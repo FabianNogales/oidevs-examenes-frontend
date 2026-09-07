@@ -12,7 +12,7 @@
     'Segoe UI',
     sans-serif;
   color: #111827;
-  background: #f9fafb;
+  background: #f6f8fb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -50,4 +50,242 @@ select {
 .backend-status {
   margin: 0;
   color: #4b5563;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.session-loading {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #475569;
+}
+
+.session-loading__spinner {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid #bfdbfe;
+  border-top-color: #0f6fb6;
+  border-radius: 999px;
+  animation: spin 0.75s linear infinite;
+}
+
+.login-page,
+.home-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.login-page {
+  background:
+    linear-gradient(135deg, rgba(14, 116, 144, 0.08), transparent 44%), #f7fafc;
+}
+
+.login-card {
+  width: min(100%, 28rem);
+  padding: 2rem;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+.login-card__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+.login-card__mark {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 8px;
+  background: #0f6fb6;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.login-card__eyebrow,
+.home-panel__eyebrow {
+  margin: 0 0 0.2rem;
+  color: #0f6fb6;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.login-card h1,
+.login-form h2,
+.home-panel h1 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.login-card h1 {
+  font-size: 1.45rem;
+}
+
+.login-form {
+  display: grid;
+  gap: 1.125rem;
+}
+
+.login-form h2 {
+  font-size: 1.35rem;
+}
+
+.login-form p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.form-field label {
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.form-field input {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.65rem 0.8rem;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+}
+
+.form-field input:focus {
+  border-color: #0f6fb6;
+  box-shadow: 0 0 0 3px rgba(15, 111, 182, 0.14);
+}
+
+.form-error {
+  margin: 0;
+  border-left: 3px solid #dc2626;
+  padding: 0.7rem 0.85rem;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.92rem;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 2.75rem;
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+}
+
+.primary-button {
+  width: 100%;
+  background: #0f6fb6;
+  color: #ffffff;
+}
+
+.secondary-button {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.home-page {
+  background: #eef4f9;
+}
+
+.home-panel {
+  display: grid;
+  width: min(100%, 42rem);
+  gap: 1.5rem;
+  border: 1px solid #d8e3ee;
+  border-radius: 8px;
+  padding: 2rem;
+  background: #ffffff;
+}
+
+.home-panel h1 {
+  font-size: 1.6rem;
+}
+
+.session-details {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.session-details div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+}
+
+.session-details dt {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.session-details dd {
+  margin: 0;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 520px) {
+  .login-card,
+  .home-panel {
+    padding: 1.25rem;
+  }
+
+  .session-details div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .session-details dd {
+    text-align: left;
+  }
 }
