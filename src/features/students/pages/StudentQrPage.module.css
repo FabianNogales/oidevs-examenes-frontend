@@ -1,0 +1,179 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: #111827;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  line-height: 1.2;
+}
+
+.header p {
+  max-width: 48rem;
+}
+.homeLink {
+  color: #1e40af;
+}
+.eyebrow {
+  color: #4b5563;
+  font-weight: 600;
+}
+.notice {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #eff6ff;
+  border-left: 4px solid #1e40af;
+  border-radius: 0.5rem;
+}
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.sectionHeading h2 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+.examGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.examCard,
+.qrCard {
+  padding: 1.5rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 0.75rem;
+}
+.examCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.examCard h3,
+.qrCard h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.examCard .primaryButton {
+  margin-top: auto;
+}
+.selected {
+  border-color: #1e40af;
+  box-shadow: 0 0 0 1px #1e40af;
+}
+.subject {
+  color: #1e3a8a;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+.muted {
+  color: #4b5563;
+}
+.available {
+  color: #166534;
+  font-weight: 600;
+}
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid #1e40af;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+}
+.primaryButton {
+  color: #fff;
+  background: #1e40af;
+}
+.secondaryButton {
+  color: #1e40af;
+  background: #fff;
+}
+.primaryButton:hover:not(:disabled) {
+  background: #1e3a8a;
+}
+.secondaryButton:hover:not(:disabled) {
+  background: #eff6ff;
+}
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  color: #4b5563;
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+.page :focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 4px;
+}
+.state {
+  padding: 1.5rem;
+  background: #fff;
+  color: #4b5563;
+  border: 1px dashed #d1d5db;
+  border-radius: 0.75rem;
+}
+.error {
+  padding: 1.25rem;
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+}
+.error p:first-child {
+  margin-top: 0;
+}
+.qrSection {
+  margin-top: 2rem;
+}
+.qrCard {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+}
+.qrImage {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: #fff;
+  margin: 1.5rem auto;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 1rem;
+  }
+  .examCard,
+  .qrCard {
+    padding: 1rem;
+  }
+  .sectionHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .primaryButton {
+    width: 100%;
+  }
+}
