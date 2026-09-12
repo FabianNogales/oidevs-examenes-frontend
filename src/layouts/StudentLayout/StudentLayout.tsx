@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router'
+import { Footer } from '@/shared/components/Footer/Footer'
 import { Header } from '@/shared/components/Header/Header'
 import { navigationByRole } from '@/shared/components/Header/headerNavigation'
 import type { HeaderUser } from '@/shared/components/Header/header.types'
@@ -24,6 +25,7 @@ export function StudentLayout() {
       <main id="student-content" className={styles.main} tabIndex={-1}>
         <Outlet />
       </main>
+      <Footer />
     </div>
   )
 }
