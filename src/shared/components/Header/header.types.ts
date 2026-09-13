@@ -4,18 +4,32 @@ export type HeaderRole = 'student' | 'teacher' | 'admin'
 
 export interface HeaderNavigationItem {
   label: string
-  /** Omit until the destination exists; the item is displayed as unavailable. */
   to?: string
   end?: boolean
 }
 
 export interface HeaderUser {
   name: string
-  roleLabel: string
+  role: HeaderRole
+  roleLabel?: string
 }
 
 export interface HeaderProps {
-  navigation: readonly HeaderNavigationItem[]
-  user: HeaderUser
+  user?: HeaderUser | null
+  navigation?: readonly HeaderNavigationItem[]
   notifications?: ReactNode
+  onLogout?: () => void | Promise<void>
+  isLoggingOut?: boolean
+}
+
+export interface HeaderNavigationProps {
+  items: readonly HeaderNavigationItem[]
+  onNavigate?: () => void
+}
+
+export interface HeaderAccountProps {
+  user?: HeaderUser | null
+  notifications?: ReactNode
+  onLogout?: () => void | Promise<void>
+  isLoggingOut?: boolean
 }
