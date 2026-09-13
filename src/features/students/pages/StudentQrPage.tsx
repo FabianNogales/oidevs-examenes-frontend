@@ -10,6 +10,12 @@ export function StudentQrPage() {
   const qr = useStudentQr()
   const selectedExam = exams.data.find((exam) => exam.exam_id === qr.examId)
 
+  function selectExam(examId: number) {
+    const exam = exams.data.find((item) => item.exam_id === examId)
+
+    if (exam) qr.select(exam)
+  }
+
   function refreshExams() {
     qr.clear()
     exams.retry()
@@ -82,7 +88,7 @@ export function StudentQrPage() {
                 <StudentExamCard
                   exam={exam}
                   selected={qr.examId === exam.exam_id}
-                  onSelect={(examId) => void qr.load(examId)}
+                  onSelect={selectExam}
                 />
               </li>
             ))}
@@ -114,14 +120,14 @@ export function StudentQrPage() {
             <span className={styles.stateIcon}>
               <StudentQrIcon name="clock" />
             </span>
-            Cargando QR de {selectedExam?.subject_name}:{' '}
+            Cargando QR de {selectedExam?.subject}:{' '}
             {selectedExam?.exam_title}…
           </p>
         ) : qr.error ? (
           <div className={styles.error} role="alert">
             <StudentQrIcon name="info" />
             <p>
-              {selectedExam?.subject_name} · {selectedExam?.exam_title}
+              {selectedExam?.subject} · {selectedExam?.exam_title}
             </p>
             <p>{qr.error.message}</p>
             <button

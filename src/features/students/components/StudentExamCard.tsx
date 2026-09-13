@@ -19,7 +19,7 @@ export function StudentExamCard({
       className={`${styles.examCard} ${selected ? styles.selected : ''}`}
     >
       <div className={styles.cardHeading}>
-        <p className={styles.subject}>{exam.subject_name}</p>
+        <p className={styles.subject}>{exam.subject}</p>
         {selected && (
           <span className={styles.selectionBadge}>
             <StudentQrIcon name="check" />
@@ -49,7 +49,7 @@ export function StudentExamCard({
         disabled={!exam.is_qr_available}
         aria-pressed={selected}
         aria-controls="student-exam-qr"
-        aria-label={`Ver QR: ${exam.subject_name}, ${exam.exam_title}`}
+        aria-label={`Ver QR: ${exam.subject}, ${exam.exam_title}`}
         onClick={() => onSelect(exam.exam_id)}
       >
         <StudentQrIcon name="qr" />
