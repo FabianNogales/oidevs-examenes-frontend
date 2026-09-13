@@ -1,24 +1,17 @@
 import {
-  createContext,
   useEffect,
   useState,
   type ReactNode,
 } from 'react'
 
+import { AuthContext } from '@/app/providers/AuthContext'
 import { getCurrentUser } from '@/features/auth/api/authApi'
 import { mapCurrentUser } from '@/features/auth/utils/mapCurrentUser'
+
 
 import type {
   AuthUser,
 } from '@/features/auth/types/auth.types'
-
-interface AuthContextValue {
-  user: AuthUser | null
-  isLoading: boolean
-}
-
-export const AuthContext =
-  createContext<AuthContextValue | null>(null)
 
 interface AuthProviderProps {
   children: ReactNode
