@@ -1,28 +1,18 @@
-import {
-  createContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
+import { env } from '@/app/config/env'
 import { getCurrentUser } from '@/features/auth/api/authApi'
+import { getMockCurrentUser } from '@/features/auth/mocks/currentUser.mock'
+import type { AuthUser } from '@/features/auth/types/auth.types'
 import { mapCurrentUser } from '@/features/auth/utils/mapCurrentUser'
 
-import type {
-  AuthUser,
-} from '@/features/auth/types/auth.types'
-
-interface AuthContextValue {
-  user: AuthUser | null
-  isLoading: boolean
-}
-
-export const AuthContext =
-  createContext<AuthContextValue | null>(null)
+import { AuthContext } from './authContext'
 
 interface AuthProviderProps {
   children: ReactNode
 }
+
+export { AuthContext } from './authContext'
 
 export function AuthProvider({
   children,
@@ -37,7 +27,9 @@ export function AuthProvider({
     async function restoreSession() {
       try {
         const currentUser =
-          await getCurrentUser()
+          env.useAuthMock && import.meta.env.DEV
+            ? getMockCurrentUser()
+            : await getCurrentUser()
 
         setUser(
           mapCurrentUser(currentUser),

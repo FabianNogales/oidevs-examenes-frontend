@@ -1,3 +1,7 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
+
+import { getTeacherSubjects } from '@/features/subjects/api/teacherSubjectsApi'
 import { SubjectList } from '@/features/subjects/components/SubjectList'
 import { SubjectsSkeleton } from '@/features/subjects/components/SubjectsSkeleton'
 import type { Subject } from '@/features/subjects/types/subject.types'
@@ -12,12 +16,49 @@ interface TeacherSubjectsPageProps {
 }
 
 export function TeacherSubjectsPage({
-  subjects = [],
-  isLoading = false,
-  errorMessage = null,
+  subjects: providedSubjects,
+  isLoading: providedIsLoading,
+  errorMessage: providedErrorMessage,
   onRetry,
 }: TeacherSubjectsPageProps) {
+  const navigate = useNavigate()
+  const [loadedSubjects, setLoadedSubjects] = useState<Subject[]>([])
+  const [loadedIsLoading, setLoadedIsLoading] = useState(true)
+  const [loadedErrorMessage, setLoadedErrorMessage] = useState<string | null>(null)
+  const hasProvidedSubjects = providedSubjects !== undefined
+  const subjects = providedSubjects ?? loadedSubjects
+  const isLoading = hasProvidedSubjects ? providedIsLoading ?? false : loadedIsLoading
+  const errorMessage = hasProvidedSubjects
+    ? providedErrorMessage ?? null
+    : loadedErrorMessage
   const hasSubjects = subjects.length > 0
+
+  const loadSubjects = useCallback(async () => {
+    setLoadedIsLoading(true)
+    setLoadedErrorMessage(null)
+
+    try {
+      setLoadedSubjects(await getTeacherSubjects())
+    } catch (error) {
+      setLoadedErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No se pudieron cargar las materias.',
+      )
+    } finally {
+      setLoadedIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!hasProvidedSubjects) {
+      const run = async () => {
+        await loadSubjects()
+      }
+
+      void run()
+    }
+  }, [hasProvidedSubjects, loadSubjects])
 
   return (
     <main className={styles.page}>
@@ -35,8 +76,11 @@ export function TeacherSubjectsPage({
           <section className={styles.state} role="alert">
             <h2>No se pudieron cargar las materias</h2>
             <p>{errorMessage}</p>
-            {onRetry ? (
-              <button type="button" onClick={onRetry}>
+            {onRetry || !hasProvidedSubjects ? (
+              <button
+                type="button"
+                onClick={onRetry ?? (() => void loadSubjects())}
+              >
                 Reintentar
               </button>
             ) : null}
@@ -44,7 +88,12 @@ export function TeacherSubjectsPage({
         ) : null}
 
         {!isLoading && !errorMessage && hasSubjects ? (
-          <SubjectList subjects={subjects} />
+          <SubjectList
+            subjects={subjects}
+            onAddStudents={(subject) => {
+              navigate(`/teacher/students/${subject.id}`)
+            }}
+          />
         ) : null}
 
         {!isLoading && !errorMessage && !hasSubjects ? (
