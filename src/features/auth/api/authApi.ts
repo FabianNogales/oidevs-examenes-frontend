@@ -1,24 +1,11 @@
-import { backendHttpClient, httpClient } from '@/shared/api/httpClient'
-import type {
-  AuthenticatedUser,
-  CurrentUserResponse,
-  LoginCredentials,
-} from '@/features/auth/types/auth'
+import { httpClient } from '@/shared/api/httpClient'
 
-export async function getCsrfCookie(): Promise<void> {
-  await backendHttpClient.get('/sanctum/csrf-cookie')
-}
+import type { CurrentUserResponse } from '@/features/auth/types/auth.types'
 
-export async function login(credentials: LoginCredentials): Promise<void> {
-  await backendHttpClient.post('/login', credentials)
-}
-
-export async function getCurrentUser(): Promise<AuthenticatedUser> {
-  const response = await httpClient.get<CurrentUserResponse>('/me')
+export async function getCurrentUser() {
+  const response = await httpClient.get<CurrentUserResponse>(
+    '/api/v1/me',
+  )
 
   return response.data.data
-}
-
-export async function logout(): Promise<void> {
-  await backendHttpClient.post('/logout')
 }

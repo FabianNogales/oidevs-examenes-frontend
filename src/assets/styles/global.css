@@ -1,55 +1,363 @@
+:root {
+  /* Official EIDA palette. Components should consume semantic tokens below. */
+  --brand-navy: #172554;
+  --brand-blue: #2563eb;
+  --brand-crimson: #8b1e3f;
+  --brand-pink: #d67a8c;
+  --brand-pink-light: #f7e9ed;
+  --brand-blue-light: #eaf3ff;
+  --brand-white-warm: #fafafa;
+
+  --font-family: 'Poppins', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 9999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --button-height: 44px;
+  --button-radius: var(--radius-md);
+  --input-height: 44px;
+  --input-radius: var(--radius-md);
+  --content-max-width: 1280px;
+  --content-gutter: var(--space-4);
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --focus-width: 3px;
+  --focus-offset: 4px;
+}
+
+/* Default: light. Set data-theme on <html>; remove it to restore light mode. */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-primary: var(--brand-blue);
+  --color-primary-hover: #1d4ed8;
+  --color-primary-active: #1e40af;
+  --color-on-primary: #ffffff;
+  --color-accent: var(--brand-crimson);
+  --color-accent-hover: #741832;
+  --color-accent-soft: var(--brand-pink-light);
+  --color-on-accent: #ffffff;
+  --color-decorative: var(--brand-pink);
+
+  --color-background: var(--brand-white-warm);
+  --color-surface: #ffffff;
+  --color-surface-soft: var(--brand-blue-light);
+  --color-surface-accent: var(--brand-pink-light);
+  --color-text: var(--brand-navy);
+  /* Darker than the proposed grays so small text works on soft surfaces too. */
+  --color-text-secondary: #52627a;
+  --color-text-muted: #5b6a80;
+  --color-border: #dce5f2;
+  --color-border-strong: #b8c9e1;
+  --color-input-border: var(--color-text-muted);
+  --color-disabled-background: var(--color-surface-soft);
+  --color-disabled-text: var(--color-text-secondary);
+
+  --color-success: #15803d;
+  --color-success-soft: #dcfce7;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3c7;
+  --color-error: #b91c1c;
+  --color-error-soft: #fee2e2;
+  /* Use the darker action tone for readable text on the info background. */
+  --color-info: var(--color-primary-hover);
+  --color-info-soft: #dbeafe;
+
+  --color-focus: var(--color-primary);
+  --color-selection-background: var(--color-accent);
+  --color-selection-text: var(--color-on-accent);
+  --shadow-sm: 0 1px 3px rgb(23 37 84 / 6%);
+  --shadow-md: 0 4px 12px rgb(23 37 84 / 8%);
+  --shadow-lg: 0 8px 24px rgb(23 37 84 / 10%);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-primary: #60a5fa;
+  --color-primary-hover: #93c5fd;
+  --color-primary-active: #3b82f6;
+  --color-on-primary: #0d1424;
+  --color-accent: #e38a9c;
+  --color-accent-hover: #f2a4b2;
+  --color-accent-soft: #44202b;
+  --color-on-accent: #0d1424;
+  --color-decorative: var(--brand-pink);
+
+  --color-background: #0d1424;
+  --color-surface: #151f33;
+  --color-surface-soft: #1b2942;
+  --color-surface-accent: #33202a;
+  --color-text: #f5f7fb;
+  --color-text-secondary: #aebbd0;
+  --color-text-muted: #8c9bb2;
+  --color-border: #2b3952;
+  --color-border-strong: #40516e;
+  --color-input-border: var(--color-text-muted);
+  --color-disabled-background: var(--color-surface-soft);
+  --color-disabled-text: var(--color-text-secondary);
+
+  --color-success: #86efac;
+  --color-success-soft: #143324;
+  --color-warning: #fcd34d;
+  --color-warning-soft: #382a16;
+  --color-error: #fca5a5;
+  --color-error-soft: #3d2028;
+  --color-info: #93c5fd;
+  --color-info-soft: #1b2942;
+
+  --color-focus: var(--color-primary);
+  --color-selection-background: var(--color-accent);
+  --color-selection-text: var(--color-on-accent);
+  --shadow-sm: 0 1px 3px rgb(5 10 20 / 16%);
+  --shadow-md: 0 4px 12px rgb(5 10 20 / 20%);
+  --shadow-lg: 0 8px 24px rgb(5 10 20 / 24%);
+}
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-:root {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
-  color: #111827;
-  background: #f6f8fb;
+html {
+  min-height: 100%;
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: 100%;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background: var(--color-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
+body,
+#root {
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background: var(--color-background);
 }
 
-button,
-input,
-textarea,
-select {
+/* Low specificity lets feature CSS Modules define their own variants. */
+:where(h1, h2, h3, h4, h5, h6) {
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  overflow-wrap: break-word;
+}
+
+:where(h1) {
+  font-size: clamp(var(--font-size-3xl), 5vw, var(--font-size-4xl));
+  font-weight: var(--font-weight-bold);
+}
+
+:where(h2) {
+  font-size: var(--font-size-2xl);
+}
+
+:where(h3) {
+  font-size: var(--font-size-xl);
+}
+
+:where(h4) {
+  font-size: var(--font-size-lg);
+}
+
+:where(h5, h6) {
+  font-size: var(--font-size-md);
+}
+
+:where(small) {
+  font-size: var(--font-size-sm);
+}
+
+:where(strong, b) {
+  font-weight: var(--font-weight-bold);
+}
+
+:where(img) {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(button, input, textarea, select) {
   font: inherit;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-normal),
+    border-color var(--transition-fast);
 }
 
+:where(button) {
+  min-height: var(--button-height);
+  border-radius: var(--button-radius);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+:where(button:disabled, input:disabled, textarea:disabled, select:disabled) {
+  cursor: not-allowed;
+}
+
+:where(button:disabled) {
+  opacity: 0.65;
+}
+
+/* Do not give text-field dimensions to checkboxes, radios or special inputs. */
+:where(
+  input:not(
+    [type='checkbox'],
+    [type='radio'],
+    [type='range'],
+    [type='color'],
+    [type='file'],
+    [type='hidden'],
+    [type='button'],
+    [type='submit'],
+    [type='reset'],
+    [type='image']
+  ),
+  select,
+  textarea
+) {
+  max-width: 100%;
+  min-height: var(--input-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+:where(textarea) {
+  resize: vertical;
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+:where(input:disabled, textarea:disabled, select:disabled) {
+  color: var(--color-disabled-text);
+  background-color: var(--color-disabled-background);
+}
+
+:where(a[href]) {
+  color: var(--color-primary);
+  text-underline-offset: 0.2em;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-normal),
+    border-color var(--transition-fast);
+}
+
+:where(a[href]:hover) {
+  color: var(--color-primary-hover);
+}
+
+:where(a[href]:active) {
+  color: var(--color-primary-active);
+}
+
+:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+::selection {
+  color: var(--color-selection-text);
+  background: var(--color-selection-background);
+}
+
+/* Existing home/health rules retained for compatibility; no new page styles. */
 .app-shell {
   display: grid;
   min-height: 100vh;
   place-content: center;
-  gap: 1rem;
-  padding: 2rem;
+  gap: var(--space-4);
+  padding: var(--space-8);
   text-align: center;
 }
 
 .app-shell h1 {
   margin: 0;
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .backend-status {
   margin: 0;
-  color: #4b5563;
+  color: var(--color-text-secondary);
+}
+
+/* Breakpoint references: 640px large mobile, 768px tablet,
+   1024px desktop, 1280px wide desktop. Use literals in media queries. */
+@media (min-width: 640px) {
+  :root {
+    --content-gutter: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-gutter: var(--space-8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0s;
+    --transition-normal: 0s;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 button {

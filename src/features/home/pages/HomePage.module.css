@@ -1,0 +1,992 @@
+.page {
+  min-height: 100vh;
+
+  color: #0c2d6c;
+  background: #ffffff;
+}
+
+/* ==================================================
+   HERO
+   ================================================== */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 58%);
+
+  min-height: 300px;
+
+  overflow: hidden;
+
+  background: #f5f9fe;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  padding: 26px 36px 28px
+    max(36px, calc((100vw - 1400px) / 2 + 18px));
+}
+
+/* ==================================================
+   MARCA EIDA
+   ================================================== */
+.eidaBrand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: fit-content;
+
+  margin-bottom: 12px;
+}
+
+.eidaLogo {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  object-fit: contain;
+}
+
+.eidaBrand div {
+  display: flex;
+  flex-direction: column;
+}
+
+.eidaBrand strong {
+  color: #0c2d6c;
+
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  letter-spacing: 0.04em;
+}
+
+.eidaBrand span {
+  color: #52627a;
+
+  font-size: 0.62rem;
+  font-weight: 500;
+}
+
+/* ==================================================
+   TÍTULO HERO
+   ================================================== */
+
+.heroTitle {
+  display: flex;
+  flex-direction: column;
+
+  margin: 0;
+
+  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-weight: 700;
+  line-height: 1.03;
+
+  letter-spacing: -0.02em;
+}
+
+.heroTitle span {
+  color: #0c2d6c;
+}
+
+.heroTitle strong {
+  color: #cd123a;
+
+  font-weight: 700;
+}
+
+.heroDescription {
+  max-width: 430px;
+
+  margin: 14px 0 0;
+
+  color: #52627a;
+
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.heroDivider {
+  width: 46px;
+  height: 3px;
+
+  margin-top: 16px;
+
+  border-radius: 999px;
+
+  background: #cd123a;
+}
+
+.heroSlogan {
+  margin: 8px 0 0;
+
+  color: #0c2d6c;
+
+  font-size: 0.62rem;
+  font-weight: 600;
+
+  letter-spacing: 0.16em;
+}
+
+/* ==================================================
+   IMAGEN DEL HERO
+   ================================================== */
+
+.heroVisual {
+  position: relative;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 300px;
+
+  overflow: hidden;
+
+  background: #eaf3ff;
+}
+
+.heroHomeImage {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center center;
+}
+
+/* ==================================================
+   CONTENIDO PRINCIPAL
+   CALENDARIO + NOTICIAS
+   ================================================== */
+
+.informationGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(320px, 0.4fr)
+    minmax(0, 0.6fr);
+
+  gap: 12px;
+
+  width: min(100% - 36px, 1400px);
+
+  margin: 12px auto;
+}
+.calendarCard,
+.newsCard {
+  min-height: 310px;
+
+  padding: 16px;
+
+  border: 1px solid #cbdcf1;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  box-shadow: 0 2px 8px rgb(12 45 108 / 4%);
+}
+
+/* ==================================================
+   ENCABEZADOS DE TARJETAS
+   ================================================== */
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding-bottom: 14px;
+
+  border-bottom: 1px solid #dce5f2;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.sectionTitle h2 {
+  margin: 0;
+
+  color: #0c2d6c;
+
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.sectionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  flex-shrink: 0;
+
+  color: #214e8f;
+}
+
+.sectionIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.viewAll {
+  flex-shrink: 0;
+
+  color: #214e8f;
+
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+/* ==================================================
+   CALENDARIO
+   ================================================== */
+
+.calendarMonth {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+
+  margin: 20px 0 16px;
+
+  color: #0c2d6c;
+
+  text-align: center;
+}
+
+.calendarMonth strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.monthArrow {
+  color: #214e8f;
+
+  font-size: 1.65rem;
+  font-weight: 400;
+
+  line-height: 1;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+
+  row-gap: 7px;
+
+  text-align: center;
+}
+
+.weekDay {
+  padding-bottom: 6px;
+
+  color: #52627a;
+
+  font-size: 0.67rem;
+  font-weight: 600;
+}
+
+.calendarDay {
+  display: grid;
+  place-items: center;
+
+  width: 30px;
+  height: 30px;
+
+  margin-inline: auto;
+
+  border-radius: 50%;
+
+  color: #172554;
+
+  font-size: 0.73rem;
+  font-weight: 500;
+}
+
+.outsideMonth {
+  color: #a6b2c3;
+}
+
+.highlightedDay {
+  color: #ffffff;
+
+  background: #214e8f;
+
+  font-weight: 600;
+}
+
+/* ==================================================
+   NOTICIAS
+   ================================================== */
+
+.newsList {
+  display: grid;
+
+  margin-top: 12px;
+}
+
+.newsItem {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+
+  gap: 16px;
+
+  padding: 11px 0;
+
+  border-bottom: 1px solid #e4ebf5;
+}
+
+.newsItem:last-child {
+  border-bottom: 0;
+}
+
+.newsImage {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-height: 78px;
+
+  overflow: hidden;
+
+  padding: 12px;
+
+  border-radius: 7px;
+
+  color: #ffffff;
+
+  background: #214e8f;
+}
+
+.newsDay {
+  position: relative;
+  z-index: 2;
+
+  font-size: 1.3rem;
+  font-weight: 700;
+
+  line-height: 1;
+}
+
+.newsMonth {
+  position: relative;
+  z-index: 2;
+
+  margin-top: 3px;
+
+  font-size: 0.65rem;
+  font-weight: 600;
+
+  letter-spacing: 0.12em;
+}
+
+.newsImageDecoration {
+  position: absolute;
+  top: -25px;
+  right: -25px;
+
+  width: 85px;
+  height: 85px;
+
+  border-radius: 50%;
+
+  background: #cd123a;
+
+  opacity: 0.85;
+}
+
+.newsContent {
+  min-width: 0;
+}
+
+.newsContent h3 {
+  margin: 0;
+
+  color: #0c2d6c;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  line-height: 1.3;
+}
+
+.newsContent time {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #8795a8;
+
+  font-size: 0.62rem;
+}
+
+.newsContent p {
+  margin: 5px 0 0;
+
+  color: #52627a;
+
+  font-size: 0.68rem;
+
+  line-height: 1.45;
+}
+
+/* ==================================================
+   FOOTER
+   ================================================== */
+
+.footer {
+  width: 100%;
+
+  color: #ffffff;
+
+  background: #0753a5;
+}
+
+.footerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  width: min(100% - 64px, 1400px);
+  min-height: 48px;
+
+  margin-inline: auto;
+
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.footerInstitution,
+.footerValues {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+}
+
+.footerSeparator {
+  opacity: 0.65;
+}
+
+/* ==================================================
+   TABLET
+   ================================================== */
+
+@media (max-width: 1023px) {
+.hero {
+  grid-template-columns:
+    minmax(0, 46%)
+    minmax(0, 54%);
+}
+
+.heroContent {
+  padding: 24px 24px;
+}
+
+.heroTitle {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+  .informationGrid {
+    grid-template-columns:
+      minmax(300px, 0.44fr)
+      minmax(0, 0.56fr);
+  }
+
+  .newsItem {
+    grid-template-columns: 85px minmax(0, 1fr);
+  }
+
+  .newsContent p {
+    font-size: 0.64rem;
+  }
+}
+
+/* ==================================================
+   MÓVIL
+   ================================================== */
+
+@media (max-width: 767px) {
+  .hero {
+    grid-template-columns: 1fr;
+
+    min-height: auto;
+  }
+
+  .heroContent {
+    padding: 32px 20px;
+  }
+
+  .heroTitle {
+  font-size: clamp(1.8rem, 8vw, 2.4rem);
+}
+
+.heroDescription {
+  font-size: 0.82rem;
+}
+
+.heroVisual {
+  min-height: 240px;
+}
+
+  .heroHomeImage {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .informationGrid {
+    grid-template-columns: 1fr;
+
+    width: min(100% - 32px, 1400px);
+  }
+
+  .calendarCard,
+  .newsCard {
+    min-height: auto;
+
+    padding: 18px;
+  }
+
+  .calendarDay {
+    width: 30px;
+    height: 30px;
+
+    font-size: 0.7rem;
+  }
+
+  .weekDay {
+    font-size: 0.62rem;
+  }
+
+  .sectionTitle h2 {
+    font-size: 1rem;
+  }
+
+  .newsItem {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+
+  .footerContent {
+    flex-direction: column;
+    justify-content: center;
+
+    gap: 8px;
+
+    width: min(100% - 32px, 1400px);
+
+    padding-block: 12px;
+
+    text-align: center;
+  }
+
+  .footerInstitution,
+  .footerValues {
+    justify-content: center;
+
+    flex-wrap: wrap;
+  }
+}
+
+/* ==================================================
+   MÓVILES PEQUEÑOS
+   ================================================== */
+
+@media (max-width: 479px) {
+  .heroContent {
+    padding: 28px 18px;
+  }
+
+  .eidaLogo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .eidaBrand strong {
+    font-size: 0.82rem;
+  }
+
+  .eidaBrand span {
+    font-size: 0.6rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.8rem, 9.5vw, 2.25rem);
+  }
+
+  .heroDescription {
+    margin-top: 14px;
+
+    font-size: 0.84rem;
+  }
+
+  .heroSlogan {
+    font-size: 0.6rem;
+
+    letter-spacing: 0.15em;
+  }
+
+  .heroVisual {
+    min-height: 260px;
+  }
+
+  .sectionHeader {
+    gap: 8px;
+  }
+
+  .sectionTitle {
+    gap: 6px;
+  }
+
+  .sectionTitle h2 {
+    font-size: 0.88rem;
+  }
+
+  .sectionIcon {
+    width: 24px;
+  }
+
+  .sectionIcon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .viewAll {
+    font-size: 0.65rem;
+  }
+
+  .calendarGrid {
+    row-gap: 5px;
+  }
+
+  .calendarDay {
+    width: 27px;
+    height: 27px;
+
+    font-size: 0.65rem;
+  }
+
+  .weekDay {
+    font-size: 0.58rem;
+  }
+
+  .newsItem {
+    grid-template-columns: 72px minmax(0, 1fr);
+
+    gap: 12px;
+  }
+
+  .newsImage {
+    min-height: 72px;
+
+    padding: 9px;
+  }
+
+  .newsContent h3 {
+    font-size: 0.76rem;
+  }
+
+  .newsContent p {
+    display: none;
+  }
+
+  .footerContent {
+    font-size: 0.66rem;
+  }
+}
+/* ==================================================
+   DESKTOP - HOME COMPLETA EN UNA SOLA PANTALLA
+   ================================================== */
+
+@media (min-width: 1024px) {
+  .page {
+    height: calc(100dvh - 136px);
+    min-height: 0;
+
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 42px;
+
+    overflow: hidden;
+  }
+
+  .page main {
+    min-height: 0;
+
+    display: grid;
+    grid-template-rows:
+      minmax(0, 57%)
+      minmax(0, 43%);
+
+    overflow: hidden;
+  }
+
+  /* =========================
+     HERO
+     ========================= */
+
+  .hero {
+    min-height: 0;
+    height: 100%;
+
+    grid-template-columns:
+      minmax(0, 42%)
+      minmax(0, 58%);
+  }
+
+  .heroContent {
+    min-height: 0;
+
+    padding-top: 18px;
+    padding-bottom: 18px;
+
+    justify-content: center;
+  }
+
+  .eidaBrand {
+    margin-bottom: 9px;
+  }
+
+  .eidaLogo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .eidaBrand strong {
+    font-size: 0.76rem;
+  }
+
+  .eidaBrand span {
+    font-size: 0.58rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.8rem, 2.6vw, 2.75rem);
+    line-height: 1;
+  }
+
+  .heroDescription {
+    max-width: 420px;
+
+    margin-top: 10px;
+
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .heroDivider {
+    width: 42px;
+    height: 2px;
+
+    margin-top: 12px;
+  }
+
+  .heroSlogan {
+    margin-top: 7px;
+
+    font-size: 0.56rem;
+
+    letter-spacing: 0.16em;
+  }
+
+  .heroVisual {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .heroHomeImage {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* =========================
+     CALENDARIO + NOTICIAS
+     ========================= */
+
+  .informationGrid {
+    min-height: 0;
+    height: calc(100% - 16px);
+
+    grid-template-columns:
+      minmax(330px, 0.4fr)
+      minmax(0, 0.6fr);
+
+    gap: 12px;
+
+    width: min(100% - 36px, 1400px);
+
+    margin: 8px auto;
+  }
+
+  .calendarCard,
+  .newsCard {
+    min-height: 0;
+    height: 100%;
+
+    padding: 12px 14px;
+
+    overflow: hidden;
+  }
+
+  /* =========================
+     TÍTULOS
+     ========================= */
+
+  .sectionHeader {
+    gap: 10px;
+
+    padding-bottom: 8px;
+  }
+
+  .sectionTitle {
+    gap: 7px;
+  }
+
+  .sectionTitle h2 {
+    font-size: 0.95rem;
+  }
+
+  .sectionIcon {
+    width: 23px;
+    height: 23px;
+  }
+
+  .sectionIcon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .viewAll {
+    font-size: 0.62rem;
+  }
+
+  /* =========================
+     CALENDARIO
+     ========================= */
+
+  .calendarMonth {
+    grid-template-columns: 26px 1fr 26px;
+
+    margin: 9px 0 7px;
+  }
+
+  .calendarMonth strong {
+    font-size: 0.73rem;
+  }
+
+  .monthArrow {
+    font-size: 1.25rem;
+  }
+
+  .calendarGrid {
+    row-gap: 2px;
+  }
+
+  .weekDay {
+    padding-bottom: 2px;
+
+    font-size: 0.56rem;
+  }
+
+  .calendarDay {
+    width: 24px;
+    height: 24px;
+
+    font-size: 0.59rem;
+  }
+
+  /* =========================
+     NOTICIAS
+     ========================= */
+
+  .newsList {
+    margin-top: 4px;
+  }
+
+  .newsItem {
+    grid-template-columns: 72px minmax(0, 1fr);
+
+    gap: 10px;
+
+    padding: 5px 0;
+  }
+
+  .newsImage {
+    min-height: 52px;
+
+    padding: 8px;
+  }
+
+  .newsDay {
+    font-size: 1rem;
+  }
+
+  .newsMonth {
+    font-size: 0.5rem;
+  }
+
+  .newsImageDecoration {
+    top: -25px;
+    right: -30px;
+
+    width: 72px;
+    height: 72px;
+  }
+
+  .newsContent h3 {
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+
+  .newsContent time {
+    margin-top: 2px;
+
+    font-size: 0.52rem;
+  }
+
+  .newsContent p {
+    margin-top: 2px;
+
+    font-size: 0.56rem;
+    line-height: 1.25;
+  }
+
+  /* =========================
+     FOOTER
+     ========================= */
+
+  .footer {
+    height: 42px;
+  }
+
+  .footerContent {
+    width: min(100% - 48px, 1400px);
+    min-height: 42px;
+    height: 42px;
+
+    font-size: 0.6rem;
+  }
+
+  .footerInstitution,
+  .footerValues {
+    gap: 9px;
+  }
+}
