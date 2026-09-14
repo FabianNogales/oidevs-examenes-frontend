@@ -1,14 +1,20 @@
 import { env } from '@/app/config/env'
 import { getMockTeacherSubjects } from '@/features/subjects/mocks/teacherSubjects.mock'
-import type { Subject } from '@/features/subjects/types/subject.types'
-
-const MOCK_DISABLED_MESSAGE =
-  'No existe endpoint real para materias. Activa VITE_USE_STUDENTS_MOCK=true para revisar la experiencia de desarrollo.'
+import { httpClient } from '@/shared/api/httpClient'
+import {
+  mapTeacherDashboardSubject,
+  type Subject,
+  type TeacherDashboardSubjectsResponse,
+} from '@/features/subjects/types/subject.types'
 
 export async function getTeacherSubjects(): Promise<Subject[]> {
-  if (!env.useStudentsMock) {
-    throw new Error(MOCK_DISABLED_MESSAGE)
+  if (env.useStudentsMock) {
+    return getMockTeacherSubjects()
   }
 
-  return getMockTeacherSubjects()
+  const response = await httpClient.get<TeacherDashboardSubjectsResponse>(
+    '/teacher/dashboard/subjects',
+  )
+
+  return response.data.data.map(mapTeacherDashboardSubject)
 }

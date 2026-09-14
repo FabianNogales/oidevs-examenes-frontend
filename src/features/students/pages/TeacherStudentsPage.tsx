@@ -67,7 +67,7 @@ export function TeacherStudentsPage() {
             subjects={subjects}
             showCreateExam={false}
             onAddStudents={(subject) => {
-              navigate(`/teacher/students/${subject.id}`)
+              navigate(`/teacher/students/${subject.courseOfferingId}`)
             }}
           />
         ) : null}

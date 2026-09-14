@@ -17,7 +17,7 @@ export function SubjectCard({
     <article className={styles.card}>
       <div className={styles.subjectInfo}>
         <span className={styles.label}>Codigo</span>
-        <strong className={styles.code}>{subject.code}</strong>
+        <strong className={styles.code}>{subject.code ?? 'No disponible'}</strong>
       </div>
 
       <div className={styles.subjectInfo}>

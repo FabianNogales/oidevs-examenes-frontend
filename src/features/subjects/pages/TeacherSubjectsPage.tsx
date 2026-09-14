@@ -91,7 +91,7 @@ export function TeacherSubjectsPage({
           <SubjectList
             subjects={subjects}
             onAddStudents={(subject) => {
-              navigate(`/teacher/students/${subject.id}`)
+              navigate(`/teacher/students/${subject.courseOfferingId}`)
             }}
           />
         ) : null}

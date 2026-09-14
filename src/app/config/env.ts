@@ -1,5 +1,7 @@
 const apiUrl = import.meta.env.VITE_API_URL
-const useStudentsMock = import.meta.env.VITE_USE_STUDENTS_MOCK === 'true'
+const useStudentsMock =
+  import.meta.env.DEV &&
+  import.meta.env.VITE_USE_STUDENTS_MOCK === 'true'
 const useAuthMock =
   import.meta.env.DEV &&
   import.meta.env.VITE_USE_AUTH_MOCK === 'true'

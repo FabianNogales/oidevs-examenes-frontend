@@ -16,8 +16,8 @@ export const mockStudentsBySubject: Record<string, StudentEnrollment[]> = {
   ],
 }
 
-export function getMockSubjectStudents(subjectId: string): Promise<StudentEnrollment[]> {
-  return Promise.resolve(mockStudentsBySubject[subjectId] ?? [])
+export function getMockSubjectStudents(courseOfferingId: string): Promise<StudentEnrollment[]> {
+  return Promise.resolve(mockStudentsBySubject[courseOfferingId] ?? [])
 }
 
 export function getMockStudentBySis(sis: string): { sis: string; fullName: string } | null {

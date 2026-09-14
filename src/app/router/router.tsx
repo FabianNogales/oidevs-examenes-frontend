@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
         element: <TeacherStudentsPage />,
       },
       {
-        path: 'teacher/students/:subjectId',
+        path: 'teacher/students/:courseOfferingId',
         element: <TeacherSubjectStudentsPage />,
       },
       {

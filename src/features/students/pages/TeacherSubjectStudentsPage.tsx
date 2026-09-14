@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
+import { env } from '@/app/config/env'
 import {
   addStudentToSubject,
   getSubjectStudents,
@@ -16,9 +17,10 @@ import styles from './TeacherSubjectStudentsPage.module.css'
 
 export function TeacherSubjectStudentsPage() {
   const navigate = useNavigate()
-  const { subjectId } = useParams()
+  const { courseOfferingId } = useParams()
   const [subject, setSubject] = useState<Subject | null>(null)
   const [students, setStudents] = useState<StudentEnrollment[]>([])
+  const [studentsError, setStudentsError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -26,7 +28,7 @@ export function TeacherSubjectStudentsPage() {
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
   const loadSubjectData = useCallback(async () => {
-    if (!subjectId) {
+    if (!courseOfferingId) {
       setErrorMessage('No se seleccionó una materia válida.')
       setIsLoading(false)
       return
@@ -34,10 +36,13 @@ export function TeacherSubjectStudentsPage() {
 
     setIsLoading(true)
     setErrorMessage(null)
+    setStudentsError(null)
 
     try {
       const subjects = await getTeacherSubjects()
-      const selectedSubject = subjects.find((item) => String(item.id) === String(subjectId)) ?? null
+      const selectedSubject = subjects.find(
+        (item) => String(item.courseOfferingId) === String(courseOfferingId),
+      ) ?? null
 
       if (!selectedSubject) {
         setSubject(null)
@@ -45,8 +50,17 @@ export function TeacherSubjectStudentsPage() {
       }
 
       setSubject(selectedSubject)
-      const nextStudents = await getSubjectStudents(subjectId)
-      setStudents(nextStudents)
+      try {
+        const nextStudents = await getSubjectStudents(courseOfferingId)
+        setStudents(nextStudents)
+      } catch (error) {
+        setStudents([])
+        setStudentsError(
+          error instanceof Error
+            ? error.message
+            : 'El listado de estudiantes no está disponible.',
+        )
+      }
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -56,7 +70,7 @@ export function TeacherSubjectStudentsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [subjectId])
+  }, [courseOfferingId])
 
   useEffect(() => {
     const run = async () => {
@@ -67,39 +81,36 @@ export function TeacherSubjectStudentsPage() {
   }, [loadSubjectData])
 
   async function handleManualSubmit(sis: string) {
-    if (!subjectId) {
+    if (!courseOfferingId) {
       throw new Error('No se seleccionó una materia válida.')
     }
 
-    const addedStudent = await addStudentToSubject(subjectId, sis)
-    setStudents((previous) => [addedStudent, ...previous])
+    const addedStudent = await addStudentToSubject(courseOfferingId, sis)
+    if (addedStudent) {
+      setStudents((previous) => [addedStudent, ...previous])
+    }
     setToastMessage('Estudiante agregado correctamente.')
     setToastType('success')
     setIsModalOpen(false)
   }
 
   async function handleCsvSubmit(file: File): Promise<CsvImportSummary> {
-    if (!subjectId) {
+    if (!courseOfferingId) {
       throw new Error('No se seleccionó una materia válida.')
     }
 
-    const text = await file.text()
-    const rows = text
-      .split(/\r?\n/)
-      .map((row) => row.trim())
-      .filter((row) => row.length > 0)
-
-    if (rows.length === 0) {
-      throw new Error('El archivo CSV está vacío.')
-    }
-
-    const summary = await importStudentsCsv(subjectId, rows)
-    const mergedStudents = [...students]
+    const summary = await importStudentsCsv(courseOfferingId, file)
+    let mergedStudents = [...students]
 
     for (const imported of summary.importedStudents) {
       if (!mergedStudents.some((student) => student.sis === imported.sis)) {
         mergedStudents.push(imported)
       }
+    }
+
+    if (!env.useStudentsMock) {
+      mergedStudents = await getSubjectStudents(courseOfferingId)
+      setStudentsError(null)
     }
 
     setStudents(mergedStudents)
@@ -155,7 +166,7 @@ export function TeacherSubjectStudentsPage() {
           <div className={styles.subjectMeta}>
             <div>
               <span>Código</span>
-              <strong>{subject.code}</strong>
+              <strong>{subject.code ?? 'No disponible'}</strong>
             </div>
             <div>
               <span>Gestión académica</span>
@@ -173,7 +184,13 @@ export function TeacherSubjectStudentsPage() {
           </button>
         </div>
 
-        {students.length === 0 ? (
+        {studentsError ? (
+          <section className={styles.emptyState} role="status">
+            <h3>Listado de estudiantes no disponible</h3>
+            <p>{studentsError}</p>
+            <p>Las operaciones de inscripción manual y CSV siguen disponibles.</p>
+          </section>
+        ) : students.length === 0 ? (
           <section className={styles.emptyState}>
             <h3>No hay estudiantes inscritos en esta materia.</h3>
             <p>Agrega estudiantes por SIS o CSV para comenzar.</p>

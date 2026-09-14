@@ -74,11 +74,6 @@ export function AddStudentsModal({
       return
     }
 
-    if (!/^\d{9,}$/.test(normalizedSis)) {
-      setManualError('El SIS debe contener solo números y tener al menos 9 dígitos.')
-      return
-    }
-
     setIsProcessing(true)
     setManualError(null)
 
@@ -175,7 +170,7 @@ export function AddStudentsModal({
               type="text"
               inputMode="numeric"
               value={sis}
-              onChange={(event) => setSis(event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => setSis(event.target.value)}
               placeholder="Ingrese el SIS"
               disabled={isProcessing}
             />
@@ -215,8 +210,11 @@ export function AddStudentsModal({
               <div className={styles.summaryBox} role="status">
                 <h3>Resumen de importación</h3>
                 <ul>
-                  <li>Válidos / inscritos: <strong>{csvSummary.validCount}</strong></li>
-                  <li>Duplicados: <strong>{csvSummary.duplicateCount}</strong></li>
+                  <li>Inscritos: <strong>{csvSummary.validCount}</strong></li>
+                  <li>
+                    Duplicados:{' '}
+                    <strong>{csvSummary.duplicateCount ?? 'No informado'}</strong>
+                  </li>
                   <li>Errores: <strong>{csvSummary.errorCount}</strong></li>
                 </ul>
                 {csvSummary.issues.length > 0 ? (
@@ -225,7 +223,10 @@ export function AddStudentsModal({
                       <div key={`${issue.row}-${issue.sis || 'empty'}`} className={styles.issueItem}>
                         <span>Fila {issue.row}</span>
                         <span>{issue.sis ? issue.sis : 'Vacía'}</span>
-                        <span>{issue.reason}</span>
+                        <span>
+                          {issue.status ? `${issue.status}: ` : ''}
+                          {issue.reason}
+                        </span>
                       </div>
                     ))}
                   </div>

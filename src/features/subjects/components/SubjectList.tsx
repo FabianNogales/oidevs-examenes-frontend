@@ -19,7 +19,7 @@ export function SubjectList({
     <section aria-label="Materias asignadas" className={styles.list}>
       {subjects.map((subject) => (
         <SubjectCard
-          key={subject.id}
+          key={subject.courseOfferingId}
           subject={subject}
           onAddStudents={onAddStudents}
           showCreateExam={showCreateExam}
