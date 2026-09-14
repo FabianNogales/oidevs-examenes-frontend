@@ -29,9 +29,14 @@ Create a local environment file from the example:
 copy .env.example .env
 ```
 
+`VITE_BACKEND_URL` must point to the Laravel backend root URL. Fortify and
+Sanctum use root routes such as `/login`, `/logout`, and
+`/sanctum/csrf-cookie`.
+
 `VITE_API_URL` must point to the Laravel API base URL, including the API version:
 
 ```bash
+VITE_BACKEND_URL=http://127.0.0.1:8000
 VITE_API_URL=http://127.0.0.1:8000/api/v1
 ```
 

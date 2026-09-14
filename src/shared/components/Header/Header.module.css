@@ -3,41 +3,62 @@
   top: 0;
   z-index: 50;
 
+  width: 100%;
+
   font-family: var(--font-family);
   color: var(--color-text);
-  background: var(--color-surface);
 
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  background: #ffffff;
+
+  border-bottom: 1px solid #dce5f2;
+  box-shadow: 0 1px 4px rgb(12 45 108 / 6%);
 }
+
+/* ---
+   BARRA SUPERIOR
+   Logo UMSS + institución + cuenta
+   --- */
 
 .topBar {
   display: flex;
   align-items: center;
+
   gap: var(--space-3);
 
-  width: min(100%, var(--content-max-width));
+  width: min(100% - 48px, var(--content-max-width));
+  min-height: 68px;
+
   margin-inline: auto;
-
-  padding: var(--space-3) var(--content-gutter);
-}
-
-.logoLink {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-
-  border-radius: var(--radius-sm);
-  text-decoration: none;
+  padding: 5px 0;
 }
 
 .logo {
   display: block;
+
   width: auto;
-  height: var(--space-16);
+  height: 50px;
+
+  flex-shrink: 0;
 
   object-fit: contain;
 }
+
+.institutionName {
+  display: flex;
+  flex-direction: column;
+
+  color: #0c2d6c;
+
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.15;
+
+  white-space: nowrap;
+}
+
+/* ---
+   CUENTA
+   --- */
 
 .account {
   display: flex;
@@ -47,14 +68,24 @@
   gap: var(--space-3);
 
   min-width: 0;
+
   margin-left: auto;
 }
+
+/* ---
+   NOTIFICACIONES
+   --- */
 
 .notifications {
   display: flex;
   align-items: center;
+
   flex-shrink: 0;
 }
+
+/* ---
+   BOTONES DE ICONO
+   --- */
 
 .iconButton {
   display: inline-flex;
@@ -72,12 +103,15 @@
   border-radius: var(--button-radius);
 
   color: var(--color-primary);
+
   background: var(--color-surface);
 }
 
 .iconButton:hover:not(:disabled) {
   color: var(--color-primary-hover);
+
   background: var(--color-surface-soft);
+
   border-color: var(--color-primary);
 }
 
@@ -87,6 +121,7 @@
 
 .iconButton:disabled {
   color: var(--color-text-muted);
+
   opacity: 0.65;
 }
 
@@ -95,9 +130,17 @@
   height: var(--space-6);
 }
 
+/* ---
+   MENÚ MÓVIL
+   --- */
+
 .menuButton {
   flex-shrink: 0;
 }
+
+/* ---
+   MENÚ DE USUARIO
+   --- */
 
 .accountMenu {
   position: relative;
@@ -118,18 +161,25 @@
   border-radius: var(--radius-md);
 
   color: var(--color-text);
+
   background: transparent;
 }
 
 .userButton:hover {
   background: var(--color-surface-soft);
+
   border-color: var(--color-border);
 }
 
 .userButton[aria-expanded='true'] {
   background: var(--color-surface-soft);
+
   border-color: var(--color-primary);
 }
+
+/* ---
+   AVATAR
+   --- */
 
 .avatar {
   display: grid;
@@ -143,6 +193,7 @@
   border-radius: var(--radius-pill);
 
   color: var(--color-primary);
+
   background: var(--color-surface-soft);
 }
 
@@ -150,6 +201,10 @@
   width: var(--space-6);
   height: var(--space-6);
 }
+
+/* ---
+   DATOS DEL USUARIO
+   --- */
 
 .userDetails {
   display: flex;
@@ -170,6 +225,7 @@
   font-weight: var(--font-weight-semibold);
 
   text-overflow: ellipsis;
+
   white-space: nowrap;
 }
 
@@ -189,6 +245,10 @@
   color: var(--color-text-secondary);
 }
 
+/* ---
+   DROPDOWN
+   --- */
+
 .accountDropdown {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -196,9 +256,13 @@
   z-index: 60;
 
   display: grid;
+
   gap: var(--space-2);
 
-  width: min(240px, calc(100vw - var(--space-8)));
+  width: min(
+    240px,
+    calc(100vw - var(--space-8))
+  );
 
   padding: var(--space-3);
 
@@ -206,6 +270,7 @@
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
+
   box-shadow: var(--shadow-md);
 }
 
@@ -231,6 +296,10 @@
   font-size: var(--font-size-xs);
 }
 
+/* ---
+   CERRAR SESIÓN
+   --- */
+
 .logoutButton {
   width: 100%;
 
@@ -239,6 +308,7 @@
   border: 1px solid transparent;
 
   color: var(--color-error);
+
   background: transparent;
 
   text-align: left;
@@ -248,37 +318,65 @@
   background: var(--color-error-soft);
 }
 
+/* ---
+   INICIAR SESIÓN
+   --- */
+
 .loginButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  min-height: var(--button-height);
+  /*
+    Esto es lo que empuja el login
+    completamente hacia la derecha.
+  */
+  margin-left: auto;
 
-  padding-inline: var(--space-5);
+  min-height: 38px;
 
-  border-radius: var(--button-radius);
+  padding: 6px 10px;
 
-  color: var(--color-on-accent);
-  background: var(--color-accent);
+  border: 0;
+  border-radius: 6px;
 
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  color: #0b4fa3;
+
+  background: transparent;
+
+  font-size: 0.82rem;
+  font-weight: 600;
 
   text-decoration: none;
+
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
 }
 
 .loginButton:hover {
-  color: var(--color-on-accent);
-  background: var(--color-accent-hover);
+  color: #cd123a;
+
+  background: #f7f9fc;
 }
+
+.loginButton:focus-visible {
+  outline: 2px solid #214e8f;
+  outline-offset: 3px;
+}
+
+/* ---
+   NAVEGACIÓN
+   --- */
 
 .navigation {
   display: none;
 
-  border-top: 1px solid var(--color-border);
+  width: 100%;
 
-  background: var(--color-surface);
+  border-top: 1px solid #e4ebf5;
+
+  background: #ffffff;
 }
 
 .navigation[data-open='true'] {
@@ -289,59 +387,112 @@
   display: flex;
   flex-direction: column;
 
-  gap: var(--space-2);
+  gap: 0;
 
-  width: min(100%, var(--content-max-width));
+  width: min(100% - 48px, var(--content-max-width));
 
   margin: 0 auto;
-  padding: var(--space-3) var(--content-gutter);
+  padding: 0;
 
   list-style: none;
+}
+
+/* Cada opción del menú */
+
+.navigationList > li {
+  position: relative;
 }
 
 .navigationLink {
   display: flex;
   align-items: center;
+  justify-content: center;
 
-  min-height: var(--button-height);
+  gap: 8px;
 
-  padding: var(--space-2) var(--space-4);
+  min-height: 58px;
 
-  border-bottom: var(--space-1) solid transparent;
-  border-radius: var(--radius-sm);
+  padding: 8px 26px;
 
-  color: var(--color-text);
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
 
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  color: #53637a;
+
+  font-size: 0.82rem;
+  font-weight: 600;
 
   text-decoration: none;
+
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
 
 a.navigationLink:hover {
-  color: var(--color-primary);
+  color: #0c2d6c;
 
-  background: var(--color-surface-soft);
+  background: #f8fafc;
 }
 
 a.navigationLink:active {
-  color: var(--color-primary-active);
+  color: #214e8f;
 }
+
+/* Opción activa */
 
 .navigationLink.active,
 .navigationLink.active:hover {
-  color: var(--color-accent);
+  color: #9e173a;
 
   background: transparent;
 
-  border-bottom-color: var(--color-accent);
+  border-bottom-color: #9e173a;
 }
+
+/* ---
+   ICONOS DE NAVEGACIÓN
+   Se usarán cuando agreguemos los iconos al TSX
+   --- */
+
+.navigationIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 21px;
+  height: 21px;
+}
+
+.navigationIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---
+   OPCIONES NO DISPONIBLES
+   --- */
 
 .unavailable {
   color: var(--color-text-muted);
 
+  opacity: 0.65;
+
   cursor: not-allowed;
 }
+
+.unavailable:hover {
+  color: var(--color-text-muted);
+
+  background: transparent;
+}
+
+/* ---
+   ACCESIBILIDAD
+   --- */
 
 .srOnly {
   position: absolute;
@@ -350,28 +501,45 @@ a.navigationLink:active {
   height: 1px;
 
   padding: 0;
+  margin: -1px;
 
   overflow: hidden;
 
   clip-path: inset(50%);
 
   white-space: nowrap;
+
+  border: 0;
 }
 
-/* Móvil */
+/* ---
+   MÓVIL
+   --- */
+
 @media (max-width: 639px) {
   .topBar {
     gap: var(--space-2);
 
-    padding-block: var(--space-2);
+    width: min(100% - 24px, var(--content-max-width));
+    min-height: 62px;
+
+    padding-block: 5px;
+  }
+
+  .logo {
+    height: 45px;
+  }
+
+  .logoLink {
+    gap: 8px;
+  }
+
+  .institutionName {
+    font-size: 0.68rem;
   }
 
   .account {
     gap: var(--space-2);
-  }
-
-  .logo {
-    height: var(--space-12);
   }
 
   .avatar {
@@ -383,20 +551,65 @@ a.navigationLink:active {
   }
 
   .loginButton {
-    padding-inline: var(--space-3);
+    margin-left: auto;
+
+    min-height: 34px;
+
+    padding-inline: 7px;
+
+    font-size: 0.7rem;
   }
 
   .navigationList {
-    padding-block: var(--space-3);
+    width: 100%;
+
+    padding: 8px 12px;
   }
 
   .navigationLink {
+    justify-content: flex-start;
+
     width: 100%;
+    min-height: 44px;
+
+    padding: 8px 14px;
+
+    border-bottom-width: 2px;
+    border-radius: 6px;
+  }
+
+  .navigationLink.active {
+    border-bottom-color: transparent;
+
+    background: #fff4f6;
   }
 }
 
-/* Móviles pequeños */
+/* ---
+   MÓVILES PEQUEÑOS
+   --- */
+
 @media (max-width: 479px) {
+  .topBar {
+    width: min(
+      100% - 18px,
+      var(--content-max-width)
+    );
+  }
+
+  .logo {
+    height: 40px;
+  }
+
+  .logoLink {
+    gap: 6px;
+  }
+
+  .institutionName {
+    font-size: 0.6rem;
+    line-height: 1.1;
+  }
+
   .notifications {
     display: none;
   }
@@ -409,6 +622,12 @@ a.navigationLink:active {
     max-width: 10ch;
   }
 
+  .loginButton {
+    padding-inline: 5px;
+
+    font-size: 0.64rem;
+  }
+
   .accountDropdown {
     right: calc(var(--space-12) * -1);
 
@@ -419,7 +638,10 @@ a.navigationLink:active {
   }
 }
 
-/* Tablet y desktop */
+/* ---
+   TABLET Y DESKTOP
+   --- */
+
 @media (min-width: 768px) {
   .menuButton {
     display: none;
@@ -434,9 +656,29 @@ a.navigationLink:active {
     flex-wrap: wrap;
     justify-content: center;
 
-    gap: var(--space-2);
+    gap: 0;
 
-    padding-block: var(--space-2);
+    padding: 0;
+  }
+
+  /*
+    Separadores verticales como el mockup:
+    Inicio | Información | Servicios
+  */
+
+  .navigationList > li:not(:last-child)::after {
+    content: '';
+
+    position: absolute;
+    top: 50%;
+    right: 0;
+
+    width: 1px;
+    height: 24px;
+
+    background: #dce5f2;
+
+    transform: translateY(-50%);
   }
 
   .account {
@@ -444,13 +686,82 @@ a.navigationLink:active {
   }
 }
 
-/* Desktop */
+/* ---
+   DESKTOP
+   --- */
+
 @media (min-width: 1024px) {
+  .topBar {
+    width: min(
+      100% - 48px,
+      var(--content-max-width)
+    );
+  }
+
   .navigationList {
-    gap: var(--space-3);
+    width: min(
+      100% - 48px,
+      var(--content-max-width)
+    );
   }
 
   .navigationLink {
-    padding-inline: var(--space-5);
+    padding-inline: 28px;
   }
+}
+/* ---
+   AJUSTE LOGO + NOMBRE UMSS
+   --- */
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+
+  gap: 10px;
+
+  flex-shrink: 0;
+
+  color: #0c2d6c;
+
+  text-decoration: none;
+}
+
+.logoLink:hover {
+  color: #0c2d6c;
+
+  text-decoration: none;
+}
+
+.logoLink:visited {
+  color: #0c2d6c;
+
+  text-decoration: none;
+}
+
+.logo {
+  display: block;
+
+  width: auto;
+  height: 50px;
+
+  flex-shrink: 0;
+
+  object-fit: contain;
+}
+
+.institutionName {
+  display: flex;
+  flex-direction: column;
+
+  flex-shrink: 0;
+
+  color: #0c2d6c;
+
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.12;
+
+  text-decoration: none;
+  white-space: nowrap;
 }
