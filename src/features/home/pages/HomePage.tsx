@@ -74,59 +74,7 @@ const news = [
 ]
 
 export function HomePage() {
-  const navigate = useNavigate()
-  const { logout, user } = useAuth()
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
-
-  async function handleLogout() {
-    setIsLoggingOut(true)
-
-    try {
-      await logout()
-    } catch {
-      // The auth context still clears the local user if the server session expired.
-    } finally {
-      setIsLoggingOut(false)
-    }
-
-    navigate('/login', { replace: true })
-  }
-
   return (
-<<<<<<< HEAD
-    <main className="home-page">
-      <section className="home-panel" aria-labelledby="home-title">
-        <div>
-          <p className="home-panel__eyebrow">OiPass</p>
-          <h1 id="home-title">Sesion iniciada correctamente</h1>
-        </div>
-
-        <dl className="session-details">
-          <div>
-            <dt>Correo</dt>
-            <dd>{user?.email}</dd>
-          </div>
-          <div>
-            <dt>Estado</dt>
-            <dd>
-              <span className="status-pill">{user?.status}</span>
-            </dd>
-          </div>
-        </dl>
-
-        <BackendHealthStatus />
-
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? 'Cerrando sesion...' : 'Cerrar sesion'}
-        </button>
-      </section>
-    </main>
-=======
     <div className={styles.page}>
       <main>
         <section className={styles.hero}>
@@ -154,20 +102,14 @@ export function HomePage() {
               exámenes en la UMSS.
             </p>
 
-            <div
-              className={styles.heroDivider}
-              aria-hidden="true"
-            />
+            <div className={styles.heroDivider} aria-hidden="true" />
 
             <p className={styles.heroSlogan}>
               EDUCACIÓN QUE TRANSFORMA REALIDADES
             </p>
           </div>
 
-          <div
-            className={styles.heroVisual}
-            aria-hidden="true"
-          >
+          <div className={styles.heroVisual} aria-hidden="true">
             <img
               src={homeHeroImage}
               alt=""
@@ -186,53 +128,36 @@ export function HomePage() {
           >
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>
-                <span
-                  className={styles.sectionIcon}
-                  aria-hidden="true"
-                >
+                <span className={styles.sectionIcon} aria-hidden="true">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.7"
                   >
-                    <rect
-                      x="3"
-                      y="5"
-                      width="18"
-                      height="16"
-                      rx="2"
-                    />
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
                     <path d="M16 3v4M8 3v4M3 10h18" />
                   </svg>
                 </span>
 
-                <h2 id="calendar-title">
-                  Calendario de Exámenes
-                </h2>
+                <h2 id="calendar-title">Calendario de Exámenes</h2>
               </div>
 
               <span className={styles.viewAll}>
                 Ver todos
-                <span aria-hidden="true"> ›</span>
+                <span aria-hidden="true"> &gt;</span>
               </span>
             </div>
 
             <div className={styles.calendarMonth}>
-              <span
-                className={styles.monthArrow}
-                aria-hidden="true"
-              >
-                ‹
+              <span className={styles.monthArrow} aria-hidden="true">
+                &lt;
               </span>
 
               <strong>Septiembre 2026</strong>
 
-              <span
-                className={styles.monthArrow}
-                aria-hidden="true"
-              >
-                ›
+              <span className={styles.monthArrow} aria-hidden="true">
+                &gt;
               </span>
             </div>
 
@@ -241,10 +166,7 @@ export function HomePage() {
               aria-label="Calendario de septiembre de 2026"
             >
               {weekDays.map((day) => (
-                <span
-                  key={day}
-                  className={styles.weekDay}
-                >
+                <span key={day} className={styles.weekDay}>
                   {day}
                 </span>
               ))}
@@ -254,12 +176,8 @@ export function HomePage() {
                   key={`${item.day}-${index}`}
                   className={[
                     styles.calendarDay,
-                    item.outsideMonth
-                      ? styles.outsideMonth
-                      : '',
-                    item.highlighted
-                      ? styles.highlightedDay
-                      : '',
+                    item.outsideMonth ? styles.outsideMonth : '',
+                    item.highlighted ? styles.highlightedDay : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -270,16 +188,10 @@ export function HomePage() {
             </div>
           </section>
 
-          <section
-            className={styles.newsCard}
-            aria-labelledby="news-title"
-          >
+          <section className={styles.newsCard} aria-labelledby="news-title">
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>
-                <span
-                  className={styles.sectionIcon}
-                  aria-hidden="true"
-                >
+                <span className={styles.sectionIcon} aria-hidden="true">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -291,38 +203,24 @@ export function HomePage() {
                   </svg>
                 </span>
 
-                <h2 id="news-title">
-                  Noticias
-                </h2>
+                <h2 id="news-title">Noticias</h2>
               </div>
 
               <span className={styles.viewAll}>
                 Ver todas
-                <span aria-hidden="true"> ›</span>
+                <span aria-hidden="true"> &gt;</span>
               </span>
             </div>
 
             <div className={styles.newsList}>
               {news.map((item) => (
-                <article
-                  key={item.id}
-                  className={styles.newsItem}
-                >
-                  <div
-                    className={styles.newsImage}
-                    aria-hidden="true"
-                  >
-                    <span className={styles.newsDay}>
-                      {item.day}
-                    </span>
+                <article key={item.id} className={styles.newsItem}>
+                  <div className={styles.newsImage} aria-hidden="true">
+                    <span className={styles.newsDay}>{item.day}</span>
 
-                    <span className={styles.newsMonth}>
-                      {item.month}
-                    </span>
+                    <span className={styles.newsMonth}>{item.month}</span>
 
-                    <div
-                      className={styles.newsImageDecoration}
-                    />
+                    <div className={styles.newsImageDecoration} />
                   </div>
 
                   <div className={styles.newsContent}>
@@ -344,34 +242,23 @@ export function HomePage() {
           <div className={styles.footerInstitution}>
             <span>Universidad Mayor de San Simón</span>
 
-            <span
-              className={styles.footerSeparator}
-              aria-hidden="true"
-            >
+            <span className={styles.footerSeparator} aria-hidden="true">
               |
             </span>
 
-            <span>
-              EIDA - Sistema de Control de Exámenes Masivos
-            </span>
+            <span>EIDA - Sistema de Control de Exámenes Masivos</span>
           </div>
 
           <div className={styles.footerValues}>
             <span>Confianza</span>
 
-            <span
-              className={styles.footerSeparator}
-              aria-hidden="true"
-            >
+            <span className={styles.footerSeparator} aria-hidden="true">
               |
             </span>
 
             <span>Tecnología</span>
 
-            <span
-              className={styles.footerSeparator}
-              aria-hidden="true"
-            >
+            <span className={styles.footerSeparator} aria-hidden="true">
               |
             </span>
 
@@ -380,6 +267,5 @@ export function HomePage() {
         </div>
       </footer>
     </div>
->>>>>>> origin/Dev_Daniel
   )
 }
