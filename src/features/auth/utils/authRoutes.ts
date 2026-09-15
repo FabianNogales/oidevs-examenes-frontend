@@ -11,7 +11,7 @@ export const AUTH_ROUTES = Object.freeze({
 const ROLE_HOME_ROUTES: Record<AuthRole, string> = {
   ADMINISTRADOR: '/admin',
   DOCENTE: '/docente',
-  ESTUDIANTE: '/students/qr',
+  ESTUDIANTE: '/',
 }
 
 const ROLE_PRIORITY: AuthRole[] = ['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE']

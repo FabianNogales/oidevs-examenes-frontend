@@ -11,6 +11,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { HomePage } from '@/features/home/pages/HomePage'
 import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
+import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 
@@ -43,12 +44,16 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'estudiante',
-                element: <Navigate to="/students/qr" replace />,
+                element: <Navigate to="/" replace />,
               },
               {
                 path: 'students',
                 element: <StudentLayout />,
                 children: [
+                  {
+                    path: 'profile',
+                    element: <StudentProfilePage />,
+                  },
                   {
                     path: 'qr',
                     element: <StudentQrPage />,
