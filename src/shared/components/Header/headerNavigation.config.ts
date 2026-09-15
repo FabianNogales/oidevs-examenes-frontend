@@ -57,7 +57,7 @@ export const navigationByRole: Record<
       to: '/students/profile',
     },
     {
-      label: 'Mi QR',
+      label: 'Mis exámenes',
       to: '/students/qr',
     },
     {
