@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { StudentExamCard } from '@/features/students/components/StudentExamCard'
 import { StudentQrCard } from '@/features/students/components/StudentQrCard'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
@@ -8,12 +9,21 @@ import styles from './StudentQrPage.module.css'
 export function StudentQrPage() {
   const exams = useStudentExams()
   const qr = useStudentQr()
+  const qrSectionRef = useRef<HTMLElement>(null)
   const selectedExam = exams.data.find((exam) => exam.exam_id === qr.examId)
 
   function selectExam(examId: number) {
     const exam = exams.data.find((item) => item.exam_id === examId)
 
-    if (exam) qr.select(exam)
+    if (!exam?.is_qr_available) return
+
+    qr.select(exam)
+    qrSectionRef.current?.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'instant'
+        : 'smooth',
+      block: 'start',
+    })
   }
 
   function refreshExams() {
@@ -24,11 +34,16 @@ export function StudentQrPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1>Mis exámenes</h1>
-        <p>
-          Consulta tus exámenes programados y accede a tu código QR cuando esté
-          disponible.
-        </p>
+        <span className={styles.headerIcon}>
+          <StudentQrIcon name="qr" />
+        </span>
+        <div>
+          <h1>Mis exámenes</h1>
+          <p>
+            Consulta tus exámenes programados y accede a tu código QR cuando
+            esté disponible.
+          </p>
+        </div>
       </header>
 
       <div className={styles.notice}>
@@ -40,11 +55,15 @@ export function StudentQrPage() {
       </div>
 
       <section
+        className={styles.examsPanel}
         aria-labelledby="student-exams-heading"
         aria-busy={exams.loading}
       >
         <div className={styles.sectionHeading}>
-          <h2 id="student-exams-heading">Exámenes programados</h2>
+          <h2 id="student-exams-heading">
+            <StudentQrIcon name="calendar" />
+            Exámenes programados
+          </h2>
           <button
             type="button"
             className={styles.secondaryButton}
@@ -82,7 +101,7 @@ export function StudentQrPage() {
             No tienes exámenes programados actualmente.
           </p>
         ) : (
-          <ul className={styles.examGrid}>
+          <ul className={styles.examList}>
             {exams.data.map((exam) => (
               <li key={exam.exam_id}>
                 <StudentExamCard
@@ -97,14 +116,18 @@ export function StudentQrPage() {
       </section>
 
       <section
+        ref={qrSectionRef}
         id="student-exam-qr"
         aria-labelledby="student-qr-heading"
         aria-busy={qr.loading}
         aria-live="polite"
-        className={styles.qrSection}
+        className={`${styles.qrSection} ${qr.examId !== null ? styles.qrSectionActive : ''}`}
       >
         <div className={styles.sectionHeading}>
-          <h2 id="student-qr-heading">Tu QR de ingreso</h2>
+          <h2 id="student-qr-heading">
+            <StudentQrIcon name="qr" />
+            Tu QR de ingreso
+          </h2>
           {qr.examId !== null && (
             <button
               type="button"
@@ -120,8 +143,7 @@ export function StudentQrPage() {
             <span className={styles.stateIcon}>
               <StudentQrIcon name="clock" />
             </span>
-            Cargando QR de {selectedExam?.subject}:{' '}
-            {selectedExam?.exam_title}…
+            Cargando QR de {selectedExam?.subject}: {selectedExam?.exam_title}…
           </p>
         ) : qr.error ? (
           <div className={styles.error} role="alert">

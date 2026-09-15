@@ -87,7 +87,7 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
             download={filename}
           >
             <StudentQrIcon name="download" />
-            Descargar QR
+            Descargar QR (SVG)
           </a>
         </>
       )}

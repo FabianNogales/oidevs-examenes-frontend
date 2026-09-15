@@ -1,4 +1,6 @@
 .page {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   max-width: var(--content-max-width);
   margin-inline: auto;
@@ -6,29 +8,67 @@
   color: var(--color-text);
   line-height: var(--line-height-relaxed);
   overflow-wrap: anywhere;
-  background:
-    radial-gradient(
-      ellipse at top right,
-      var(--color-surface-soft),
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at bottom left,
-      var(--color-surface-accent),
-      transparent 50%
-    ),
-    var(--color-background);
+  background: var(--color-background);
+}
+
+.page::before,
+.page::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+.page::before {
+  top: 0;
+  right: 0;
+  width: min(48%, 30rem);
+  height: 22rem;
+  border-radius: 0 0 0 100%;
+  background: var(--color-surface-soft);
+}
+.page::after {
+  bottom: 0;
+  left: 0;
+  width: min(35%, 23rem);
+  height: 27rem;
+  border-radius: 0 100% 0 0;
+  background: var(--color-surface-accent);
 }
 
 .header {
-  max-width: 48rem;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
   margin-bottom: var(--space-6);
+}
+.headerIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--space-16);
+  height: var(--space-16);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  background: var(--color-surface-soft);
+}
+.headerIcon svg {
+  width: var(--space-8);
+  height: var(--space-8);
 }
 .header h1 {
   margin: 0;
   font-size: clamp(var(--font-size-3xl), 4vw, var(--font-size-4xl));
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
+}
+.header h1::after {
+  content: '';
+  display: block;
+  width: var(--space-12);
+  height: var(--space-1);
+  margin-top: var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
 }
 .header p {
   margin: var(--space-3) 0 0;
@@ -43,7 +83,8 @@
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-md);
   color: var(--color-info);
-  background: var(--color-info-soft);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-soft);
   font-size: var(--font-size-sm);
 }
 .notice p {
@@ -61,19 +102,37 @@
   margin-bottom: var(--space-5);
 }
 .sectionHeading h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
 }
-.examGrid {
+.sectionHeading h2 > svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+.examsPanel {
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+.examsPanel > .sectionHeading {
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.examList {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
-  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.examGrid > li {
+.examList > li {
   min-width: 0;
 }
 .examCard,
@@ -85,13 +144,24 @@
   box-shadow: var(--shadow-sm);
 }
 .examCard {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 14rem;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-5);
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-normal);
+}
+.examDetails {
+  min-width: 0;
+}
+.examActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  min-width: 0;
 }
 .cardHeading {
   display: flex;
@@ -119,9 +189,17 @@
 }
 .selected {
   border-color: var(--color-accent);
+  background: linear-gradient(
+    100deg,
+    var(--color-accent-soft),
+    var(--color-surface) 65%
+  );
   box-shadow:
-    inset 0 0 0 1px var(--color-accent),
+    inset var(--space-1) 0 0 var(--color-accent),
     var(--shadow-sm);
+}
+.selected h3 {
+  color: var(--color-accent);
 }
 .selectionBadge {
   display: inline-flex;
@@ -143,11 +221,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin: var(--space-5) 0;
+  margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 .schedule > svg {
+  color: var(--color-primary);
   flex-shrink: 0;
   width: var(--space-5);
   height: var(--space-5);
@@ -161,7 +240,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  margin: 0 0 var(--space-5);
+  margin: 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
@@ -173,8 +252,8 @@
   flex-shrink: 0;
 }
 .available {
-  color: var(--color-success);
-  background: var(--color-success-soft);
+  color: var(--color-info);
+  background: var(--color-surface-soft);
 }
 .unavailable {
   color: var(--color-text-secondary);
@@ -235,9 +314,10 @@
   cursor: not-allowed;
   opacity: 1;
 }
-.examCard .secondaryButton {
-  width: 100%;
-  margin-top: auto;
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 .state {
   display: flex;
@@ -279,11 +359,23 @@
 }
 .qrSection {
   margin-top: var(--space-10);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  /* Leave room for the existing sticky institutional header. */
+  scroll-margin-top: 12rem;
+}
+.qrSectionActive {
+  border-color: var(--color-accent);
 }
 .qrCard {
   max-width: 36rem;
   margin-inline: auto;
   padding: var(--space-8);
+  border-top: var(--space-1) solid var(--color-accent);
+  box-shadow: var(--shadow-md);
   text-align: center;
 }
 .qrCardHeading {
@@ -319,7 +411,7 @@
   width: min(100%, 22rem);
   margin: 0 auto var(--space-6);
   padding: var(--space-4);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
   background: #fff;
 }
@@ -343,7 +435,7 @@
 }
 .validity svg {
   flex-shrink: 0;
-  color: var(--color-success);
+  color: var(--color-primary);
   width: var(--space-5);
   height: var(--space-5);
 }
@@ -356,16 +448,51 @@
   width: 100%;
 }
 
+@media (min-width: 640px) and (max-width: 1023px) {
+  .examCard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  .examActions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .examActions .primaryButton {
+    min-width: 10rem;
+  }
+}
+
 @media (max-width: 639px) {
   .page {
     padding-block: var(--space-6) var(--space-8);
   }
-  .examGrid {
-    grid-template-columns: minmax(0, 1fr);
+  .header {
+    gap: var(--space-3);
   }
+  .headerIcon {
+    width: var(--space-10);
+    height: var(--space-10);
+  }
+  .headerIcon svg {
+    width: var(--space-6);
+    height: var(--space-6);
+  }
+  .examCard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  .examsPanel,
   .examCard,
   .qrCard {
-    padding: var(--space-5);
+    padding: var(--space-4);
+  }
+  .qrCard {
+    padding-block: var(--space-6);
+  }
+  .examsPanel {
+    padding-inline: var(--space-3);
   }
   .sectionHeading {
     flex-direction: column;
@@ -380,5 +507,15 @@
   }
   .qrFrame {
     padding: var(--space-3);
+  }
+  .qrSection {
+    padding: var(--space-4);
+    scroll-margin-top: 6rem;
+  }
+  .qrCard {
+    padding-inline: var(--space-3);
+  }
+  .qrFrame {
+    padding: var(--space-2);
   }
 }
