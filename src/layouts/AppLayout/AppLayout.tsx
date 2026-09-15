@@ -1,16 +1,52 @@
-import { Outlet, useNavigate } from 'react-router'
+import { useMemo } from 'react'
+import { useNavigate, Outlet } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { Header } from '@/shared/components/Header/Header'
+import type { AuthRole } from '@/features/auth/types/auth'
+import type {
+  HeaderRole,
+  HeaderUser,
+} from '@/shared/components/Header/header.types'
+
+const HEADER_ROLE_BY_AUTH_ROLE: Record<AuthRole, HeaderRole> = {
+  ADMINISTRADOR: 'admin',
+  DOCENTE: 'teacher',
+  ESTUDIANTE: 'student',
+}
+
+const ROLE_PRIORITY: AuthRole[] = ['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE']
 
 export function AppLayout() {
   const navigate = useNavigate()
   const {
+    logout,
     user,
     isLoading,
     isLoggingOut,
-    logout,
   } = useAuth()
+
+  const headerUser = useMemo<HeaderUser | null>(() => {
+    if (!user) {
+      return null
+    }
+
+    const primaryRole = ROLE_PRIORITY.find((role) => user.roles.includes(role))
+
+    if (!primaryRole) {
+      return null
+    }
+
+    return {
+      name: user.display_name,
+      role: HEADER_ROLE_BY_AUTH_ROLE[primaryRole],
+    }
+  }, [user])
+
+  async function handleLogout() {
+    await logout()
+    navigate('/login', { replace: true })
+  }
 
   if (isLoading) {
     return null
@@ -19,12 +55,9 @@ export function AppLayout() {
   return (
     <>
       <Header
-        user={user}
+        user={headerUser}
+        onLogout={handleLogout}
         isLoggingOut={isLoggingOut}
-        onLogout={async () => {
-          await logout()
-          navigate('/', { replace: true })
-        }}
       />
 
       <Outlet />

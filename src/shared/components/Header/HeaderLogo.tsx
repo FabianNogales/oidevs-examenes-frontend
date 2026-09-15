@@ -20,11 +20,16 @@ export function HeaderLogo({
     >
       <img
         src={umssLogo}
-        alt="Universidad Mayor de San Simón"
+        alt=""
         width={864}
         height={1328}
         className={styles.logo}
       />
+
+      <span className={styles.institutionName}>
+        <span>Universidad Mayor</span>
+        <span>de San Simón</span>
+      </span>
     </NavLink>
   )
 }

@@ -1,6 +1,6 @@
-import type { CurrentUserDto } from '@/features/auth/types/auth.types'
+import type { AuthenticatedUser } from '@/features/auth/types/auth'
 
-export const mockCurrentUserDto: CurrentUserDto = {
+export const mockCurrentUserDto: AuthenticatedUser = {
   id: 999,
   display_name: 'Docente de Prueba',
   email: 'docente.prueba@umss.edu',
@@ -9,7 +9,7 @@ export const mockCurrentUserDto: CurrentUserDto = {
   roles: ['DOCENTE'],
 }
 
-export function getMockCurrentUser(): CurrentUserDto {
+export function getMockCurrentUser(): AuthenticatedUser {
   return {
     ...mockCurrentUserDto,
   }
