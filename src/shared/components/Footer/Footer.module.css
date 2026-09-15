@@ -17,10 +17,11 @@
   gap: var(--space-2) var(--space-6);
   max-width: var(--content-max-width);
   margin-inline: auto;
-  padding: var(--space-3) var(--content-gutter);
+  padding: var(--space-2) var(--content-gutter);
 }
 
 .identity,
+.identityText,
 .motto {
   display: flex;
   align-items: center;
@@ -30,9 +31,20 @@
   overflow-wrap: anywhere;
 }
 
-.identity > span,
+.identityText > span,
 .motto > span {
   min-width: 0;
+}
+
+.logo {
+  display: block;
+  flex-shrink: 0;
+  width: var(--space-8);
+  height: var(--space-8);
+  padding: calc(var(--space-1) / 2);
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  background: var(--brand-white-warm);
 }
 
 .separator {
@@ -46,12 +58,17 @@
     text-align: center;
   }
 
-  .identity {
+  .logo {
+    width: calc(var(--space-6) + var(--space-1));
+    height: calc(var(--space-6) + var(--space-1));
+  }
+
+  .identityText {
     flex-direction: column;
     gap: var(--space-1);
   }
 
-  .identity > .separator {
+  .identityText > .separator {
     display: none;
   }
 }
