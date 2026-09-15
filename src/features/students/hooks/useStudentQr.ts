@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getStudentExamQr } from '@/features/students/api/studentQrApi'
 import { getStudentQrError } from '@/features/students/api/studentQrError'
 import type {
+  StudentExam,
   StudentExamQr,
   StudentQrError,
 } from '@/features/students/types/studentQr'
@@ -57,9 +58,34 @@ export function useStudentQr() {
     setState(emptyState)
   }
 
+  function select(exam: StudentExam) {
+    clear()
+
+    if (!exam.is_qr_available) return
+
+    if (exam.qr_code_base64 && exam.token) {
+      setState({
+        examId: exam.exam_id,
+        data: {
+          exam_id: exam.exam_id,
+          subject: exam.subject,
+          exam_title: exam.exam_title,
+          scheduled_at: exam.scheduled_at,
+          qr_code_base64: exam.qr_code_base64,
+          token: exam.token,
+        },
+        loading: false,
+        error: null,
+      })
+      return
+    }
+
+    void load(exam.exam_id)
+  }
+
   function retry() {
     if (state.examId !== null) void load(state.examId)
   }
 
-  return { ...state, load, clear, retry }
+  return { ...state, select, load, clear, retry }
 }

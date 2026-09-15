@@ -16,6 +16,7 @@ import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
+import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
 
 export const router = createBrowserRouter([
   {
@@ -46,7 +47,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'estudiante',
-                element: <Navigate to="/students/qr" replace />,
+                element: <Navigate to="/" replace />,
               },
               {
                 path: 'teacher/subjects',
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
                 path: 'students',
                 element: <StudentLayout />,
                 children: [
+                  {
+                    path: 'profile',
+                    element: <StudentProfilePage />,
+                  },
                   {
                     path: 'qr',
                     element: <StudentQrPage />,

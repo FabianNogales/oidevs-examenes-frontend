@@ -54,6 +54,7 @@ export const navigationByRole: Record<
     },
     {
       label: 'Mis datos',
+      to: '/students/profile',
     },
     {
       label: 'Mi QR',

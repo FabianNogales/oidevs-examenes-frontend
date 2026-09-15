@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { AuthInfoPanel } from '@/features/auth/components/AuthInfoPanel'
-import { PublicFooter } from '@/features/auth/components/PublicFooter'
+import { Footer } from '@/shared/components/Footer/Footer'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { AuthRole } from '@/features/auth/types/auth'
 import { Header } from '@/shared/components/Header/Header'
@@ -46,7 +46,7 @@ export function PublicAuthLayout({ children }: PublicAuthLayoutProps) {
           {children}
         </section>
       </main>
-      <PublicFooter />
+      <Footer />
     </div>
   )
 }

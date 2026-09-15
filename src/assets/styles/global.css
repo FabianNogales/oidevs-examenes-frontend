@@ -764,38 +764,6 @@ svg {
   font-weight: 600;
 }
 
-.public-footer {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  min-height: var(--footer-height);
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.6rem max(1.25rem, calc((100vw - 72rem) / 2 + 1.25rem));
-  background: linear-gradient(90deg, var(--color-footer-deep), var(--color-footer));
-  color: var(--color-surface);
-  font-size: 0.68rem;
-}
-
-.public-footer__credits,
-.public-footer nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.public-footer__credits span + span,
-.public-footer nav a + a {
-  border-left: 1px solid color-mix(in srgb, var(--color-surface) 45%, transparent);
-  padding-left: 1rem;
-}
-
-.public-footer a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 .snackbar {
   position: fixed;
   right: 1.25rem;
@@ -924,13 +892,6 @@ svg {
     width: 44%;
     height: 8rem;
   }
-
-  .public-footer {
-    align-items: center;
-    flex-direction: column;
-    padding-block: 0.85rem;
-    text-align: center;
-  }
 }
 
 @media (max-width: 620px) {
@@ -966,19 +927,6 @@ svg {
 
   .auth-info__campus {
     display: none;
-  }
-
-  .public-footer__credits,
-  .public-footer nav {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.55rem;
-  }
-
-  .public-footer__credits span + span,
-  .public-footer nav a + a {
-    border-left: 0;
-    padding-left: 0;
   }
 
   .snackbar {

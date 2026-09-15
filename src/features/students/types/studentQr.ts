@@ -1,9 +1,11 @@
 export interface StudentExam {
   exam_id: number
-  subject_name: string
+  subject: string
   exam_title: string
   scheduled_at: string
   is_qr_available: boolean
+  qr_code_base64: string | null
+  token: string | null
 }
 
 export interface StudentExamsResponse {
