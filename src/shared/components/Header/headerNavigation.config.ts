@@ -37,7 +37,6 @@ export const navigationByRole: Record<
     },
     {
       label: 'Mis exámenes',
-      to: '/teacher/exams',
     },
     {
       label: 'Información',
@@ -57,7 +56,8 @@ export const navigationByRole: Record<
       label: 'Mis datos',
     },
     {
-      label: 'Mis materias',
+      label: 'Mi QR',
+      to: '/students/qr',
     },
     {
       label: 'Información',

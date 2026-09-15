@@ -9,3 +9,7 @@ export async function getCurrentUser() {
 
   return response.data.data
 }
+
+export async function logout() {
+  await httpClient.post('/auth/logout')
+}

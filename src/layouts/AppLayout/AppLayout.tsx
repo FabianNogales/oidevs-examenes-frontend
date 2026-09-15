@@ -1,10 +1,16 @@
-import { Outlet } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { Header } from '@/shared/components/Header/Header'
 
 export function AppLayout() {
-  const { user, isLoading } = useAuth()
+  const navigate = useNavigate()
+  const {
+    user,
+    isLoading,
+    isLoggingOut,
+    logout,
+  } = useAuth()
 
   if (isLoading) {
     return null
@@ -12,7 +18,14 @@ export function AppLayout() {
 
   return (
     <>
-      <Header user={user} />
+      <Header
+        user={user}
+        isLoggingOut={isLoggingOut}
+        onLogout={async () => {
+          await logout()
+          navigate('/', { replace: true })
+        }}
+      />
 
       <Outlet />
     </>

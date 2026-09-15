@@ -13,6 +13,7 @@ export function HeaderAccount({
   isLoggingOut = false,
 }: HeaderAccountProps) {
   const [accountOpen, setAccountOpen] = useState(false)
+  const [logoutError, setLogoutError] = useState<string | null>(null)
 
   const accountButton = useRef<HTMLButtonElement>(null)
 
@@ -35,7 +36,14 @@ export function HeaderAccount({
       return
     }
 
-    await onLogout()
+    setLogoutError(null)
+
+    try {
+      await onLogout()
+    } catch {
+      setLogoutError('No se pudo cerrar sesión. Intenta nuevamente.')
+      return
+    }
 
     setAccountOpen(false)
   }
@@ -138,6 +146,12 @@ export function HeaderAccount({
               <strong>{user.name}</strong>
               <span>{roleLabel}</span>
             </div>
+
+            {logoutError && (
+              <p className={styles.logoutError} role="alert">
+                {logoutError}
+              </p>
+            )}
 
             <button
               type="button"
