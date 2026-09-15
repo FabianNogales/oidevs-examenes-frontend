@@ -1,19 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ExamSchedule } from '@/features/students/components/ExamSchedule'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
 import type { StudentExamQr } from '@/features/students/types/studentQr'
+import {
+  downloadQrBlob,
+  getQrFilename,
+  svgToPng,
+} from '@/features/students/utils/studentQrDownload'
 import styles from '@/features/students/pages/StudentQrPage.module.css'
-
-function filenamePart(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 70)
-    .replace(/-+$/g, '')
-}
+import downloadStyles from './StudentQrCard.module.css'
 
 interface StudentQrCardProps {
   qr: StudentExamQr
@@ -22,12 +17,37 @@ interface StudentQrCardProps {
 
 export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
   const [imageFailed, setImageFailed] = useState(false)
+  const [generatingPng, setGeneratingPng] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const activeDownload = useRef<AbortController | null>(null)
+
+  useEffect(() => () => activeDownload.current?.abort(), [])
 
   const validImage = qr.qr_code_base64.startsWith('data:image/svg+xml;base64,')
 
-  const filename = `qr-${filenamePart(qr.subject) || 'materia'}-${
-    filenamePart(qr.exam_title) || 'examen'
-  }-${qr.exam_id}.svg`
+  const filename = getQrFilename(qr.subject, qr.exam_title)
+
+  async function downloadPng() {
+    if (activeDownload.current) return
+    const controller = new AbortController()
+    activeDownload.current = controller
+    setDownloadError(null)
+    setGeneratingPng(true)
+
+    try {
+      const blob = await svgToPng(qr.qr_code_base64)
+      if (!controller.signal.aborted) downloadQrBlob(blob, `${filename}.png`)
+    } catch {
+      if (!controller.signal.aborted) {
+        setDownloadError(
+          'No se pudo descargar el PNG. Intenta nuevamente o descarga el SVG.',
+        )
+      }
+    } finally {
+      if (activeDownload.current === controller) activeDownload.current = null
+      if (!controller.signal.aborted) setGeneratingPng(false)
+    }
+  }
 
   return (
     <article className={styles.qrCard}>
@@ -81,14 +101,36 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
           </p>
           <p className={styles.qrHelp}>Preséntalo al ingresar a tu examen.</p>
 
-          <a
-            className={styles.primaryButton}
-            href={qr.qr_code_base64}
-            download={filename}
-          >
-            <StudentQrIcon name="download" />
-            Descargar QR (SVG)
-          </a>
+          <div className={downloadStyles.downloads}>
+            <a
+              className={styles.primaryButton}
+              href={qr.qr_code_base64}
+              download={`${filename}.svg`}
+            >
+              <StudentQrIcon name="download" />
+              Descargar SVG
+            </a>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              disabled={generatingPng}
+              onClick={() => void downloadPng()}
+            >
+              <StudentQrIcon name="download" />
+              {generatingPng ? 'Generando PNG…' : 'Descargar PNG'}
+            </button>
+          </div>
+          <p className={downloadStyles.status} role="status">
+            {generatingPng ? 'Preparando la descarga PNG…' : ''}
+          </p>
+          {downloadError && (
+            <div
+              className={`${styles.error} ${downloadStyles.downloadError}`}
+              role="alert"
+            >
+              {downloadError}
+            </div>
+          )}
         </>
       )}
     </article>
