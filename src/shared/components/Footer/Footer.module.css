@@ -1,93 +1,57 @@
 .footer {
   flex-shrink: 0;
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text);
-  background: var(--color-surface);
+  width: 100%;
+  color: var(--brand-white-warm);
+  background: var(--brand-navy);
   font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
 }
 
 .content {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-6);
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
   max-width: var(--content-max-width);
   margin-inline: auto;
-  padding: var(--space-6) var(--content-gutter);
-  text-align: center;
+  padding: var(--space-3) var(--content-gutter);
+}
+
+.identity,
+.motto {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
   overflow-wrap: anywhere;
 }
 
-.identity {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
+.identity > span,
+.motto > span {
   min-width: 0;
 }
 
-.logoSurface {
+.separator {
   flex-shrink: 0;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  /* Keep the official blue/red logo legible without recoloring it in dark mode. */
-  background: var(--brand-white-warm);
+  opacity: 0.6;
 }
 
-.logo {
-  display: block;
-  width: var(--space-12);
-  height: auto;
-  aspect-ratio: 1;
-  object-fit: contain;
-}
-
-.description,
-.institution {
-  min-width: 0;
-}
-
-.footer p {
-  margin: 0;
-}
-
-.name {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-}
-
-.meaning {
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
-}
-
-.institution {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-}
-
-.motto {
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-regular);
-}
-
-@media (min-width: 768px) {
+@media (max-width: 767px) {
   .content {
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: left;
+    flex-direction: column;
+    text-align: center;
   }
 
   .identity {
-    flex-direction: row;
-    gap: var(--space-4);
+    flex-direction: column;
+    gap: var(--space-1);
   }
 
-  .institution {
-    text-align: right;
+  .identity > .separator {
+    display: none;
   }
 }

@@ -3,11 +3,13 @@ import { useNavigate, Outlet } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { Header } from '@/shared/components/Header/Header'
+import { Footer } from '@/shared/components/Footer/Footer'
 import type { AuthRole } from '@/features/auth/types/auth'
 import type {
   HeaderRole,
   HeaderUser,
 } from '@/shared/components/Header/header.types'
+import styles from './AppLayout.module.css'
 
 const HEADER_ROLE_BY_AUTH_ROLE: Record<AuthRole, HeaderRole> = {
   ADMINISTRADOR: 'admin',
@@ -55,14 +57,18 @@ export function AppLayout() {
   }
 
   return (
-    <>
+    <div className={styles.layout}>
       <Header
         user={headerUser}
         onLogout={handleLogout}
         isLoggingOut={isLoggingOut}
       />
 
-      <Outlet />
-    </>
+      <div className={styles.content}>
+        <Outlet />
+      </div>
+
+      <Footer />
+    </div>
   )
 }

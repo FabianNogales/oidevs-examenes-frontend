@@ -236,36 +236,6 @@ export function HomePage() {
           </section>
         </section>
       </main>
-
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <div className={styles.footerInstitution}>
-            <span>Universidad Mayor de San Simón</span>
-
-            <span className={styles.footerSeparator} aria-hidden="true">
-              |
-            </span>
-
-            <span>EIDA - Sistema de Control de Exámenes Masivos</span>
-          </div>
-
-          <div className={styles.footerValues}>
-            <span>Confianza</span>
-
-            <span className={styles.footerSeparator} aria-hidden="true">
-              |
-            </span>
-
-            <span>Tecnología</span>
-
-            <span className={styles.footerSeparator} aria-hidden="true">
-              |
-            </span>
-
-            <span>Educación</span>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
