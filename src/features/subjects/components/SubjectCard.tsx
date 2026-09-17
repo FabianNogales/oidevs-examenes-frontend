@@ -1,4 +1,4 @@
-import type { Subject } from '@/features/subjects/types/subject.types'
+﻿import type { Subject } from '@/features/subjects/types/subject.types'
 
 import styles from './SubjectCard.module.css'
 
@@ -36,14 +36,15 @@ export function SubjectCard({
             Crear examen
           </button>
         ) : null}
-        <button
-          type="button"
-          title="Gestionar estudiantes"
-          onClick={onAddStudents ? () => onAddStudents(subject) : undefined}
-          disabled={!onAddStudents}
-        >
-          {onAddStudents ? 'Gestionar estudiantes' : 'Agregar estudiantes'}
-        </button>
+        {onAddStudents ? (
+          <button
+            type="button"
+            title="Gestionar estudiantes"
+            onClick={() => onAddStudents(subject)}
+          >
+            Gestionar estudiantes
+          </button>
+        ) : null}
       </div>
     </article>
   )

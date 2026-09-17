@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+﻿import { useCallback, useEffect, useState } from 'react'
 
 import { getTeacherSubjects } from '@/features/subjects/api/teacherSubjectsApi'
 import { SubjectList } from '@/features/subjects/components/SubjectList'
@@ -21,7 +20,6 @@ export function TeacherSubjectsPage({
   errorMessage: providedErrorMessage,
   onRetry,
 }: TeacherSubjectsPageProps) {
-  const navigate = useNavigate()
   const [loadedSubjects, setLoadedSubjects] = useState<Subject[]>([])
   const [loadedIsLoading, setLoadedIsLoading] = useState(true)
   const [loadedErrorMessage, setLoadedErrorMessage] = useState<string | null>(null)
@@ -88,12 +86,7 @@ export function TeacherSubjectsPage({
         ) : null}
 
         {!isLoading && !errorMessage && hasSubjects ? (
-          <SubjectList
-            subjects={subjects}
-            onAddStudents={(subject) => {
-              navigate(`/teacher/students/${subject.courseOfferingId}`)
-            }}
-          />
+          <SubjectList subjects={subjects} />
         ) : null}
 
         {!isLoading && !errorMessage && !hasSubjects ? (

@@ -1,11 +1,130 @@
-.skeletonList {
-  display: grid;
-  gap: var(--space-3);
+﻿.page {
+  min-height: calc(100vh - 136px);
+  padding: var(--space-10) var(--content-gutter);
+  background:
+    linear-gradient(135deg, rgb(234 243 255 / 72%), transparent 34%),
+    linear-gradient(315deg, rgb(247 233 237 / 55%), transparent 38%),
+    var(--color-background);
 }
 
-.row {
+.content {
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 88%);
+  box-shadow: var(--shadow-md);
+}
+
+.pageHeader,
+.toolbar,
+.subjectMeta,
+.studentsHeader,
+.studentRow {
   display: grid;
-  grid-template-columns: minmax(110px, 0.6fr) minmax(220px, 1.5fr) minmax(120px, 0.6fr);
+}
+
+.pageHeader {
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.headingWrap {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+
+.backButton,
+.subjectLabel,
+.subjectName,
+.metaLabel,
+.metaValue,
+.titleLine,
+.primaryButton,
+.headerCell,
+.headerCellWide,
+.studentCell,
+.studentCellWide,
+.statusCell {
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.17),
+    rgba(148, 163, 184, 0.35),
+    rgba(148, 163, 184, 0.17)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.backButton {
+  width: 86px;
+  height: 36px;
+}
+
+.headerText {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.subjectLabel {
+  width: 88px;
+  height: 14px;
+}
+
+.subjectName {
+  width: min(220px, 60%);
+  height: 30px;
+}
+
+.subjectMeta {
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+
+.subjectMeta div {
+  display: grid;
+  gap: var(--space-2);
+  min-height: 72px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.metaLabel {
+  width: 62%;
+  height: 14px;
+}
+
+.metaValue {
+  width: 78%;
+  height: 18px;
+}
+
+.toolbar {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.titleLine {
+  width: min(200px, 40%);
+  height: 26px;
+}
+
+.primaryButton {
+  width: 166px;
+  height: 44px;
+}
+
+.studentsHeader,
+.studentRow {
+  grid-template-columns: minmax(120px, 0.7fr) minmax(220px, 1.5fr) minmax(140px, 0.7fr);
   gap: var(--space-4);
   align-items: center;
   min-height: 72px;
@@ -16,18 +135,37 @@
   box-shadow: var(--shadow-sm);
 }
 
-.line {
+.studentsHeader {
+  margin-bottom: var(--space-3);
+}
+
+.headerCell,
+.studentCell,
+.headerCellWide,
+.studentCellWide,
+.statusCell {
   display: block;
-  height: 16px;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(
-    90deg,
-    rgba(148, 163, 184, 0.15),
-    rgba(148, 163, 184, 0.32),
-    rgba(148, 163, 184, 0.15)
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
+  height: 18px;
+}
+
+.headerCell {
+  width: 78%;
+}
+
+.headerCellWide {
+  width: 70%;
+}
+
+.studentCell {
+  width: 72%;
+}
+
+.studentCellWide {
+  width: 78%;
+}
+
+.statusCell {
+  width: 58%;
 }
 
 @keyframes shimmer {
@@ -39,8 +177,34 @@
   }
 }
 
+@media (max-width: 768px) {
+  .pageHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .subjectMeta {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
-  .row {
+  .page {
+    padding-block: var(--space-6);
+  }
+
+  .content {
+    padding: var(--space-5);
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .studentsHeader {
+    display: none;
+  }
+
+  .studentRow {
     grid-template-columns: 1fr;
   }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import { env } from '@/app/config/env'
@@ -200,20 +200,23 @@ export function TeacherSubjectStudentsPage() {
           </section>
         ) : (
           <section className={styles.list} aria-label="Estudiantes inscritos">
+            <div className={styles.studentsHeader} role="rowgroup">
+              <span>SIS</span>
+              <span>NOMBRE</span>
+              <span>ESTADO</span>
+            </div>
+
             {students.map((student) => (
               <article key={student.id} className={styles.studentRow}>
-                <div className={styles.studentInfo}>
-                  <span className={styles.label}>SIS</span>
+                <div className={styles.studentCell}>
                   <strong>{student.sis}</strong>
                 </div>
 
-                <div className={styles.studentInfo}>
-                  <span className={styles.label}>Nombre</span>
+                <div className={styles.studentCell}>
                   <strong>{student.fullName}</strong>
                 </div>
 
-                <div className={styles.studentInfo}>
-                  <span className={styles.label}>Estado</span>
+                <div className={styles.studentCell}>
                   <span className={styles.status}>{student.status}</span>
                 </div>
               </article>
