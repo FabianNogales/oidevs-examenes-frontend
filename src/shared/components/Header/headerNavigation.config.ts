@@ -78,7 +78,8 @@ export const navigationByRole: Record<
       label: 'Docentes',
     },
     {
-      label: 'Estudiantes',
+      label: 'Importar estudiantes',
+      to: '/admin/students/import',
     },
     {
       label: 'Información',
