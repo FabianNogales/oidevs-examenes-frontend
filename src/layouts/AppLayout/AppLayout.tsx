@@ -1,26 +1,49 @@
 import { useMemo } from 'react'
-import { useNavigate, Outlet } from 'react-router'
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+} from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { Header } from '@/shared/components/Header/Header'
 import { Footer } from '@/shared/components/Footer/Footer'
-import type { AuthRole } from '@/features/auth/types/auth'
+import { Header } from '@/shared/components/Header/Header'
+import { Snackbar } from '@/shared/components/Snackbar'
+
+import type {
+  AuthNotice,
+  AuthRole,
+} from '@/features/auth/types/auth'
 import type {
   HeaderRole,
   HeaderUser,
 } from '@/shared/components/Header/header.types'
+
 import styles from './AppLayout.module.css'
 
-const HEADER_ROLE_BY_AUTH_ROLE: Record<AuthRole, HeaderRole> = {
+const HEADER_ROLE_BY_AUTH_ROLE: Record<
+  AuthRole,
+  HeaderRole
+> = {
   ADMINISTRADOR: 'admin',
   DOCENTE: 'teacher',
   ESTUDIANTE: 'student',
 }
 
-const ROLE_PRIORITY: AuthRole[] = ['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE']
+const ROLE_PRIORITY: AuthRole[] = [
+  'ADMINISTRADOR',
+  'DOCENTE',
+  'ESTUDIANTE',
+]
+
+interface NavigationState {
+  accessDenied?: boolean
+}
 
 export function AppLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
+
   const {
     logout,
     user,
@@ -33,7 +56,9 @@ export function AppLayout() {
       return null
     }
 
-    const primaryRole = ROLE_PRIORITY.find((role) => user.roles.includes(role))
+    const primaryRole = ROLE_PRIORITY.find((role) =>
+      user.roles.includes(role),
+    )
 
     if (!primaryRole) {
       return null
@@ -45,9 +70,32 @@ export function AppLayout() {
     }
   }, [user])
 
+  const navigationState =
+    location.state as NavigationState | null
+
+  const notice: AuthNotice | null =
+    navigationState?.accessDenied
+      ? {
+          id: 1,
+          type: 'error',
+          message:
+            'Acceso restringido. No cuenta con permisos para acceder a esta sección.',
+        }
+      : null
+
+  function dismissNotice() {
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    })
+  }
+
   async function handleLogout() {
     await logout()
-    navigate('/login', { replace: true })
+
+    navigate('/login', {
+      replace: true,
+    })
   }
 
   if (isLoading) {
@@ -67,6 +115,11 @@ export function AppLayout() {
       </div>
 
       <Footer />
+
+      <Snackbar
+        notice={notice}
+        onDismiss={dismissNotice}
+      />
     </div>
   )
 }
