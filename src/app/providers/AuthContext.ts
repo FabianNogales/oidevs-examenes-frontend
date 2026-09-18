@@ -10,10 +10,12 @@ export type AuthContextValue = {
   user: AuthenticatedUser | null
   isAuthenticated: boolean
   isLoading: boolean
+  sessionError: boolean
   isLoggingOut: boolean
   login: (credentials: LoginCredentials) => Promise<AuthenticatedUser>
   logout: () => Promise<void>
   refreshUser: () => Promise<AuthenticatedUser | null>
+  verifySessionForRoute: (routeKey: string) => Promise<void>
   clearSession: () => void
   notify: (type: AuthNoticeType, message: string) => void
   notice: AuthNotice | null
