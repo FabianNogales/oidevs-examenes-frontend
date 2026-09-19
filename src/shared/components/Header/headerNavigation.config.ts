@@ -37,6 +37,7 @@ export const navigationByRole: Record<
     },
     {
       label: 'Mis exámenes',
+      to: '/teacher/exams',
     },
     {
       label: 'Información',

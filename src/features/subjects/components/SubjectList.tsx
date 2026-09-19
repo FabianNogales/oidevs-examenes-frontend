@@ -7,12 +7,14 @@ import styles from './SubjectList.module.css'
 interface SubjectListProps {
   subjects: Subject[]
   onAddStudents?: (subject: Subject) => void
+  onCreateExam?: (subject: Subject) => void
   showCreateExam?: boolean
 }
 
 export function SubjectList({
   subjects,
   onAddStudents,
+  onCreateExam,
   showCreateExam = true,
 }: SubjectListProps) {
   return (
@@ -22,6 +24,7 @@ export function SubjectList({
           key={subject.courseOfferingId}
           subject={subject}
           onAddStudents={onAddStudents}
+          onCreateExam={onCreateExam}
           showCreateExam={showCreateExam}
         />
       ))}

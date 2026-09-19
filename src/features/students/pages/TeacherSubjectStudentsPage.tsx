@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import { env } from '@/app/config/env'
@@ -126,7 +126,7 @@ export function TeacherSubjectStudentsPage() {
   }
 
   if (isLoading) {
-    return <StudentsSkeleton />
+    return <StudentsSkeleton variant="students" />
   }
 
   if (errorMessage || !subject) {

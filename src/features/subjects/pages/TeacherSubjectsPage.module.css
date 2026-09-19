@@ -35,6 +35,18 @@
   font-size: var(--font-size-sm);
 }
 
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  background: #eff6ff;
+  color: var(--brand-navy);
+}
+
 .state {
   display: grid;
   justify-items: center;

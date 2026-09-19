@@ -5,12 +5,14 @@ import styles from './SubjectCard.module.css'
 interface SubjectCardProps {
   subject: Subject
   onAddStudents?: (subject: Subject) => void
+  onCreateExam?: (subject: Subject) => void
   showCreateExam?: boolean
 }
 
 export function SubjectCard({
   subject,
   onAddStudents,
+  onCreateExam,
   showCreateExam = true,
 }: SubjectCardProps) {
   return (
@@ -32,7 +34,11 @@ export function SubjectCard({
 
       <div className={styles.actions} aria-label={`Acciones para ${subject.name}`}>
         {showCreateExam ? (
-          <button type="button" disabled title="Disponible en HU08">
+          <button
+            type="button"
+            onClick={() => onCreateExam?.(subject)}
+            title="Crear examen"
+          >
             Crear examen
           </button>
         ) : null}

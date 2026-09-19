@@ -1,49 +1,77 @@
-﻿import styles from './StudentsSkeleton.module.css'
+import styles from './StudentsSkeleton.module.css'
 
-export function StudentsSkeleton() {
+type StudentsSkeletonProps = {
+  variant?: 'subjects' | 'students'
+}
+
+export function StudentsSkeleton({ variant = 'subjects' }: StudentsSkeletonProps) {
+  if (variant === 'students') {
+    return (
+      <main className={styles.studentPage} aria-label="Cargando estudiantes" aria-busy="true">
+        <section className={styles.studentContent}>
+          <header className={styles.studentHeader} aria-hidden="true">
+            <div className={styles.headingGroup}>
+              <div className={styles.backButton} />
+              <div className={styles.headerText}>
+                <div className={styles.subjectLabel} />
+                <div className={styles.subjectTitle} />
+              </div>
+            </div>
+
+            <div className={styles.metaGrid}>
+              <div className={styles.metaCell}>
+                <div className={styles.metaLabel} />
+                <div className={styles.metaValue} />
+              </div>
+              <div className={styles.metaCell}>
+                <div className={styles.metaLabel} />
+                <div className={styles.metaValue} />
+              </div>
+            </div>
+          </header>
+
+          <div className={styles.toolbarRow} aria-hidden="true">
+            <div className={styles.toolbarTitle} />
+            <div className={styles.primaryButton} />
+          </div>
+
+          <div className={styles.tableHeader} aria-hidden="true">
+            <span className={styles.tableCell} />
+            <span className={styles.tableCellWide} />
+            <span className={styles.tableCellSmall} />
+          </div>
+
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className={styles.studentRow} aria-hidden="true">
+              <div className={styles.tableCell} />
+              <div className={styles.tableCellWide} />
+              <div className={styles.statusCell} />
+            </div>
+          ))}
+        </section>
+      </main>
+    )
+  }
+
   return (
-    <main className={styles.page} aria-label="Cargando estudiantes" aria-busy="true">
-      <section className={styles.content}>
-        <header className={styles.pageHeader} aria-hidden="true">
-          <div className={styles.headingWrap}>
-            <div className={styles.backButton} />
-            <div className={styles.headerText}>
-              <div className={styles.subjectLabel} />
-              <div className={styles.subjectName} />
-            </div>
+    <section className={styles.grid} aria-label="Cargando materias" aria-busy="true">
+      {Array.from({ length: 3 }, (_, index) => (
+        <article key={index} className={styles.card} aria-hidden="true">
+          <div className={styles.titleBlock}>
+            <div className={styles.titleLine} />
+            <div className={styles.subtitleLine} />
           </div>
 
-          <div className={styles.subjectMeta}>
-            <div>
-              <span className={styles.metaLabel} />
-              <span className={styles.metaValue} />
-            </div>
-            <div>
-              <span className={styles.metaLabel} />
-              <span className={styles.metaValue} />
-            </div>
+          <div className={styles.metaBlock}>
+            <div className={styles.metaLabel} />
+            <div className={styles.metaValue} />
           </div>
-        </header>
 
-        <div className={styles.toolbar} aria-hidden="true">
-          <div className={styles.titleLine} />
-          <div className={styles.primaryButton} />
-        </div>
-
-        <div className={styles.studentsHeader} aria-hidden="true">
-          <span className={styles.headerCell} />
-          <span className={styles.headerCellWide} />
-          <span className={styles.headerCell} />
-        </div>
-
-        {Array.from({ length: 3 }, (_, index) => (
-          <div key={index} className={styles.studentRow} aria-hidden="true">
-            <div className={styles.studentCell} />
-            <div className={styles.studentCellWide} />
-            <div className={styles.statusCell} />
+          <div className={styles.actionRow}>
+            <div className={styles.buttonLine} />
           </div>
-        ))}
-      </section>
-    </main>
+        </article>
+      ))}
+    </section>
   )
 }

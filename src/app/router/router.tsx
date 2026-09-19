@@ -14,6 +14,7 @@ import { TeacherStudentsPage } from '@/features/students/pages/TeacherStudentsPa
 import { TeacherSubjectStudentsPage } from '@/features/students/pages/TeacherSubjectStudentsPage'
 import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
+import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
@@ -97,6 +98,10 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/students',
                 element: <TeacherStudentsPage />,
+              },
+              {
+                path: 'teacher/exams',
+                element: <TeacherExamsPage />,
               },
               {
                 path: 'teacher/students/:courseOfferingId',
