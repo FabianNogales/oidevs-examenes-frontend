@@ -22,6 +22,7 @@ import { RoleRoute } from '@/features/auth/components/RoleRoute'
 import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
 import { AdminModulePage } from '@/features/admin/pages/AdminModulePage'
 import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
+import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
 
 export const router = createBrowserRouter([
   {
@@ -59,12 +60,7 @@ export const router = createBrowserRouter([
                     },
                     {
                       path: 'teachers',
-                      element: (
-                        <AdminModulePage
-                          title="Gestión de docentes"
-                          description="Administra la información de los docentes registrados en EIDA."
-                        />
-                      ),
+                      element: <AdminTeachersPage />,
                     },
                     {
                       path: 'students/import',
