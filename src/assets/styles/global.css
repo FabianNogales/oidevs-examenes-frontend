@@ -387,23 +387,7 @@ svg {
   min-height: 100vh;
   grid-template-rows: auto 1fr auto;
   overflow-x: hidden;
-  background:
-    radial-gradient(
-      circle at -4% 17%,
-      color-mix(in srgb, var(--color-primary) 14%, transparent) 0 12rem,
-      transparent 12.1rem
-    ),
-    radial-gradient(
-      circle at -2% 78%,
-      color-mix(in srgb, var(--color-accent) 17%, transparent) 0 8rem,
-      transparent 8.1rem
-    ),
-    radial-gradient(
-      circle at 103% 36%,
-      color-mix(in srgb, var(--color-accent) 12%, transparent) 0 7rem,
-      transparent 7.1rem
-    ),
-    linear-gradient(120deg, var(--color-surface) 0%, var(--color-azure-mist) 100%);
+  background: var(--color-surface);
 }
 
 .auth-shell__body {
@@ -434,14 +418,14 @@ svg {
 .auth-info__eyebrow {
   margin: 0 0 0.25rem;
   color: var(--color-text-secondary);
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .auth-info h1 {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(2rem, 3.8vw, 2.9rem);
   font-weight: 800;
   line-height: 1.08;
   text-transform: uppercase;
@@ -454,10 +438,10 @@ svg {
 
 .auth-info__summary {
   width: min(100%, 22rem);
-  margin: 0.65rem 0 1.4rem;
-  color: var(--color-text-muted);
-  font-size: 1.02rem;
-  line-height: 1.35;
+  margin: 0.75rem 0 1.45rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
 }
 
 .auth-info__benefits {
@@ -506,8 +490,8 @@ svg {
 .auth-info__academic strong {
   display: block;
   color: var(--color-text-primary);
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
 }
 
 .auth-info__benefits small,
@@ -515,8 +499,8 @@ svg {
   display: block;
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 0.76rem;
-  line-height: 1.35;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
 }
 
 .auth-info__academic {
@@ -570,16 +554,16 @@ svg {
 .auth-card__header h2 {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: clamp(1.8rem, 3vw, 2.25rem);
+  font-size: clamp(1.875rem, 2.6vw, 2.125rem);
   font-weight: 800;
   line-height: 1.08;
 }
 
 .auth-card__header p {
-  margin: 0.35rem 0 0;
+  margin: 0.45rem 0 0;
   color: var(--color-text-secondary);
-  font-size: 0.92rem;
-  line-height: 1.4;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
 }
 
 .login-form {
@@ -599,8 +583,8 @@ svg {
 
 .auth-field label {
   color: var(--color-text-primary);
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .auth-field__control {
@@ -643,7 +627,7 @@ svg {
   padding: 0.55rem 0.6rem 0.55rem 0;
   background: transparent;
   color: var(--color-text-primary);
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   outline: none;
 }
 
@@ -672,16 +656,16 @@ svg {
 .auth-field__error {
   margin: 0;
   color: var(--color-error);
-  font-size: 0.74rem;
-  font-weight: 500;
-  line-height: 1.3;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
 }
 
 .auth-link {
   justify-self: end;
   color: var(--color-info);
-  font-size: 0.74rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -700,7 +684,8 @@ svg {
   gap: 0.7rem;
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .primary-button {
@@ -745,9 +730,9 @@ svg {
   border-radius: var(--radius-sm);
   background: var(--color-soft-blue);
   color: var(--color-info);
-  font-size: 0.68rem;
-  font-weight: 500;
-  line-height: 1.35;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
 }
 
 .auth-note svg {
@@ -760,8 +745,8 @@ svg {
 .auth-card__back-link {
   justify-self: center;
   color: var(--color-info);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .snackbar {
