@@ -70,12 +70,7 @@ export const router = createBrowserRouter([
                     },
                     {
                       path: 'students/import',
-                      element: (
-                        <AdminModulePage
-                          title="Importación de estudiantes"
-                          description="Gestiona la carga del registro de estudiantes del sistema."
-                        />
-                      ),
+                      element: <ImportStudentsPage />,
                     },
                     {
                     path: '*',

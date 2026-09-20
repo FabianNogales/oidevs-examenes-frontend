@@ -2,6 +2,7 @@ import { STUDENT_IMPORT_COLUMNS } from '@/features/students/utils/studentImportC
 import type { CsvValidationResult } from '@/features/students/types/studentImport'
 
 const CSV_EXTENSION = '.csv'
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 const TRUSTED_CSV_MIME_TYPES = new Set([
   'text/csv',
   'application/csv',
@@ -28,6 +29,13 @@ export function validateStudentImportFile(file: File): CsvValidationResult {
     return {
       isValid: false,
       message: 'El archivo CSV esta vacio.',
+    }
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      isValid: false,
+      message: 'El archivo supera el tamano maximo permitido de 10 MB.',
     }
   }
 
@@ -64,9 +72,7 @@ export async function validateStudentImportCsv(
   }
 
   const headers = parseCsvRow(headerLine).map(normalizeHeader)
-  const missingHeaders = STUDENT_IMPORT_COLUMNS.filter(
-    (column) => !headers.includes(normalizeHeader(column)),
-  )
+  const expectedHeaders = STUDENT_IMPORT_COLUMNS.map(normalizeHeader)
 
   if (headers.length <= 1 && STUDENT_IMPORT_COLUMNS.length > 1) {
     return {
@@ -75,14 +81,22 @@ export async function validateStudentImportCsv(
     }
   }
 
-  if (missingHeaders.length > 0) {
+  if (!headersMatchExpected(headers, expectedHeaders)) {
     return {
       isValid: false,
-      message: `Faltan columnas requeridas: ${missingHeaders.join(', ')}.`,
+      message: `Los encabezados deben ser exactamente: ${STUDENT_IMPORT_COLUMNS.join(', ')}.`,
     }
   }
 
   return { isValid: true }
+}
+
+function headersMatchExpected(headers: string[], expectedHeaders: string[]): boolean {
+  if (headers.length !== expectedHeaders.length) {
+    return false
+  }
+
+  return expectedHeaders.every((header, index) => headers[index] === header)
 }
 
 function normalizeHeader(value: string): string {

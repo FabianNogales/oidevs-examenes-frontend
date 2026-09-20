@@ -1,8 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import {
+  confirmStudentImport,
+  getStudentImportErrorMessage,
+  previewStudentImport,
+} from '@/features/students/api/studentImportApi'
 import { CsvDropzone } from '@/features/students/components/CsvDropzone'
 import { ImportColumnsGuide } from '@/features/students/components/ImportColumnsGuide'
+import type {
+  StudentImportConfirmation,
+  StudentImportPreview,
+  StudentImportPreviewRow,
+} from '@/features/students/types/studentImport'
 import { downloadStudentCsvTemplate } from '@/features/students/utils/csvTemplate'
 import {
   validateStudentImportCsv,
@@ -10,12 +20,21 @@ import {
 } from '@/features/students/utils/csvValidation'
 import styles from '@/features/students/pages/ImportStudentsPage.module.css'
 
+type ImportFlowState = 'idle' | 'validating' | 'preview' | 'confirming' | 'success'
+
 export function StudentImportPanel() {
   const navigate = useNavigate()
   const { notify } = useAuth()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isValidating, setIsValidating] = useState(false)
+  const [flowState, setFlowState] = useState<ImportFlowState>('idle')
   const [validationMessage, setValidationMessage] = useState<string | null>(null)
+  const [preview, setPreview] = useState<StudentImportPreview | null>(null)
+  const [confirmation, setConfirmation] = useState<StudentImportConfirmation | null>(null)
+
+  const isValidating = flowState === 'validating'
+  const isConfirming = flowState === 'confirming'
+  const isProcessing = isValidating || isConfirming
+  const canConfirm = preview !== null && preview.valid_rows > 0 && !isProcessing
 
   function handleFileSelected(file: File) {
     const validation = validateStudentImportFile(file)
@@ -29,11 +48,17 @@ export function StudentImportPanel() {
 
     setSelectedFile(file)
     setValidationMessage(null)
+    setPreview(null)
+    setConfirmation(null)
+    setFlowState('idle')
   }
 
   function clearSelection() {
     setSelectedFile(null)
     setValidationMessage(null)
+    setPreview(null)
+    setConfirmation(null)
+    setFlowState('idle')
   }
 
   function handleCancel() {
@@ -52,25 +77,56 @@ export function StudentImportPanel() {
       return
     }
 
-    setIsValidating(true)
+    setFlowState('validating')
     setValidationMessage(null)
+    setPreview(null)
+    setConfirmation(null)
 
     try {
       const validation = await validateStudentImportCsv(selectedFile)
 
       if (!validation.isValid) {
         notify('error', validation.message ?? 'El CSV no es valido.')
+        setFlowState('idle')
         return
       }
 
-      setValidationMessage(
-        'Archivo validado localmente. La previsualizacion se conectara cuando exista el backend HU05.',
-      )
-      notify('success', 'El archivo CSV cumple la estructura esperada.')
-    } catch {
-      notify('error', 'No se pudo leer el archivo CSV.')
-    } finally {
-      setIsValidating(false)
+      const nextPreview = await previewStudentImport(selectedFile)
+
+      setPreview(nextPreview)
+      setFlowState('preview')
+      setValidationMessage(buildPreviewMessage(nextPreview))
+
+      if (nextPreview.valid_rows > 0) {
+        notify('success', 'Vista previa generada correctamente.')
+        return
+      }
+
+      notify('error', 'El archivo no tiene filas validas para importar.')
+    } catch (error) {
+      notify('error', getStudentImportErrorMessage(error))
+      setFlowState('idle')
+    }
+  }
+
+  async function handleConfirm() {
+    if (!selectedFile || !canConfirm) {
+      return
+    }
+
+    setFlowState('confirming')
+
+    try {
+      const result = await confirmStudentImport(selectedFile)
+
+      setConfirmation(result)
+      setPreview(result)
+      setFlowState('success')
+      setValidationMessage('Importacion procesada por el backend.')
+      notify('success', `Importacion procesada: ${result.imported_rows} estudiantes creados.`)
+    } catch (error) {
+      notify('error', getStudentImportErrorMessage(error))
+      setFlowState('preview')
     }
   }
 
@@ -102,15 +158,22 @@ export function StudentImportPanel() {
 
       <div className={styles.infoBanner}>
         <InfoIcon />
-        <span>Podras revisar los datos antes de confirmar la importacion.</span>
+        <span>Podras revisar los datos reales del backend antes de confirmar la importacion.</span>
       </div>
+
+      {preview ? (
+        <StudentImportPreviewResult
+          preview={preview}
+          confirmation={confirmation}
+        />
+      ) : null}
 
       <div className={styles.panelActions}>
         <button
           type="button"
           className={styles.cancelButton}
           onClick={handleCancel}
-          disabled={isValidating}
+          disabled={isProcessing}
         >
           Cancelar
         </button>
@@ -118,16 +181,129 @@ export function StudentImportPanel() {
           type="button"
           className={styles.continueButton}
           onClick={() => {
+            if (flowState === 'preview') {
+              void handleConfirm()
+              return
+            }
+
             void handleValidate()
           }}
-          disabled={!selectedFile || isValidating}
+          disabled={
+            !selectedFile ||
+            isProcessing ||
+            (flowState === 'preview' && !canConfirm) ||
+            flowState === 'success'
+          }
         >
-          {isValidating ? 'Validando...' : 'Validar y continuar'}
+          {getPrimaryActionLabel(flowState)}
           <ChevronRightIcon />
         </button>
       </div>
     </section>
   )
+}
+
+function StudentImportPreviewResult({
+  preview,
+  confirmation,
+}: {
+  preview: StudentImportPreview
+  confirmation: StudentImportConfirmation | null
+}) {
+  const rowsWithErrors = preview.rows.filter((row) => !row.valid)
+
+  return (
+    <section className={styles.previewPanel} aria-live="polite">
+      <div className={styles.previewSummary}>
+        <SummaryItem label="Total" value={preview.total_rows} />
+        <SummaryItem label="Validas" value={preview.valid_rows} />
+        <SummaryItem label="Con errores" value={preview.error_rows} />
+        {confirmation ? (
+          <>
+            <SummaryItem label="Importadas" value={confirmation.imported_rows} />
+            <SummaryItem label="Fallidas" value={confirmation.failed_rows} />
+          </>
+        ) : null}
+      </div>
+
+      {preview.errors.length > 0 ? (
+        <div className={styles.importErrors} role="alert">
+          {preview.errors.map((error) => (
+            <p key={error}>{error}</p>
+          ))}
+        </div>
+      ) : null}
+
+      {rowsWithErrors.length > 0 ? (
+        <div className={styles.rowErrors}>
+          <h3>Filas con observaciones</h3>
+          <div className={styles.rowErrorList}>
+            {rowsWithErrors.map((row) => (
+              <RowErrorItem key={row.row} row={row} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function SummaryItem({ label, value }: { label: string; value: number }) {
+  return (
+    <div className={styles.summaryItem}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  )
+}
+
+function RowErrorItem({ row }: { row: StudentImportPreviewRow }) {
+  const displayValue =
+    row.data.sis_code ||
+    row.data.identity_number ||
+    row.data.email ||
+    'Sin identificador'
+
+  return (
+    <article className={styles.rowErrorItem}>
+      <div>
+        <strong>Fila {row.row}</strong>
+        <span>{displayValue}</span>
+      </div>
+      <ul>
+        {row.errors.map((error) => (
+          <li key={error}>{error}</li>
+        ))}
+      </ul>
+    </article>
+  )
+}
+
+function buildPreviewMessage(preview: StudentImportPreview): string {
+  if (preview.valid_rows === 0) {
+    return 'El backend no encontro filas validas para importar.'
+  }
+
+  if (preview.error_rows > 0) {
+    return 'El backend encontro filas validas y filas con observaciones.'
+  }
+
+  return 'El backend valido todas las filas del archivo.'
+}
+
+function getPrimaryActionLabel(flowState: ImportFlowState): string {
+  switch (flowState) {
+    case 'validating':
+      return 'Validando...'
+    case 'preview':
+      return 'Confirmar importacion'
+    case 'confirming':
+      return 'Confirmando...'
+    case 'success':
+      return 'Importacion procesada'
+    default:
+      return 'Validar y continuar'
+  }
 }
 
 function DownloadIcon() {

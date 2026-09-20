@@ -3,7 +3,7 @@ import { STUDENT_IMPORT_COLUMNS } from '@/features/students/utils/studentImportC
 const STUDENT_TEMPLATE_FILENAME = 'plantilla_estudiantes.csv'
 
 export function downloadStudentCsvTemplate(): void {
-  const csvContent = `\uFEFF${STUDENT_IMPORT_COLUMNS.join(',')}\r\n`
+  const csvContent = `${STUDENT_IMPORT_COLUMNS.join(',')}\r\n`
   const blob = new Blob([csvContent], {
     type: 'text/csv;charset=utf-8',
   })
