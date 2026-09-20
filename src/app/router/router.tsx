@@ -16,9 +16,14 @@ import { TeacherSubjectStudentsPage } from '@/features/students/pages/TeacherSub
 import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
+import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
+import { RoleRoute } from '@/features/auth/components/RoleRoute'
+import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
+import { AdminModulePage } from '@/features/admin/pages/AdminModulePage'
+import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
 
 export const router = createBrowserRouter([
   {
@@ -40,9 +45,46 @@ export const router = createBrowserRouter([
                 element: <AuthenticatedEntryRoute />,
               },
               {
-                path: 'admin',
-                element: <HomePage />,
-              },
+              element: (
+                <RoleRoute
+                  allowedRoles={['ADMINISTRADOR']}
+                />
+              ),
+              children: [
+                {
+                  path: 'admin',
+                  element: <AdminLayout />,
+                  children: [
+                    {
+                      index: true,
+                      element: <HomePage />,
+                    },
+                    {
+                      path: 'teachers',
+                      element: (
+                        <AdminModulePage
+                          title="Gestión de docentes"
+                          description="Administra la información de los docentes registrados en EIDA."
+                        />
+                      ),
+                    },
+                    {
+                      path: 'students/import',
+                      element: (
+                        <AdminModulePage
+                          title="Importación de estudiantes"
+                          description="Gestiona la carga del registro de estudiantes del sistema."
+                        />
+                      ),
+                    },
+                    {
+                    path: '*',
+                    element: <AdminNotFoundPage />,
+                    },
+                  ],
+                },
+              ],
+            },
               {
                 element: <AdminRoute />,
                 children: [
@@ -67,6 +109,10 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/students',
                 element: <TeacherStudentsPage />,
+              },
+              {
+                path: 'teacher/exams',
+                element: <TeacherExamsPage />,
               },
               {
                 path: 'teacher/students/:courseOfferingId',

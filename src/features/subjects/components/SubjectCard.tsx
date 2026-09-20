@@ -1,16 +1,18 @@
-import type { Subject } from '@/features/subjects/types/subject.types'
+﻿import type { Subject } from '@/features/subjects/types/subject.types'
 
 import styles from './SubjectCard.module.css'
 
 interface SubjectCardProps {
   subject: Subject
   onAddStudents?: (subject: Subject) => void
+  onCreateExam?: (subject: Subject) => void
   showCreateExam?: boolean
 }
 
 export function SubjectCard({
   subject,
   onAddStudents,
+  onCreateExam,
   showCreateExam = true,
 }: SubjectCardProps) {
   return (
@@ -32,18 +34,23 @@ export function SubjectCard({
 
       <div className={styles.actions} aria-label={`Acciones para ${subject.name}`}>
         {showCreateExam ? (
-          <button type="button" disabled title="Disponible en HU08">
+          <button
+            type="button"
+            onClick={() => onCreateExam?.(subject)}
+            title="Crear examen"
+          >
             Crear examen
           </button>
         ) : null}
-        <button
-          type="button"
-          title="Gestionar estudiantes"
-          onClick={onAddStudents ? () => onAddStudents(subject) : undefined}
-          disabled={!onAddStudents}
-        >
-          {onAddStudents ? 'Gestionar estudiantes' : 'Agregar estudiantes'}
-        </button>
+        {onAddStudents ? (
+          <button
+            type="button"
+            title="Gestionar estudiantes"
+            onClick={() => onAddStudents(subject)}
+          >
+            Gestionar estudiantes
+          </button>
+        ) : null}
       </div>
     </article>
   )

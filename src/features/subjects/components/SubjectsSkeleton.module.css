@@ -1,13 +1,47 @@
-.list {
+﻿.list {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
+}
+
+.header {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.titleLine,
+.subtitleLine,
+.codeLine,
+.nameLine,
+.metaLine,
+.actionButton {
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.17),
+    rgba(148, 163, 184, 0.35),
+    rgba(148, 163, 184, 0.17)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.titleLine {
+  width: min(240px, 52%);
+  height: 26px;
+}
+
+.subtitleLine {
+  width: min(520px, 75%);
+  height: 18px;
 }
 
 .row {
   display: grid;
-  grid-template-columns: 0.8fr 1.4fr 1fr 1.5fr;
+  grid-template-columns: minmax(88px, 0.8fr) minmax(150px, 1.4fr) minmax(130px, 1fr) minmax(280px, 1.5fr);
   gap: var(--space-4);
-  min-height: 64px;
+  align-items: center;
+  min-height: 72px;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -15,36 +49,67 @@
   box-shadow: var(--shadow-sm);
 }
 
-.row span {
-  align-self: center;
-  height: 12px;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-soft);
-  animation: pulse 1.4s ease-in-out infinite;
+.codeLine {
+  height: 18px;
+  width: 72%;
 }
 
-@keyframes pulse {
-  50% {
-    opacity: 0.45;
+.nameLine {
+  height: 20px;
+  width: 78%;
+}
+
+.metaLine {
+  height: 16px;
+  width: 60%;
+}
+
+.actionWrap {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionButton {
+  width: min(120px, 100%);
+  height: 38px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 
 @media (max-width: 1024px) {
   .row {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .row span:last-child {
+  .actionWrap {
     grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 640px) {
   .row {
     grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
   }
 
-  .row span:nth-child(2) {
+  .nameLine {
     grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .actionWrap {
+    grid-column: 1 / -1;
+  }
+
+  .actionButton {
+    width: 100%;
   }
 }

@@ -17,9 +17,6 @@
 }
 
 .pageHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
   margin-bottom: var(--space-6);
 }
 
@@ -33,6 +30,93 @@
   margin: var(--space-2) 0 0;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+}
+
+.subjectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.subjectCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--color-surface) 0%, rgba(255, 255, 255, 0.9) 100%);
+  box-shadow: 0 10px 22px rgb(15 23 42 / 6%);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.subjectCard:hover {
+  border-color: rgb(59 130 246 / 35%);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgb(15 23 42 / 10%);
+}
+
+.cardBody {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.subjectMeta {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.subjectMeta h2 {
+  margin: 0;
+  color: var(--brand-navy);
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  line-height: 1.4;
+  font-weight: var(--font-weight-semibold);
+  word-break: break-word;
+}
+
+.subjectMeta p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.cardDetails {
+  display: grid;
+  gap: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.metaLabel {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.metaValue {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  word-break: break-word;
+}
+
+.cardAction {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+
+.cardAction button {
+  min-height: 40px;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  background: var(--color-surface-soft);
+  font-weight: var(--font-weight-semibold);
 }
 
 .state {
@@ -68,6 +152,12 @@
   background: var(--color-primary);
 }
 
+@media (max-width: 768px) {
+  .subjectGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .page {
     padding-block: var(--space-6);
@@ -79,5 +169,17 @@
 
   .pageHeader h1 {
     font-size: var(--font-size-2xl);
+  }
+
+  .subjectGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardAction {
+    justify-content: stretch;
+  }
+
+  .cardAction button {
+    width: 100%;
   }
 }

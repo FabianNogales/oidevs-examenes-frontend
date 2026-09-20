@@ -1,11 +1,188 @@
-.skeletonList {
+.grid {
   display: grid;
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
 }
 
-.row {
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 8px 18px rgb(15 23 42 / 5%);
+}
+
+.titleBlock,
+.metaBlock,
+.actionRow,
+.studentHeader,
+.metaGrid,
+.toolbarRow,
+.tableHeader,
+.studentRow {
   display: grid;
-  grid-template-columns: minmax(110px, 0.6fr) minmax(220px, 1.5fr) minmax(120px, 0.6fr);
+}
+
+.titleBlock,
+.metaBlock,
+.actionRow,
+.metaGrid,
+.headingGroup,
+.toolbarRow,
+.studentRow,
+.tableHeader {
+  gap: var(--space-2);
+}
+
+.titleLine,
+.subtitleLine,
+.metaLabel,
+.metaValue,
+.buttonLine,
+.backButton,
+.subjectLabel,
+.subjectTitle,
+.toolbarTitle,
+.primaryButton,
+.tableCell,
+.tableCellWide,
+.tableCellSmall,
+.statusCell {
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.17),
+    rgba(148, 163, 184, 0.35),
+    rgba(148, 163, 184, 0.17)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.titleLine {
+  width: 82%;
+  height: 24px;
+}
+
+.subtitleLine {
+  width: 44%;
+  height: 14px;
+}
+
+.metaBlock {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.metaLabel {
+  width: 52%;
+  height: 12px;
+}
+
+.metaValue {
+  width: 78%;
+  height: 16px;
+}
+
+.actionRow {
+  margin-top: var(--space-4);
+  justify-content: flex-end;
+}
+
+.buttonLine {
+  width: 120px;
+  min-height: 40px;
+  border-radius: var(--radius-md);
+}
+
+.studentPage {
+  min-height: calc(100vh - 136px);
+  padding: var(--space-10) var(--content-gutter);
+}
+
+.studentContent {
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 88%);
+  box-shadow: var(--shadow-md);
+}
+
+.studentHeader {
+  grid-template-columns: 1fr auto;
+  align-items: flex-end;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.headingGroup {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+
+.backButton {
+  width: 90px;
+  height: 40px;
+}
+
+.headerText {
+  display: grid;
+  gap: var(--space-2);
+  width: min(300px, 60%);
+}
+
+.subjectLabel {
+  width: 70px;
+  height: 14px;
+}
+
+.subjectTitle {
+  width: 100%;
+  height: 30px;
+}
+
+.metaGrid {
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+
+.metaCell {
+  display: grid;
+  gap: var(--space-2);
+  min-height: 72px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.toolbarRow {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.toolbarTitle {
+  width: min(220px, 40%);
+  height: 26px;
+}
+
+.primaryButton {
+  width: 168px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+}
+
+.tableHeader,
+.studentRow {
+  grid-template-columns: minmax(120px, 0.7fr) minmax(220px, 1.5fr) minmax(140px, 0.7fr);
   gap: var(--space-4);
   align-items: center;
   min-height: 72px;
@@ -16,18 +193,32 @@
   box-shadow: var(--shadow-sm);
 }
 
-.line {
+.tableHeader {
+  margin-bottom: var(--space-3);
+}
+
+.tableCell,
+.tableCellWide,
+.tableCellSmall,
+.statusCell {
   display: block;
-  height: 16px;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(
-    90deg,
-    rgba(148, 163, 184, 0.15),
-    rgba(148, 163, 184, 0.32),
-    rgba(148, 163, 184, 0.15)
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
+  height: 18px;
+}
+
+.tableCell {
+  width: 70%;
+}
+
+.tableCellWide {
+  width: 80%;
+}
+
+.tableCellSmall {
+  width: 60%;
+}
+
+.statusCell {
+  width: 52%;
 }
 
 @keyframes shimmer {
@@ -39,8 +230,42 @@
   }
 }
 
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .studentHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
-  .row {
+  .studentPage {
+    padding-block: var(--space-6);
+  }
+
+  .studentContent {
+    padding: var(--space-5);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbarRow {
+    grid-template-columns: 1fr;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .studentRow {
     grid-template-columns: 1fr;
   }
 }

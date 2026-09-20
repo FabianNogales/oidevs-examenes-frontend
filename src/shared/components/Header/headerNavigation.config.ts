@@ -37,6 +37,7 @@ export const navigationByRole: Record<
     },
     {
       label: 'Mis exámenes',
+      to: '/teacher/exams',
     },
     {
       label: 'Información',
@@ -71,14 +72,15 @@ export const navigationByRole: Record<
   admin: [
     {
       label: 'Inicio',
-      to: '/',
+      to: '/admin',
       end: true,
     },
     {
       label: 'Docentes',
+      to: '/admin/teachers',
     },
     {
-      label: 'Importar estudiantes',
+      label: 'Estudiantes',
       to: '/admin/students/import',
     },
     {

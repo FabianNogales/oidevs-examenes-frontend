@@ -1,0 +1,229 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgb(15 23 42 / 45%);
+  padding: var(--space-4);
+}
+
+.modal {
+  width: min(100%, 620px);
+  max-height: min(88vh, 760px);
+  overflow: auto;
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--brand-navy);
+}
+
+.subjectHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.subjectHeader strong {
+  color: var(--brand-navy);
+}
+
+.term {
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-secondary);
+}
+
+.term span {
+  font-weight: var(--font-weight-semibold);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.fieldHalf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fieldFull,
+.fieldHalf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+label {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  border-color: var(--color-border);
+  background: var(--color-surface-soft);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.stateRow {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.stateLabel {
+  color: var(--color-text-secondary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: var(--color-primary-deep);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.inlineError,
+.inlineInfo {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.inlineError {
+  color: var(--color-error);
+}
+
+.inlineInfo {
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 44px;
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.primaryButton {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.secondaryButton {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-primary);
+}
+
+.closeButton {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+}
+
+.closeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .modal {
+    padding: var(--space-4);
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
