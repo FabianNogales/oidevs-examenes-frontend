@@ -1,29 +1,46 @@
-import { useRef } from 'react'
+import { useMemo } from 'react'
 import { StudentExamCard } from '@/features/students/components/StudentExamCard'
 import { StudentQrCard } from '@/features/students/components/StudentQrCard'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
 import { useStudentExams } from '@/features/students/hooks/useStudentExams'
 import { useStudentQr } from '@/features/students/hooks/useStudentQr'
+import type { StudentQrStatus } from '@/features/students/types/studentQr'
 import styles from './StudentQrPage.module.css'
+
+const statusOrder: Record<StudentQrStatus, number> = {
+  AVAILABLE: 0,
+  UPCOMING: 1,
+  FINISHED: 2,
+}
 
 export function StudentQrPage() {
   const exams = useStudentExams()
   const qr = useStudentQr()
-  const qrSectionRef = useRef<HTMLElement>(null)
-  const selectedExam = exams.data.find((exam) => exam.exam_id === qr.examId)
+  const orderedExams = useMemo(
+    () =>
+      [...exams.data].sort((first, second) => {
+        const groupOrder =
+          statusOrder[first.qr_status] - statusOrder[second.qr_status]
+        if (groupOrder !== 0) return groupOrder
+
+        // The contract uses fixed-width YYYY-MM-DD HH:mm:ss local timestamps.
+        const dateOrder =
+          first.scheduled_at < second.scheduled_at
+            ? -1
+            : first.scheduled_at > second.scheduled_at
+              ? 1
+              : 0
+        return first.qr_status === 'FINISHED' ? -dateOrder : dateOrder
+      }),
+    [exams.data],
+  )
 
   function selectExam(examId: number) {
     const exam = exams.data.find((item) => item.exam_id === examId)
 
-    if (!exam?.is_qr_available) return
+    if (exam?.qr_status !== 'AVAILABLE' || qr.examId === examId) return
 
     qr.select(exam)
-    qrSectionRef.current?.scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 'instant'
-        : 'smooth',
-      block: 'start',
-    })
   }
 
   function refreshExams() {
@@ -102,83 +119,71 @@ export function StudentQrPage() {
           </p>
         ) : (
           <ul className={styles.examList}>
-            {exams.data.map((exam) => (
+            {orderedExams.map((exam) => (
               <li key={exam.exam_id}>
                 <StudentExamCard
                   exam={exam}
                   selected={qr.examId === exam.exam_id}
                   onSelect={selectExam}
-                />
+                >
+                  {qr.examId === exam.exam_id && (
+                    <section
+                      id={`exam-${exam.exam_id}-qr`}
+                      className={styles.expandedQr}
+                      aria-labelledby={`exam-${exam.exam_id}-qr-heading`}
+                      aria-busy={qr.loading}
+                    >
+                      <div className={styles.expandedQrHeading}>
+                        <h3 id={`exam-${exam.exam_id}-qr-heading`}>
+                          <StudentQrIcon name="qr" />
+                          Código QR del examen
+                        </h3>
+                        <button
+                          type="button"
+                          className={styles.secondaryButton}
+                          onClick={qr.clear}
+                        >
+                          Cerrar QR
+                        </button>
+                      </div>
+                      {qr.loading ? (
+                        <p className={styles.state} role="status">
+                          <span className={styles.stateIcon}>
+                            <StudentQrIcon name="clock" />
+                          </span>
+                          Cargando QR de {exam.subject}: {exam.exam_title}…
+                        </p>
+                      ) : qr.error ? (
+                        <div className={styles.error} role="alert">
+                          <StudentQrIcon name="info" />
+                          <p>{qr.error.message}</p>
+                          <button
+                            type="button"
+                            className={styles.secondaryButton}
+                            onClick={
+                              qr.error.status === 403 || qr.error.status === 404
+                                ? refreshExams
+                                : qr.retry
+                            }
+                          >
+                            {qr.error.status === 403 || qr.error.status === 404
+                              ? 'Actualizar exámenes'
+                              : 'Reintentar'}
+                          </button>
+                        </div>
+                      ) : qr.data ? (
+                        <StudentQrCard
+                          key={qr.data.exam_id}
+                          qr={qr.data}
+                          onRetry={qr.retry}
+                        />
+                      ) : null}
+                    </section>
+                  )}
+                </StudentExamCard>
               </li>
             ))}
           </ul>
-        )}
-      </section>
-
-      <section
-        ref={qrSectionRef}
-        id="student-exam-qr"
-        aria-labelledby="student-qr-heading"
-        aria-busy={qr.loading}
-        aria-live="polite"
-        className={`${styles.qrSection} ${qr.examId !== null ? styles.qrSectionActive : ''}`}
-      >
-        <div className={styles.sectionHeading}>
-          <h2 id="student-qr-heading">
-            <StudentQrIcon name="qr" />
-            Tu QR de ingreso
-          </h2>
-          {qr.examId !== null && (
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={qr.clear}
-            >
-              Cerrar QR
-            </button>
-          )}
-        </div>
-        {qr.loading ? (
-          <p className={styles.state} role="status">
-            <span className={styles.stateIcon}>
-              <StudentQrIcon name="clock" />
-            </span>
-            Cargando QR de {selectedExam?.subject}: {selectedExam?.exam_title}…
-          </p>
-        ) : qr.error ? (
-          <div className={styles.error} role="alert">
-            <StudentQrIcon name="info" />
-            <p>
-              {selectedExam?.subject} · {selectedExam?.exam_title}
-            </p>
-            <p>{qr.error.message}</p>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={
-                qr.error.status === 403 || qr.error.status === 404
-                  ? refreshExams
-                  : qr.retry
-              }
-            >
-              {qr.error.status === 403 || qr.error.status === 404
-                ? 'Actualizar exámenes'
-                : 'Reintentar'}
-            </button>
-          </div>
-        ) : qr.data ? (
-          <StudentQrCard
-            key={qr.data.exam_id}
-            qr={qr.data}
-            onRetry={qr.retry}
-          />
-        ) : (
-          <p className={styles.state}>
-            <span className={styles.stateIcon}>
-              <StudentQrIcon name="qr" />
-            </span>
-            Selecciona «Ver QR» en un examen disponible.
-          </p>
         )}
       </section>
     </div>

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ExamSchedule } from '@/features/students/components/ExamSchedule'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
 import type { StudentExam } from '@/features/students/types/studentQr'
@@ -7,13 +8,37 @@ interface StudentExamCardProps {
   exam: StudentExam
   selected: boolean
   onSelect: (examId: number) => void
+  children?: ReactNode
 }
 
 export function StudentExamCard({
   exam,
   selected,
   onSelect,
+  children,
 }: StudentExamCardProps) {
+  const qrAvailable = exam.qr_status === 'AVAILABLE'
+  const status = {
+    UPCOMING: {
+      style: styles.unavailable,
+      icon: 'clock' as const,
+      title: 'QR no disponible',
+      detail: 'Disponible 24 h antes del examen',
+    },
+    AVAILABLE: {
+      style: styles.available,
+      icon: 'check' as const,
+      title: 'QR disponible',
+      detail: 'Válido hasta el final del examen',
+    },
+    FINISHED: {
+      style: styles.finished,
+      icon: 'clock' as const,
+      title: 'Examen finalizado',
+      detail: 'QR no disponible para ingreso',
+    },
+  }[exam.qr_status]
+
   return (
     <article
       className={`${styles.examCard} ${selected ? styles.selected : ''}`}
@@ -38,22 +63,24 @@ export function StudentExamCard({
         </span>
       </p>
       <div className={styles.examActions}>
-        <p
+        <div
           id={`exam-${exam.exam_id}-availability`}
-          className={`${styles.statusBadge} ${exam.is_qr_available ? styles.available : styles.unavailable}`}
+          className={`${styles.statusBadge} ${status.style}`}
         >
-          <StudentQrIcon name={exam.is_qr_available ? 'check' : 'clock'} />
-          {exam.is_qr_available
-            ? 'QR disponible'
-            : 'Disponible 24 h antes del examen'}
-        </p>
+          <StudentQrIcon name={status.icon} />
+          <span>
+            <strong>{status.title}</strong>
+            <span className={styles.statusDetail}>{status.detail}</span>
+          </span>
+        </div>
         <button
           type="button"
           className={styles.primaryButton}
-          disabled={!exam.is_qr_available}
+          disabled={!qrAvailable}
           aria-describedby={`exam-${exam.exam_id}-availability`}
           aria-pressed={selected}
-          aria-controls="student-exam-qr"
+          aria-controls={selected ? `exam-${exam.exam_id}-qr` : undefined}
+          aria-expanded={selected}
           aria-label={`Ver QR: ${exam.subject}, ${exam.exam_title}`}
           onClick={() => onSelect(exam.exam_id)}
         >
@@ -61,6 +88,7 @@ export function StudentExamCard({
           Ver QR
         </button>
       </div>
+      {children}
     </article>
   )
 }

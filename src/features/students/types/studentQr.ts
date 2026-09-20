@@ -1,8 +1,11 @@
+export type StudentQrStatus = 'UPCOMING' | 'AVAILABLE' | 'FINISHED'
+
 export interface StudentExam {
   exam_id: number
   subject: string
   exam_title: string
   scheduled_at: string
+  qr_status: StudentQrStatus
   is_qr_available: boolean
   qr_code_base64: string | null
   token: string | null
