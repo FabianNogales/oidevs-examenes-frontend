@@ -8,31 +8,6 @@
   color: var(--color-text);
   line-height: var(--line-height-relaxed);
   overflow-wrap: anywhere;
-  background: var(--color-background);
-}
-
-.page::before,
-.page::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-}
-.page::before {
-  top: 0;
-  right: 0;
-  width: min(48%, 30rem);
-  height: 22rem;
-  border-radius: 0 0 0 100%;
-  background: var(--color-surface-soft);
-}
-.page::after {
-  bottom: 0;
-  left: 0;
-  width: min(35%, 23rem);
-  height: 27rem;
-  border-radius: 0 100% 0 0;
-  background: var(--color-surface-accent);
 }
 
 .header {
@@ -145,13 +120,17 @@
 }
 .examCard {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 14rem;
+  grid-template-columns:
+    minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 13rem 7.5rem;
   align-items: center;
-  gap: var(--space-6);
-  padding: var(--space-5);
+  gap: var(--space-4);
+  padding: var(--space-4);
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-normal);
+}
+.examCard > * {
+  min-width: 0;
 }
 .expandedQr {
   grid-column: 1 / -1;
@@ -177,23 +156,9 @@
 .expandedQrHeading h3 svg {
   color: var(--color-primary);
 }
-.examDetails {
-  min-width: 0;
-}
-.examActions {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-  min-width: 0;
-}
-.cardHeading {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+.examAction {
   width: 100%;
-  margin-bottom: var(--space-2);
+  white-space: nowrap;
 }
 .subject {
   margin: 0;
@@ -201,8 +166,10 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
-.cardHeading .subject {
-  flex: 1 1 9rem;
+.examSubject .subject {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
 }
 .examCard h3,
 .qrCard h3 {
@@ -213,22 +180,22 @@
 }
 .selected {
   border-color: var(--color-accent);
-  background: linear-gradient(
-    100deg,
-    var(--color-accent-soft),
-    var(--color-surface) 65%
-  );
   box-shadow:
     inset var(--space-1) 0 0 var(--color-accent),
     var(--shadow-sm);
 }
-.selected h3 {
+.examDetails h3 {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+.selected > .examDetails h3 {
   color: var(--color-accent);
 }
 .selectionBadge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  margin-top: var(--space-2);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   color: var(--color-accent);
@@ -244,16 +211,17 @@
 .schedule {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
 }
 .schedule > svg {
   color: var(--color-primary);
   flex-shrink: 0;
-  width: var(--space-5);
-  height: var(--space-5);
+  width: var(--space-4);
+  height: var(--space-4);
 }
 .fieldLabel {
   display: block;
@@ -261,14 +229,22 @@
   font-weight: var(--font-weight-medium);
 }
 .statusBadge {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: var(--space-4) minmax(0, 1fr);
+  align-content: center;
   align-items: flex-start;
+  width: 100%;
+  min-height: calc(var(--space-16) + var(--space-2));
   gap: var(--space-2);
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+.statusBadge strong {
+  font-weight: var(--font-weight-semibold);
 }
 .statusBadge strong,
 .statusDetail {
@@ -394,11 +370,9 @@
   margin: 0 0 var(--space-4);
 }
 .qrCard {
-  max-width: 36rem;
+  width: min(100%, 30rem);
   margin-inline: auto;
-  padding: var(--space-8);
-  border-top: var(--space-1) solid var(--color-accent);
-  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
   text-align: center;
 }
 .qrCardHeading {
@@ -406,7 +380,7 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-3);
 }
 .qrMark {
   display: grid;
@@ -423,15 +397,15 @@
 }
 .qrSchedule {
   justify-content: center;
-  margin-block: var(--space-3) var(--space-6);
+  margin-block: var(--space-3) var(--space-4);
 }
 .qrFrame {
-  width: min(100%, 22rem);
-  margin: 0 auto var(--space-6);
-  padding: var(--space-4);
+  width: min(100%, 18rem);
+  margin: 0 auto var(--space-4);
+  padding: var(--space-3);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
-  background: #fff;
+  background: var(--color-surface);
 }
 .qrImage {
   display: block;
@@ -439,7 +413,14 @@
   height: auto;
   aspect-ratio: 1;
   object-fit: contain;
-  background: #fff;
+  background: var(--color-surface);
+}
+.qrValidity {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-success);
+  background: var(--color-success-soft);
 }
 .validity {
   display: flex;
@@ -447,20 +428,19 @@
   justify-content: center;
   gap: var(--space-2);
   margin: 0;
-  color: var(--color-text);
+  color: var(--color-success);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
 }
 .validity svg {
   flex-shrink: 0;
-  color: var(--color-primary);
+  color: var(--color-success);
   width: var(--space-5);
   height: var(--space-5);
 }
 .qrHelp {
-  margin: var(--space-2) 0 var(--space-6);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-xs);
 }
 .qrCard .primaryButton {
   width: 100%;
@@ -468,17 +448,10 @@
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .examCard {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-4);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .examActions {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .examActions .primaryButton {
-    min-width: 10rem;
+  .statusBadge {
+    grid-column: span 2;
   }
 }
 
@@ -506,9 +479,6 @@
   .qrCard {
     padding: var(--space-4);
   }
-  .qrCard {
-    padding-block: var(--space-6);
-  }
   .examsPanel {
     padding-inline: var(--space-3);
   }
@@ -522,9 +492,6 @@
   }
   .notice {
     padding: var(--space-4);
-  }
-  .qrFrame {
-    padding: var(--space-3);
   }
   .expandedQrHeading .secondaryButton {
     width: 100%;

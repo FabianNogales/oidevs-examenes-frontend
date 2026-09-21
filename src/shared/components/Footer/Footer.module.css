@@ -1,8 +1,8 @@
 .footer {
   flex-shrink: 0;
   width: 100%;
-  color: var(--brand-white-warm);
-  background: var(--brand-navy);
+  color: var(--color-on-primary);
+  background: var(--color-footer);
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
@@ -44,7 +44,7 @@
   padding: calc(var(--space-1) / 2);
   border-radius: var(--radius-sm);
   object-fit: contain;
-  background: var(--brand-white-warm);
+  background: var(--color-surface);
 }
 
 .separator {

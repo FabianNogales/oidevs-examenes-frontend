@@ -3,7 +3,6 @@
   padding: var(--space-10) var(--content-gutter) var(--space-12);
   color: var(--color-text);
   font-family: var(--font-family);
-  background: var(--color-background);
   overflow-wrap: anywhere;
 }
 

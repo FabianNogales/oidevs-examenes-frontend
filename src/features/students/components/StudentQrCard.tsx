@@ -94,11 +94,13 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
             />
           </div>
 
-          <p className={styles.validity}>
-            <StudentQrIcon name="check" />
-            Válido únicamente para este examen
-          </p>
-          <p className={styles.qrHelp}>Disponible hasta el final del examen</p>
+          <div className={styles.qrValidity}>
+            <p className={styles.validity}>
+              <StudentQrIcon name="check" />
+              Válido únicamente para este examen
+            </p>
+            <p className={styles.qrHelp}>Disponible hasta el final del examen</p>
+          </div>
 
           <div className={downloadStyles.downloads}>
             <a

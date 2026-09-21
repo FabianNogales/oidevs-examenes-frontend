@@ -8,10 +8,10 @@
   font-family: var(--font-family);
   color: var(--color-text);
 
-  background: #ffffff;
+  background: var(--color-surface-soft);
 
-  border-bottom: 1px solid #dce5f2;
-  box-shadow: 0 1px 4px rgb(12 45 108 / 6%);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ---
@@ -47,7 +47,7 @@
   display: flex;
   flex-direction: column;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   font-size: 0.78rem;
   font-weight: 600;
@@ -348,7 +348,7 @@
   border: 0;
   border-radius: 6px;
 
-  color: #0b4fa3;
+  color: var(--color-primary);
 
   background: transparent;
 
@@ -363,13 +363,13 @@
 }
 
 .loginButton:hover {
-  color: #cd123a;
+  color: var(--color-accent);
 
-  background: #f7f9fc;
+  background: var(--color-surface);
 }
 
 .loginButton:focus-visible {
-  outline: 2px solid #214e8f;
+  outline: var(--focus-width) solid var(--color-focus);
   outline-offset: 3px;
 }
 
@@ -382,9 +382,9 @@
 
   width: 100%;
 
-  border-top: 1px solid #e4ebf5;
+  border-top: 1px solid var(--color-border);
 
-  background: #ffffff;
+  background: var(--color-soft-blue);
 }
 
 .navigation[data-open='true'] {
@@ -425,7 +425,7 @@
   border-bottom: 3px solid transparent;
   border-radius: 0;
 
-  color: #53637a;
+  color: var(--color-primary);
 
   font-size: 0.82rem;
   font-weight: 600;
@@ -439,24 +439,24 @@
 }
 
 a.navigationLink:hover {
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
-  background: #f8fafc;
+  background: var(--color-surface-soft);
 }
 
 a.navigationLink:active {
-  color: #214e8f;
+  color: var(--color-primary);
 }
 
 /* Opción activa */
 
 .navigationLink.active,
 .navigationLink.active:hover {
-  color: #9e173a;
+  color: var(--color-accent);
 
   background: transparent;
 
-  border-bottom-color: #9e173a;
+  border-bottom-color: var(--color-accent);
 }
 
 /* ---
@@ -589,7 +589,7 @@ a.navigationLink:active {
   .navigationLink.active {
     border-bottom-color: transparent;
 
-    background: #fff4f6;
+    background: var(--color-accent-soft);
   }
 }
 
@@ -684,7 +684,7 @@ a.navigationLink:active {
     width: 1px;
     height: 24px;
 
-    background: #dce5f2;
+    background: var(--color-border);
 
     transform: translateY(-50%);
   }
@@ -730,19 +730,19 @@ a.navigationLink:active {
 
   flex-shrink: 0;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   text-decoration: none;
 }
 
 .logoLink:hover {
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   text-decoration: none;
 }
 
 .logoLink:visited {
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   text-decoration: none;
 }
@@ -764,7 +764,7 @@ a.navigationLink:active {
 
   flex-shrink: 0;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   font-size: 0.76rem;
   font-weight: 600;

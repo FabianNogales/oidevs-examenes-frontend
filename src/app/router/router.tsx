@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import { AuthenticatedEntryRoute } from '@/features/auth/components/AuthenticatedEntryRoute'
-import { AdminRoute } from '@/features/auth/components/AdminRoute'
 import { AuthEventHandler } from '@/features/auth/components/AuthEventHandler'
 import { FirstAccessRoute } from '@/features/auth/components/FirstAccessRoute'
 import { GuestRoute } from '@/features/auth/components/GuestRoute'
@@ -20,9 +19,7 @@ import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
-import { RoleRoute } from '@/features/auth/components/RoleRoute'
 import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
-import { AdminModulePage } from '@/features/admin/pages/AdminModulePage'
 import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
 import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
 
@@ -51,42 +48,24 @@ export const router = createBrowserRouter([
             element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
             children: [
               {
-              element: (
-                <RoleRoute
-                  allowedRoles={['ADMINISTRADOR']}
-                />
-              ),
-              children: [
-                {
-                  path: 'admin',
-                  element: <AdminLayout />,
-                  children: [
-                    {
-                      index: true,
-                      element: <HomePage />,
-                    },
-                    {
-                      path: 'teachers',
-                      element: <AdminTeachersPage />,
-                    },
-                    {
-                      path: 'students/import',
-                      element: <ImportStudentsPage />,
-                    },
-                    {
-                    path: '*',
-                    element: <AdminNotFoundPage />,
-                    },
-                  ],
-                },
-              ],
-            },
-              {
-                element: <AdminRoute />,
+                path: 'admin',
+                element: <AdminLayout />,
                 children: [
                   {
-                    path: 'admin/students/import',
+                    index: true,
+                    element: <HomePage />,
+                  },
+                  {
+                    path: 'teachers',
+                    element: <AdminTeachersPage />,
+                  },
+                  {
+                    path: 'students/import',
                     element: <ImportStudentsPage />,
+                  },
+                  {
+                    path: '*',
+                    element: <AdminNotFoundPage />,
                   },
                 ],
               },
