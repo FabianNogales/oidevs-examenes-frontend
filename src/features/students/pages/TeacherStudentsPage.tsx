@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
+import { StudentsSkeleton } from '@/features/students/components/StudentsSkeleton'
 import { getTeacherSubjects } from '@/features/students/api/teacherStudentsApi'
-import { SubjectsSkeleton } from '@/features/subjects/components/SubjectsSkeleton'
-import { SubjectList } from '@/features/subjects/components/SubjectList'
 import type { Subject } from '@/features/subjects/types/subject.types'
 
 import styles from './TeacherStudentsPage.module.css'
@@ -46,11 +45,11 @@ export function TeacherStudentsPage() {
         <header className={styles.pageHeader}>
           <div>
             <h1>Estudiantes</h1>
-            <p>Selecciona una materia para gestionar los estudiantes inscritos.</p>
+            <p>Selecciona una materia para consultar la lista de estudiantes inscritos.</p>
           </div>
         </header>
 
-        {isLoading ? <SubjectsSkeleton /> : null}
+        {isLoading ? <StudentsSkeleton variant="subjects" /> : null}
 
         {!isLoading && errorMessage ? (
           <section className={styles.state} role="alert">
@@ -63,13 +62,32 @@ export function TeacherStudentsPage() {
         ) : null}
 
         {!isLoading && !errorMessage && subjects.length > 0 ? (
-          <SubjectList
-            subjects={subjects}
-            showCreateExam={false}
-            onAddStudents={(subject) => {
-              navigate(`/teacher/students/${subject.courseOfferingId}`)
-            }}
-          />
+          <section className={styles.subjectGrid} aria-label="Materias del docente">
+            {subjects.map((subject) => (
+              <article key={subject.courseOfferingId} className={styles.subjectCard}>
+                <div className={styles.cardBody}>
+                  <div className={styles.subjectMeta}>
+                    <h2>{subject.name}</h2>
+                    <p>{subject.code ?? 'No disponible'}</p>
+                  </div>
+
+                  <div className={styles.cardDetails}>
+                    <span className={styles.metaLabel}>Gestión académica</span>
+                    <span className={styles.metaValue}>{subject.academicManagement}</span>
+                  </div>
+                </div>
+
+                <div className={styles.cardAction}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/teacher/students/${subject.courseOfferingId}`)}
+                  >
+                    Ver lista
+                  </button>
+                </div>
+              </article>
+            ))}
+          </section>
         ) : null}
 
         {!isLoading && !errorMessage && subjects.length === 0 ? (
