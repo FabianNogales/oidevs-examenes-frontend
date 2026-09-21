@@ -1,17 +1,21 @@
 .overlay {
   position: fixed;
-  inset: 0;
+  inset: var(--app-header-height, 136px) 0 0;
   z-index: 30;
-  display: grid;
-  place-items: center;
-  background: rgb(15 23 42 / 45%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
   padding: var(--space-4);
+  background: rgb(15 23 42 / 45%);
 }
 
 .modal {
   width: min(100%, 620px);
-  max-height: min(88vh, 760px);
-  overflow: auto;
+  max-height: calc(100dvh - var(--app-header-height, 136px) - 2rem);
+  margin-block: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--space-5);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -199,6 +203,7 @@ textarea:disabled {
   place-items: center;
   width: 36px;
   height: 36px;
+  flex: 0 0 36px;
   padding: 0;
   border: 1px solid var(--color-border-strong);
   border-radius: 50%;
@@ -214,7 +219,13 @@ textarea:disabled {
 }
 
 @media (max-width: 640px) {
+  .overlay {
+    padding: var(--space-3);
+  }
+
   .modal {
+    width: 100%;
+    max-height: calc(100dvh - var(--app-header-height, 136px) - 1.5rem);
     padding: var(--space-4);
   }
 
