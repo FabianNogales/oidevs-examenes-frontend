@@ -55,7 +55,6 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
         <span className={styles.qrMark}>
           <StudentQrIcon name="qr" />
         </span>
-        <p className={styles.cardEyebrow}>QR del examen seleccionado</p>
       </div>
       <p className={styles.subject}>{qr.subject}</p>
       <h3>{qr.exam_title}</h3>
@@ -99,7 +98,7 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
             <StudentQrIcon name="check" />
             Válido únicamente para este examen
           </p>
-          <p className={styles.qrHelp}>Preséntalo al ingresar a tu examen.</p>
+          <p className={styles.qrHelp}>Disponible hasta el final del examen</p>
 
           <div className={downloadStyles.downloads}>
             <a

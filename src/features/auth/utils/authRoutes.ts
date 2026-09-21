@@ -19,5 +19,5 @@ const ROLE_PRIORITY: AuthRole[] = ['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE']
 export function getHomeRouteForUser(user: AuthenticatedUser): string {
   const primaryRole = ROLE_PRIORITY.find((role) => user.roles.includes(role))
 
-  return primaryRole ? ROLE_HOME_ROUTES[primaryRole] : AUTH_ROUTES.fallbackHome
+  return primaryRole ? ROLE_HOME_ROUTES[primaryRole] : '/'
 }

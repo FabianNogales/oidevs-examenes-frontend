@@ -45,6 +45,11 @@ export const router = createBrowserRouter([
                 path: AUTH_ROUTES.fallbackHome,
                 element: <AuthenticatedEntryRoute />,
               },
+            ],
+          },
+          {
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
+            children: [
               {
               element: (
                 <RoleRoute
@@ -85,13 +90,14 @@ export const router = createBrowserRouter([
                   },
                 ],
               },
+            ],
+          },
+          {
+            element: <ProtectedRoute allowedRoles={['DOCENTE']} />,
+            children: [
               {
                 path: 'docente',
                 element: <HomePage />,
-              },
-              {
-                path: 'estudiante',
-                element: <Navigate to="/" replace />,
               },
               {
                 path: 'teacher/subjects',
@@ -108,6 +114,15 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/students/:courseOfferingId',
                 element: <TeacherSubjectStudentsPage />,
+              },
+            ],
+          },
+          {
+            element: <ProtectedRoute allowedRoles={['ESTUDIANTE']} />,
+            children: [
+              {
+                path: 'estudiante',
+                element: <Navigate to="/" replace />,
               },
               {
                 path: 'students',

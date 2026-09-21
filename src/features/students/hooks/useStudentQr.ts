@@ -61,7 +61,7 @@ export function useStudentQr() {
   function select(exam: StudentExam) {
     clear()
 
-    if (!exam.is_qr_available) return
+    if (exam.qr_status !== 'AVAILABLE') return
 
     if (exam.qr_code_base64 && exam.token) {
       setState({
