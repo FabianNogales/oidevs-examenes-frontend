@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import { AuthenticatedEntryRoute } from '@/features/auth/components/AuthenticatedEntryRoute'
+import { AdminRoute } from '@/features/auth/components/AdminRoute'
 import { AuthEventHandler } from '@/features/auth/components/AuthEventHandler'
 import { FirstAccessRoute } from '@/features/auth/components/FirstAccessRoute'
 import { GuestRoute } from '@/features/auth/components/GuestRoute'
@@ -13,6 +14,7 @@ import { HomePage } from '@/features/home/pages/HomePage'
 import { TeacherStudentsPage } from '@/features/students/pages/TeacherStudentsPage'
 import { TeacherSubjectStudentsPage } from '@/features/students/pages/TeacherSubjectStudentsPage'
 import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
+import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
 import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
@@ -64,12 +66,7 @@ export const router = createBrowserRouter([
                     },
                     {
                       path: 'students/import',
-                      element: (
-                        <AdminModulePage
-                          title="Importación de estudiantes"
-                          description="Gestiona la carga del registro de estudiantes del sistema."
-                        />
-                      ),
+                      element: <ImportStudentsPage />,
                     },
                     {
                     path: '*',
@@ -79,6 +76,15 @@ export const router = createBrowserRouter([
                 },
               ],
             },
+              {
+                element: <AdminRoute />,
+                children: [
+                  {
+                    path: 'admin/students/import',
+                    element: <ImportStudentsPage />,
+                  },
+                ],
+              },
               {
                 path: 'docente',
                 element: <HomePage />,
