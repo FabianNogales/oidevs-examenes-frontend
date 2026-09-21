@@ -1,3 +1,4 @@
+import eidaLogo from '@/assets/images/eida-logo.svg'
 import {
   BoltIcon,
   ShieldIcon,
@@ -29,7 +30,19 @@ export function AuthInfoPanel() {
   return (
     <section className="auth-info" aria-labelledby="auth-info-title">
       <div className="auth-info__content">
-        <p className="auth-info__eyebrow">EIDA - UMSS</p>
+        <div className="auth-info__brand">
+          <img
+            className="auth-info__brand-logo"
+            src={eidaLogo}
+            alt="Logo EIDA"
+            width={48}
+            height={48}
+          />
+          <div className="auth-info__brand-text">
+            <strong>EIDA</strong>
+            <span>Escáner de Identidad Digital Ágil</span>
+          </div>
+        </div>
         <h1 id="auth-info-title">
           Sistema de Control
           <span>de Exámenes Masivos</span>

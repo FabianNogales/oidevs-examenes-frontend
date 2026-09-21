@@ -103,7 +103,7 @@
   --color-error-soft: #fee2e2;
   --color-info: var(--color-primary-hover);
   --color-info-soft: #dbeafe;
-  --color-footer: #003b8d;
+  --color-footer: var(--brand-navy);
   --color-footer-deep: #002f72;
   --color-soft-red: #ffe1e7;
   --color-soft-blue: #dff1ff;
@@ -382,28 +382,11 @@ svg {
 }
 
 .auth-shell {
-  position: relative;
   display: grid;
   min-height: 100vh;
   grid-template-rows: auto 1fr auto;
   overflow-x: hidden;
-  background:
-    radial-gradient(
-      circle at -4% 17%,
-      color-mix(in srgb, var(--color-primary) 14%, transparent) 0 12rem,
-      transparent 12.1rem
-    ),
-    radial-gradient(
-      circle at -2% 78%,
-      color-mix(in srgb, var(--color-accent) 17%, transparent) 0 8rem,
-      transparent 8.1rem
-    ),
-    radial-gradient(
-      circle at 103% 36%,
-      color-mix(in srgb, var(--color-accent) 12%, transparent) 0 7rem,
-      transparent 7.1rem
-    ),
-    linear-gradient(120deg, var(--color-surface) 0%, var(--color-azure-mist) 100%);
+  background: var(--color-surface-soft);
 }
 
 .auth-shell__body {
@@ -431,11 +414,41 @@ svg {
   padding-top: 1rem;
 }
 
-.auth-info__eyebrow {
-  margin: 0 0 0.25rem;
+.auth-info__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.auth-info__brand-logo {
+  display: block;
+  flex-shrink: 0;
+  width: var(--space-12);
+  height: var(--space-12);
+  object-fit: contain;
+}
+
+.auth-info__brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.auth-info__brand-text strong {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.auth-info__brand-text span {
   color: var(--color-text-secondary);
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
 }
 
 .auth-info h1 {
@@ -534,23 +547,7 @@ svg {
 }
 
 .auth-info__campus {
-  position: absolute;
-  right: -3rem;
-  bottom: -0.7rem;
-  width: min(72%, 31rem);
-  height: 13rem;
-  opacity: 0.18;
-  background:
-    linear-gradient(135deg, transparent 0 2.6rem, var(--color-primary) 2.65rem 3rem, transparent 3.05rem),
-    linear-gradient(to top, var(--color-primary-deep) 0 1.6rem, transparent 1.6rem),
-    repeating-linear-gradient(
-      to right,
-      transparent 0 2.15rem,
-      var(--color-primary) 2.15rem 2.45rem,
-      transparent 2.45rem 4.3rem
-    ),
-    linear-gradient(to top, var(--color-primary) 0 9rem, transparent 9rem);
-  clip-path: polygon(0 65%, 22% 50%, 42% 42%, 55% 22%, 79% 54%, 100% 42%, 100% 100%, 0 100%);
+  display: none;
 }
 
 .auth-card {
@@ -558,9 +555,8 @@ svg {
   padding: clamp(1.35rem, 3vw, 2rem);
   border: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  background: var(--color-surface);
   box-shadow: 0 1.4rem 3.2rem rgb(var(--shadow-card-rgb) / 12%);
-  backdrop-filter: blur(10px);
 }
 
 .auth-card__header {

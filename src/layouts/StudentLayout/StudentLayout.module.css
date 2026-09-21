@@ -5,7 +5,7 @@
   min-height: 0;
   min-width: 0;
   color: var(--color-text);
-  background: var(--color-background);
+  background: var(--color-surface-soft);
 }
 
 .main {

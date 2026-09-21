@@ -6,8 +6,8 @@
   min-width: 0;
   min-height: 0;
 
-  color: #0c2d6c;
-  background: #ffffff;
+  color: var(--color-text-primary);
+  background: var(--color-surface-soft);
 }
 
 .page main {
@@ -29,7 +29,7 @@
 
   overflow: hidden;
 
-  background: #f5f9fe;
+  background: var(--color-surface-soft);
 }
 
 /* ==================================================
@@ -54,35 +54,7 @@
     28px
     max(40px, calc((100vw - 1400px) / 2 + 18px));
 
-  background:
-    radial-gradient(
-      circle at 10% 12%,
-      rgb(205 18 58 / 5%) 0,
-      transparent 25%
-    ),
-    linear-gradient(
-      90deg,
-      #f5f9fe 0%,
-      #f5f9fe 82%,
-      #edf5fd 100%
-    );
-}
-
-.heroContent::after {
-  content: '';
-
-  position: absolute;
-
-  right: -90px;
-  bottom: -130px;
-
-  width: 280px;
-  height: 280px;
-
-  border: 32px solid rgb(12 45 108 / 3%);
-  border-radius: 50%;
-
-  pointer-events: none;
+  background: var(--color-surface-soft);
 }
 
 /* ==================================================
@@ -118,7 +90,7 @@
 }
 
 .eidaBrand strong {
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   font-size: 0.86rem;
   font-weight: 700;
@@ -129,7 +101,7 @@
 .eidaBrand span {
   margin-top: 2px;
 
-  color: #52627a;
+  color: var(--color-text-secondary);
 
   font-size: 0.64rem;
   font-weight: 500;
@@ -159,11 +131,11 @@
 }
 
 .heroTitle span {
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 }
 
 .heroTitle strong {
-  color: #cd123a;
+  color: var(--color-accent);
 
   font-weight: 700;
 }
@@ -176,7 +148,7 @@
 
   margin: 14px 0 0;
 
-  color: #52627a;
+  color: var(--color-text-secondary);
 
   font-size: 0.86rem;
   line-height: 1.5;
@@ -193,7 +165,7 @@
 
   border-radius: 999px;
 
-  background: #cd123a;
+  background: var(--color-accent);
 }
 
 .heroSlogan {
@@ -202,7 +174,7 @@
 
   margin: 7px 0 0;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   font-size: 0.61rem;
   font-weight: 600;
@@ -222,7 +194,7 @@
 
   overflow: hidden;
 
-  background: #eaf3ff;
+  background: var(--color-surface-soft);
 }
 
 .heroVisual::before {
@@ -237,13 +209,8 @@
 
   width: 95px;
 
-  background: linear-gradient(
-    90deg,
-    #f5f9fe 0%,
-    rgb(245 249 254 / 72%) 25%,
-    rgb(245 249 254 / 20%) 70%,
-    transparent 100%
-  );
+  background: var(--color-surface-soft);
+  opacity: 0.82;
 
   pointer-events: none;
 }
@@ -290,12 +257,12 @@
 
   padding: 16px;
 
-  border: 1px solid #cbdcf1;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 
-  background: #ffffff;
+  background: var(--color-surface);
 
-  box-shadow: 0 2px 8px rgb(12 45 108 / 4%);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ==================================================
@@ -313,7 +280,7 @@
 
   padding-bottom: 14px;
 
-  border-bottom: 1px solid #dce5f2;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .sectionTitle {
@@ -326,7 +293,7 @@
 .sectionTitle h2 {
   margin: 0;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   font-size: 1.15rem;
   font-weight: 600;
@@ -342,7 +309,7 @@
 
   flex-shrink: 0;
 
-  color: #214e8f;
+  color: var(--color-primary);
 }
 
 .sectionIcon svg {
@@ -353,7 +320,7 @@
 .viewAll {
   flex-shrink: 0;
 
-  color: #214e8f;
+  color: var(--color-primary);
 
   font-size: 0.72rem;
   font-weight: 500;
@@ -379,7 +346,7 @@
 
   margin: 16px 0 10px;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   text-align: center;
 }
@@ -390,7 +357,7 @@
 }
 
 .monthArrow {
-  color: #214e8f;
+  color: var(--color-primary);
 
   font-size: 1.65rem;
   font-weight: 400;
@@ -428,7 +395,7 @@
 
   padding-bottom: 3px;
 
-  color: #52627a;
+  color: var(--color-text-secondary);
 
   font-size: 0.67rem;
   font-weight: 600;
@@ -446,20 +413,20 @@
 
   border-radius: 50%;
 
-  color: #172554;
+  color: var(--color-text);
 
   font-size: 0.73rem;
   font-weight: 500;
 }
 
 .outsideMonth {
-  color: #a6b2c3;
+  color: var(--color-text-muted);
 }
 
 .highlightedDay {
-  color: #ffffff;
+  color: var(--color-on-primary);
 
-  background: #214e8f;
+  background: var(--color-primary);
 
   font-weight: 600;
 }
@@ -496,7 +463,7 @@
 
   padding: 8px 0;
 
-  border-bottom: 1px solid #e4ebf5;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .newsItem:last-child {
@@ -520,9 +487,9 @@
 
   border-radius: 7px;
 
-  color: #ffffff;
+  color: var(--color-on-primary);
 
-  background: #214e8f;
+  background: var(--color-primary);
 }
 
 .newsDay {
@@ -548,19 +515,7 @@
 }
 
 .newsImageDecoration {
-  position: absolute;
-
-  top: -20px;
-  right: -24px;
-
-  width: 72px;
-  height: 72px;
-
-  border-radius: 50%;
-
-  background: #cd123a;
-
-  opacity: 0.9;
+  display: none;
 }
 
 .newsContent {
@@ -575,7 +530,7 @@
 .newsContent h3 {
   margin: 0;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   font-size: 0.82rem;
   font-weight: 600;
@@ -588,7 +543,7 @@
 
   margin-top: 4px;
 
-  color: #8795a8;
+  color: var(--color-text-muted);
 
   font-size: 0.62rem;
 }
@@ -596,7 +551,7 @@
 .newsContent p {
   margin: 5px 0 0;
 
-  color: #52627a;
+  color: var(--color-text-secondary);
 
   font-size: 0.68rem;
 
@@ -660,11 +615,6 @@
     padding: 32px 20px;
   }
 
-  .heroContent::after {
-    right: -140px;
-    bottom: -160px;
-  }
-
   .heroTitle {
     font-size: clamp(1.8rem, 8vw, 2.4rem);
   }
@@ -686,12 +636,7 @@
     width: auto;
     height: 60px;
 
-    background: linear-gradient(
-      180deg,
-      #f5f9fe 0%,
-      rgb(245 249 254 / 70%) 30%,
-      transparent 100%
-    );
+    background: var(--color-surface-soft);
   }
 
   .informationGrid {
