@@ -1,3 +1,7 @@
+/* ==================================================
+   HEADER GENERAL
+   ================================================== */
+
 .header {
   position: sticky;
   top: 0;
@@ -8,35 +12,65 @@
   font-family: var(--font-family);
   color: var(--color-text);
 
-  background: var(--color-surface-soft);
+  /* Barra superior clara */
+  background: #eaf3ff;
 
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid #cfdbe8;
+
+  box-shadow: 0 1px 3px rgb(12 45 108 / 4%);
 }
 
-/* ---
+/* ==================================================
    BARRA SUPERIOR
    Logo UMSS + institución + cuenta
-   --- */
+   ================================================== */
 
 .topBar {
   display: flex;
   align-items: center;
 
-  gap: var(--space-3);
+  gap: 12px;
 
-  width: min(100% - 48px, var(--content-max-width));
-  min-height: 68px;
+  width: 100%;
+  min-height: 58px;
 
-  margin-inline: auto;
-  padding: 5px 0;
+  margin: 0;
+
+  padding: 5px 18px;
+
+  /* Primer tono del mockup */
+  background: #eaf3ff;
+}
+
+/* ==================================================
+   LOGO + NOMBRE UMSS
+   ================================================== */
+
+.logoLink {
+  display: flex;
+  align-items: center;
+
+  flex-shrink: 0;
+
+  gap: 10px;
+
+  color: #0c2d6c;
+
+  text-decoration: none;
+}
+
+.logoLink:hover,
+.logoLink:visited {
+  color: #0c2d6c;
+
+  text-decoration: none;
 }
 
 .logo {
   display: block;
 
   width: auto;
-  height: 50px;
+  height: 42px;
 
   flex-shrink: 0;
 
@@ -47,34 +81,37 @@
   display: flex;
   flex-direction: column;
 
-  color: var(--color-text-primary);
+  flex-shrink: 0;
 
-  font-size: 0.78rem;
+  color: #0c2d6c;
+
+  font-size: 0.76rem;
   font-weight: 600;
-  line-height: 1.15;
+
+  line-height: 1.12;
 
   white-space: nowrap;
 }
 
-/* ---
+/* ==================================================
    CUENTA
-   --- */
+   ================================================== */
 
 .account {
   display: flex;
   align-items: center;
   justify-content: flex-end;
 
-  gap: var(--space-3);
+  gap: 12px;
 
   min-width: 0;
 
   margin-left: auto;
 }
 
-/* ---
+/* ==================================================
    NOTIFICACIONES
-   --- */
+   ================================================== */
 
 .notifications {
   display: flex;
@@ -83,9 +120,9 @@
   flex-shrink: 0;
 }
 
-/* ---
+/* ==================================================
    BOTONES DE ICONO
-   --- */
+   ================================================== */
 
 .iconButton {
   display: inline-flex;
@@ -104,13 +141,13 @@
 
   color: var(--color-primary);
 
-  background: var(--color-surface);
+  background: #ffffff;
 }
 
 .iconButton:hover:not(:disabled) {
   color: var(--color-primary-hover);
 
-  background: var(--color-surface-soft);
+  background: #f8fbff;
 
   border-color: var(--color-primary);
 }
@@ -130,17 +167,17 @@
   height: var(--space-6);
 }
 
-/* ---
+/* ==================================================
    MENÚ MÓVIL
-   --- */
+   ================================================== */
 
 .menuButton {
   flex-shrink: 0;
 }
 
-/* ---
+/* ==================================================
    MENÚ DE USUARIO
-   --- */
+   ================================================== */
 
 .accountMenu {
   position: relative;
@@ -166,20 +203,20 @@
 }
 
 .userButton:hover {
-  background: var(--color-surface-soft);
+  background: rgb(255 255 255 / 60%);
 
   border-color: var(--color-border);
 }
 
 .userButton[aria-expanded='true'] {
-  background: var(--color-surface-soft);
+  background: #ffffff;
 
   border-color: var(--color-primary);
 }
 
-/* ---
+/* ==================================================
    AVATAR
-   --- */
+   ================================================== */
 
 .avatar {
   display: grid;
@@ -194,7 +231,7 @@
 
   color: var(--color-primary);
 
-  background: var(--color-surface-soft);
+  background: #ffffff;
 }
 
 .avatar svg {
@@ -202,9 +239,9 @@
   height: var(--space-6);
 }
 
-/* ---
+/* ==================================================
    DATOS DEL USUARIO
-   --- */
+   ================================================== */
 
 .userDetails {
   display: flex;
@@ -245,12 +282,13 @@
   color: var(--color-text-secondary);
 }
 
-/* ---
+/* ==================================================
    DROPDOWN
-   --- */
+   ================================================== */
 
 .accountDropdown {
   position: absolute;
+
   top: calc(100% + var(--space-2));
   right: 0;
   z-index: 60;
@@ -304,9 +342,9 @@
   font-size: var(--font-size-xs);
 }
 
-/* ---
+/* ==================================================
    CERRAR SESIÓN
-   --- */
+   ================================================== */
 
 .logoutButton {
   width: 100%;
@@ -326,36 +364,36 @@
   background: var(--color-error-soft);
 }
 
-/* ---
+/* ==================================================
    INICIAR SESIÓN
-   --- */
+   ================================================== */
 
 .loginButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  /*
-    Esto es lo que empuja el login
-    completamente hacia la derecha.
-  */
+  flex-shrink: 0;
+
   margin-left: auto;
 
-  min-height: 38px;
+  min-height: 34px;
 
-  padding: 6px 10px;
+  padding: 5px 8px;
 
   border: 0;
-  border-radius: 6px;
+  border-radius: 4px;
 
-  color: var(--color-primary);
+  color: #164b91;
 
   background: transparent;
 
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
 
   text-decoration: none;
+
+  white-space: nowrap;
 
   transition:
     color 160ms ease,
@@ -363,28 +401,32 @@
 }
 
 .loginButton:hover {
-  color: var(--color-accent);
+  color: #cd123a;
 
-  background: var(--color-surface);
+  background: rgb(255 255 255 / 55%);
 }
 
 .loginButton:focus-visible {
   outline: var(--focus-width) solid var(--color-focus);
+
   outline-offset: 3px;
 }
 
-/* ---
+/* ==================================================
    NAVEGACIÓN
-   --- */
+   Segundo tono del header
+   ================================================== */
 
 .navigation {
   display: none;
 
   width: 100%;
 
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid #cfdeeb;
+  border-bottom: 1px solid #c7d9e8;
 
-  background: var(--color-soft-blue);
+  /* Celeste ligeramente más fuerte */
+  background: #dff1ff;
 }
 
 .navigation[data-open='true'] {
@@ -397,19 +439,21 @@
 
   gap: 0;
 
-  width: min(100% - 48px, var(--content-max-width));
+  width: 100%;
 
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
 
   list-style: none;
 }
 
-/* Cada opción del menú */
-
 .navigationList > li {
   position: relative;
 }
+
+/* ==================================================
+   LINKS DE NAVEGACIÓN
+   ================================================== */
 
 .navigationLink {
   display: flex;
@@ -418,16 +462,16 @@
 
   gap: 8px;
 
-  min-height: 58px;
+  min-height: 46px;
 
-  padding: 8px 26px;
+  padding: 7px 26px;
 
   border-bottom: 3px solid transparent;
   border-radius: 0;
 
-  color: var(--color-primary);
+  color: #164b91;
 
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
 
   text-decoration: none;
@@ -439,30 +483,31 @@
 }
 
 a.navigationLink:hover {
-  color: var(--color-text-primary);
+  color: #0c2d6c;
 
-  background: var(--color-surface-soft);
+  background: rgb(255 255 255 / 28%);
 }
 
 a.navigationLink:active {
-  color: var(--color-primary);
+  color: #164b91;
 }
 
-/* Opción activa */
+/* ==================================================
+   OPCIÓN ACTIVA
+   ================================================== */
 
 .navigationLink.active,
 .navigationLink.active:hover {
-  color: var(--color-accent);
+  color: #cd123a;
 
   background: transparent;
 
-  border-bottom-color: var(--color-accent);
+  border-bottom-color: #cd123a;
 }
 
-/* ---
+/* ==================================================
    ICONOS DE NAVEGACIÓN
-   Se usarán cuando agreguemos los iconos al TSX
-   --- */
+   ================================================== */
 
 .navigationIcon {
   display: inline-flex;
@@ -480,9 +525,9 @@ a.navigationLink:active {
   height: 100%;
 }
 
-/* ---
+/* ==================================================
    OPCIONES NO DISPONIBLES
-   --- */
+   ================================================== */
 
 .unavailable {
   color: var(--color-text-muted);
@@ -498,9 +543,9 @@ a.navigationLink:active {
   background: transparent;
 }
 
-/* ---
+/* ==================================================
    ACCESIBILIDAD
-   --- */
+   ================================================== */
 
 .srOnly {
   position: absolute;
@@ -520,34 +565,33 @@ a.navigationLink:active {
   border: 0;
 }
 
-/* ---
+/* ==================================================
    MÓVIL
-   --- */
+   ================================================== */
 
 @media (max-width: 639px) {
   .topBar {
-    gap: var(--space-2);
+    gap: 8px;
 
-    width: min(100% - 24px, var(--content-max-width));
-    min-height: 62px;
+    min-height: 60px;
 
-    padding-block: 5px;
+    padding: 5px 12px;
   }
 
   .logo {
-    height: 45px;
+    height: 41px;
   }
 
   .logoLink {
-    gap: 8px;
+    gap: 7px;
   }
 
   .institutionName {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
   }
 
   .account {
-    gap: var(--space-2);
+    gap: 7px;
   }
 
   .avatar {
@@ -555,23 +599,25 @@ a.navigationLink:active {
   }
 
   .userDetails {
-    max-width: 14ch;
+    max-width: 13ch;
   }
 
   .loginButton {
-    margin-left: auto;
+    min-height: 32px;
 
-    min-height: 34px;
+    padding-inline: 5px;
 
-    padding-inline: 7px;
+    font-size: 0.67rem;
+  }
 
-    font-size: 0.7rem;
+  .navigation {
+    background: #dff1ff;
   }
 
   .navigationList {
     width: 100%;
 
-    padding: 8px 12px;
+    padding: 7px 10px;
   }
 
   .navigationLink {
@@ -589,32 +635,30 @@ a.navigationLink:active {
   .navigationLink.active {
     border-bottom-color: transparent;
 
-    background: var(--color-accent-soft);
+    background: rgb(205 18 58 / 8%);
   }
 }
 
-/* ---
+/* ==================================================
    MÓVILES PEQUEÑOS
-   --- */
+   ================================================== */
 
 @media (max-width: 479px) {
   .topBar {
-    width: min(
-      100% - 18px,
-      var(--content-max-width)
-    );
+    padding-inline: 9px;
   }
 
   .logo {
-    height: 40px;
+    height: 37px;
   }
 
   .logoLink {
-    gap: 6px;
+    gap: 5px;
   }
 
   .institutionName {
-    font-size: 0.6rem;
+    font-size: 0.57rem;
+
     line-height: 1.1;
   }
 
@@ -627,13 +671,13 @@ a.navigationLink:active {
   }
 
   .userDetails {
-    max-width: 10ch;
+    max-width: 9ch;
   }
 
   .loginButton {
-    padding-inline: 5px;
+    padding-inline: 4px;
 
-    font-size: 0.64rem;
+    font-size: 0.61rem;
   }
 
   .accountDropdown {
@@ -646,9 +690,9 @@ a.navigationLink:active {
   }
 }
 
-/* ---
+/* ==================================================
    TABLET Y DESKTOP
-   --- */
+   ================================================== */
 
 @media (min-width: 768px) {
   .menuButton {
@@ -664,27 +708,29 @@ a.navigationLink:active {
     flex-wrap: wrap;
     justify-content: center;
 
+    width: 100%;
+
     gap: 0;
 
     padding: 0;
   }
 
-  /*
-    Separadores verticales como el mockup:
-    Inicio | Información | Servicios
+  /* Separadores:
+     Inicio | Información | Servicios
   */
 
   .navigationList > li:not(:last-child)::after {
     content: '';
 
     position: absolute;
+
     top: 50%;
     right: 0;
 
     width: 1px;
-    height: 24px;
+    height: 21px;
 
-    background: var(--color-border);
+    background: #bfcfdd;
 
     transform: translateY(-50%);
   }
@@ -694,82 +740,55 @@ a.navigationLink:active {
   }
 }
 
-/* ---
+/* ==================================================
    DESKTOP
-   --- */
+   ================================================== */
 
 @media (min-width: 1024px) {
+  /* Logo UMSS al extremo izquierdo
+     Login al extremo derecho
+  */
+
   .topBar {
-    width: min(
-      100% - 48px,
-      var(--content-max-width)
-    );
+    width: 100%;
+    max-width: none;
+
+    min-height: 58px;
+
+    margin: 0;
+
+    padding:
+      5px
+      18px;
+  }
+
+  .logo {
+    height: 42px;
+  }
+
+  .loginButton {
+    margin-left: auto;
   }
 
   .navigationList {
-    width: min(
-      100% - 48px,
-      var(--content-max-width)
-    );
+    width: 100%;
+
+    margin-inline: auto;
   }
 
   .navigationLink {
+    min-height: 44px;
+
     padding-inline: 28px;
   }
 }
-/* ---
-   AJUSTE LOGO + NOMBRE UMSS
-   --- */
 
-.logoLink {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
+/* ==================================================
+   PANTALLAS GRANDES
+   ================================================== */
 
-  gap: 10px;
-
-  flex-shrink: 0;
-
-  color: var(--color-text-primary);
-
-  text-decoration: none;
-}
-
-.logoLink:hover {
-  color: var(--color-text-primary);
-
-  text-decoration: none;
-}
-
-.logoLink:visited {
-  color: var(--color-text-primary);
-
-  text-decoration: none;
-}
-
-.logo {
-  display: block;
-
-  width: auto;
-  height: 50px;
-
-  flex-shrink: 0;
-
-  object-fit: contain;
-}
-
-.institutionName {
-  display: flex;
-  flex-direction: column;
-
-  flex-shrink: 0;
-
-  color: var(--color-text-primary);
-
-  font-size: 0.76rem;
-  font-weight: 600;
-  line-height: 1.12;
-
-  text-decoration: none;
-  white-space: nowrap;
+@media (min-width: 1600px) {
+  .topBar {
+    padding-inline: 20px;
+  }
 }

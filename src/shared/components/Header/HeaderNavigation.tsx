@@ -15,8 +15,8 @@ export function HeaderNavigation({
           {item.to ? (
             <NavLink
               to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
+                end={item.to === '/' ? true : item.end}
+                className={({ isActive }) =>
                 `${styles.navigationLink} ${
                   isActive ? styles.active : ''
                 }`

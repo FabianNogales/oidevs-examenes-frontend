@@ -72,7 +72,7 @@ export const navigationByRole: Record<
   admin: [
     {
       label: 'Inicio',
-      to: '/admin',
+      to: '/',
       end: true,
     },
     {

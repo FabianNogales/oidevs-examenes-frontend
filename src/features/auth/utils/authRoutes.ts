@@ -9,7 +9,7 @@ export const AUTH_ROUTES = Object.freeze({
 })
 
 const ROLE_HOME_ROUTES: Record<AuthRole, string> = {
-  ADMINISTRADOR: '/admin',
+  ADMINISTRADOR: '/',
   DOCENTE: '/docente',
   ESTUDIANTE: '/',
 }
