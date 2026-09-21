@@ -13,13 +13,13 @@ import { HomePage } from '@/features/home/pages/HomePage'
 import { TeacherStudentsPage } from '@/features/students/pages/TeacherStudentsPage'
 import { TeacherSubjectStudentsPage } from '@/features/students/pages/TeacherSubjectStudentsPage'
 import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
+import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
 import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
 import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
-import { AdminModulePage } from '@/features/admin/pages/AdminModulePage'
 import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
 import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
 
@@ -61,12 +61,7 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'students/import',
-                    element: (
-                      <AdminModulePage
-                        title="Importación de estudiantes"
-                        description="Gestiona la carga del registro de estudiantes del sistema."
-                      />
-                    ),
+                    element: <ImportStudentsPage />,
                   },
                   {
                     path: '*',
