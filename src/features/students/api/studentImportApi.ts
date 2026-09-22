@@ -41,21 +41,15 @@ export async function confirmStudentImport(
 
 export function getStudentImportErrorMessage(error: unknown): string {
   if (!axios.isAxiosError(error)) {
-    return 'No se pudo procesar la importacion de estudiantes.'
-  }
-
-  const message = error.response?.data?.message
-
-  if (typeof message === 'string' && message.trim()) {
-    return message
+    return 'No pudimos procesar este archivo. Verifica que utilice la plantilla CSV indicada e intentalo nuevamente.'
   }
 
   switch (error.response?.status) {
     case 403:
       return 'No tienes autorizacion para importar estudiantes.'
     case 422:
-      return 'El archivo enviado no cumple las reglas requeridas.'
+      return 'No pudimos procesar este archivo. Verifica que utilice la plantilla CSV indicada e intentalo nuevamente.'
     default:
-      return 'No se pudo procesar la importacion de estudiantes.'
+      return 'No pudimos procesar este archivo. Verifica que utilice la plantilla CSV indicada e intentalo nuevamente.'
   }
 }
