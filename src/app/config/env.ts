@@ -6,8 +6,10 @@ const useStudentsMock =
 const useAuthMock =
   import.meta.env.DEV &&
   import.meta.env.VITE_USE_AUTH_MOCK === 'true'
+const defaultInstitutionalEmailDomains = 'umss.edu.bo'
 const institutionalEmailDomains: string =
-  import.meta.env.VITE_EIDA_INSTITUTIONAL_EMAIL_DOMAINS ?? 'umss.edu.bo'
+  import.meta.env.VITE_EIDA_INSTITUTIONAL_EMAIL_DOMAINS ??
+  defaultInstitutionalEmailDomains
 
 if (!backendUrl) {
   throw new Error('VITE_BACKEND_URL is required')
@@ -22,8 +24,23 @@ export const env = Object.freeze({
   apiUrl,
   useStudentsMock,
   useAuthMock,
-  institutionalEmailDomains: institutionalEmailDomains
-    .split(',')
-    .map((domain) => domain.trim().toLowerCase())
-    .filter(Boolean),
+  institutionalEmailDomains:
+    normalizeInstitutionalEmailDomains(institutionalEmailDomains),
 })
+
+function normalizeInstitutionalEmailDomains(domains: string): string[] {
+  const normalizedDomains = domains
+    .split(',')
+    .map((domain) =>
+      domain
+        .trim()
+        .toLowerCase()
+        .replace(/^@+/, '')
+        .replace(/^['"]|['"]$/g, ''),
+    )
+    .filter(Boolean)
+
+  return normalizedDomains.length > 0
+    ? normalizedDomains
+    : [defaultInstitutionalEmailDomains]
+}
