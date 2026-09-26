@@ -13,10 +13,11 @@ export function AuthEventHandler() {
     () =>
       subscribeToAuthSessionEvents(({ reason }) => {
         const hadSession = isAuthenticated
+        const shouldNotify = reason === 'SESSION_REPLACED' || hadSession
 
         clearSession()
 
-        if (!hadSession) {
+        if (!shouldNotify) {
           return
         }
 

@@ -84,6 +84,9 @@ export function LoginForm() {
 
     if (Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors)
+      if (validationErrors.identifier && values.identifier.trim().includes('@')) {
+        notify('error', validationErrors.identifier)
+      }
       return
     }
 
