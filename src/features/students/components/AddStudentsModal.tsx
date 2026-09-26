@@ -27,6 +27,7 @@ export function AddStudentsModal({
   const [csvError, setCsvError] = useState<string | null>(null)
   const [csvSummary, setCsvSummary] = useState<CsvImportSummary | null>(null)
   const firstInputRef = useRef<HTMLInputElement>(null)
+  const processingRef = useRef(false)
 
   const resetModalState = () => {
     setActiveTab('manual')
@@ -44,7 +45,7 @@ export function AddStudentsModal({
   )
 
   const closeWithoutProcessing = useCallback(() => {
-    if (!isProcessing) {
+    if (!isProcessing && !processingRef.current) {
       onClose()
       resetModalState()
     }
@@ -68,12 +69,14 @@ export function AddStudentsModal({
   }, [isOpen, isProcessing, closeWithoutProcessing])
 
   async function submitManual() {
+    if (processingRef.current) return
     const normalizedSis = sis.trim()
     if (!normalizedSis) {
       setManualError('Debes ingresar un SIS válido.')
       return
     }
 
+    processingRef.current = true
     setIsProcessing(true)
     setManualError(null)
 
@@ -87,16 +90,19 @@ export function AddStudentsModal({
           : 'No se pudo agregar el estudiante.',
       )
     } finally {
+      processingRef.current = false
       setIsProcessing(false)
     }
   }
 
   async function submitCsv() {
+    if (processingRef.current) return
     if (!file) {
       setCsvError('Selecciona un archivo CSV para continuar.')
       return
     }
 
+    processingRef.current = true
     setIsProcessing(true)
     setCsvError(null)
     setCsvSummary(null)
@@ -112,6 +118,7 @@ export function AddStudentsModal({
           : 'No se pudo procesar el archivo CSV.',
       )
     } finally {
+      processingRef.current = false
       setIsProcessing(false)
     }
   }
@@ -157,6 +164,13 @@ export function AddStudentsModal({
             Importar CSV
           </button>
         </div>
+
+        {isProcessing ? (
+          <div className={styles.processing} role="status" aria-live="polite">
+            <span className={styles.spinner} aria-hidden="true" />
+            Procesando…
+          </div>
+        ) : null}
 
         {activeTab === 'manual' ? (
           <div className={styles.tabPanel}>
@@ -210,6 +224,9 @@ export function AddStudentsModal({
               <div className={styles.summaryBox} role="status">
                 <h3>Resumen de importación</h3>
                 <ul>
+                  {csvSummary.totalProcessed != null ? (
+                    <li>Total procesados: <strong>{csvSummary.totalProcessed}</strong></li>
+                  ) : null}
                   <li>Inscritos: <strong>{csvSummary.validCount}</strong></li>
                   <li>
                     Duplicados:{' '}

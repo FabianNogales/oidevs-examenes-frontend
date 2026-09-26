@@ -1,40 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
-
-import { getTeacherUpcomingExams } from '@/features/exams/api/teacherExamsApi'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
-import type { TeacherUpcomingExamDto } from '@/features/exams/types/exam.types'
+import { useTeacherUpcomingExams } from '@/features/exams/hooks/useTeacherUpcomingExams'
 
 import styles from './TeacherExamsPage.module.css'
 
 export function TeacherExamsPage() {
-  const [exams, setExams] = useState<TeacherUpcomingExamDto[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const loadExams = useCallback(async () => {
-    setIsLoading(true)
-    setErrorMessage(null)
-
-    try {
-      const nextExams = await getTeacherUpcomingExams()
-      setExams(nextExams)
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : 'No se pudieron cargar los exámenes.',
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void loadExams()
-    }, 0)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [loadExams])
+  const { exams, isLoading, errorMessage, loadExams } = useTeacherUpcomingExams()
 
   return (
     <main className={styles.page}>
@@ -48,12 +19,12 @@ export function TeacherExamsPage() {
 
         {isLoading ? <ExamsSkeleton /> : null}
 
-        {!isLoading && errorMessage ? (
+        {errorMessage ? (
           <section className={styles.state} role="alert">
             <h2>No se pudieron cargar los exámenes</h2>
             <p>{errorMessage}</p>
-            <button type="button" onClick={() => void loadExams()}>
-              Reintentar
+            <button type="button" onClick={() => void loadExams()} disabled={isLoading}>
+              {isLoading ? 'Reintentando…' : 'Reintentar'}
             </button>
           </section>
         ) : null}
@@ -69,8 +40,8 @@ export function TeacherExamsPage() {
                 examDate={exam.exam_date}
                 examTime={exam.start_time}
                 durationMinutes={exam.duration_minutes}
-                roomName={exam.room.name}
-                roomCode={exam.room.code}
+                roomName={exam.room?.name}
+                roomCode={exam.room?.code}
                 evaluationType={exam.evaluation_type}
                 status={exam.status}
               />

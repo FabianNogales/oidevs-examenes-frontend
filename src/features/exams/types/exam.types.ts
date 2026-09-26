@@ -44,15 +44,15 @@ export type TeacherUpcomingExamDto = {
   subject_code: string
   subject_name: string
   exam_date: string
-  start_time: string
-  duration_minutes: number
-  room: {
+  start_time?: string | null
+  duration_minutes?: number | null
+  room?: {
     id: number
     code: string
     name: string
-  }
-  evaluation_type: EvaluationType
-  status: string
+  } | null
+  evaluation_type?: EvaluationType | null
+  status?: string | null
 }
 
 export type TeacherUpcomingExamsResponse = {

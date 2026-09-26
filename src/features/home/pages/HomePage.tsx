@@ -1,5 +1,7 @@
 import eidaLogo from '@/assets/images/eida-logo.svg'
 import homeHeroImage from '@/assets/images/logo-home.png'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { TeacherUpcomingExamsSection } from '@/features/home/components/TeacherUpcomingExamsSection'
 
 import styles from './HomePage.module.css'
 
@@ -74,6 +76,9 @@ const news = [
 ]
 
 export function HomePage() {
+  const { user } = useAuth()
+  const isTeacher = user?.roles.includes('DOCENTE') ?? false
+
   return (
     <div className={styles.page}>
       <main>
@@ -235,6 +240,8 @@ export function HomePage() {
             </div>
           </section>
         </section>
+
+        {isTeacher ? <TeacherUpcomingExamsSection key={user?.id} /> : null}
       </main>
     </div>
   )

@@ -154,7 +154,18 @@ textarea:disabled {
 }
 
 .inlineError {
+  margin-top: 0;
   color: var(--color-error);
+}
+
+.modal [aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.fieldFull,
+.fieldHalf {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .inlineInfo {
@@ -185,6 +196,21 @@ textarea:disabled {
 
 .primaryButton:hover:not(:disabled) {
   background: var(--color-primary-hover);
+}
+
+.primaryButton:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+.secondaryButton:hover:not(:disabled),
+.closeButton:hover:not(:disabled) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary);
+}
+
+.secondaryButton:active:not(:disabled),
+.closeButton:active:not(:disabled) {
+  background: var(--color-border);
 }
 
 .primaryButton:disabled {

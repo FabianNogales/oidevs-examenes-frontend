@@ -37,6 +37,7 @@ export interface CsvRowIssue {
 }
 
 export interface CsvImportSummary {
+  totalProcessed?: number
   validCount: number
   duplicateCount: number | null
   errorCount: number

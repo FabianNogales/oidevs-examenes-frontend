@@ -7,12 +7,12 @@ type ExamCardProps = {
   subjectName: string
   examName: string
   examDate: string
-  examTime: string
-  durationMinutes: number
-  roomName: string
-  roomCode: string
-  evaluationType: EvaluationType
-  status: string
+  examTime?: string | null
+  durationMinutes?: number | null
+  roomName?: string | null
+  roomCode?: string | null
+  evaluationType?: EvaluationType | null
+  status?: string | null
 }
 
 const EVALUATION_LABELS: Record<EvaluationType, string> = {
@@ -63,7 +63,7 @@ export function ExamCard({
           <span>{subjectCode}</span>
         </div>
 
-        <span className={styles.badge}>{STATUS_LABELS[status] ?? status}</span>
+        {status ? <span className={styles.badge}>{STATUS_LABELS[status] ?? status}</span> : null}
       </div>
 
       <div className={styles.examNameWrap}>
@@ -78,34 +78,34 @@ export function ExamCard({
           </div>
         </div>
 
-        <div className={styles.infoItem}>
+        {examTime ? <div className={styles.infoItem}>
           <div className={styles.itemContent}>
             <span className={styles.label}>Hora</span>
             <strong>{formatTime(examTime)}</strong>
           </div>
-        </div>
+        </div> : null}
 
-        <div className={styles.infoItem}>
+        {durationMinutes != null ? <div className={styles.infoItem}>
           <div className={styles.itemContent}>
             <span className={styles.label}>Duración</span>
             <strong>{durationMinutes} min</strong>
           </div>
-        </div>
+        </div> : null}
 
-        <div className={styles.infoItem}>
+        {roomName || roomCode ? <div className={styles.infoItem}>
           <div className={styles.itemContent}>
             <span className={styles.label}>Ambiente</span>
-            <strong>{roomName}</strong>
-            <small>{roomCode}</small>
+            {roomName ? <strong>{roomName}</strong> : null}
+            {roomCode ? <small>{roomCode}</small> : null}
           </div>
-        </div>
+        </div> : null}
 
-        <div className={styles.infoItem}>
+        {evaluationType ? <div className={styles.infoItem}>
           <div className={styles.itemContent}>
             <span className={styles.label}>Tipo</span>
             <strong>{EVALUATION_LABELS[evaluationType] ?? evaluationType}</strong>
           </div>
-        </div>
+        </div> : null}
       </div>
     </article>
   )

@@ -109,8 +109,12 @@ export function TeacherSubjectStudentsPage() {
     }
 
     if (!env.useStudentsMock) {
-      mergedStudents = await getSubjectStudents(courseOfferingId)
-      setStudentsError(null)
+      try {
+        mergedStudents = await getSubjectStudents(courseOfferingId)
+        setStudentsError(null)
+      } catch {
+        setStudentsError('La importación se procesó, pero no se pudo actualizar el listado de estudiantes.')
+      }
     }
 
     setStudents(mergedStudents)
@@ -120,7 +124,6 @@ export function TeacherSubjectStudentsPage() {
         : 'La importación no agregó estudiantes.',
     )
     setToastType(summary.validCount > 0 ? 'success' : 'error')
-    setIsModalOpen(false)
 
     return summary
   }
