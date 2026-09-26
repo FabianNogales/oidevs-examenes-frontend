@@ -11,8 +11,9 @@ export function HeaderAccount({
   notifications,
   onLogout,
   isLoggingOut = false,
+  accountOpen = false,
+  onAccountOpenChange,
 }: HeaderAccountProps) {
-  const [accountOpen, setAccountOpen] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
 
   const accountButton = useRef<HTMLButtonElement>(null)
@@ -31,6 +32,14 @@ export function HeaderAccount({
   const roleLabel =
     user.roleLabel ?? roleLabelByRole[user.role]
 
+  function closeAccount() {
+    onAccountOpenChange?.(false)
+  }
+
+  function toggleAccount() {
+    onAccountOpenChange?.(!accountOpen)
+  }
+
   async function handleLogout() {
     if (!onLogout || isLoggingOut) {
       return
@@ -45,7 +54,7 @@ export function HeaderAccount({
       return
     }
 
-    setAccountOpen(false)
+    closeAccount()
   }
 
   return (
@@ -53,7 +62,7 @@ export function HeaderAccount({
       className={styles.account}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && accountOpen) {
-          setAccountOpen(false)
+          closeAccount()
           accountButton.current?.focus()
         }
       }}
@@ -89,9 +98,7 @@ export function HeaderAccount({
           className={styles.userButton}
           aria-haspopup="menu"
           aria-expanded={accountOpen}
-          onClick={() =>
-            setAccountOpen((open) => !open)
-          }
+          onClick={toggleAccount}
         >
           <span
             className={styles.avatar}

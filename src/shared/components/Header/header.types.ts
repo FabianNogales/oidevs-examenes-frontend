@@ -32,4 +32,6 @@ export interface HeaderAccountProps {
   notifications?: ReactNode
   onLogout?: () => void | Promise<void>
   isLoggingOut?: boolean
+  accountOpen?: boolean
+  onAccountOpenChange?: (open: boolean) => void
 }

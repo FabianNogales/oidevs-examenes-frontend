@@ -17,6 +17,7 @@ export function Header({
   isLoggingOut = false,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
 
   const navigationId = useId()
   const menuButton = useRef<HTMLButtonElement>(null)
@@ -30,6 +31,35 @@ export function Header({
     setMenuOpen(false)
   }
 
+  function closeAccount() {
+    setAccountOpen(false)
+  }
+
+  function closeMenus() {
+    closeMenu()
+    closeAccount()
+  }
+
+  function toggleMenu() {
+    setMenuOpen((open) => {
+      const nextOpen = !open
+
+      if (nextOpen) {
+        closeAccount()
+      }
+
+      return nextOpen
+    })
+  }
+
+  function handleAccountOpenChange(open: boolean) {
+    if (open) {
+      closeMenu()
+    }
+
+    setAccountOpen(open)
+  }
+
   return (
     <header
       className={styles.header}
@@ -41,13 +71,15 @@ export function Header({
       }}
     >
       <div className={styles.topBar}>
-        <HeaderLogo onNavigate={closeMenu} />
+        <HeaderLogo onNavigate={closeMenus} />
 
         <HeaderAccount
           user={user}
           notifications={notifications}
           onLogout={onLogout}
           isLoggingOut={isLoggingOut}
+          accountOpen={accountOpen}
+          onAccountOpenChange={handleAccountOpenChange}
         />
 
         <button
@@ -61,9 +93,7 @@ export function Header({
               ? 'Cerrar menú principal'
               : 'Abrir menú principal'
           }
-          onClick={() => {
-            setMenuOpen((open) => !open)
-          }}
+          onClick={toggleMenu}
         >
           <svg
             viewBox="0 0 24 24"
@@ -92,7 +122,7 @@ export function Header({
       >
         <HeaderNavigation
           items={navigationItems}
-          onNavigate={closeMenu}
+          onNavigate={closeMenus}
         />
       </nav>
     </header>

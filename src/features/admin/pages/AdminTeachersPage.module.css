@@ -1277,20 +1277,31 @@ input:focus-visible {
   }
 
   .table td {
-    display: grid;
+  display: grid;
 
-    grid-template-columns:
-      minmax(105px, 0.7fr)
-      minmax(0, 1.3fr);
+  grid-template-columns:
+    minmax(105px, 0.7fr)
+    minmax(0, 1.3fr);
 
-    gap: 12px;
+  min-width: 0;
 
-    border-top:
-      1px solid #edf1f6;
+  gap: 12px;
 
-    padding: 10px 12px;
-  }
+  border-top:
+    1px solid #edf1f6;
 
+  padding: 10px 12px;
+
+  overflow-wrap: anywhere;
+}
+.table td > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.teacherData {
+  min-width: 0;
+}
   .table td:first-child {
     border-top: 0;
   }

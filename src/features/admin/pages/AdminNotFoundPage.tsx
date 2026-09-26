@@ -18,7 +18,7 @@ export function AdminNotFoundPage() {
         </p>
 
         <Link to="/admin">
-          Volver al iniciocode
+          Volver al inicio
         </Link>
       </div>
     </section>
