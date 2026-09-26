@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
 import { getRooms } from '@/features/exams/api/teacherExamsApi'
+import { getApiFieldErrors, getRequestStatus } from '@/features/auth/utils/apiErrors'
+import { getLocalDate, validateExamForm } from '@/features/exams/utils/examValidation'
 import type {
   CreateExamPayload,
   EvaluationType,
@@ -13,9 +15,10 @@ import styles from './CreateExamModal.module.css'
 interface CreateExamModalProps {
   isOpen: boolean
   subject: Subject | null
+  subjects: Subject[]
   isSubmitting?: boolean
   onClose: () => void
-  onSubmit: (payload: CreateExamPayload) => Promise<void>
+  onSubmit: (payload: CreateExamPayload, subject: Subject) => Promise<void>
 }
 
 const DEFAULT_FORM = {
@@ -37,15 +40,21 @@ const EVALUATION_LABELS: Record<EvaluationType, string> = {
 export function CreateExamModal({
   isOpen,
   subject,
+  subjects,
   isSubmitting = false,
   onClose,
   onSubmit,
 }: CreateExamModalProps) {
   const [formValues, setFormValues] = useState(DEFAULT_FORM)
-  const [fieldError, setFieldError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [selectedSubjectId, setSelectedSubjectId] = useState(
+    String(subject?.courseOfferingId ?? ''),
+  )
   const [roomError, setRoomError] = useState<string | null>(null)
   const [rooms, setRooms] = useState<Room[]>([])
-  const [isLoadingRooms, setIsLoadingRooms] = useState(false)
+  const [isLoadingRooms, setIsLoadingRooms] = useState(isOpen)
+  const submittingRef = useRef(false)
   const firstInputRef = useRef<HTMLInputElement>(null)
   const nameId = useId()
   const evaluationTypeId = useId()
@@ -54,29 +63,24 @@ export function CreateExamModal({
   const durationId = useId()
   const rulesId = useId()
   const roomId = useId()
-
-  const isSubmitDisabled = useMemo(
-    () =>
-      isSubmitting ||
-      !subject ||
-      !formValues.name.trim() ||
-      !formValues.exam_date ||
-      !formValues.start_time ||
-      !formValues.evaluation_type ||
-      !formValues.room_id ||
-      Number(formValues.duration_minutes) <= 0,
-    [formValues, isSubmitting, subject],
+  const subjectId = useId()
+  const selectedSubject = subjects.find(
+    (item) => String(item.courseOfferingId) === selectedSubjectId,
   )
 
+  const isSubmitDisabled = isSubmitting || isLoadingRooms
+
   const handleCloseDialog = useCallback(() => {
+    if (isSubmitting || submittingRef.current) return
     setFormValues(DEFAULT_FORM)
-    setFieldError(null)
+    setFieldErrors({})
+    setSubmitError(null)
     setRoomError(null)
     onClose()
-  }, [onClose])
+  }, [isSubmitting, onClose])
 
   useEffect(() => {
-    if (!isOpen || !subject) {
+    if (!isOpen) {
       return
     }
 
@@ -87,38 +91,47 @@ export function CreateExamModal({
     }
 
     document.addEventListener('keydown', handleKeyDown)
-    requestAnimationFrame(() => firstInputRef.current?.focus())
+    const frameId = requestAnimationFrame(() => firstInputRef.current?.focus())
 
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      cancelAnimationFrame(frameId)
+    }
+  }, [handleCloseDialog, isOpen, isSubmitting])
+
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
     const loadRooms = async () => {
       setIsLoadingRooms(true)
       setRoomError(null)
 
       try {
         const nextRooms = await getRooms()
+        if (cancelled) return
         setRooms(nextRooms)
 
-        if (nextRooms.length > 0 && !formValues.room_id) {
+        if (nextRooms.length > 0) {
           setFormValues((current) => ({
             ...current,
-            room_id: String(nextRooms[0].id),
+            room_id: current.room_id || String(nextRooms[0].id),
           }))
         }
-      } catch (error) {
-        setRoomError(
-          error instanceof Error
-            ? error.message
-            : 'No se pudieron cargar los ambientes disponibles.',
-        )
+      } catch {
+        if (cancelled) return
+        setRoomError('No se pudieron cargar los ambientes disponibles.')
         setRooms([])
       } finally {
-        setIsLoadingRooms(false)
+        if (!cancelled) setIsLoadingRooms(false)
       }
     }
 
     void loadRooms()
 
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [formValues.room_id, handleCloseDialog, isOpen, isSubmitting, subject])
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen])
 
   if (!isOpen || !subject) {
     return null
@@ -129,69 +142,70 @@ export function CreateExamModal({
     value: string,
   ) => {
     setFormValues((current) => ({ ...current, [field]: value }))
-    if (fieldError) {
-      setFieldError(null)
-    }
+    setFieldErrors((current) => ({
+      ...current,
+      [field]: '',
+      ...(field === 'exam_date' || field === 'start_time'
+        ? { exam_date: '', start_time: '' }
+        : {}),
+    }))
+    setSubmitError(null)
   }
 
   const handleSubmit = async () => {
-    const trimmedName = formValues.name.trim()
-    const duration = Number(formValues.duration_minutes)
-
-    if (!trimmedName) {
-      setFieldError('El nombre del examen es obligatorio.')
-      return
+    if (isSubmitDisabled || submittingRef.current) return
+    const errors = validateExamForm(formValues)
+    if (!selectedSubject) {
+      errors.course_offering_id = 'Debes seleccionar una materia asignada.'
     }
+    setFieldErrors(errors)
+    setSubmitError(null)
+    if (Object.keys(errors).length > 0 || !selectedSubject) return
 
-    if (!formValues.exam_date) {
-      setFieldError('La fecha es obligatoria.')
-      return
+    submittingRef.current = true
+    try {
+      await onSubmit(
+        {
+          name: formValues.name.trim(),
+          exam_date: formValues.exam_date,
+          start_time: `${formValues.start_time}:00`,
+          duration_minutes: Number(formValues.duration_minutes),
+          room_id: Number(formValues.room_id),
+          evaluation_type: formValues.evaluation_type,
+          rules: formValues.rules.trim() || null,
+        },
+        selectedSubject,
+      )
+    } catch (error) {
+      const apiError = error instanceof Error && error.cause ? error.cause : error
+      const status = getRequestStatus(apiError)
+      if (status === 422) {
+        setFieldErrors(getApiFieldErrors(apiError))
+        setSubmitError('Revisa los datos ingresados para programar el examen.')
+      } else {
+        setSubmitError(
+          status === 403
+            ? 'No tienes autorización para programar este examen.'
+            : 'No se pudo programar el examen. Inténtalo nuevamente.',
+        )
+      }
+    } finally {
+      submittingRef.current = false
     }
-
-    if (!formValues.start_time) {
-      setFieldError('La hora es obligatoria.')
-      return
-    }
-
-    if (!formValues.evaluation_type) {
-      setFieldError('Debes seleccionar el tipo de evaluación.')
-      return
-    }
-
-    if (!formValues.room_id) {
-      setFieldError('Debes seleccionar un ambiente.')
-      return
-    }
-
-    if (!Number.isFinite(duration) || duration <= 0) {
-      setFieldError('La duración debe ser mayor a 0 minutos.')
-      return
-    }
-
-    if (
-      formValues.exam_date &&
-      formValues.exam_date < new Date().toISOString().slice(0, 10)
-    ) {
-      setFieldError('La fecha no puede ser anterior a hoy.')
-      return
-    }
-
-    setFieldError(null)
-
-    if (isSubmitDisabled) {
-      return
-    }
-
-    await onSubmit({
-      name: trimmedName,
-      exam_date: formValues.exam_date,
-      start_time: `${formValues.start_time}:00`,
-      duration_minutes: duration,
-      room_id: Number(formValues.room_id),
-      evaluation_type: formValues.evaluation_type,
-      rules: formValues.rules.trim() ? formValues.rules.trim() : null,
-    })
   }
+
+  const errorFor = (field: string) =>
+    fieldErrors[field] || (field === 'room_id' ? roomError : null)
+  const fieldAccessibility = (field: string, id: string) => ({
+    'aria-invalid': Boolean(errorFor(field)),
+    'aria-describedby': errorFor(field) ? `${id}-error` : undefined,
+  })
+  const renderFieldError = (field: string, id: string) =>
+    errorFor(field) ? (
+      <p id={`${id}-error`} className={styles.inlineError} role="alert">
+        {errorFor(field)}
+      </p>
+    ) : null
 
   return (
     <div className={styles.overlay} aria-modal="true" role="dialog" aria-labelledby="create-exam-title">
@@ -213,18 +227,41 @@ export function CreateExamModal({
           </button>
         </div>
 
-        <div className={styles.subjectHeader}>
-          <strong>{subject.code ?? 'Materia'}</strong>
-          <span>— {subject.name}</span>
+        <div className={styles.fieldFull}>
+          <label htmlFor={subjectId}>Materia *</label>
+          <select
+            id={subjectId}
+            {...fieldAccessibility('course_offering_id', subjectId)}
+            value={selectedSubjectId}
+            onChange={(event) => {
+              setSelectedSubjectId(event.target.value)
+              setFieldErrors((current) => ({ ...current, course_offering_id: '' }))
+              setSubmitError(null)
+            }}
+            disabled={isSubmitting}
+          >
+            <option value="">Selecciona una materia</option>
+            {subjects.map((item) => (
+              <option key={item.courseOfferingId} value={String(item.courseOfferingId)}>
+                {item.code ? `${item.code} — ` : ''}{item.name} — {item.academicManagement}
+              </option>
+            ))}
+          </select>
+          {renderFieldError('course_offering_id', subjectId)}
         </div>
 
-        <p className={styles.term}><span>Gestión</span> {subject.academicManagement}</p>
+        {selectedSubject ? (
+          <p className={styles.term}>
+            <span>Gestión</span> {selectedSubject.academicManagement}
+          </p>
+        ) : null}
 
         <div className={styles.formGrid}>
           <div className={styles.fieldFull}>
             <label htmlFor={nameId}>Nombre del examen *</label>
             <input
               id={nameId}
+              {...fieldAccessibility('name', nameId)}
               ref={firstInputRef}
               type="text"
               maxLength={255}
@@ -233,12 +270,14 @@ export function CreateExamModal({
               placeholder="Ej. Primer parcial"
               disabled={isSubmitting}
             />
+            {renderFieldError('name', nameId)}
           </div>
 
           <div className={styles.fieldHalf}>
             <label htmlFor={evaluationTypeId}>Tipo de evaluación *</label>
             <select
               id={evaluationTypeId}
+              {...fieldAccessibility('evaluation_type', evaluationTypeId)}
               value={formValues.evaluation_type}
               onChange={(event) =>
                 handleInputChange(
@@ -254,35 +293,41 @@ export function CreateExamModal({
                 </option>
               ))}
             </select>
+            {renderFieldError('evaluation_type', evaluationTypeId)}
           </div>
 
           <div className={styles.fieldHalf}>
             <label htmlFor={dateId}>Fecha *</label>
             <input
               id={dateId}
+              {...fieldAccessibility('exam_date', dateId)}
               type="date"
-              min={new Date().toISOString().slice(0, 10)}
+              min={getLocalDate()}
               value={formValues.exam_date}
               onChange={(event) => handleInputChange('exam_date', event.target.value)}
               disabled={isSubmitting}
             />
+            {renderFieldError('exam_date', dateId)}
           </div>
 
           <div className={styles.fieldHalf}>
             <label htmlFor={timeId}>Hora *</label>
             <input
               id={timeId}
+              {...fieldAccessibility('start_time', timeId)}
               type="time"
               value={formValues.start_time}
               onChange={(event) => handleInputChange('start_time', event.target.value)}
               disabled={isSubmitting}
             />
+            {renderFieldError('start_time', timeId)}
           </div>
 
           <div className={styles.fieldHalf}>
             <label htmlFor={durationId}>Duración (minutos) *</label>
             <input
               id={durationId}
+              {...fieldAccessibility('duration_minutes', durationId)}
               type="number"
               min={1}
               step={1}
@@ -290,12 +335,14 @@ export function CreateExamModal({
               onChange={(event) => handleInputChange('duration_minutes', event.target.value)}
               disabled={isSubmitting}
             />
+            {renderFieldError('duration_minutes', durationId)}
           </div>
 
           <div className={styles.fieldHalf}>
             <label htmlFor={roomId}>Ambiente *</label>
             <select
               id={roomId}
+              {...fieldAccessibility('room_id', roomId)}
               value={formValues.room_id}
               onChange={(event) => handleInputChange('room_id', event.target.value)}
               disabled={isSubmitting || isLoadingRooms || rooms.length === 0}
@@ -316,18 +363,21 @@ export function CreateExamModal({
                 <option value="">No hay ambientes disponibles</option>
               )}
             </select>
+            {renderFieldError('room_id', roomId)}
           </div>
 
           <div className={styles.fieldFull}>
             <label htmlFor={rulesId}>Normas / restricciones</label>
             <textarea
               id={rulesId}
+              {...fieldAccessibility('rules', rulesId)}
               rows={4}
               value={formValues.rules}
               onChange={(event) => handleInputChange('rules', event.target.value)}
               placeholder="Ej. Sin calculadoras durante la prueba."
               disabled={isSubmitting}
             />
+            {renderFieldError('rules', rulesId)}
           </div>
 
           <div className={styles.stateRow}>
@@ -336,8 +386,7 @@ export function CreateExamModal({
           </div>
         </div>
 
-        {fieldError ? <p className={styles.inlineError} role="alert">{fieldError}</p> : null}
-        {roomError ? <p className={styles.inlineInfo}>{roomError}</p> : null}
+        {submitError ? <p className={styles.inlineError} role="alert">{submitError}</p> : null}
 
         <div className={styles.actions}>
           <button type="button" className={styles.secondaryButton} onClick={handleCloseDialog} disabled={isSubmitting}>

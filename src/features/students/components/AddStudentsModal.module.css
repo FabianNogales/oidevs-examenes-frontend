@@ -133,7 +133,7 @@
   color: var(--color-on-primary);
 }
 
-.primaryButton:hover {
+.primaryButton:hover:not(:disabled) {
   background: var(--color-primary-hover);
 }
 
@@ -165,6 +165,31 @@
   display: grid;
   gap: var(--space-2);
   margin-top: var(--space-3);
+}
+
+.processing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--color-primary);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
 }
 
 .issueItem {
