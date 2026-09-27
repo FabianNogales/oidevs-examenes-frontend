@@ -53,6 +53,17 @@
   white-space: nowrap;
 }
 
+.actions button:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.actions button:active:not(:disabled) {
+  background: var(--color-primary-active);
+  color: var(--color-on-primary);
+}
+
 .actions button:disabled {
   color: var(--color-disabled-text);
   background: var(--color-disabled-background);

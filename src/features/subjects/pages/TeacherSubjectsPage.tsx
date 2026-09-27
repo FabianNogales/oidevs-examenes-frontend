@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { CreateExamModal } from '@/features/exams/components/CreateExamModal'
@@ -7,6 +7,8 @@ import { getTeacherSubjects } from '@/features/subjects/api/teacherSubjectsApi'
 import { SubjectList } from '@/features/subjects/components/SubjectList'
 import { SubjectsSkeleton } from '@/features/subjects/components/SubjectsSkeleton'
 import type { Subject } from '@/features/subjects/types/subject.types'
+import type { CreateExamPayload } from '@/features/exams/types/exam.types'
+import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardError'
 
 import styles from './TeacherSubjectsPage.module.css'
 
@@ -30,6 +32,7 @@ export function TeacherSubjectsPage({
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
   const [isSubmittingExam, setIsSubmittingExam] = useState(false)
   const [lastCreatedExamName, setLastCreatedExamName] = useState<string | null>(null)
+  const subjectsRequestInFlight = useRef(false)
   const hasProvidedSubjects = providedSubjects !== undefined
   const subjects = providedSubjects ?? loadedSubjects
   const isLoading = hasProvidedSubjects ? providedIsLoading ?? false : loadedIsLoading
@@ -39,18 +42,17 @@ export function TeacherSubjectsPage({
   const hasSubjects = subjects.length > 0
 
   const loadSubjects = useCallback(async () => {
+    if (subjectsRequestInFlight.current) return
+    subjectsRequestInFlight.current = true
     setLoadedIsLoading(true)
-    setLoadedErrorMessage(null)
 
     try {
       setLoadedSubjects(await getTeacherSubjects())
+      setLoadedErrorMessage(null)
     } catch (error) {
-      setLoadedErrorMessage(
-        error instanceof Error
-          ? error.message
-          : 'No se pudieron cargar las materias.',
-      )
+      setLoadedErrorMessage(getTeacherDashboardErrorMessage(error))
     } finally {
+      subjectsRequestInFlight.current = false
       setLoadedIsLoading(false)
     }
   }, [])
@@ -74,44 +76,21 @@ export function TeacherSubjectsPage({
   }, [])
 
   const submitCreateExam = useCallback(
-    async (payload: {
-      name: string
-      exam_date: string
-      start_time: string
-      duration_minutes: number
-      room_id: number
-      evaluation_type: 'partial' | 'final' | 'makeup'
-      rules?: string | null
-    }) => {
-      if (!selectedSubject) {
-        return
-      }
-
+    async (payload: CreateExamPayload, subject: Subject) => {
       setIsSubmittingExam(true)
 
       try {
-        await createExam(selectedSubject.courseOfferingId, {
-          ...payload,
-          room_id: Number(payload.room_id) || 0,
-          evaluation_type: payload.evaluation_type,
-        })
+        await createExam(subject.courseOfferingId, payload)
 
         const examLabel = payload.name.trim() || 'Examen'
         setLastCreatedExamName(examLabel)
         notify('success', 'Examen programado correctamente.')
         setSelectedSubject(null)
-      } catch (error) {
-        notify(
-          'error',
-          error instanceof Error
-            ? error.message
-            : 'No se pudo programar el examen.',
-        )
       } finally {
         setIsSubmittingExam(false)
       }
     },
-    [notify, selectedSubject],
+    [notify],
   )
 
   return (
@@ -132,7 +111,7 @@ export function TeacherSubjectsPage({
 
         {isLoading ? <SubjectsSkeleton /> : null}
 
-        {!isLoading && errorMessage ? (
+        {errorMessage ? (
           <section className={styles.state} role="alert">
             <h2>No se pudieron cargar las materias</h2>
             <p>{errorMessage}</p>
@@ -140,8 +119,9 @@ export function TeacherSubjectsPage({
               <button
                 type="button"
                 onClick={onRetry ?? (() => void loadSubjects())}
+                disabled={isLoading}
               >
-                Reintentar
+                {isLoading ? 'Reintentando…' : 'Reintentar'}
               </button>
             ) : null}
           </section>
@@ -163,8 +143,10 @@ export function TeacherSubjectsPage({
       </section>
 
       <CreateExamModal
+        key={selectedSubject?.courseOfferingId ?? 'closed'}
         isOpen={selectedSubject !== null}
         subject={selectedSubject}
+        subjects={subjects}
         isSubmitting={isSubmittingExam}
         onClose={closeCreateExamModal}
         onSubmit={submitCreateExam}

@@ -225,12 +225,14 @@ export async function importStudentsCsv(
     )
 
     const {
+      totalProcessed,
       successfulRecords,
       duplicateRecords,
       failedCount,
       failedRecords,
     } = response.data.data
     return {
+      totalProcessed,
       validCount: successfulRecords,
       duplicateCount: duplicateRecords,
       errorCount: failedCount,

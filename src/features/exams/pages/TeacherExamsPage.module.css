@@ -66,6 +66,14 @@
   background: var(--color-primary);
 }
 
+.state button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.state button:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
 @media (max-width: 640px) {
   .page {
     padding-block: var(--space-6);

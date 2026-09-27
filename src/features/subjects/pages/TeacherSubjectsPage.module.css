@@ -77,12 +77,11 @@
   background: var(--color-primary);
 }
 
-.state button:hover {
+.state button:hover:not(:disabled) {
   background: var(--color-primary-hover);
 }
 
-.state button:focus-visible,
-.state button:active {
+.state button:active:not(:disabled) {
   background: var(--color-primary-active);
 }
 
