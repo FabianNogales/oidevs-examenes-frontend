@@ -10,7 +10,9 @@ import styles from './StudentQrPage.module.css'
 const statusOrder: Record<StudentQrStatus, number> = {
   AVAILABLE: 0,
   UPCOMING: 1,
-  FINISHED: 2,
+  PENDING_ELIGIBILITY: 2,
+  NOT_ELIGIBLE: 3,
+  FINISHED: 4,
 }
 
 export function StudentQrPage() {

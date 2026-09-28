@@ -92,7 +92,7 @@
 .eidaBrand strong {
   color: var(--color-text-primary);
 
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   font-weight: 700;
 
   letter-spacing: 0.04em;
@@ -103,7 +103,7 @@
 
   color: var(--color-text-secondary);
 
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 
@@ -150,7 +150,7 @@
 
   color: var(--color-text-secondary);
 
-  font-size: 0.86rem;
+  font-size: 0.95rem;
   line-height: 1.5;
 }
 
@@ -176,7 +176,7 @@
 
   color: var(--color-text-primary);
 
-  font-size: 0.61rem;
+  font-size: 0.7rem;
   font-weight: 600;
 
   letter-spacing: 0.17em;
@@ -322,7 +322,7 @@
 
   color: var(--color-primary);
 
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 500;
 
   white-space: nowrap;
@@ -352,7 +352,7 @@
 }
 
 .calendarMonth strong {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
@@ -397,7 +397,7 @@
 
   color: var(--color-text-secondary);
 
-  font-size: 0.67rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -415,7 +415,7 @@
 
   color: var(--color-text);
 
-  font-size: 0.73rem;
+  font-size: 0.82rem;
   font-weight: 500;
 }
 
@@ -498,7 +498,7 @@
 
   color: #ffffff;
 
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 700;
 
   line-height: 1;
@@ -512,7 +512,7 @@
 
   color: #ffffff;
 
-  font-size: 0.52rem;
+  font-size: 0.62rem;
   font-weight: 600;
 
   letter-spacing: 0.08em;
@@ -549,7 +549,7 @@
 
   color: var(--color-text-primary);
 
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 600;
 
   line-height: 1.3;
@@ -562,7 +562,7 @@
 
   color: var(--color-text-muted);
 
-  font-size: 0.62rem;
+  font-size: 0.75rem;
 }
 
 .newsContent p {
@@ -570,9 +570,9 @@
 
   color: var(--color-text-secondary);
 
-  font-size: 0.68rem;
+  font-size: 0.82rem;
 
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 /* ==================================================
@@ -611,7 +611,7 @@
   }
 
   .newsContent p {
-    font-size: 0.64rem;
+    font-size: 0.78rem;
   }
 }
 
@@ -637,7 +637,7 @@
   }
 
   .heroDescription {
-    font-size: 0.82rem;
+    font-size: 0.92rem;
   }
 
   .heroVisual {
@@ -681,13 +681,13 @@
     width: 30px;
     height: 30px;
 
-    font-size: 0.7rem;
+    font-size: 0.78rem;
   }
 
   .weekDay {
     height: auto;
 
-    font-size: 0.62rem;
+    font-size: 0.72rem;
   }
 
   .sectionTitle h2 {
@@ -734,11 +734,11 @@
   }
 
   .eidaBrand strong {
-    font-size: 0.82rem;
+    font-size: 0.86rem;
   }
 
   .eidaBrand span {
-    font-size: 0.6rem;
+    font-size: 0.68rem;
   }
 
   .heroTitle {
@@ -748,11 +748,11 @@
   .heroDescription {
     margin-top: 14px;
 
-    font-size: 0.84rem;
+    font-size: 0.9rem;
   }
 
   .heroSlogan {
-    font-size: 0.6rem;
+    font-size: 0.64rem;
 
     letter-spacing: 0.15em;
   }
@@ -770,7 +770,7 @@
   }
 
   .sectionTitle h2 {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
   }
 
   .sectionIcon {
@@ -783,7 +783,7 @@
   }
 
   .viewAll {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
   }
 
   .calendarGrid {
@@ -794,11 +794,11 @@
     width: 27px;
     height: 27px;
 
-    font-size: 0.65rem;
+    font-size: 0.72rem;
   }
 
   .weekDay {
-    font-size: 0.58rem;
+    font-size: 0.66rem;
   }
 
   .newsItem {
@@ -816,7 +816,7 @@
   }
 
   .newsContent h3 {
-    font-size: 0.76rem;
+    font-size: 0.84rem;
   }
 
   .newsContent p {
@@ -878,11 +878,11 @@
   }
 
   .eidaBrand strong {
-    font-size: 0.86rem;
+    font-size: 0.9rem;
   }
 
   .eidaBrand span {
-    font-size: 0.64rem;
+    font-size: 0.75rem;
   }
 
   .heroTitle {
@@ -898,7 +898,7 @@
 
     margin-top: 14px;
 
-    font-size: 0.86rem;
+    font-size: 0.95rem;
 
     line-height: 1.5;
   }
@@ -912,7 +912,7 @@
   .heroSlogan {
     margin-top: 7px;
 
-    font-size: 0.61rem;
+    font-size: 0.7rem;
   }
 
   .heroVisual {
@@ -989,7 +989,7 @@
   }
 
   .sectionTitle h2 {
-    font-size: 1rem;
+    font-size: 1.08rem;
   }
 
   .sectionIcon {
@@ -1003,7 +1003,7 @@
   }
 
   .viewAll {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
   }
 
   /* ==================================================
@@ -1020,7 +1020,7 @@
   }
 
   .calendarMonth strong {
-    font-size: 0.78rem;
+    font-size: 0.95rem;
   }
 
   .monthArrow {
@@ -1042,14 +1042,14 @@
 
     padding: 0;
 
-    font-size: 0.59rem;
+    font-size: 0.75rem;
   }
 
   .calendarDay {
     width: 27px;
     height: 27px;
 
-    font-size: 0.64rem;
+    font-size: 0.82rem;
   }
 
   /* ==================================================
@@ -1090,13 +1090,13 @@
   }
 
   .newsDay {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
 
   .newsMonth {
     margin-top: 2px;
 
-    font-size: 0.48rem;
+    font-size: 0.62rem;
   }
 
   .newsImageDecoration {
@@ -1118,23 +1118,23 @@
   }
 
   .newsContent h3 {
-    font-size: 0.66rem;
+    font-size: 0.92rem;
 
-    line-height: 1.2;
+    line-height: 1.3;
   }
 
   .newsContent time {
     margin-top: 2px;
 
-    font-size: 0.49rem;
+    font-size: 0.75rem;
   }
 
   .newsContent p {
     margin-top: 2px;
 
-    font-size: 0.53rem;
+    font-size: 0.82rem;
 
-    line-height: 1.28;
+    line-height: 1.4;
   }
 }
 /* ==================================================
@@ -1214,11 +1214,11 @@
   }
 
   .eidaBrand strong {
-    font-size: 0.78rem;
+    font-size: 0.9rem;
   }
 
   .eidaBrand span {
-    font-size: 0.56rem;
+    font-size: 0.75rem;
   }
 
   /* Título */
@@ -1244,8 +1244,8 @@
 
     margin-top: 11px;
 
-    font-size: 0.72rem;
-    line-height: 1.42;
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
 
   .heroDivider {
@@ -1258,7 +1258,7 @@
   .heroSlogan {
     margin-top: 7px;
 
-    font-size: 0.52rem;
+    font-size: 0.68rem;
 
     letter-spacing: 0.17em;
   }
@@ -1358,7 +1358,7 @@
   }
 
   .sectionTitle h2 {
-    font-size: 0.84rem;
+    font-size: 1.05rem;
   }
 
   .sectionIcon {
@@ -1372,7 +1372,7 @@
   }
 
   .viewAll {
-    font-size: 0.55rem;
+    font-size: 0.78rem;
   }
 
   /* =========================
@@ -1392,7 +1392,7 @@
   }
 
   .calendarMonth strong {
-    font-size: 0.65rem;
+    font-size: 0.9rem;
   }
 
   .monthArrow {
@@ -1406,14 +1406,14 @@
   .weekDay {
     padding-bottom: 2px;
 
-    font-size: 0.5rem;
+    font-size: 0.72rem;
   }
 
   .calendarDay {
     width: 22px;
     height: 22px;
 
-    font-size: 0.53rem;
+    font-size: 0.78rem;
   }
 
   /* =========================
@@ -1445,13 +1445,13 @@
   }
 
   .newsDay {
-    font-size: 1rem;
+    font-size: 1.22rem;
   }
 
   .newsMonth {
     margin-top: 2px;
 
-    font-size: 0.48rem;
+    font-size: 0.62rem;
   }
 
   /*
@@ -1473,20 +1473,20 @@
   }
 
   .newsContent h3 {
-    font-size: 0.66rem;
-    line-height: 1.2;
+    font-size: 0.88rem;
+    line-height: 1.3;
   }
 
   .newsContent time {
     margin-top: 2px;
 
-    font-size: 0.49rem;
+    font-size: 0.72rem;
   }
 
   .newsContent p {
     margin-top: 2px;
 
-    font-size: 0.53rem;
-    line-height: 1.28;
+    font-size: 0.78rem;
+    line-height: 1.4;
   }
 }

@@ -1,4 +1,9 @@
-export type StudentQrStatus = 'UPCOMING' | 'AVAILABLE' | 'FINISHED'
+export type StudentQrStatus =
+  | 'PENDING_ELIGIBILITY'
+  | 'NOT_ELIGIBLE'
+  | 'UPCOMING'
+  | 'AVAILABLE'
+  | 'FINISHED'
 
 export interface StudentExam {
   exam_id: number

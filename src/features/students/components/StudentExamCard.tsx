@@ -19,6 +19,18 @@ export function StudentExamCard({
 }: StudentExamCardProps) {
   const qrAvailable = exam.qr_status === 'AVAILABLE'
   const status = {
+    PENDING_ELIGIBILITY: {
+      style: styles.unavailable,
+      icon: 'clock' as const,
+      title: 'Habilitación pendiente',
+      detail: 'QR no disponible todavía',
+    },
+    NOT_ELIGIBLE: {
+      style: styles.unavailable,
+      icon: 'info' as const,
+      title: 'No habilitado',
+      detail: 'QR no disponible para este examen',
+    },
     UPCOMING: {
       style: styles.unavailable,
       icon: 'clock' as const,
