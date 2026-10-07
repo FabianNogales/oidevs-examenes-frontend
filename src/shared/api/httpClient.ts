@@ -7,6 +7,7 @@ function registerAuthSessionInterceptor(client: ReturnType<typeof axios.create>)
     (response) => response,
     (error: unknown) => {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
+        if (error.config?.url === '/auth/logout') return Promise.reject(error)
         const code = readErrorCode(error.response.data)
 
         emitAuthSessionEvent({

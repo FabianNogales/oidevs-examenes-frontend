@@ -137,7 +137,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       if (!env.useAuthMock) {
-        await requestLogout()
+        try {
+          await requestLogout()
+        } catch (error) {
+          const status = getRequestStatus(error)
+          if (status !== 401) throw error
+        }
       }
       sessionVersion.current += 1
       setUser(null)

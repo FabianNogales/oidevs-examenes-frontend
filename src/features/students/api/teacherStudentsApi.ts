@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 
 import { env } from '@/app/config/env'
 import { getTeacherSubjects } from '@/features/subjects/api/teacherSubjectsApi'
@@ -27,6 +28,7 @@ interface BulkEnrollmentResponse {
       status: string
       reason: string
     }>
+    records?: BulkEnrollmentResponse['data']['failedRecords']
   }
 }
 
@@ -63,7 +65,7 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     const message = error.response?.data?.message
     if (typeof message === 'string') {
-      return message
+      return translateVisibleMessage(message)
     }
 
     if (error.response?.status === 401) {
@@ -152,6 +154,7 @@ export async function addStudentToSubject(
 export async function importStudentsCsv(
   courseOfferingId: string,
   file: File,
+  preview = false,
 ): Promise<CsvImportSummary> {
   if (env.useStudentsMock) {
     const text = await file.text()
@@ -164,7 +167,7 @@ export async function importStudentsCsv(
       throw new Error('El archivo CSV está vacío.')
     }
 
-    const subjectStudents = mockStudentsBySubject[courseOfferingId] ?? []
+    const subjectStudents = [...(mockStudentsBySubject[courseOfferingId] ?? [])]
     const summary: CsvImportSummary = {
       validCount: 0,
       duplicateCount: 0,
@@ -210,8 +213,16 @@ export async function importStudentsCsv(
       summary.validCount += 1
     }
 
-    mockStudentsBySubject[courseOfferingId] = subjectStudents
-    summary.issues = summary.issues.slice(0, 25)
+    if (!preview) mockStudentsBySubject[courseOfferingId] = subjectStudents
+    summary.records = [
+      ...summary.issues,
+      ...summary.importedStudents.map((student) => ({
+        row: rows.findIndex((row) => row.replace(/^['"]|['"]$/g, '').trim() === student.sis) + 1,
+        sis: student.sis,
+        status: preview ? 'VALID' : 'ADDED',
+        reason: preview ? 'Listo para importar.' : 'Agregado correctamente.',
+      })),
+    ].sort((a, b) => a.row - b.row)
     return summary
   }
 
@@ -220,7 +231,7 @@ export async function importStudentsCsv(
 
   try {
     const response = await httpClient.post<BulkEnrollmentResponse>(
-      `/course-offerings/${courseOfferingId}/enrollments/bulk`,
+      `/course-offerings/${courseOfferingId}/enrollments/bulk${preview ? '/preview' : ''}`,
       formData,
     )
 
@@ -230,6 +241,7 @@ export async function importStudentsCsv(
       duplicateRecords,
       failedCount,
       failedRecords,
+      records,
     } = response.data.data
     return {
       totalProcessed,
@@ -237,11 +249,17 @@ export async function importStudentsCsv(
       duplicateCount: duplicateRecords,
       errorCount: failedCount,
       importedStudents: [],
+      records: (records ?? failedRecords).map((record) => ({
+        row: record.row,
+        sis: record.sisCode ?? '',
+        status: record.status,
+        reason: translateVisibleMessage(record.reason),
+      })),
       issues: failedRecords.map((record) => ({
         row: record.row,
         sis: record.sisCode ?? '',
         status: record.status,
-        reason: record.reason,
+        reason: translateVisibleMessage(record.reason),
       })),
     }
   } catch (error) {

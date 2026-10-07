@@ -68,12 +68,9 @@ export function validateIdentifier(identifier: string): string | null {
     return null
   }
 
-  if (!NUMERIC_PATTERN.test(value)) {
-    return 'El Código SIS debe contener solo números.'
-  }
-
-  if (value.length < AUTH_FIELD_LIMITS.sisMin) {
-    return 'El Código SIS debe contener al menos 9 dígitos.'
+  // Los códigos docentes admiten texto y hasta 50 caracteres; el servidor valida su existencia.
+  if (value.length > 50 && !NUMERIC_PATTERN.test(value)) {
+    return 'Ingresa un código institucional o SIS válido.'
   }
 
   return null

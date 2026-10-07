@@ -761,6 +761,10 @@ svg {
   font-weight: var(--font-weight-semibold);
 }
 
+.auth-password-control input::-ms-reveal {
+  display: none;
+}
+
 .snackbar {
   position: fixed;
   right: 1.25rem;

@@ -146,7 +146,6 @@ export function TeacherSubjectsPage({
         key={selectedSubject?.courseOfferingId ?? 'closed'}
         isOpen={selectedSubject !== null}
         subject={selectedSubject}
-        subjects={subjects}
         isSubmitting={isSubmittingExam}
         onClose={closeCreateExamModal}
         onSubmit={submitCreateExam}

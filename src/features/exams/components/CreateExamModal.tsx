@@ -11,11 +11,11 @@ import type {
 import type { Subject } from '@/features/subjects/types/subject.types'
 
 import styles from './CreateExamModal.module.css'
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 
 interface CreateExamModalProps {
   isOpen: boolean
   subject: Subject | null
-  subjects: Subject[]
   isSubmitting?: boolean
   onClose: () => void
   onSubmit: (payload: CreateExamPayload, subject: Subject) => Promise<void>
@@ -40,7 +40,6 @@ const EVALUATION_LABELS: Record<EvaluationType, string> = {
 export function CreateExamModal({
   isOpen,
   subject,
-  subjects,
   isSubmitting = false,
   onClose,
   onSubmit,
@@ -48,9 +47,7 @@ export function CreateExamModal({
   const [formValues, setFormValues] = useState(DEFAULT_FORM)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [selectedSubjectId, setSelectedSubjectId] = useState(
-    String(subject?.courseOfferingId ?? ''),
-  )
+  useBodyScrollLock(isOpen && Boolean(subject))
   const [roomError, setRoomError] = useState<string | null>(null)
   const [rooms, setRooms] = useState<Room[]>([])
   const [isLoadingRooms, setIsLoadingRooms] = useState(isOpen)
@@ -64,9 +61,7 @@ export function CreateExamModal({
   const rulesId = useId()
   const roomId = useId()
   const subjectId = useId()
-  const selectedSubject = subjects.find(
-    (item) => String(item.courseOfferingId) === selectedSubjectId,
-  )
+  const selectedSubject = subject
 
   const isSubmitDisabled = isSubmitting || isLoadingRooms
 
@@ -229,24 +224,12 @@ export function CreateExamModal({
 
         <div className={styles.fieldFull}>
           <label htmlFor={subjectId}>Materia *</label>
-          <select
+          <input
             id={subjectId}
             {...fieldAccessibility('course_offering_id', subjectId)}
-            value={selectedSubjectId}
-            onChange={(event) => {
-              setSelectedSubjectId(event.target.value)
-              setFieldErrors((current) => ({ ...current, course_offering_id: '' }))
-              setSubmitError(null)
-            }}
-            disabled={isSubmitting}
-          >
-            <option value="">Selecciona una materia</option>
-            {subjects.map((item) => (
-              <option key={item.courseOfferingId} value={String(item.courseOfferingId)}>
-                {item.code ? `${item.code} — ` : ''}{item.name} — {item.academicManagement}
-              </option>
-            ))}
-          </select>
+            value={`${subject.code ? `${subject.code} — ` : ''}${subject.name}`}
+            readOnly
+          />
           {renderFieldError('course_offering_id', subjectId)}
         </div>
 

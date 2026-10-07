@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 
 import { httpClient } from '@/shared/api/httpClient'
 
@@ -15,7 +16,7 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     const message = error.response?.data?.message
     if (typeof message === 'string') {
-      return message
+      return translateVisibleMessage(message)
     }
 
     if (error.response?.status === 401) {

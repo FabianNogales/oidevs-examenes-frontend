@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { CsvImportSummary } from '@/features/students/types/student.types'
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
+import { importStatusLabel, translateVisibleMessage } from '@/shared/api/visibleMessage'
 
 import styles from './AddStudentsModal.module.css'
 
@@ -10,6 +12,7 @@ interface AddStudentsModalProps {
   onClose: () => void
   onManualSubmit: (sis: string) => Promise<void>
   onCsvSubmit: (file: File) => Promise<CsvImportSummary>
+  onCsvPreview: (file: File) => Promise<CsvImportSummary>
 }
 
 export function AddStudentsModal({
@@ -18,6 +21,7 @@ export function AddStudentsModal({
   onClose,
   onManualSubmit,
   onCsvSubmit,
+  onCsvPreview,
 }: AddStudentsModalProps) {
   const [activeTab, setActiveTab] = useState<'manual' | 'csv'>('manual')
   const [sis, setSis] = useState('')
@@ -26,7 +30,10 @@ export function AddStudentsModal({
   const [manualError, setManualError] = useState<string | null>(null)
   const [csvError, setCsvError] = useState<string | null>(null)
   const [csvSummary, setCsvSummary] = useState<CsvImportSummary | null>(null)
+  const [csvConfirmed, setCsvConfirmed] = useState(false)
+  useBodyScrollLock(isOpen)
   const firstInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const processingRef = useRef(false)
 
   const resetModalState = () => {
@@ -36,6 +43,7 @@ export function AddStudentsModal({
     setManualError(null)
     setCsvError(null)
     setCsvSummary(null)
+    setCsvConfirmed(false)
     setIsProcessing(false)
   }
 
@@ -63,9 +71,12 @@ export function AddStudentsModal({
     }
 
     document.addEventListener('keydown', handleKeyDown)
-    requestAnimationFrame(() => firstInputRef.current?.focus())
+    const frame = requestAnimationFrame(() => firstInputRef.current?.focus())
 
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      cancelAnimationFrame(frame)
+    }
   }, [isOpen, isProcessing, closeWithoutProcessing])
 
   async function submitManual() {
@@ -95,7 +106,7 @@ export function AddStudentsModal({
     }
   }
 
-  async function submitCsv() {
+  async function submitCsv(confirm: boolean) {
     if (processingRef.current) return
     if (!file) {
       setCsvError('Selecciona un archivo CSV para continuar.')
@@ -108,9 +119,13 @@ export function AddStudentsModal({
     setCsvSummary(null)
 
     try {
-      const summary = await onCsvSubmit(file)
+      const summary = await (confirm ? onCsvSubmit(file) : onCsvPreview(file))
       setCsvSummary(summary)
-      setFile(null)
+      setCsvConfirmed(confirm)
+      if (confirm) {
+        setFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }
     } catch (error) {
       setCsvError(
         error instanceof Error
@@ -173,7 +188,7 @@ export function AddStudentsModal({
         ) : null}
 
         {activeTab === 'manual' ? (
-          <div className={styles.tabPanel}>
+          <form className={styles.tabPanel} onSubmit={(event) => { event.preventDefault(); void submitManual() }}>
             <label className={styles.fieldLabel} htmlFor="student-sis">
               SIS
             </label>
@@ -197,24 +212,34 @@ export function AddStudentsModal({
               <button type="button" className={styles.secondaryButton} onClick={closeWithoutProcessing} disabled={isProcessing}>
                 Cancelar
               </button>
-              <button type="button" className={styles.primaryButton} onClick={() => void submitManual()} disabled={isProcessing}>
+              <button type="submit" className={styles.primaryButton} disabled={isProcessing}>
                 {isProcessing ? 'Procesando…' : 'Agregar'}
               </button>
             </div>
-          </div>
+          </form>
         ) : (
           <div className={styles.tabPanel}>
-            <label className={styles.fieldLabel} htmlFor="csv-upload">
-              Archivo CSV
+            <p id="csv-guide">Selecciona un archivo .csv con la columna <strong>sisCode</strong>. La vista previa valida los registros sin agregar estudiantes. Solo «Confirmar importación» guarda las inscripciones.</p>
+            <pre className={styles.csvExample}>{'sisCode\n202600001\n202600002'}</pre>
+            <label className={styles.filePicker} htmlFor="csv-upload">
+              Seleccionar archivo CSV
             </label>
             <input
               id="csv-upload"
+              ref={fileInputRef}
+              aria-describedby="csv-guide"
               className={styles.fileInput}
               type="file"
               accept={acceptedFileTypes}
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              onChange={(event) => {
+                setFile(event.target.files?.[0] ?? null)
+                setCsvSummary(null)
+                setCsvConfirmed(false)
+                setCsvError(null)
+              }}
               disabled={isProcessing}
             />
+            <span>{file?.name ?? 'Ningún archivo seleccionado'}</span>
 
             {csvError ? (
               <p className={styles.inlineError} role="alert">{csvError}</p>
@@ -222,27 +247,27 @@ export function AddStudentsModal({
 
             {csvSummary ? (
               <div className={styles.summaryBox} role="status">
-                <h3>Resumen de importación</h3>
+                <h3>{csvConfirmed ? 'Resultado de importación' : 'Vista previa: aún no se guardaron inscripciones'}</h3>
                 <ul>
                   {csvSummary.totalProcessed != null ? (
                     <li>Total procesados: <strong>{csvSummary.totalProcessed}</strong></li>
                   ) : null}
-                  <li>Inscritos: <strong>{csvSummary.validCount}</strong></li>
+                  <li>{csvConfirmed ? 'Agregados' : 'Listos para importar'}: <strong>{csvSummary.validCount}</strong></li>
                   <li>
                     Duplicados:{' '}
                     <strong>{csvSummary.duplicateCount ?? 'No informado'}</strong>
                   </li>
                   <li>Errores: <strong>{csvSummary.errorCount}</strong></li>
                 </ul>
-                {csvSummary.issues.length > 0 ? (
+                {(csvSummary.records ?? csvSummary.issues).length > 0 ? (
                   <div className={styles.issueList}>
-                    {csvSummary.issues.map((issue) => (
+                    {(csvSummary.records ?? csvSummary.issues).map((issue) => (
                       <div key={`${issue.row}-${issue.sis || 'empty'}`} className={styles.issueItem}>
                         <span>Fila {issue.row}</span>
-                        <span>{issue.sis ? issue.sis : 'Vacía'}</span>
+                        <span>{issue.sis ? `SIS ${issue.sis}` : 'Sin SIS'}</span>
                         <span>
-                          {issue.status ? `${issue.status}: ` : ''}
-                          {issue.reason}
+                          {issue.status ? `${importStatusLabel(issue.status)}: ` : ''}
+                          {translateVisibleMessage(issue.reason)}
                         </span>
                       </div>
                     ))}
@@ -253,10 +278,10 @@ export function AddStudentsModal({
 
             <div className={styles.actions}>
               <button type="button" className={styles.secondaryButton} onClick={closeWithoutProcessing} disabled={isProcessing}>
-                Cancelar
+                {csvConfirmed ? 'Cerrar' : 'Cancelar'}
               </button>
-              <button type="button" className={styles.primaryButton} onClick={() => void submitCsv()} disabled={isProcessing || !file}>
-                {isProcessing ? 'Procesando…' : 'Importar CSV'}
+              <button type="button" className={styles.primaryButton} onClick={() => void submitCsv(Boolean(csvSummary))} disabled={isProcessing || !file || (csvSummary !== null && csvSummary.validCount === 0)}>
+                {isProcessing ? 'Procesando…' : csvSummary ? 'Confirmar importación' : 'Previsualizar CSV'}
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 
 type ApiErrorBody = {
   message?: unknown
@@ -15,7 +16,7 @@ export function getApiErrorCode(error: unknown): string | null {
 export function getApiErrorMessage(error: unknown): string | null {
   const body = getApiErrorBody(error)
 
-  return typeof body?.message === 'string' ? body.message : null
+  return typeof body?.message === 'string' ? translateVisibleMessage(body.message) : null
 }
 
 export function getApiFieldErrors(error: unknown): Record<string, string> {
@@ -32,7 +33,7 @@ export function getApiFieldErrors(error: unknown): Record<string, string> {
         messages.length > 0 &&
         typeof messages[0] === 'string'
       ) {
-        result[field] = messages[0]
+        result[field] = translateVisibleMessage(messages[0])
       }
 
       return result
@@ -59,7 +60,7 @@ export function getLoginErrorMessage(error: unknown): string {
   const status = getRequestStatus(error)
 
   if (status === 422) {
-    return 'El correo/Código SIS o la contraseña no son correctos.'
+    return 'Correo, código institucional/SIS o contraseña incorrectos.'
   }
 
   if (status === 419) {

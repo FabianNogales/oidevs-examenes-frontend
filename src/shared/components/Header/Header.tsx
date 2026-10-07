@@ -1,6 +1,6 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
-import { HeaderAccount } from './HeaderAccount'
+import { HeaderAccount, HeaderNotifications } from './HeaderAccount'
 import { HeaderLogo } from './HeaderLogo'
 import { HeaderNavigation } from './HeaderNavigation'
 import { getHeaderNavigation } from './headerNavigation.config'
@@ -21,6 +21,31 @@ export function Header({
 
   const navigationId = useId()
   const menuButton = useRef<HTMLButtonElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
+  const navigationRef = useRef<HTMLElement>(null)
+  const [smallScreen, setSmallScreen] = useState(() => window.matchMedia('(max-width: 479px)').matches)
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 479px)')
+    const update = () => setSmallScreen(media.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (!menuOpen && !accountOpen) return
+    const handleOutside = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return
+      if (menuOpen && !navigationRef.current?.contains(event.target) && !menuButton.current?.contains(event.target)) {
+        setMenuOpen(false)
+      }
+      if (!headerRef.current?.contains(event.target)) {
+        setAccountOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handleOutside)
+    return () => document.removeEventListener('pointerdown', handleOutside)
+  }, [menuOpen, accountOpen])
 
   // Si alguien pasa navigation manualmente, la usamos.
   // Si no, elegimos automáticamente según el rol.
@@ -62,6 +87,7 @@ export function Header({
 
   return (
     <header
+      ref={headerRef}
       className={styles.header}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && menuOpen) {
@@ -75,7 +101,7 @@ export function Header({
 
         <HeaderAccount
           user={user}
-          notifications={notifications}
+          notifications={smallScreen ? <></> : notifications}
           onLogout={onLogout}
           isLoggingOut={isLoggingOut}
           accountOpen={accountOpen}
@@ -115,6 +141,7 @@ export function Header({
       </div>
 
       <nav
+        ref={navigationRef}
         id={navigationId}
         aria-label="Navegación principal"
         className={styles.navigation}
@@ -124,6 +151,12 @@ export function Header({
           items={navigationItems}
           onNavigate={closeMenus}
         />
+        {smallScreen && user ? (
+          <div className={styles.mobileNotifications}>
+            <span>Notificaciones</span>
+            <HeaderNotifications notifications={notifications} />
+          </div>
+        ) : null}
       </nav>
     </header>
   )
