@@ -22,10 +22,12 @@ export function RoomsTable({
   rooms,
   onDetail,
   onEdit,
+  onStatusChange,
 }: {
   rooms: Room[]
   onDetail: (roomId: number) => void
   onEdit: (roomId: number) => void
+  onStatusChange: (room: Room) => void
 }) {
   return (
     <div
@@ -116,6 +118,18 @@ export function RoomsTable({
                     aria-label={`Editar ${room.code}`}
                   >
                     Editar
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      room.status === 'ACTIVE'
+                        ? styles.deactivateButton
+                        : styles.secondaryButton
+                    }
+                    onClick={() => onStatusChange(room)}
+                    aria-label={`${room.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} ${room.code}`}
+                  >
+                    {room.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                   </button>
                 </div>
               </td>

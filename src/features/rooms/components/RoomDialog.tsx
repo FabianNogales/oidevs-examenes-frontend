@@ -1,8 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getAdminRoom, RoomApiError } from '../api/adminRoomsApi'
 import type { Room, RoomDialogSelection } from '../types/room.types'
 import { RoomDetails } from './RoomDetails'
 import { RoomForm } from './RoomForm'
+import { RoomModal } from './RoomModal'
 import styles from './RoomDialog.module.css'
 
 interface Props {
@@ -92,35 +93,15 @@ function ExistingRoom({
 }
 
 export function RoomDialog({ selection, onClose, onSaved }: Props) {
-  const dialog = useRef<HTMLDialogElement>(null)
   const busy = useRef(false)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(selection.mode === 'edit')
-  const titleId = useId()
   const title =
     selection.mode === 'create'
       ? 'Registrar aula'
       : editing
         ? 'Editar aula'
         : 'Detalle del aula'
-
-  useEffect(() => {
-    const element = dialog.current
-    const previousFocus =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null
-    const previousOverflow = document.body.style.overflow
-    element?.showModal()
-    element?.querySelector<HTMLInputElement>('[name="code"]')?.focus()
-    document.body.style.overflow = 'hidden'
-    return () => {
-      element?.close()
-      document.body.style.overflow = previousOverflow
-      if (previousFocus?.isConnected) previousFocus.focus()
-      else document.getElementById('rooms-title')?.focus()
-    }
-  }, [])
 
   function close() {
     if (!busy.current) onClose()
@@ -136,48 +117,19 @@ export function RoomDialog({ selection, onClose, onSaved }: Props) {
   }
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={titleId}
-      onCancel={(event) => {
-        event.preventDefault()
-        close()
-      }}
-    >
-      <header className={styles.header}>
-        <div>
-          <p>Gestión de aulas</p>
-          <h2 id={titleId}>{title}</h2>
-        </div>
-        <button
-          type="button"
-          className={styles.closeButton}
-          onClick={close}
-          disabled={saving}
-          aria-label="Cerrar ventana"
-        >
-          ×
-        </button>
-      </header>
-      <div className={styles.body}>
-        {selection.mode === 'create' ? (
-          <RoomForm
-            onCancel={close}
-            onSaved={saved}
-            onBusyChange={changeBusy}
-          />
-        ) : (
-          <ExistingRoom
-            roomId={selection.roomId}
-            editing={editing}
-            onClose={close}
-            onEdit={() => setEditing(true)}
-            onSaved={saved}
-            onBusyChange={changeBusy}
-          />
-        )}
-      </div>
-    </dialog>
+    <RoomModal title={title} busy={saving} onClose={close}>
+      {selection.mode === 'create' ? (
+        <RoomForm onCancel={close} onSaved={saved} onBusyChange={changeBusy} />
+      ) : (
+        <ExistingRoom
+          roomId={selection.roomId}
+          editing={editing}
+          onClose={close}
+          onEdit={() => setEditing(true)}
+          onSaved={saved}
+          onBusyChange={changeBusy}
+        />
+      )}
+    </RoomModal>
   )
 }

@@ -5,6 +5,7 @@ import type {
   RoomFieldErrors,
   RoomPayload,
   RoomResponse,
+  RoomStatus,
   RoomsQuery,
   RoomsResponse,
 } from '../types/room.types'
@@ -28,7 +29,7 @@ export class RoomApiError extends Error {
   }
 }
 
-function mapRoomError(error: unknown): RoomApiError {
+export function mapRoomError(error: unknown): RoomApiError {
   if (!axios.isAxiosError(error))
     return new RoomApiError(
       'No se pudo completar la operación. Inténtalo nuevamente.',
@@ -68,6 +69,27 @@ function mapRoomError(error: unknown): RoomApiError {
   )
     message = data.message
   return new RoomApiError(message, status, fields)
+}
+
+export async function updateAdminRoomStatus(
+  roomId: number,
+  status: RoomStatus,
+): Promise<Room> {
+  try {
+    const response = await httpClient.patch<RoomResponse>(
+      `${ROOMS_ENDPOINT}/${roomId}/status`,
+      { status },
+    )
+    const room = readRoom(response.data, roomId)
+    if (room.status !== status)
+      throw new RoomApiError(
+        'El servidor no confirmó el cambio de estado. Actualiza el listado antes de intentarlo nuevamente.',
+      )
+    return room
+  } catch (error) {
+    if (error instanceof RoomApiError) throw error
+    throw mapRoomError(error)
+  }
 }
 
 function readRoom(response: RoomResponse, expectedId?: number): Room {

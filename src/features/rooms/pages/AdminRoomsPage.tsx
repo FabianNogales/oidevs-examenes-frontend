@@ -1,7 +1,9 @@
 import { useCallback, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { Snackbar } from '@/shared/components/Snackbar'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { RoomDialog } from '../components/RoomDialog'
+import { RoomStatusDialog } from '../components/RoomStatusDialog'
 import { RoomsTable } from '../components/RoomsTable'
 import { useAdminRooms } from '../hooks/useAdminRooms'
 import type {
@@ -22,6 +24,7 @@ export function AdminRoomsPage() {
   const rooms = useAdminRooms(query)
   const [selection, setSelection] = useState<RoomDialogSelection | null>(null)
   const [notice, setNotice] = useState<AuthNotice | null>(null)
+  const [statusRoom, setStatusRoom] = useState<Room | null>(null)
   const dismissNotice = useCallback(() => setNotice(null), [])
 
   function handleSaved(room: Room, created: boolean) {
@@ -32,6 +35,18 @@ export function AdminRoomsPage() {
       message: `Aula ${room.code} ${created ? 'registrada' : 'actualizada'} correctamente.`,
     })
     if (created && query.page !== 1) changeQuery({ ...query, page: 1 })
+    else rooms.reload()
+  }
+
+  function handleStatusChanged(room: Room) {
+    setStatusRoom(null)
+    setNotice({
+      id: Date.now(),
+      type: 'success',
+      message: `Aula ${room.code} ${room.status === 'ACTIVE' ? 'activada' : 'desactivada'} correctamente.`,
+    })
+    if (query.status && query.page > 1 && rooms.result?.data.length === 1)
+      changeQuery({ ...query, page: query.page - 1 })
     else rooms.reload()
   }
 
@@ -48,6 +63,10 @@ export function AdminRoomsPage() {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (query.page === 1 && query.search === search.trim()) {
+      rooms.reload()
+      return
+    }
     changeQuery({ ...query, search: search.trim(), page: 1 })
   }
 
@@ -68,13 +87,18 @@ export function AdminRoomsPage() {
               sistema.
             </p>
           </div>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={() => setSelection({ mode: 'create' })}
-          >
-            + Registrar aula
-          </button>
+          <div className={styles.headerActions}>
+            <Link to="/admin/rooms/import" className={styles.primaryButton}>
+              + Importar aulas (CSV)
+            </Link>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => setSelection({ mode: 'create' })}
+            >
+              + Registrar aula
+            </button>
+          </div>
         </header>
         <div className={styles.card}>
           <form
@@ -164,6 +188,7 @@ export function AdminRoomsPage() {
                     setSelection({ mode: 'detail', roomId })
                   }
                   onEdit={(roomId) => setSelection({ mode: 'edit', roomId })}
+                  onStatusChange={setStatusRoom}
                 />
               ) : (
                 <div className={styles.state} role="status">
@@ -227,6 +252,13 @@ export function AdminRoomsPage() {
         />
       )}
       <Snackbar notice={notice} onDismiss={dismissNotice} />
+      {statusRoom && (
+        <RoomStatusDialog
+          room={statusRoom}
+          onClose={() => setStatusRoom(null)}
+          onChanged={handleStatusChanged}
+        />
+      )}
     </section>
   )
 }

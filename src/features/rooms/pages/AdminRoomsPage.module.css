@@ -19,6 +19,34 @@
 .pageHeader > button {
   flex-shrink: 0;
 }
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+.headerActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--button-height);
+  border-radius: var(--button-radius);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+.deactivateButton {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+  font-size: var(--font-size-xs);
+  padding: var(--space-2) var(--space-3);
+}
+.deactivateButton:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--color-error) 15%,
+    var(--color-error-soft)
+  );
+}
 .rowActions {
   display: flex;
   flex-wrap: wrap;
@@ -222,6 +250,9 @@
   border: 0;
 }
 @media (max-width: 640px) {
+  .headerActions {
+    flex-direction: column;
+  }
   .pageHeader {
     flex-direction: column;
     align-items: stretch;
