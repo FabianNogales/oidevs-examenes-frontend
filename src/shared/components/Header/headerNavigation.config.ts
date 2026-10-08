@@ -84,6 +84,10 @@ export const navigationByRole: Record<
       to: '/admin/students/import',
     },
     {
+      label: 'Aulas',
+      to: '/admin/rooms',
+    },
+    {
       label: 'Información',
     },
     {

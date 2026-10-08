@@ -22,6 +22,7 @@ import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage
 import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
 import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
 import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
+import { AdminRoomsPage } from '@/features/rooms/pages/AdminRoomsPage'
 
 export const router = createBrowserRouter([
   {
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
                   {
                     path: 'teachers',
                     element: <AdminTeachersPage />,
+                  },
+                  {
+                    path: 'rooms',
+                    element: <AdminRoomsPage />,
                   },
                   {
                     path: 'students/import',
