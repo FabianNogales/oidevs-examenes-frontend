@@ -1,0 +1,440 @@
+/* ==================================================
+   CONTENEDOR PRINCIPAL
+   ================================================== */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--space-8) 50px;
+  gap: var(--space-6); 
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* ==================================================
+   BREADCRUMBS
+   ================================================== */
+.breadcrumbs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumbLink {
+  color: var(--brand-blue, #2563EB);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.breadcrumbLink:hover {
+  text-decoration: underline;
+}
+
+/* Primer separador (Azul) */
+.breadcrumbSeparator {
+  color: var(--brand-blue, #2563EB);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Segundo separador (Rosa) */
+.breadcrumbSeparatorActive {
+  color: var(--brand-pink, #D67A8C);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Página actual (Rosa y Regular) */
+.breadcrumbCurrent {
+  color: var(--brand-pink, #D67A8C);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* =======================
+   CONTENEDOR DE LA TABLA
+   ======================= */
+.tableContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface); 
+  border: 1px solid var(--color-border-strong, #b8c9e1); 
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(23, 37, 84, 0.04);
+  overflow: hidden;
+}
+
+/* ==================================================
+   BARRA DE BÚSQUEDA
+   ================================================== */
+.searchBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px 24px;
+  gap: 12px;
+  width: 100%;
+  background: var(--color-surface);
+}
+
+.searchInputWrapper {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  height: 45px; 
+  padding: 0 16px;
+  gap: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-text-secondary); 
+  border-radius: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.searchInputWrapper:focus-within {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.searchInput {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--brand-navy);
+  font-size: 15px; 
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.searchButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 45px; 
+  padding: 0 24px;
+  background: var(--brand-blue);
+  border: none;
+  border-radius: 10px; 
+  color: var(--color-surface);
+  font-size: 16px; 
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.searchButton:hover {
+  background: var(--color-primary-hover);
+}
+
+/* ==================================================
+   ENCABEZADO DE PÁGINA 
+   ================================================== */
+.pageHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.headerTitles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.headerTitles h1 {
+  margin: 0;
+  color: var(--brand-navy);
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  line-height: var(--line-height-tight);
+}
+
+.headerTitles p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+}
+
+.headerActions {
+  display: flex;
+  gap: 16px;
+}
+
+.primaryButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 45px; 
+  padding: 0 24px;
+  background: var(--brand-blue);
+  border: 1px solid var(--brand-blue);
+  border-radius: 10px; 
+  color: var(--color-surface);
+  font-size: 16px; 
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.primaryButton:hover {
+  background: var(--color-primary-hover);
+}
+
+.secondaryButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 45px; 
+  padding: 0 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--brand-blue);
+  border-radius: 8px; 
+  color: var(--brand-blue);
+  font-size: 15px; 
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background: var(--brand-blue-light);
+}
+
+/* ==================================================
+   TABLA
+   ================================================== */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.studentsTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.studentsTable th {
+  background: var(--color-soft-blue); 
+  color: var(--brand-navy);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 24px;
+  border-top: 1px solid var(--brand-navy);
+  border-bottom: 1px solid var(--brand-navy);
+}
+
+.textRight {
+  text-align: right;
+}
+
+.studentsTable td {
+  padding: 12px 24px;
+  border-bottom: 1px solid #F0F4F8; 
+  vertical-align: middle;
+}
+
+.studentsTable tr:hover {
+  background-color: #FAFCFF;
+}
+
+.cellCode {
+  color: var(--brand-navy);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.studentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.studentName {
+  color: var(--brand-navy);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.studentCi {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.cellEmail {
+  color: var(--brand-navy);
+  font-size: 14px;
+}
+
+/* ==================================================
+   ESTADOS (Badges)
+   ================================================== */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  gap: 0;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 700;
+  justify-content: center;
+}
+
+.statusDot {
+  display: none;
+}
+
+.statusActive {
+  background: #E8F5E9;
+  color: #115E28;
+}
+
+.statusInactive {
+  background: #FFEBEE;
+  color: #8B1E3F;
+}
+
+/* ==================================================
+   BOTONES DE ACCIÓN DE LA TABLA (Small Button)
+   ================================================== */
+.actionButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Base unificada para todos los botones de la fila */
+.actionBtnText, .actionBtnDanger, .actionBtnSuccess {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 25px;
+  border-radius: 6px;
+  font-size: 13px; 
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #FFFFFF;
+}
+
+/* Botones "Ver detalle" y "Editar" */
+.actionBtnText {
+  padding: 0 14px;
+  border: 1px solid var(--brand-blue, #2563eb);
+  color: var(--brand-blue, #2563eb);
+}
+
+.actionBtnText:hover {
+  background: var(--brand-blue-light, #eaf3ff);
+}
+
+/* Botones de Estado: Ancho estricto e igualado para evitar saltos visuales */
+.actionBtnDanger, .actionBtnSuccess {
+  width: 95px;
+  padding: 0; 
+}
+
+/* Botón "Desactivar" (Delineado rojo) */
+.actionBtnDanger {
+  border: 1px solid #D67A8C;
+  color: #8B1E3F;
+}
+
+.actionBtnDanger:hover {
+  background: #FFEBEE;
+}
+
+/* Botón "Activar" (Delineado verde) */
+.actionBtnSuccess {
+  border: 1px solid #A5D6A7; 
+  color: #115E28;
+}
+
+.actionBtnSuccess:hover {
+  background: #E8F5E9;
+}
+
+/* ==================================================
+   PAGINACIÓN
+   ================================================== */
+.pagination {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 16px 24px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.paginationSummary {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pageCurrent {
+  color: var(--brand-navy);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pageBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 45px; 
+  padding: 0 16px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px; 
+  color: var(--brand-blue);
+  font-size: 14px; 
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageBtn:hover {
+  background: #EAF3FF;
+  border-color: var(--brand-blue);
+}
+
+.pageBtnDisabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 45px; 
+  padding: 0 16px;
+  background: #FAFAFA;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px; 
+  color: #9E9E9E;
+  font-size: 14px; 
+  font-weight: 600;
+  cursor: not-allowed;
+}
+
+/* Celda vacía */
+.emptyState {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-text-secondary);
+}

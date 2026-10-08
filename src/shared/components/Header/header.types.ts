@@ -6,6 +6,7 @@ export interface HeaderNavigationItem {
   label: string
   to?: string
   end?: boolean
+  children?: HeaderNavigationItem[];
 }
 
 export interface HeaderUser {

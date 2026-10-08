@@ -81,7 +81,10 @@ export const navigationByRole: Record<
     },
     {
       label: 'Estudiantes',
-      to: '/admin/students/import',
+      children: [
+        { label: 'Gestionar estudiantes', to: '/admin/students/manage' },
+        { label: 'Importar estudiantes', to: '/admin/students/import' },
+      ],
     },
     {
       label: 'Información',

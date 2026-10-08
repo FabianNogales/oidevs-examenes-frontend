@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
@@ -22,23 +22,33 @@ import {
 } from '@/features/students/utils/csvValidation'
 import styles from '@/features/students/pages/ImportStudentsPage.module.css'
 
-type ImportFlowState =
-  | 'idle'
-  | 'selected'
-  | 'validating'
-  | 'preview'
-  | 'confirming'
-  | 'success'
+type ImportFlowState = 'idle' | 'selected' | 'validating' | 'preview' | 'confirming' | 'success'
+
+const IMPORT_STORAGE_KEY = 'eida_last_import_preview'
 
 export function StudentImportPanel() {
   const navigate = useNavigate()
   const { notify } = useAuth()
   const confirmationRequestInFlight = useRef(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [flowState, setFlowState] = useState<ImportFlowState>('idle')
   const [validationMessage, setValidationMessage] = useState<string | null>(null)
-  const [preview, setPreview] = useState<StudentImportPreview | null>(null)
   const [confirmation, setConfirmation] = useState<StudentImportConfirmation | null>(null)
+  const [preview, setPreview] = useState<StudentImportPreview | null>(() => {
+    const saved = localStorage.getItem(IMPORT_STORAGE_KEY)
+    return saved ? JSON.parse(saved) : null
+  })
+
+  const [flowState, setFlowState] = useState<ImportFlowState>(() => {
+    return localStorage.getItem(IMPORT_STORAGE_KEY) ? 'preview' : 'idle'
+  })
+
+  useEffect(() => {
+    if (preview) {
+      localStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify(preview))
+    } else {
+      localStorage.removeItem(IMPORT_STORAGE_KEY)
+    }
+  }, [preview])
 
   const isValidating = flowState === 'validating'
   const isConfirming = flowState === 'confirming'
@@ -49,14 +59,12 @@ export function StudentImportPanel() {
 
   function handleFileSelected(file: File) {
     const validation = validateStudentImportFile(file)
-
     if (!validation.isValid) {
       setSelectedFile(null)
       setValidationMessage(null)
       notify('error', validation.message ?? 'No se pudo seleccionar el archivo.')
       return
     }
-
     setSelectedFile(file)
     setValidationMessage(null)
     setPreview(null)
@@ -78,7 +86,6 @@ export function StudentImportPanel() {
       notify('info', 'Se cambio el archivo seleccionado.')
       return
     }
-
     navigate('/admin')
   }
 
@@ -164,23 +171,18 @@ export function StudentImportPanel() {
 
       {showInitialSelection ? (
         <>
-          <p className={styles.columnsIntro}>
-            El archivo debe incluir las siguientes columnas:
-          </p>
+          <p className={styles.columnsIntro}>El archivo debe incluir las siguientes columnas:</p>
           <ImportColumnsGuide />
-
           <CsvDropzone
             selectedFile={selectedFile}
             validationMessage={validationMessage}
             onFileSelected={handleFileSelected}
             onRemoveFile={clearSelection}
           />
-
           <div className={styles.infoBanner}>
             <InfoIcon />
             <span>Podras revisar los estudiantes antes de confirmar la importacion.</span>
           </div>
-
           <div className={styles.panelActions}>
             <button
               type="button"
@@ -193,9 +195,7 @@ export function StudentImportPanel() {
             <button
               type="button"
               className={styles.continueButton}
-              onClick={() => {
-                void handleValidate()
-              }}
+              onClick={() => { void handleValidate() }}
               disabled={!selectedFile || isProcessing}
             >
               {getPrimaryActionLabel(flowState)}
@@ -214,9 +214,7 @@ export function StudentImportPanel() {
           canConfirm={canConfirm}
           onChangeFile={clearSelection}
           onCancel={handleCancel}
-          onConfirm={() => {
-            void handleConfirm()
-          }}
+          onConfirm={() => { void handleConfirm() }}
         />
       ) : null}
 
@@ -250,12 +248,20 @@ function StudentImportReview({
   onCancel: () => void
   onConfirm: () => void
 }) {
+  const [filter, setFilter] = useState<'all' | 'valid' | 'invalid'>('all')
+  
+  const filteredRows = preview.rows.filter((row) => {
+    if (filter === 'valid') return row.valid === true
+    if (filter === 'invalid') return row.valid === false
+    return true
+  })
+
   return (
     <>
       <div className={styles.selectedFileBar}>
         <div>
           <span>Archivo seleccionado</span>
-          <strong>{file?.name ?? 'Archivo CSV'}</strong>
+          <strong>{file?.name ?? 'Archivo recuperado (Sesión anterior)'}</strong>
           {file ? <small>{formatFileSize(file.size)}</small> : null}
         </div>
         <button
@@ -276,8 +282,13 @@ function StudentImportReview({
       {message ? <PreviewMessage preview={preview} message={message} /> : null}
       {preview.errors.length > 0 ? <FileObservations errors={preview.errors} /> : null}
 
-      <StudentImportSummary preview={preview} />
-      <StudentImportPreviewTable rows={preview.rows} />
+      <StudentImportSummary 
+        preview={preview} 
+        currentFilter={filter} 
+        onFilterChange={setFilter} 
+      />
+      
+      <StudentImportPreviewTable rows={filteredRows} />
 
       <div className={styles.panelActions}>
         <button
@@ -292,7 +303,7 @@ function StudentImportReview({
           type="button"
           className={styles.continueButton}
           onClick={onConfirm}
-          disabled={!canConfirm || isConfirming}
+          disabled={!canConfirm || isConfirming || !file}
         >
           {isConfirming ? 'Confirmando...' : 'Confirmar importacion'}
           <ChevronRightIcon />
@@ -315,15 +326,8 @@ function FileObservations({ errors }: { errors: string[] }) {
   )
 }
 
-function PreviewMessage({
-  preview,
-  message,
-}: {
-  preview: StudentImportPreview
-  message: string
-}) {
+function PreviewMessage({ preview, message }: { preview: StudentImportPreview, message: string }) {
   const subtext = getPreviewSubtext(preview)
-
   return (
     <div
       className={styles.reviewMessage}
@@ -337,26 +341,14 @@ function PreviewMessage({
 }
 
 function getPreviewSubtext(preview: StudentImportPreview): string {
-  if (preview.valid_rows === 0) {
-    return 'Corrige las observaciones del archivo y vuelve a intentarlo.'
-  }
-
-  if (preview.error_rows > 0) {
-    return 'Los registros listos podran importarse; los registros con observaciones no seran registrados.'
-  }
-
+  if (preview.valid_rows === 0) return 'Corrige las observaciones del archivo y vuelve a intentarlo.'
+  if (preview.error_rows > 0) return 'Los registros listos podran importarse; los registros con observaciones no seran registrados.'
   return 'Revisa la informacion antes de confirmar la importacion.'
 }
 
 function buildPreviewMessage(preview: StudentImportPreview): string {
-  if (preview.valid_rows === 0) {
-    return 'No hay estudiantes listos para importar.'
-  }
-
-  if (preview.error_rows > 0) {
-    return 'Algunos registros necesitan revision.'
-  }
-
+  if (preview.valid_rows === 0) return 'No hay estudiantes listos para importar.'
+  if (preview.error_rows > 0) return 'Algunos registros necesitan revision.'
   return 'Todos los estudiantes estan listos para ser importados.'
 }
 
@@ -366,37 +358,24 @@ function getInvalidFileMessage(): string {
 
 function getPrimaryActionLabel(flowState: ImportFlowState): string {
   switch (flowState) {
-    case 'validating':
-      return 'Validando...'
-    case 'confirming':
-      return 'Confirmando...'
-    case 'success':
-      return 'Importacion completada'
-    default:
-      return 'Validar y continuar'
+    case 'validating': return 'Validando...'
+    case 'confirming': return 'Confirmando...'
+    case 'success': return 'Importacion completada'
+    default: return 'Validar y continuar'
   }
 }
 
 function formatFileSize(size: number): string {
-  if (size < 1024) {
-    return `${size} B`
-  }
-
+  if (size < 1024) return `${size} B`
   const kilobytes = size / 1024
-
-  if (kilobytes < 1024) {
-    return `${kilobytes.toFixed(1)} KB`
-  }
-
+  if (kilobytes < 1024) return `${kilobytes.toFixed(1)} KB`
   return `${(kilobytes / 1024).toFixed(1)} MB`
 }
 
 function DownloadIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3v12" />
-      <path d="m7 10 5 5 5-5" />
-      <path d="M5 21h14" />
+      <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" />
     </svg>
   )
 }
@@ -404,9 +383,7 @@ function DownloadIcon() {
 function InfoIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 11v5" />
-      <path d="M12 8h.01" />
+      <circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><path d="M12 8h.01" />
     </svg>
   )
 }

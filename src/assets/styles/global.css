@@ -79,7 +79,7 @@
   --color-on-accent: #ffffff;
   --color-decorative: var(--brand-pink);
 
-  --color-background: var(--brand-white-warm);
+  --color-background: var(--brand-blue-light);
   --color-surface: #ffffff;
   --color-surface-soft: var(--brand-blue-light);
   --color-surface-muted: #f5fbff;
@@ -216,8 +216,46 @@ body,
 }
 
 :where(h1) {
-  font-size: clamp(var(--font-size-3xl), 5vw, var(--font-size-4xl));
+  font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
+}
+
+.auth-info h1 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+}
+
+.auth-card__header h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+.auth-field label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+.primary-button,
+.secondary-button {
+  display: inline-flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold); 
+  line-height: 1.14;
 }
 
 :where(h2) {
