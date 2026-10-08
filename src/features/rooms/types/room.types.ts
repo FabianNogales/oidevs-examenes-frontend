@@ -39,3 +39,31 @@ export interface RoomsQuery {
   search: string
   status: RoomStatus | ''
 }
+
+export interface RoomFormValues {
+  code: string
+  name: string
+  location: string
+  description: string
+  capacity: string
+  floor: string
+}
+
+export type RoomField = keyof RoomFormValues
+export type RoomFieldErrors = Partial<Record<RoomField, string>>
+
+export interface RoomPayload {
+  code: string
+  name: string
+  location: string | null
+  description: string | null
+  capacity: number | null
+  floor: string | null
+}
+
+export interface RoomResponse {
+  data: Room
+}
+
+export type RoomDialogSelection =
+  { mode: 'create' } | { mode: 'detail' | 'edit'; roomId: number }

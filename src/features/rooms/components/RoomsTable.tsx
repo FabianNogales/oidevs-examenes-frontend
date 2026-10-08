@@ -18,7 +18,15 @@ function CurrentExam({ exam }: { exam: Room['current_exam'] }) {
   )
 }
 
-export function RoomsTable({ rooms }: { rooms: Room[] }) {
+export function RoomsTable({
+  rooms,
+  onDetail,
+  onEdit,
+}: {
+  rooms: Room[]
+  onDetail: (roomId: number) => void
+  onEdit: (roomId: number) => void
+}) {
   return (
     <div
       className={styles.tableScroll}
@@ -38,6 +46,7 @@ export function RoomsTable({ rooms }: { rooms: Room[] }) {
             <th scope="col">Estado</th>
             <th scope="col">Disponibilidad actual</th>
             <th scope="col">Examen actual</th>
+            <th scope="col">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -89,6 +98,26 @@ export function RoomsTable({ rooms }: { rooms: Room[] }) {
               </td>
               <td data-label="Examen actual">
                 <CurrentExam exam={room.current_exam} />
+              </td>
+              <td data-label="Acciones">
+                <div className={styles.rowActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => onDetail(room.id)}
+                    aria-label={`Ver detalle de ${room.code}`}
+                  >
+                    Ver detalle
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => onEdit(room.id)}
+                    aria-label={`Editar ${room.code}`}
+                  >
+                    Editar
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

@@ -1,7 +1,15 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent } from 'react'
+import { Snackbar } from '@/shared/components/Snackbar'
+import type { AuthNotice } from '@/features/auth/types/auth'
+import { RoomDialog } from '../components/RoomDialog'
 import { RoomsTable } from '../components/RoomsTable'
 import { useAdminRooms } from '../hooks/useAdminRooms'
-import type { RoomsQuery, RoomStatus } from '../types/room.types'
+import type {
+  Room,
+  RoomDialogSelection,
+  RoomsQuery,
+  RoomStatus,
+} from '../types/room.types'
 import styles from './AdminRoomsPage.module.css'
 
 export function AdminRoomsPage() {
@@ -12,6 +20,20 @@ export function AdminRoomsPage() {
     status: '',
   })
   const rooms = useAdminRooms(query)
+  const [selection, setSelection] = useState<RoomDialogSelection | null>(null)
+  const [notice, setNotice] = useState<AuthNotice | null>(null)
+  const dismissNotice = useCallback(() => setNotice(null), [])
+
+  function handleSaved(room: Room, created: boolean) {
+    setSelection(null)
+    setNotice({
+      id: Date.now(),
+      type: 'success',
+      message: `Aula ${room.code} ${created ? 'registrada' : 'actualizada'} correctamente.`,
+    })
+    if (created && query.page !== 1) changeQuery({ ...query, page: 1 })
+    else rooms.reload()
+  }
 
   function changeQuery(next: RoomsQuery) {
     if (
@@ -36,12 +58,23 @@ export function AdminRoomsPage() {
     <section className={styles.page} aria-labelledby="rooms-title">
       <div className={styles.container}>
         <header className={styles.pageHeader}>
-          <p className={styles.eyebrow}>Administrador</p>
-          <h1 id="rooms-title">Gestión de aulas</h1>
-          <p className={styles.description}>
-            Consulta y administra las aulas o ambientes disponibles en el
-            sistema.
-          </p>
+          <div>
+            <p className={styles.eyebrow}>Administrador</p>
+            <h1 id="rooms-title" tabIndex={-1}>
+              Gestión de aulas
+            </h1>
+            <p className={styles.description}>
+              Consulta y administra las aulas o ambientes disponibles en el
+              sistema.
+            </p>
+          </div>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={() => setSelection({ mode: 'create' })}
+          >
+            + Registrar aula
+          </button>
         </header>
         <div className={styles.card}>
           <form
@@ -125,7 +158,13 @@ export function AdminRoomsPage() {
             )}
             {rooms.status === 'ready' &&
               (rooms.result.data.length ? (
-                <RoomsTable rooms={rooms.result.data} />
+                <RoomsTable
+                  rooms={rooms.result.data}
+                  onDetail={(roomId) =>
+                    setSelection({ mode: 'detail', roomId })
+                  }
+                  onEdit={(roomId) => setSelection({ mode: 'edit', roomId })}
+                />
               ) : (
                 <div className={styles.state} role="status">
                   <h2>
@@ -175,6 +214,19 @@ export function AdminRoomsPage() {
           )}
         </div>
       </div>
+      {selection && (
+        <RoomDialog
+          key={
+            selection.mode === 'create'
+              ? 'create'
+              : `${selection.mode}-${selection.roomId}`
+          }
+          selection={selection}
+          onClose={() => setSelection(null)}
+          onSaved={handleSaved}
+        />
+      )}
+      <Snackbar notice={notice} onDismiss={dismissNotice} />
     </section>
   )
 }
