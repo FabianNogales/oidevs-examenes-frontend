@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
 import { useTeacherUpcomingExams } from '@/features/exams/hooks/useTeacherUpcomingExams'
@@ -5,7 +6,8 @@ import { useTeacherUpcomingExams } from '@/features/exams/hooks/useTeacherUpcomi
 import styles from './TeacherExamsPage.module.css'
 
 export function TeacherExamsPage() {
-  const { exams, isLoading, errorMessage, loadExams } = useTeacherUpcomingExams()
+  const { exams, isLoading, errorMessage, loadExams } =
+    useTeacherUpcomingExams()
 
   return (
     <main className={styles.page}>
@@ -23,7 +25,11 @@ export function TeacherExamsPage() {
           <section className={styles.state} role="alert">
             <h2>No se pudieron cargar los exámenes</h2>
             <p>{errorMessage}</p>
-            <button type="button" onClick={() => void loadExams()} disabled={isLoading}>
+            <button
+              type="button"
+              onClick={() => void loadExams()}
+              disabled={isLoading}
+            >
               {isLoading ? 'Reintentando…' : 'Reintentar'}
             </button>
           </section>
@@ -44,7 +50,17 @@ export function TeacherExamsPage() {
                 roomCode={exam.room?.code}
                 evaluationType={exam.evaluation_type}
                 status={exam.status}
-              />
+              >
+                <Link to={`/teacher/exams/${exam.id}/eligibilities`}>
+                  Habilitaciones
+                </Link>
+                <Link to={`/teacher/exams/${exam.id}/collaborators`}>
+                  Colaboradores
+                </Link>
+                <Link to={`/exams/${exam.id}/entry-control?from=teacher`}>
+                  Control de ingreso
+                </Link>
+              </ExamCard>
             ))}
           </section>
         ) : null}

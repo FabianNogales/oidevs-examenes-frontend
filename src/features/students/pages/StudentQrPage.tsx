@@ -81,7 +81,7 @@ export function StudentQrPage() {
         <div className={styles.sectionHeading}>
           <h2 id="student-exams-heading">
             <StudentQrIcon name="calendar" />
-            Exámenes programados
+            Exámenes que debes rendir
           </h2>
           <button
             type="button"
