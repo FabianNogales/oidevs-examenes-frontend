@@ -65,6 +65,38 @@ export const router = createBrowserRouter([
                     element: <AdminManageStudentsPage />,
                   },
                   {
+                    path: 'subjects',
+                    lazy: async () => {
+                      const { AdminSubjectsPage } =
+                        await import('@/features/subjects/pages/AdminSubjectsPage')
+                      return { Component: AdminSubjectsPage }
+                    },
+                  },
+                  {
+                    path: 'subjects/import',
+                    lazy: async () => {
+                      const { ImportSubjectsPage } =
+                        await import('@/features/subjects/pages/ImportSubjectsPage')
+                      return { Component: ImportSubjectsPage }
+                    },
+                  },
+                  {
+                    path: 'rooms',
+                    lazy: async () => {
+                      const { AdminRoomsPage } =
+                        await import('@/features/rooms/pages/AdminRoomsPage')
+                      return { Component: AdminRoomsPage }
+                    },
+                  },
+                  {
+                    path: 'rooms/import',
+                    lazy: async () => {
+                      const { ImportRoomsPage } =
+                        await import('@/features/rooms/pages/ImportRoomsPage')
+                      return { Component: ImportRoomsPage }
+                    },
+                  },
+                  {
                     path: 'students/import',
                     element: <ImportStudentsPage />,
                   },

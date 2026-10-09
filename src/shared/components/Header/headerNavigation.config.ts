@@ -87,6 +87,14 @@ export const navigationByRole: Record<
       ],
     },
     {
+      label: 'Aulas',
+      to: '/admin/rooms',
+    },
+    {
+      label: 'Materias',
+      to: '/admin/subjects',
+    },
+    {
       label: 'Información',
     },
     {
