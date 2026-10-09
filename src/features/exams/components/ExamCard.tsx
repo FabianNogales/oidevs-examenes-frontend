@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import type { EvaluationType } from '@/features/exams/types/exam.types'
 
 import styles from './ExamCard.module.css'
 
 type ExamCardProps = {
-  subjectCode: string
-  subjectName: string
+  subjectCode?: string | null
+  subjectName?: string | null
   examName: string
   examDate: string
   examTime?: string | null
@@ -13,6 +14,7 @@ type ExamCardProps = {
   roomCode?: string | null
   evaluationType?: EvaluationType | null
   status?: string | null
+  children?: ReactNode
 }
 
 const EVALUATION_LABELS: Record<EvaluationType, string> = {
@@ -54,21 +56,28 @@ export function ExamCard({
   roomCode,
   evaluationType,
   status,
+  children,
 }: ExamCardProps) {
   return (
     <article className={styles.card}>
       <div className={styles.headerRow}>
         <div className={styles.subjectInfo}>
-          <h3>{subjectName}</h3>
-          <span>{subjectCode}</span>
+          <h3>{subjectName || examName}</h3>
+          {subjectCode ? <span>{subjectCode}</span> : null}
         </div>
 
-        {status ? <span className={styles.badge}>{STATUS_LABELS[status] ?? status}</span> : null}
+        {status ? (
+          <span className={styles.badge}>
+            {STATUS_LABELS[status] ?? status}
+          </span>
+        ) : null}
       </div>
 
-      <div className={styles.examNameWrap}>
-        <p>{examName}</p>
-      </div>
+      {subjectName ? (
+        <div className={styles.examNameWrap}>
+          <p>{examName}</p>
+        </div>
+      ) : null}
 
       <div className={styles.infoGrid}>
         <div className={styles.infoItem}>
@@ -78,35 +87,46 @@ export function ExamCard({
           </div>
         </div>
 
-        {examTime ? <div className={styles.infoItem}>
-          <div className={styles.itemContent}>
-            <span className={styles.label}>Hora</span>
-            <strong>{formatTime(examTime)}</strong>
+        {examTime ? (
+          <div className={styles.infoItem}>
+            <div className={styles.itemContent}>
+              <span className={styles.label}>Hora</span>
+              <strong>{formatTime(examTime)}</strong>
+            </div>
           </div>
-        </div> : null}
+        ) : null}
 
-        {durationMinutes != null ? <div className={styles.infoItem}>
-          <div className={styles.itemContent}>
-            <span className={styles.label}>Duración</span>
-            <strong>{durationMinutes} min</strong>
+        {durationMinutes != null ? (
+          <div className={styles.infoItem}>
+            <div className={styles.itemContent}>
+              <span className={styles.label}>Duración</span>
+              <strong>{durationMinutes} min</strong>
+            </div>
           </div>
-        </div> : null}
+        ) : null}
 
-        {roomName || roomCode ? <div className={styles.infoItem}>
-          <div className={styles.itemContent}>
-            <span className={styles.label}>Ambiente</span>
-            {roomName ? <strong>{roomName}</strong> : null}
-            {roomCode ? <small>{roomCode}</small> : null}
+        {roomName || roomCode ? (
+          <div className={styles.infoItem}>
+            <div className={styles.itemContent}>
+              <span className={styles.label}>Ambiente</span>
+              {roomName ? <strong>{roomName}</strong> : null}
+              {roomCode ? <small>{roomCode}</small> : null}
+            </div>
           </div>
-        </div> : null}
+        ) : null}
 
-        {evaluationType ? <div className={styles.infoItem}>
-          <div className={styles.itemContent}>
-            <span className={styles.label}>Tipo</span>
-            <strong>{EVALUATION_LABELS[evaluationType] ?? evaluationType}</strong>
+        {evaluationType ? (
+          <div className={styles.infoItem}>
+            <div className={styles.itemContent}>
+              <span className={styles.label}>Tipo</span>
+              <strong>
+                {EVALUATION_LABELS[evaluationType] ?? evaluationType}
+              </strong>
+            </div>
           </div>
-        </div> : null}
+        ) : null}
       </div>
+      {children ? <div className={styles.actions}>{children}</div> : null}
     </article>
   )
 }

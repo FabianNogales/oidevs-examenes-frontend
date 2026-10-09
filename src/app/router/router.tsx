@@ -16,6 +16,10 @@ import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
 import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
+import { ExamEligibilitiesPage } from '@/features/eligibilities/pages/ExamEligibilitiesPage'
+import { ExamCollaboratorsPage } from '@/features/collaborations/pages/ExamCollaboratorsPage'
+import { CollaboratorPage } from '@/features/collaborations/pages/CollaboratorPage'
+import { EntryControlPage } from '@/features/exams/pages/EntryControlPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
@@ -42,6 +46,14 @@ export const router = createBrowserRouter([
               {
                 path: AUTH_ROUTES.fallbackHome,
                 element: <AuthenticatedEntryRoute />,
+              },
+              {
+                path: 'collaborator',
+                element: <CollaboratorPage />,
+              },
+              {
+                path: 'exams/:examId/entry-control',
+                element: <EntryControlPage />,
               },
             ],
           },
@@ -126,6 +138,14 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/exams',
                 element: <TeacherExamsPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/collaborators',
+                element: <ExamCollaboratorsPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/eligibilities',
+                element: <ExamEligibilitiesPage />,
               },
               {
                 path: 'teacher/students/:courseOfferingId',

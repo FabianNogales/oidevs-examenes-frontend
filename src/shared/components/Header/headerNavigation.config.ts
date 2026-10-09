@@ -1,7 +1,4 @@
-import type {
-  HeaderNavigationItem,
-  HeaderRole,
-} from './header.types'
+import type { HeaderNavigationItem, HeaderRole } from './header.types'
 
 export const publicNavigation: readonly HeaderNavigationItem[] = [
   {
@@ -111,10 +108,17 @@ export const roleLabelByRole: Record<HeaderRole, string> = {
 
 export function getHeaderNavigation(
   role?: HeaderRole | null,
+  hasCollaborations = false,
 ): readonly HeaderNavigationItem[] {
-  if (!role) {
-    return publicNavigation
-  }
-
-  return navigationByRole[role]
+  const navigation = role ? navigationByRole[role] : publicNavigation
+  if (!hasCollaborations) return navigation
+  const insertionIndex = navigation.findIndex(
+    (item) => item.label === 'Información',
+  )
+  const index = insertionIndex < 0 ? navigation.length : insertionIndex
+  return [
+    ...navigation.slice(0, index),
+    { label: 'Colaborador', to: '/collaborator' },
+    ...navigation.slice(index),
+  ]
 }
