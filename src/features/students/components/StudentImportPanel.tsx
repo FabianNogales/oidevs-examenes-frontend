@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router' // Añadir useLocation
+import { useNavigate, useLocation } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   confirmStudentImport,
@@ -30,7 +30,7 @@ export type ImportStep = 'select' | 'preview' | 'success'
 type RowFilter = 'all' | 'valid' | 'invalid'
 
 const IMPORT_STORAGE_KEY = 'eida_last_import_preview'
-const STUDENTS_PATH = '/admin/students'
+const STUDENTS_PATH = '/admin/students/manage'
 const PAGE_SIZE = 10
 const EXPORT_COLUMNS: StudentImportColumn[] = [
   'sis_code',
@@ -118,11 +118,7 @@ export function StudentImportPanel({
   }
 
   function handleCancel() {
-    if (selectedFile || preview) {
-      clearSelection()
-      notify('info', 'Se cambió el archivo seleccionado.')
-      return
-    }
+    localStorage.removeItem(IMPORT_STORAGE_KEY)
     navigate(STUDENTS_PATH)
   }
 
