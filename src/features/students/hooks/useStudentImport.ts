@@ -34,19 +34,19 @@ export function useStudentImport() {
       // Validación inicial en frontend
       const validation = await validateStudentImportCsv(file) //[cite: 17]
       if (!validation.isValid) {
-        setNotice({ type: 'error', message: validation.message || 'El archivo no es válido.' })
+        setNotice({ id: Date.now(), type: 'error', message: validation.message || 'El archivo no es válido.' })
         return
       }
 
       // Petición al backend
       const data = await previewStudentImport(file) //[cite: 15]
       setPreviewData(data)
-      setNotice({ type: 'success', message: 'Archivo leído con éxito. Revisa la vista previa.' })
+      setNotice({ id: Date.now(), type: 'success', message: 'Archivo leído con éxito. Revisa la vista previa.' })
       
     } catch (error) {
       // Mapeo de errores usando la función existente en tu API
       const errorMessage = getStudentImportErrorMessage(error) //[cite: 15]
-      setNotice({ type: 'error', message: errorMessage })
+      setNotice({ id: Date.now(), type: 'error', message: errorMessage })
     } finally {
       setIsProcessing(false)
     }
@@ -57,11 +57,11 @@ export function useStudentImport() {
     setIsProcessing(true)
     try {
       await confirmStudentImport(file) //[cite: 15]
-      setNotice({ type: 'success', message: 'Importación confirmada y registrada exitosamente.' })
+      setNotice({ id: Date.now(), type: 'success', message: 'Importación confirmada y registrada exitosamente.' })
       clearImport() // Limpiamos el Local Storage tras el éxito
     } catch (error) {
       const errorMessage = getStudentImportErrorMessage(error) //[cite: 15]
-      setNotice({ type: 'error', message: errorMessage })
+      setNotice({ id: Date.now(), type: 'error', message: errorMessage })
     } finally {
       setIsProcessing(false)
     }

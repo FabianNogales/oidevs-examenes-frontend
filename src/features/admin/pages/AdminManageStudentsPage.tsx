@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { NavLink, useNavigate } from 'react-router'
+import { NavLink } from 'react-router'
 import styles from './AdminManageStudentsPage.module.css'
 import { SearchIcon } from '@/assets/icons/SearchIcon'
 import { StudentDetailModal } from '@/features/admin/components/StudentDetailModal'
@@ -10,8 +10,6 @@ import type { Student, StudentDetail } from '@/features/admin/types/student.type
 const PER_PAGE = 10
 
 export function AdminManageStudentsPage() {
-  const navigate = useNavigate()
-
   const [searchTerm, setSearchTerm] = useState('')
   const [searchInput, setSearchInput] = useState('')
 
