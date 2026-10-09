@@ -1,5 +1,5 @@
 import type { StudentImportPreview } from '@/features/students/types/studentImport'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from './StudentImportDesign.module.css'
 
 type FilterType = 'all' | 'valid' | 'invalid'
 
@@ -14,47 +14,48 @@ export function StudentImportSummary({
 }) {
   return (
     <section className={styles.previewPanel} aria-labelledby="student-import-summary-title">
-      <h3 id="student-import-summary-title">Resumen de importacion</h3>
+      <h3 id="student-import-summary-title">Resumen de importación</h3>
       <div className={styles.previewSummary}>
-        <SummaryItem 
-          label="Total de registros" 
+        <SummaryItem
+          label="Total de registros"
           value={preview.total_rows}
           isActive={currentFilter === 'all'}
-          onClick={() => onFilterChange('all')} 
+          onClick={() => onFilterChange('all')}
         />
-        <SummaryItem 
-          label="Listos para importar" 
+        <SummaryItem
+          label="Listos para importar"
           value={preview.valid_rows}
           isActive={currentFilter === 'valid'}
-          onClick={() => onFilterChange('valid')} 
+          onClick={() => onFilterChange('valid')}
         />
-        <SummaryItem 
-          label="Con observaciones" 
+        <SummaryItem
+          label="Con observaciones"
           value={preview.error_rows}
           isActive={currentFilter === 'invalid'}
-          onClick={() => onFilterChange('invalid')} 
+          onClick={() => onFilterChange('invalid')}
         />
       </div>
     </section>
   )
 }
 
-function SummaryItem({ 
-  label, 
-  value, 
-  isActive, 
-  onClick 
-}: { 
+function SummaryItem({
+  label,
+  value,
+  isActive,
+  onClick,
+}: {
   label: string
   value: number
   isActive: boolean
-  onClick: () => void 
+  onClick: () => void
 }) {
   return (
-    <button 
+    <button
       type="button"
       className={styles.summaryItem}
-      data-active={isActive} 
+      data-active={isActive}
+      aria-pressed={isActive}
       onClick={onClick}
     >
       <span>{label}</span>

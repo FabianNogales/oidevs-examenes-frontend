@@ -7,8 +7,6 @@ import type {
   StudentDetailResponse,
   StudentField,
   StudentFieldErrors,
-  StudentImportResponse,
-  StudentImportResult,
   StudentResponse,
   Student,
   StudentsPageResult,
@@ -16,6 +14,10 @@ import type {
   StudentStatus,
   UpdateStudentPayload,
 } from '@/features/admin/types/student.types'
+import type {
+  StudentImportConfirmation,
+  StudentImportPreview,
+} from '@/features/students/types/studentImport'
 import { httpClient } from '@/shared/api/httpClient'
 
 const STUDENTS_ENDPOINT = '/admin/students'
@@ -192,9 +194,9 @@ function buildCsvFormData(file: File): FormData {
   return formData
 }
 
-export async function previewStudentsImport(file: File): Promise<StudentImportResult> {
+export async function previewStudentsImport(file: File): Promise<StudentImportPreview> {
   try {
-    const response = await httpClient.post<StudentImportResponse>(
+    const response = await httpClient.post<{ data: StudentImportPreview }>(
       `${STUDENTS_ENDPOINT}/import/preview`,
       buildCsvFormData(file),
       { headers: { 'Content-Type': 'multipart/form-data' } },
@@ -205,14 +207,14 @@ export async function previewStudentsImport(file: File): Promise<StudentImportRe
   }
 }
 
-export async function confirmStudentsImport(file: File): Promise<StudentImportResponse> {
+export async function confirmStudentsImport(file: File): Promise<StudentImportConfirmation> {
   try {
-    const response = await httpClient.post<StudentImportResponse>(
+    const response = await httpClient.post<{ data: StudentImportConfirmation }>(
       `${STUDENTS_ENDPOINT}/import/confirm`,
       buildCsvFormData(file),
       { headers: { 'Content-Type': 'multipart/form-data' } },
     )
-    return response.data
+    return response.data.data
   } catch (error) {
     throw mapStudentApiError(error, 'No se pudo importar el archivo CSV.')
   }

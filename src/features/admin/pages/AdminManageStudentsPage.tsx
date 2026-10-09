@@ -21,16 +21,11 @@ export function AdminManageStudentsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
-
-  // Modal de detalle/edición: solo necesita el ID y si abre directo en modo edición
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [openInEditMode, setOpenInEditMode] = useState(false)
-
-  // Confirmación de activar/desactivar
   const [pendingToggle, setPendingToggle] = useState<Student | null>(null)
   const [toggling, setToggling] = useState(false)
 
-  // Evita que una respuesta lenta pise a una más reciente
   const requestIdRef = useRef(0)
 
   const loadStudents = useCallback(async (page: number, search: string) => {
@@ -74,8 +69,6 @@ export function AdminManageStudentsPage() {
   }
 
   const closeModal = () => setSelectedStudentId(null)
-
-  // Tras editar en el modal: reflejar los cambios en la fila sin recargar
   const handleStudentUpdated = (updated: StudentDetail) => {
     setStudents((prev) =>
       prev.map((s) =>
@@ -122,7 +115,7 @@ export function AdminManageStudentsPage() {
       <nav aria-label="Breadcrumbs" className={styles.breadcrumbs}>
         <NavLink to="/admin" className={styles.breadcrumbLink}>Inicio</NavLink>
         <span className={styles.breadcrumbSeparator}>/</span>
-        <NavLink to="/admin/students" className={styles.breadcrumbLink}>Estudiantes</NavLink>
+        <span className={styles.breadcrumbLink}>Estudiantes</span>
         <span className={styles.breadcrumbSeparatorActive}>/</span>
         <span className={styles.breadcrumbCurrent}>Gestionar estudiantes</span>
       </nav>
@@ -136,9 +129,9 @@ export function AdminManageStudentsPage() {
           <NavLink to="/admin/students/import" className={styles.secondaryButton}>
             + Importar CSV
           </NavLink>
-          <button className={styles.primaryButton} onClick={() => navigate('/admin/students/new')}>
+          {/*<button className={styles.primaryButton} onClick={() => navigate('/admin/students/new')}>
             + Registrar estudiantes
-          </button>
+          </button>*/}
         </div>
       </header>
 

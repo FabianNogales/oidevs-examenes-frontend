@@ -9,6 +9,7 @@ export function HeaderNavigation({
   onNavigate,
 }: HeaderNavigationProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [hasPendingImport, setHasPendingImport] = useState(false)
   const dropdownRef = useRef<HTMLLIElement>(null)
   const location = useLocation()
 
@@ -24,20 +25,55 @@ export function HeaderNavigation({
 
   useEffect(() => {
     setOpenDropdown(null)
+    setHasPendingImport(!!localStorage.getItem('eida_last_import_preview'))
   }, [location.pathname])
 
   const toggleDropdown = (label: string) => {
+    if (label === 'Estudiantes') {
+      setHasPendingImport(!!localStorage.getItem('eida_last_import_preview'))
+    }
     setOpenDropdown((prev) => (prev === label ? null : label))
+  }
+
+  const dynamicItems = items.map(item => {
+    if (item.label === 'Estudiantes' && hasPendingImport) {
+      const alreadyHasItem = item.children?.some(c => c.label === 'Ultima importacion')
+      if (!alreadyHasItem) {
+        return {
+          ...item,
+          children: [
+            ...(item.children || []),
+            { label: 'Ultima importacion', to: '/admin/students/import' }
+          ]
+        }
+      }
+    }
+    return item
+  })
+
+  const isDropdownItemActive = (childLabel: string, childTo: string) => {
+    if (!location.pathname.startsWith(childTo)) return false
+    if (childTo === '/admin/students/import') {
+      const isNewView = location.state?.view === 'new'
+      const isResumeView = location.state?.view === 'resume'
+      const hasPreview = !!localStorage.getItem('eida_last_import_preview')
+
+      if (childLabel === 'Ultima importacion') {
+        return isResumeView || (!isNewView && hasPreview)
+      }
+      if (childLabel === 'Importar estudiantes') {
+        return isNewView || (!isResumeView && !hasPreview)
+      }
+    }
+
+    return true
   }
 
   return (
     <ul className={styles.navigationList}>
-      {items.map((item) => {
+      {dynamicItems.map((item) => {
         const hasChildren = item.children && item.children.length > 0
-
-        const isParentActive =
-          hasChildren &&
-          item.children?.some((child) => location.pathname.startsWith(child.to || ''))
+        const isParentActive = hasChildren && item.children?.some((child) => location.pathname.startsWith(child.to || ''))
 
         return (
           <li 
@@ -70,20 +106,31 @@ export function HeaderNavigation({
 
                 {openDropdown === item.label && (
                   <div className={styles.navigationDropdownMenu}>
-                    {item.children?.map((child) => (
-                      <NavLink
-                        key={child.to}
-                        to={child.to!}
-                        className={({ isActive }) =>
-                          `${styles.navigationDropdownItem} ${
-                            isActive ? styles.navigationDropdownItemActive : ''
-                          }`
-                        }
-                        onClick={onNavigate}
-                      >
-                        {child.label}
-                      </NavLink>
-                    ))}
+                    {item.children?.map((child) => {
+                      const linkState = child.label === 'Importar estudiantes'
+                        ? { view: 'new' }
+                        : child.label === 'Ultima importacion'
+                          ? { view: 'resume' }
+                          : undefined
+
+                      return (
+                        <NavLink
+                          key={child.label}
+                          to={child.to!}
+                          state={linkState}
+                          className={() =>
+                            `${styles.navigationDropdownItem} ${
+                              isDropdownItemActive(child.label, child.to!) 
+                                ? styles.navigationDropdownItemActive 
+                                : ''
+                            }`
+                          }
+                          onClick={onNavigate}
+                        >
+                          {child.label}
+                        </NavLink>
+                      )
+                    })}
                   </div>
                 )}
               </>

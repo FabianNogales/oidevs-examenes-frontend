@@ -1,5 +1,5 @@
 import type { StudentImportConfirmation } from '@/features/students/types/studentImport'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from './StudentImportDesign.module.css'
 
 export function StudentImportSuccess({
   confirmation,
@@ -15,30 +15,22 @@ export function StudentImportSuccess({
       <div className={styles.successHeader}>
         <SuccessIcon />
         <div>
-          <h3>Importacion completada</h3>
+          <h3>Importación completada</h3>
           <p>Los estudiantes fueron registrados correctamente.</p>
         </div>
       </div>
 
-      <div className={styles.successSummary} aria-label="Resumen final de importacion">
+      <div className={styles.successSummary} aria-label="Resumen final de importación">
         <SummaryItem label="Procesados" value={confirmation.total_rows} />
         <SummaryItem label="Importados" value={confirmation.imported_rows} />
         <SummaryItem label="No importados" value={confirmation.failed_rows} />
       </div>
 
       <div className={styles.panelActions}>
-        <button
-          type="button"
-          className={styles.cancelButton}
-          onClick={onBackToPanel}
-        >
+        <button type="button" className={styles.cancelButton} onClick={onBackToPanel}>
           Volver al panel
         </button>
-        <button
-          type="button"
-          className={styles.continueButton}
-          onClick={onImportAnotherFile}
-        >
+        <button type="button" className={styles.continueButton} onClick={onImportAnotherFile}>
           Importar otro archivo
         </button>
       </div>
