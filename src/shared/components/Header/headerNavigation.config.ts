@@ -88,6 +88,10 @@ export const navigationByRole: Record<
       to: '/admin/rooms',
     },
     {
+      label: 'Materias',
+      to: '/admin/subjects',
+    },
+    {
       label: 'Información',
     },
     {
