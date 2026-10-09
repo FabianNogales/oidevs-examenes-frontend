@@ -1,4 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { Snackbar } from '@/shared/components/Snackbar'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { SubjectDialog } from '../components/SubjectDialog'
@@ -80,6 +81,9 @@ export function AdminSubjectsPage() {
             </p>
           </div>
           <div className={styles.headerActions}>
+            <Link to="/admin/subjects/import" className={styles.primaryButton}>
+              + Importar materias (CSV)
+            </Link>
             <button
               type="button"
               className={styles.secondaryButton}

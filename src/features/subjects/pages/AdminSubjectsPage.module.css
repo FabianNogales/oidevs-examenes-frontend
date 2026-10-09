@@ -1,5 +1,11 @@
 @import '../../rooms/pages/AdminRoomsPage.module.css';
 
+:global(html):has(.page),
+:global(body):has(.page),
+:global(#root):has(.page) {
+  min-width: 0;
+}
+
 .table {
   min-width: 1050px;
 }

@@ -68,6 +68,14 @@ export const router = createBrowserRouter([
                     },
                   },
                   {
+                    path: 'subjects/import',
+                    lazy: async () => {
+                      const { ImportSubjectsPage } =
+                        await import('@/features/subjects/pages/ImportSubjectsPage')
+                      return { Component: ImportSubjectsPage }
+                    },
+                  },
+                  {
                     path: 'rooms',
                     lazy: async () => {
                       const { AdminRoomsPage } =
