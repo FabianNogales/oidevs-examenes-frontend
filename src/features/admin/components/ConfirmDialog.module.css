@@ -1,0 +1,106 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 37, 84, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200; /* por encima del modal de detalle (100) */
+  padding: 20px;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  background: #FAFAFA;
+  border-radius: 12px;
+  box-shadow: 0px 12px 36px rgba(23, 37, 84, 0.18);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: dialogIn 0.15s ease-out;
+}
+
+@keyframes dialogIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.title {
+  margin: 0;
+  color: var(--brand-navy, #172554);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.message {
+  margin: 0;
+  color: var(--color-text-secondary, #68778F);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.cancelButton,
+.primaryButton,
+.dangerButton,
+.successButton {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s);
+}
+
+.cancelButton {
+  background: #FAFAFA;
+  border: 1px solid var(--brand-blue, #2563EB);
+  color: var(--brand-blue, #2563EB);
+}
+.cancelButton:hover:not(:disabled) {
+  background: var(--brand-blue-light, #eaf3ff);
+}
+
+.primaryButton {
+  background: var(--brand-blue, #2563EB);
+  border: 1px solid var(--brand-blue, #2563EB);
+  color: #FAFAFA;
+}
+.primaryButton:hover:not(:disabled) {
+  background: var(--color-primary-hover, #1d4ed8);
+}
+
+.dangerButton {
+  background: #D32F2F;
+  border: 1px solid #D32F2F;
+  color: #FAFAFA;
+}
+.dangerButton:hover:not(:disabled) {
+  background: #B71C1C;
+}
+
+.successButton {
+  background: #2E7D32;
+  border: 1px solid #2E7D32;
+  color: #FAFAFA;
+}
+.successButton:hover:not(:disabled) {
+  background: #1B5E20;
+}
+
+.cancelButton:disabled,
+.primaryButton:disabled,
+.dangerButton:disabled,
+.successButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

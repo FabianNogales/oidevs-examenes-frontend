@@ -800,3 +800,116 @@ a.navigationLink:active {
   padding: var(--space-3) var(--space-6);
   color: var(--color-primary);
 }
+/* ====================================
+   DROPDOWN DE NAVEGACIÓN (Estudiantes)
+   ==================================== */
+.navigationItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+button.navigationLink {
+  background-color: transparent;
+  font-family: inherit;
+  border-bottom: 3px solid transparent;
+}
+
+button.navigationLink:hover {
+  background: rgb(255 255 255 / 28%);
+  color: #0c2d6c;
+}
+
+button.navigationLink.active,
+button.navigationLink.active:hover {
+  background-color: transparent;
+  color: var(--color-accent, #8B1E3F);
+  border-bottom-color: var(--color-accent, #8B1E3F);
+}
+
+.dropdownIcon {
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  transition: transform 0.2s ease;
+}
+
+.dropdownIconOpen {
+  transform: rotate(180deg);
+}
+
+.navigationDropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  min-width: 175px;
+  padding: 8px;
+  margin-top: 2px;
+  background: #DFF1FF;
+  border: 1px solid var(--color-accent, #8B1E3F);
+  border-radius: var(--radius-sm, 8px);
+  box-shadow: 0 4px 12px var(--shadow-color, rgba(23, 37, 84, 0.08));
+}
+
+.navigationDropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 16px;
+
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #164b91;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.navigationDropdownItem:hover {
+  background: rgb(255 255 255 / 40%);
+  color: #0c2d6c;
+}
+
+.navigationDropdownItemActive {
+  background: var(--color-soft-red, #F7E9ED);
+  border-color: var(--color-accent, #8B1E3F);
+  color: var(--color-accent, #8B1E3F);
+}
+
+.navigationLink.active .dropdownIcon {
+  stroke: var(--color-accent, #8B1E3F);
+}
+
+@media (max-width: 767px) {
+  .navigationItem {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .navigationDropdownMenu {
+    position: static;
+    transform: none;
+    width: 100%;
+    margin-top: 8px;
+    border: none;
+    border-left: 2px solid var(--color-accent, #8B1E3F);
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    padding-left: 16px;
+  }
+}

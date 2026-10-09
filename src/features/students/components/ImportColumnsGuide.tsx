@@ -1,4 +1,4 @@
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from './StudentImportDesign.module.css'
 import type { StudentImportColumn } from '@/features/students/types/studentImport'
 
 const STUDENT_IMPORT_COLUMN_LABELS: ReadonlyArray<{

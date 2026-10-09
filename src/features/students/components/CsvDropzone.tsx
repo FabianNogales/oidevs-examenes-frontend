@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { DragEvent, KeyboardEvent } from 'react'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from './StudentImportDesign.module.css'
 
 type CsvDropzoneProps = {
   selectedFile: File | null
@@ -104,9 +104,9 @@ export function CsvDropzone({
         <div className={styles.emptyDropzoneState}>
           <UploadFileIcon />
           <p id={descriptionId} className={styles.dropzoneTitle}>
-            Arrastra tu archivo CSV aqui
+            Arrastra tu archivo CSV aquí
           </p>
-          <span>o seleccionalo desde tu equipo</span>
+          <span>o selecciónalo desde tu equipo</span>
           <button
             type="button"
             className={styles.selectFileButton}
