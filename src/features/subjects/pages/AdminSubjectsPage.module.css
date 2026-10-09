@@ -1,7 +1,7 @@
 @import '../../rooms/pages/AdminRoomsPage.module.css';
 
 .table {
-  min-width: 760px;
+  min-width: 1050px;
 }
 .careerList {
   display: flex;

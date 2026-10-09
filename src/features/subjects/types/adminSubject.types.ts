@@ -1,4 +1,12 @@
 export type SubjectStatus = 'ACTIVE' | 'INACTIVE'
+export type SubjectDialogSelection =
+  { mode: 'create' } | { mode: 'detail' | 'edit'; subjectId: number }
+export interface SubjectPayload {
+  code: string
+  name: string
+  career_ids: number[]
+}
+export type SubjectFieldErrors = Partial<Record<keyof SubjectPayload, string>>
 export interface SubjectCareer {
   id: number
   code: string

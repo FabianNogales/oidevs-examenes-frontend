@@ -1,7 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent } from 'react'
+import { Snackbar } from '@/shared/components/Snackbar'
+import type { AuthNotice } from '@/features/auth/types/auth'
+import { SubjectDialog } from '../components/SubjectDialog'
+import { SubjectStatusDialog } from '../components/SubjectStatusDialog'
 import { AdminSubjectsTable } from '../components/AdminSubjectsTable'
 import { useAdminSubjects, useSubjectCareers } from '../hooks/useAdminSubjects'
-import type { SubjectsQuery, SubjectStatus } from '../types/adminSubject.types'
+import type {
+  AdminSubject,
+  SubjectDialogSelection,
+  SubjectsQuery,
+  SubjectStatus,
+} from '../types/adminSubject.types'
 import styles from './AdminSubjectsPage.module.css'
 
 const INITIAL_QUERY: SubjectsQuery = {
@@ -16,6 +25,33 @@ export function AdminSubjectsPage() {
   const [search, setSearch] = useState('')
   const catalog = useAdminSubjects(query)
   const careers = useSubjectCareers()
+  const [selection, setSelection] = useState<SubjectDialogSelection | null>(
+    null,
+  )
+  const [statusSubject, setStatusSubject] = useState<AdminSubject | null>(null)
+  const [notice, setNotice] = useState<AuthNotice | null>(null)
+  const dismissNotice = useCallback(() => setNotice(null), [])
+  function saved(subject: AdminSubject, created: boolean) {
+    setSelection(null)
+    setNotice({
+      id: Date.now(),
+      type: 'success',
+      message: `Materia ${subject.code} ${created ? 'registrada' : 'actualizada'} correctamente.`,
+    })
+    if (query.page > 1) changeQuery({ ...query, page: 1 })
+    else catalog.reload()
+  }
+  function statusChanged(subject: AdminSubject) {
+    setStatusSubject(null)
+    setNotice({
+      id: Date.now(),
+      type: 'success',
+      message: `Materia ${subject.code} ${subject.status === 'ACTIVE' ? 'activada' : 'desactivada'} correctamente.`,
+    })
+    if (query.status && query.page > 1 && catalog.result?.data.length === 1)
+      changeQuery({ ...query, page: query.page - 1 })
+    else catalog.reload()
+  }
   function changeQuery(next: SubjectsQuery) {
     if (JSON.stringify(next) === JSON.stringify(query)) {
       catalog.reload()
@@ -42,6 +78,15 @@ export function AdminSubjectsPage() {
             <p className={styles.description}>
               Consulta y administra el catálogo de materias por carrera.
             </p>
+          </div>
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => setSelection({ mode: 'create' })}
+            >
+              + Registrar materia
+            </button>
           </div>
         </header>
         <div className={styles.card}>
@@ -166,7 +211,16 @@ export function AdminSubjectsPage() {
             )}
             {catalog.status === 'ready' &&
               (catalog.result.data.length ? (
-                <AdminSubjectsTable subjects={catalog.result.data} />
+                <AdminSubjectsTable
+                  subjects={catalog.result.data}
+                  onDetail={(subjectId) =>
+                    setSelection({ mode: 'detail', subjectId })
+                  }
+                  onEdit={(subjectId) =>
+                    setSelection({ mode: 'edit', subjectId })
+                  }
+                  onStatusChange={setStatusSubject}
+                />
               ) : (
                 <div className={styles.state} role="status">
                   <h2>
@@ -219,6 +273,26 @@ export function AdminSubjectsPage() {
           )}
         </div>
       </div>
+      {selection && (
+        <SubjectDialog
+          key={
+            selection.mode === 'create'
+              ? 'create'
+              : `${selection.mode}-${selection.subjectId}`
+          }
+          selection={selection}
+          onClose={() => setSelection(null)}
+          onSaved={saved}
+        />
+      )}
+      {statusSubject && (
+        <SubjectStatusDialog
+          subject={statusSubject}
+          onClose={() => setStatusSubject(null)}
+          onChanged={statusChanged}
+        />
+      )}
+      <Snackbar notice={notice} onDismiss={dismissNotice} />
     </section>
   )
 }

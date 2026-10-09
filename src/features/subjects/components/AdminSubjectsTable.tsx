@@ -1,7 +1,17 @@
 import type { AdminSubject } from '../types/adminSubject.types'
 import styles from '../pages/AdminSubjectsPage.module.css'
 
-export function AdminSubjectsTable({ subjects }: { subjects: AdminSubject[] }) {
+export function AdminSubjectsTable({
+  subjects,
+  onDetail,
+  onEdit,
+  onStatusChange,
+}: {
+  subjects: AdminSubject[]
+  onDetail: (id: number) => void
+  onEdit: (id: number) => void
+  onStatusChange: (subject: AdminSubject) => void
+}) {
   return (
     <div className={styles.tableScroll}>
       <table className={styles.table}>
@@ -14,6 +24,7 @@ export function AdminSubjectsTable({ subjects }: { subjects: AdminSubject[] }) {
             <th scope="col">Materia</th>
             <th scope="col">Carreras</th>
             <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -47,6 +58,38 @@ export function AdminSubjectsTable({ subjects }: { subjects: AdminSubject[] }) {
                 >
                   {subject.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
                 </span>
+              </td>
+              <td data-label="Acciones">
+                <div className={styles.rowActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => onDetail(subject.id)}
+                    aria-label={`Ver detalle de ${subject.code}`}
+                  >
+                    Ver detalle
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => onEdit(subject.id)}
+                    aria-label={`Editar materia ${subject.code}`}
+                  >
+                    Editar materia
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      subject.status === 'ACTIVE'
+                        ? styles.deactivateButton
+                        : styles.secondaryButton
+                    }
+                    onClick={() => onStatusChange(subject)}
+                    aria-label={`${subject.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} materia ${subject.code}`}
+                  >
+                    {subject.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
