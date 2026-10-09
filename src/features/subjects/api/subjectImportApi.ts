@@ -21,6 +21,11 @@ function mapError(error: unknown): SubjectImportError {
       'El servidor devolvió un reporte inválido. Reintenta con la misma vista previa para consultar el resultado.',
     )
   const status = error.response?.status ?? null
+  const fileErrors = error.response?.data?.errors?.file
+  const fileError =
+    Array.isArray(fileErrors) && typeof fileErrors[0] === 'string'
+      ? fileErrors[0]
+      : null
   const message =
     status === null
       ? 'No se pudo conectar con el servidor. Puedes reintentar la operación.'
@@ -33,7 +38,8 @@ function mapError(error: unknown): SubjectImportError {
             : status === 413
               ? 'El archivo supera el tamaño permitido por el servidor.'
               : status === 422
-                ? 'El archivo no cumple el formato esperado. Revisa la plantilla CSV.'
+                ? (fileError ??
+                  'El archivo no cumple el formato esperado. Revisa la plantilla CSV.')
                 : 'No se pudo procesar el archivo. Inténtalo nuevamente.'
   return new SubjectImportError(message, status)
 }
