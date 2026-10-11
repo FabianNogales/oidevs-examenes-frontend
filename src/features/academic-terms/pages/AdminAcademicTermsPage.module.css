@@ -65,7 +65,10 @@
   color: var(--color-text-secondary);
 }
 .table {
-  min-width: 700px;
+  min-width: 820px;
+}
+.table time {
+  white-space: nowrap;
 }
 .table tbody th {
   width: 28%;
@@ -78,6 +81,7 @@
   background: var(--color-surface-soft);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 }
 @media (max-width: 640px) {
   .table {

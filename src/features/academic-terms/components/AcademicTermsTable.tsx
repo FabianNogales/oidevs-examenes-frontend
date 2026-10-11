@@ -7,10 +7,12 @@ export function AcademicTermsTable({
   terms,
   onDetail,
   onEdit,
+  onStatus,
 }: {
   terms: AcademicTerm[]
   onDetail: (id: number) => void
   onEdit: (id: number) => void
+  onStatus: (term: AcademicTerm) => void
 }) {
   return (
     <div className={styles.tableScroll}>
@@ -63,6 +65,18 @@ export function AcademicTermsTable({
                     onClick={() => onEdit(term.id)}
                   >
                     Editar
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      term.status === 'ACTIVE'
+                        ? styles.deactivateButton
+                        : styles.secondaryButton
+                    }
+                    aria-label={`${term.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} periodo ${term.name}`}
+                    onClick={() => onStatus(term)}
+                  >
+                    {term.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                   </button>
                 </div>
               </td>

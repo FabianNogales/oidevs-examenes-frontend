@@ -5,6 +5,7 @@ import type {
   AcademicTerm,
   AcademicTermFieldErrors,
   AcademicTermPayload,
+  AcademicTermStatus,
   CreateAcademicTermPayload,
 } from '../types/academicTerm.types'
 
@@ -100,6 +101,28 @@ export async function editAcademicTerm(
       end_date: payload.end_date,
     })
     return readSavedTerm(response.data?.data, id)
+  } catch (error) {
+    throw mapAcademicTermMutationError(error)
+  }
+}
+
+export async function changeAcademicTermStatus(
+  id: number,
+  status: AcademicTermStatus,
+): Promise<AcademicTerm> {
+  try {
+    const response = await httpClient.patch(
+      `/admin/academic-terms/${id}/status`,
+      {
+        status,
+      },
+    )
+    const term = readSavedTerm(response.data?.data, id)
+    if (term.status !== status)
+      throw new AcademicTermMutationError(
+        'El servidor no confirmó el nuevo estado. Actualiza el catálogo antes de reintentar.',
+      )
+    return term
   } catch (error) {
     throw mapAcademicTermMutationError(error)
   }

@@ -5,12 +5,14 @@ import type {
   AcademicTerm,
   AcademicTermSelection,
   AcademicTermsQuery,
+  AcademicTermStatus,
 } from '../types/academicTerm.types'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { Snackbar } from '@/shared/components/Snackbar'
 import { AcademicTermsTable } from '../components/AcademicTermsTable'
 import { AcademicTermsFilters } from '../components/AcademicTermsFilters'
 import { AcademicTermDialog } from '../components/AcademicTermDialog'
+import { AcademicTermStatusDialog } from '../components/AcademicTermStatusDialog'
 import { ActiveAcademicTermSummary } from '../components/ActiveAcademicTermSummary'
 import styles from './AdminAcademicTermsPage.module.css'
 
@@ -21,16 +23,25 @@ export function AdminAcademicTermsPage() {
   const [selection, setSelection] = useState<AcademicTermSelection | null>(null)
   const [notice, setNotice] = useState<AuthNotice | null>(null)
   const [activeRevision, setActiveRevision] = useState(0)
+  const [statusSelection, setStatusSelection] = useState<{
+    termId: number
+    targetStatus: AcademicTermStatus
+  } | null>(null)
   const dismissNotice = useCallback(() => setNotice(null), [])
   const { state, reload } = useAcademicTerms(query)
   const meta = state?.status === 'ready' ? state.result.meta : null
   const filtered = Boolean(query.search || query.status)
-  function saved(term: AcademicTerm, created: boolean) {
+  function refresh() {
+    reload()
+    setActiveRevision((value) => value + 1)
+  }
+  function saved(term: AcademicTerm, created: boolean, statusChanged = false) {
     setSelection(null)
+    setStatusSelection(null)
     setNotice({
       id: Date.now(),
       type: 'success',
-      message: `Periodo ${term.name} ${created ? 'registrado' : 'actualizado'} correctamente.`,
+      message: `Periodo ${term.name} ${statusChanged ? (term.status === 'ACTIVE' ? 'activado' : 'desactivado') : created ? 'registrado' : 'actualizado'} correctamente.`,
     })
     if (query.page !== 1) setQuery({ ...query, page: 1 })
     else reload()
@@ -108,6 +119,13 @@ export function AdminAcademicTermsPage() {
                     setSelection({ mode: 'detail', termId })
                   }
                   onEdit={(termId) => setSelection({ mode: 'edit', termId })}
+                  onStatus={(term) =>
+                    setStatusSelection({
+                      termId: term.id,
+                      targetStatus:
+                        term.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+                    })
+                  }
                 />
               ) : (
                 <div className={styles.state} role="status">
@@ -167,6 +185,15 @@ export function AdminAcademicTermsPage() {
             selection={selection}
             onClose={() => setSelection(null)}
             onSaved={saved}
+          />
+        )}
+        {statusSelection !== null && (
+          <AcademicTermStatusDialog
+            key={`${statusSelection.termId}:${statusSelection.targetStatus}`}
+            {...statusSelection}
+            onClose={() => setStatusSelection(null)}
+            onSaved={(term) => saved(term, false, true)}
+            onRefresh={refresh}
           />
         )}
       </div>
