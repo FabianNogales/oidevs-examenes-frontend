@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 import { HeaderAccount, HeaderNotifications } from './HeaderAccount'
 import { HeaderLogo } from './HeaderLogo'
+import { HeaderAcademicTermsLink } from './HeaderAcademicTermsLink'
 import { HeaderNavigation } from './HeaderNavigation'
 import { getHeaderNavigation } from './headerNavigation.config'
 
@@ -89,6 +90,7 @@ export function Header({
     <header
       ref={headerRef}
       className={styles.header}
+      data-admin={user?.role === 'admin' || undefined}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && menuOpen) {
           closeMenu()
@@ -98,6 +100,8 @@ export function Header({
     >
       <div className={styles.topBar}>
         <HeaderLogo onNavigate={closeMenus} />
+
+        {user?.role === 'admin' && <HeaderAcademicTermsLink onNavigate={closeMenus} />}
 
         <HeaderAccount
           user={user}

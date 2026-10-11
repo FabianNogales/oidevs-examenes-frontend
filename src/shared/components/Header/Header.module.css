@@ -800,6 +800,18 @@ a.navigationLink:active {
   padding: var(--space-3) var(--space-6);
   color: var(--color-primary);
 }
+
+@media (min-width: 1024px) {
+  .header[data-admin='true'] .account {
+    margin-left: 0;
+  }
+}
+@media (max-width: 1023px) {
+  .header[data-admin='true'] .topBar {
+    flex-wrap: wrap;
+    padding-bottom: var(--space-2);
+  }
+}
 /* ====================================
    DROPDOWN DE NAVEGACIÓN (Estudiantes)
    ==================================== */

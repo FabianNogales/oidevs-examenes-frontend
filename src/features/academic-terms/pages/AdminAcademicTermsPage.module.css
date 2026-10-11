@@ -1,0 +1,109 @@
+@import '../../rooms/pages/AdminRoomsPage.module.css';
+
+:global(html):has(.page),
+:global(body):has(.page),
+:global(#root):has(.page) {
+  min-width: 0;
+}
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--button-height);
+  margin-bottom: var(--space-2);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+.backLink:hover {
+  text-decoration: underline;
+}
+.breadcrumb {
+  margin-bottom: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.breadcrumb li + li::before {
+  content: '/';
+  margin-right: var(--space-2);
+}
+.breadcrumb a {
+  color: var(--color-primary);
+}
+.activeSummary {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+.activeSummary p {
+  margin: 0;
+}
+.activeSummary .eyebrow,
+.activeSummary .description {
+  margin-bottom: var(--space-1);
+}
+.activeSummary button {
+  margin-top: var(--space-3);
+}
+.activeDates {
+  display: inline-block;
+  margin-left: var(--space-3);
+  color: var(--color-text-secondary);
+}
+.table {
+  min-width: 700px;
+}
+.table tbody th {
+  width: 28%;
+}
+.inactiveBadge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+@media (max-width: 640px) {
+  .table {
+    min-width: 0;
+  }
+  .table tbody th {
+    width: auto;
+  }
+  .table time {
+    overflow-wrap: anywhere;
+  }
+  .activeDates {
+    display: block;
+    margin: var(--space-1) 0 0;
+  }
+  .filter select {
+    width: 100%;
+    min-width: 0;
+  }
+  .filter {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 360px) {
+  .table th,
+  .table td {
+    grid-template-columns: minmax(80px, 36%) minmax(0, 1fr);
+  }
+}
