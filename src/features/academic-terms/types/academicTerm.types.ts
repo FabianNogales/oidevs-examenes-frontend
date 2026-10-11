@@ -25,3 +25,20 @@ export interface AcademicTermsResponse {
     to: number | null
   }
 }
+
+export interface AcademicTermPayload {
+  name: string
+  start_date: string
+  end_date: string
+}
+
+export interface CreateAcademicTermPayload extends AcademicTermPayload {
+  status: AcademicTermStatus
+}
+
+export type AcademicTermFieldErrors = Partial<
+  Record<keyof CreateAcademicTermPayload, string>
+>
+
+export type AcademicTermSelection =
+  { mode: 'create' } | { mode: 'detail' | 'edit'; termId: number }

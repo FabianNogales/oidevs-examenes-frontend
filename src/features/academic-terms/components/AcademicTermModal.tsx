@@ -5,10 +5,12 @@ export function AcademicTermModal({
   title,
   onClose,
   children,
+  busy = false,
 }: {
   title: string
   onClose: () => void
   children: ReactNode
+  busy?: boolean
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -37,7 +39,7 @@ export function AcademicTermModal({
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault()
-        onClose()
+        if (!busy) onClose()
       }}
     >
       <header className={styles.header}>
@@ -51,6 +53,7 @@ export function AcademicTermModal({
           className={styles.closeButton}
           onClick={onClose}
           aria-label="Cerrar ventana"
+          disabled={busy}
         >
           ×
         </button>

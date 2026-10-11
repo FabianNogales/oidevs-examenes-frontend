@@ -6,9 +6,11 @@ import styles from '../pages/AdminAcademicTermsPage.module.css'
 export function AcademicTermsTable({
   terms,
   onDetail,
+  onEdit,
 }: {
   terms: AcademicTerm[]
   onDetail: (id: number) => void
+  onEdit: (id: number) => void
 }) {
   return (
     <div className={styles.tableScroll}>
@@ -53,6 +55,14 @@ export function AcademicTermsTable({
                     onClick={() => onDetail(term.id)}
                   >
                     Ver detalle
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    aria-label={`Editar periodo ${term.name}`}
+                    onClick={() => onEdit(term.id)}
+                  >
+                    Editar
                   </button>
                 </div>
               </td>

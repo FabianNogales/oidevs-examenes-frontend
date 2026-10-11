@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
 import { useAcademicTerms } from '../hooks/useAcademicTerms'
-import type { AcademicTermsQuery } from '../types/academicTerm.types'
+import type {
+  AcademicTerm,
+  AcademicTermSelection,
+  AcademicTermsQuery,
+} from '../types/academicTerm.types'
+import type { AuthNotice } from '@/features/auth/types/auth'
+import { Snackbar } from '@/shared/components/Snackbar'
 import { AcademicTermsTable } from '../components/AcademicTermsTable'
 import { AcademicTermsFilters } from '../components/AcademicTermsFilters'
-import { AcademicTermDetail } from '../components/AcademicTermDetail'
+import { AcademicTermDialog } from '../components/AcademicTermDialog'
 import { ActiveAcademicTermSummary } from '../components/ActiveAcademicTermSummary'
 import styles from './AdminAcademicTermsPage.module.css'
 
@@ -12,10 +18,24 @@ const INITIAL_QUERY: AcademicTermsQuery = { page: 1, search: '', status: '' }
 
 export function AdminAcademicTermsPage() {
   const [query, setQuery] = useState(INITIAL_QUERY)
-  const [detailId, setDetailId] = useState<number | null>(null)
+  const [selection, setSelection] = useState<AcademicTermSelection | null>(null)
+  const [notice, setNotice] = useState<AuthNotice | null>(null)
+  const [activeRevision, setActiveRevision] = useState(0)
+  const dismissNotice = useCallback(() => setNotice(null), [])
   const { state, reload } = useAcademicTerms(query)
   const meta = state?.status === 'ready' ? state.result.meta : null
   const filtered = Boolean(query.search || query.status)
+  function saved(term: AcademicTerm, created: boolean) {
+    setSelection(null)
+    setNotice({
+      id: Date.now(),
+      type: 'success',
+      message: `Periodo ${term.name} ${created ? 'registrado' : 'actualizado'} correctamente.`,
+    })
+    if (query.page !== 1) setQuery({ ...query, page: 1 })
+    else reload()
+    setActiveRevision((value) => value + 1)
+  }
   function changeQuery(next: AcademicTermsQuery) {
     if (
       next.page === query.page &&
@@ -50,8 +70,15 @@ export function AdminAcademicTermsPage() {
               académicas y conservar su historial.
             </p>
           </div>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={() => setSelection({ mode: 'create' })}
+          >
+            + Registrar periodo
+          </button>
         </header>
-        <ActiveAcademicTermSummary />
+        <ActiveAcademicTermSummary key={activeRevision} />
         <div className={styles.card}>
           <AcademicTermsFilters query={query} onChange={changeQuery} />
           <div aria-busy={!state}>
@@ -77,7 +104,10 @@ export function AdminAcademicTermsPage() {
               (state.result.data.length ? (
                 <AcademicTermsTable
                   terms={state.result.data}
-                  onDetail={setDetailId}
+                  onDetail={(termId) =>
+                    setSelection({ mode: 'detail', termId })
+                  }
+                  onEdit={(termId) => setSelection({ mode: 'edit', termId })}
                 />
               ) : (
                 <div className={styles.state} role="status">
@@ -127,14 +157,20 @@ export function AdminAcademicTermsPage() {
             </footer>
           )}
         </div>
-        {detailId !== null && (
-          <AcademicTermDetail
-            key={detailId}
-            termId={detailId}
-            onClose={() => setDetailId(null)}
+        {selection !== null && (
+          <AcademicTermDialog
+            key={
+              selection.mode === 'create'
+                ? 'create'
+                : `${selection.mode}:${selection.termId}`
+            }
+            selection={selection}
+            onClose={() => setSelection(null)}
+            onSaved={saved}
           />
         )}
       </div>
+      <Snackbar notice={notice} onDismiss={dismissNotice} />
     </section>
   )
 }

@@ -9,3 +9,13 @@
 .dialog {
   overscroll-behavior: contain;
 }
+.field select {
+  width: 100%;
+  font-size: var(--font-size-sm);
+}
+.error p {
+  margin: 0;
+}
+.error p + p {
+  margin-top: var(--space-2);
+}
