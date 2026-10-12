@@ -20,7 +20,7 @@ type ExamCardProps = {
 const EVALUATION_LABELS: Record<EvaluationType, string> = {
   partial: 'Parcial',
   final: 'Final',
-  makeup: 'Recuperatorio',
+  makeup: '2da instancia',
 }
 
 const STATUS_LABELS: Record<string, string> = {
