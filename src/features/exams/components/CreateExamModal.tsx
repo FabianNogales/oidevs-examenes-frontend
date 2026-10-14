@@ -39,7 +39,7 @@ const DEFAULT_FORM = {
 const EVALUATION_LABELS: Record<EvaluationType, string> = {
   partial: 'Parcial',
   final: 'Final',
-  makeup: 'Recuperatorio',
+  makeup: '2da instancia',
 }
 
 export function CreateExamModal({
@@ -258,6 +258,14 @@ export function CreateExamModal({
             <select
               id={evaluationTypeId}
               {...fieldAccessibility('evaluation_type', evaluationTypeId)}
+              aria-describedby={
+                [
+                  errorFor('evaluation_type') ? `${evaluationTypeId}-error` : null,
+                  formValues.evaluation_type === 'makeup'
+                    ? `${evaluationTypeId}-info`
+                    : null,
+                ].filter(Boolean).join(' ') || undefined
+              }
               value={formValues.evaluation_type}
               onChange={(event) =>
                 handleInputChange(
@@ -273,6 +281,12 @@ export function CreateExamModal({
                 </option>
               ))}
             </select>
+            {formValues.evaluation_type === 'makeup' ? (
+              <p id={`${evaluationTypeId}-info`} className={styles.inlineInfo}>
+                Este tipo de examen requiere validación de habilitaciones antes
+                del control de ingreso.
+              </p>
+            ) : null}
             {renderFieldError('evaluation_type', evaluationTypeId)}
           </div>
 

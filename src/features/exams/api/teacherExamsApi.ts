@@ -46,7 +46,7 @@ export type RoomSchedule = {
 }
 
 export async function getRooms(
-  schedule: RoomSchedule,
+  schedule?: RoomSchedule,
   signal?: AbortSignal,
 ): Promise<Room[]> {
   const response = await httpClient.get<RoomsResponse>('/rooms', {
