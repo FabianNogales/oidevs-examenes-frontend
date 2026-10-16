@@ -86,7 +86,11 @@ export function ExamCard({
         </div>
       ) : null}
 
-      {academicTermName ? <p>Periodo académico: {academicTermName}</p> : null}
+      {academicTermName ? (
+        <p className={styles.academicTerm}>
+          Periodo académico: {academicTermName}
+        </p>
+      ) : null}
       <div className={styles.infoGrid}>
         <div className={styles.infoItem}>
           <div className={styles.itemContent}>

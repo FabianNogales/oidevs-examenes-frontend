@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ExamCard } from '@/features/exams/components/ExamCard'
+import { ExamTools } from '@/features/exams/components/ExamTools'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
 import { useManagedExams } from '@/features/exams/hooks/useManagedExams'
 import {
@@ -118,15 +119,10 @@ export function TeacherExamsPage() {
                 status={exam.status}
                 academicTermName={exam.academic_term_name}
               >
-                <Link to={`/teacher/exams/${exam.id}/eligibilities`}>
-                  Habilitaciones
+                <Link to={`/teacher/exams/${exam.id}?${params.toString()}`}>
+                  Ver detalle
                 </Link>
-                <Link to={`/teacher/exams/${exam.id}/collaborators`}>
-                  Colaboradores
-                </Link>
-                <Link to={`/exams/${exam.id}/entry-control?from=teacher`}>
-                  Control de ingreso
-                </Link>
+                <ExamTools examId={exam.id} />
               </ExamCard>
             ))}
           </section>

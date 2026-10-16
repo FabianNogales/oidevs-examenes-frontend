@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ExamCard } from '@/features/exams/components/ExamCard'
-import { useTeacherUpcomingExams } from '@/features/exams/hooks/useTeacherUpcomingExams'
+import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import {
   EligibilityApiError,
   bulkUpdateExamEligibilities,
@@ -30,12 +30,11 @@ const PAGE_SIZE = 10
 
 function ExamEligibilitiesContent({ examId }: { examId: number }) {
   const {
-    exams,
+    exam,
     isLoading: examLoading,
     errorMessage: examError,
-    loadExams,
-  } = useTeacherUpcomingExams()
-  const exam = exams.find((item) => item.id === examId)
+    reload: loadExams,
+  } = useExamDetail(examId)
   const list = useExamEligibilities(examId)
   const { notify } = useAuth()
   const [query, setQuery] = useState('')
@@ -107,7 +106,9 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
       if (!signal.aborted) {
         notify(
           'error',
-          cause instanceof Error ? cause.message : 'No se pudo procesar el archivo.',
+          cause instanceof Error
+            ? cause.message
+            : 'No se pudo procesar el archivo.',
         )
       }
       throw cause
@@ -164,11 +165,12 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
             roomName={exam.room?.name}
             roomCode={exam.room?.code}
             evaluationType={exam.evaluation_type}
+            status={exam.status}
+            academicTermName={exam.academic_term_name}
           />
         ) : (
           <p className={sharedStyles.note}>
-            La información general del examen no está disponible entre tus
-            exámenes programados.
+            La información general del examen no está disponible para tu cuenta.
           </p>
         )}
         <section

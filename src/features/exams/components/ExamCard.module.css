@@ -69,6 +69,13 @@
   gap: var(--space-3);
 }
 
+.academicTerm {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
 .infoItem {
   min-width: 0;
   padding: var(--space-2) 0;
