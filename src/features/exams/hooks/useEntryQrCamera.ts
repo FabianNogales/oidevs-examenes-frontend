@@ -12,13 +12,111 @@ type BarcodeDetectorConstructor = {
   getSupportedFormats: () => Promise<string[]>
 }
 
-function isZXingNotFound(cause: unknown): boolean {
-  return (
+type EntryCameraStage =
+  | 'GET_USER_MEDIA'
+  | 'SET_SRC_OBJECT'
+  | 'VIDEO_PLAY'
+  | 'STREAM_SETUP'
+  | 'STREAM_ENDED'
+  | 'BARCODE_DETECTOR_INIT'
+  | 'BARCODE_DETECTOR_DECODE'
+  | 'ZXING_INIT'
+  | 'ZXING_DECODE'
+  | 'QR_PROCESSING'
+
+function zxingErrorKind(cause: unknown): string | undefined {
+  if (
     cause instanceof Error &&
-    ['NotFoundException', 'ChecksumException', 'FormatException'].includes(
-      cause.name,
-    )
+    'getKind' in cause &&
+    typeof cause.getKind === 'function'
+  ) {
+    const kind: unknown = cause.getKind()
+    if (typeof kind === 'string') return kind
+  }
+  return undefined
+}
+
+function isZXingNotFound(cause: unknown): boolean {
+  if (!(cause instanceof Error)) return false
+  // ZXing's error.name comes from constructor.name, which can be minified.
+  return ['NotFoundException', 'ChecksumException', 'FormatException'].includes(
+    zxingErrorKind(cause) ?? cause.name,
   )
+}
+
+function cameraErrorDetails(cause: unknown): { name: string; message: string } {
+  if (cause instanceof Error || cause instanceof DOMException) {
+    return { name: cause.name, message: cause.message || '' }
+  }
+  return { name: 'UnknownError', message: String(cause) }
+}
+
+function logCameraFailure(stage: EntryCameraStage, cause: unknown) {
+  // Temporary HU14 diagnostics: do not log QR contents, devices or streams.
+  console.error('[HU14 camera]', {
+    stage,
+    ...cameraErrorDetails(cause),
+    kind: zxingErrorKind(cause),
+  })
+}
+
+function playCameraVideo(video: HTMLVideoElement, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    let settled = false
+    const events = ['loadeddata', 'canplay', 'playing', 'resize'] as const
+    const timeout = window.setTimeout(
+      () => finish(new DOMException(
+        'La cámara no entregó fotogramas a tiempo.',
+        'TimeoutError',
+      )),
+      10000,
+    )
+
+    function finish(error?: unknown) {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeout)
+      events.forEach((event) => video.removeEventListener(event, checkReady))
+      video.removeEventListener('error', onError)
+      signal.removeEventListener('abort', onAbort)
+      if (error !== undefined) reject(error)
+      else resolve()
+    }
+
+    function checkReady() {
+      if (
+        !video.paused &&
+        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
+      ) {
+        finish()
+      }
+    }
+
+    function onError() {
+      finish(new Error(
+        video.error?.message || 'No se pudo reproducir el video de la cámara.',
+      ))
+    }
+
+    function onAbort() {
+      finish(new DOMException('Inicialización de cámara cancelada.', 'AbortError'))
+    }
+
+    if (signal.aborted) {
+      onAbort()
+      return
+    }
+    events.forEach((event) => video.addEventListener(event, checkReady))
+    video.addEventListener('error', onError)
+    signal.addEventListener('abort', onAbort, { once: true })
+    try {
+      void video.play().then(checkReady, finish)
+    } catch (cause) {
+      finish(cause)
+    }
+  })
 }
 
 export type EntryCameraState =
@@ -30,29 +128,74 @@ export type EntryCameraState =
   | 'unsupported'
   | 'paused'
 
-function cameraFailure(cause: unknown): {
+function cameraFailure(stage: EntryCameraStage, cause: unknown): {
   state: EntryCameraState
   message: string
 } {
-  const name = cause instanceof DOMException ? cause.name : ''
-  if (name === 'NotAllowedError' || name === 'SecurityError') {
+  const { name } = cameraErrorDetails(cause)
+  if (name === 'NotAllowedError') {
     return {
       state: 'denied',
       message:
-        'Permiso de cámara denegado. Habilítalo en el navegador y vuelve a intentarlo.',
+        stage === 'VIDEO_PLAY'
+          ? 'El navegador bloqueó la reproducción de la cámara. Reintenta la cámara para continuar.'
+          : 'Permiso de cámara denegado. Habilítalo en el navegador y vuelve a intentarlo.',
     }
   }
-  if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+  if (name === 'SecurityError') {
+    return {
+      state: 'denied',
+      message:
+        'El navegador bloqueó la cámara por seguridad. Revisa la conexión HTTPS y los permisos del sitio.',
+    }
+  }
+  if (name === 'NotFoundError') {
     return {
       state: 'missing',
       message:
         'No se encontró una cámara disponible. Conecta una cámara o selecciona otra.',
     }
   }
+  if (name === 'NotReadableError') {
+    return {
+      state: 'error',
+      message:
+        'No se puede leer la cámara. Puede estar ocupada por otra aplicación o bloqueada por el sistema.',
+    }
+  }
+  if (name === 'OverconstrainedError') {
+    return {
+      state: 'error',
+      message:
+        'La cámara seleccionada no admite la configuración solicitada. Selecciona otra cámara y vuelve a intentarlo.',
+    }
+  }
+  if (name === 'AbortError') {
+    return {
+      state: 'error',
+      message: 'El inicio de la cámara se interrumpió. Vuelve a intentarlo.',
+    }
+  }
+  const messages: Record<EntryCameraStage, string> = {
+    GET_USER_MEDIA: 'No se pudo abrir la cámara. Vuelve a intentarlo.',
+    SET_SRC_OBJECT:
+      'No se pudo conectar la cámara con el visor. Vuelve a intentarlo.',
+    VIDEO_PLAY: 'No se pudo reproducir el video de la cámara. Vuelve a intentarlo.',
+    STREAM_SETUP:
+      'No se pudo preparar la cámara seleccionada. Vuelve a intentarlo.',
+    STREAM_ENDED: 'La cámara se desconectó. Conéctala y vuelve a intentarlo.',
+    BARCODE_DETECTOR_INIT: 'No se pudo iniciar el lector QR nativo.',
+    BARCODE_DETECTOR_DECODE: 'El lector QR nativo no pudo leer el video.',
+    ZXING_INIT:
+      'No se pudo iniciar el lector QR alternativo. Vuelve a intentarlo.',
+    ZXING_DECODE:
+      'El lector QR no pudo leer el video de la cámara. Vuelve a intentarlo.',
+    QR_PROCESSING:
+      'No se pudo procesar la lectura del QR. Consulta el historial antes de reintentar.',
+  }
   return {
     state: 'error',
-    message:
-      'No se pudo utilizar la cámara. Puede estar ocupada por otra aplicación. Vuelve a intentarlo.',
+    message: messages[stage],
   }
 }
 
@@ -68,6 +211,7 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
   const lastFingerprint = useRef<string | null>(null)
   const scanScope = useRef(scope)
   const trackRef = useRef<MediaStreamTrack | null>(null)
+  const pendingStart = useRef<Promise<void>>(Promise.resolve())
   const [state, setState] = useState<EntryCameraState>('paused')
   const [message, setMessage] = useState('Cámara pausada.')
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
@@ -106,6 +250,8 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
     let missingSince = 0
     let scanInProgress = false
     let scannerControls: IScannerControls | null = null
+    let stage: EntryCameraStage = 'GET_USER_MEDIA'
+    const startup = new AbortController()
     const video = videoRef.current
     setState('loading')
     setMessage('Cargando cámara…')
@@ -115,6 +261,7 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
     setControlError(null)
 
     function stop() {
+      startup.abort()
       if (timer !== undefined) window.clearTimeout(timer)
       scannerControls?.stop()
       scannerControls = null
@@ -122,6 +269,16 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
       if (trackRef.current === stream?.getVideoTracks()[0])
         trackRef.current = null
       if (video && video.srcObject === stream) video.srcObject = null
+    }
+
+    function fail(failedStage: EntryCameraStage, cause: unknown) {
+      if (!live) return
+      logCameraFailure(failedStage, cause)
+      live = false
+      stop()
+      const failure = cameraFailure(failedStage, cause)
+      setState(failure.state)
+      setMessage(failure.message)
     }
 
     async function start() {
@@ -133,23 +290,8 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
         return
       }
       try {
-        const NativeDetector = (
-          window as unknown as {
-            BarcodeDetector?: BarcodeDetectorConstructor
-          }
-        ).BarcodeDetector
-        let nativeReader: BarcodeDetector | null = null
-        if (NativeDetector) {
-          try {
-            const formats = await NativeDetector.getSupportedFormats()
-            if (!live) return
-            if (formats.includes('qr_code'))
-              nativeReader = new NativeDetector({ formats: ['qr_code'] })
-          } catch {
-            nativeReader = null
-          }
-        }
-        const zxingReader = nativeReader ? null : new BrowserQRCodeReader()
+        stage = 'GET_USER_MEDIA'
+        // This hook alone acquires, attaches and releases the MediaStream.
         stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
@@ -164,17 +306,25 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
           stop()
           return
         }
+        stage = 'SET_SRC_OBJECT'
         if (!video) {
-          stop()
-          return
+          throw new Error('No se encontró el visor de la cámara.')
         }
         video.autoplay = true
         video.muted = true
         video.playsInline = true
         video.srcObject = stream
-        await video.play()
+        stage = 'VIDEO_PLAY'
+        await playCameraVideo(video, startup.signal)
         if (!live) return
+        stage = 'STREAM_SETUP'
         const track = stream.getVideoTracks()[0]
+        if (!track || track.readyState !== 'live') {
+          throw new DOMException(
+            'El stream no contiene una cámara activa.',
+            'NotReadableError',
+          )
+        }
         trackRef.current = track
         setCurrentDeviceId(track?.getSettings().deviceId ?? '')
         try {
@@ -184,18 +334,10 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
         } catch {
           setTorchSupported(false)
         }
-        setState('active')
-        setMessage('Cámara activa')
         track?.addEventListener(
           'ended',
           () => {
-            if (!live) return
-            live = false
-            stop()
-            setState('error')
-            setMessage(
-              'La cámara se desconectó. Conéctala y vuelve a intentarlo.',
-            )
+            fail('STREAM_ENDED', new Error('La pista de video terminó.'))
           },
           { once: true },
         )
@@ -241,10 +383,55 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
           }
         }
 
+        function startZXing() {
+          if (!live || !video) return
+          stage = 'ZXING_INIT'
+          const zxingReader = new BrowserQRCodeReader()
+          stage = 'ZXING_DECODE'
+          // scan() only reads frames. It never acquires, plays or owns the stream.
+          scannerControls = zxingReader.scan(video, (result, cause) => {
+            if (!live) return
+            if (result) {
+              void processText(result.getText()).catch((error: unknown) => {
+                fail('QR_PROCESSING', error)
+              })
+            } else if (cause && !isZXingNotFound(cause)) {
+              fail('ZXING_DECODE', cause)
+            } else {
+              markCodeMissing()
+            }
+          })
+          // scan() can invoke its first callback before returning its controls.
+          if (!live) {
+            scannerControls.stop()
+            scannerControls = null
+          }
+        }
+
+        stage = 'BARCODE_DETECTOR_INIT'
+        const NativeDetector = (
+          window as unknown as {
+            BarcodeDetector?: BarcodeDetectorConstructor
+          }
+        ).BarcodeDetector
+        let nativeReader: BarcodeDetector | null = null
+        if (NativeDetector) {
+          try {
+            const formats = await NativeDetector.getSupportedFormats()
+            if (!live) return
+            if (formats.includes('qr_code'))
+              nativeReader = new NativeDetector({ formats: ['qr_code'] })
+          } catch (cause) {
+            if (!live) return
+            logCameraFailure('BARCODE_DETECTOR_INIT', cause)
+          }
+        }
+
         if (nativeReader) {
           const selectedReader = nativeReader
           async function readFrame() {
             if (!live || !video) return
+            let frameStage: EntryCameraStage = 'BARCODE_DETECTOR_DECODE'
             try {
               if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
                 const codes = await selectedReader.detect(video)
@@ -262,6 +449,7 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
                 if (texts.length > 1) {
                   missingSince = 0
                 } else if (texts[0] !== undefined) {
+                  frameStage = 'QR_PROCESSING'
                   await processText(texts[0])
                 } else {
                   markCodeMissing()
@@ -270,57 +458,36 @@ export function useEntryQrCamera({ active, scope, onToken }: Props) {
               if (live) timer = window.setTimeout(() => void readFrame(), 250)
             } catch (cause) {
               if (!live) return
-              live = false
-              stop()
-              const failure = cameraFailure(cause)
-              setState(failure.state)
-              setMessage(failure.message)
+              if (frameStage === 'QR_PROCESSING') {
+                fail(frameStage, cause)
+                return
+              }
+              logCameraFailure(frameStage, cause)
+              try {
+                // Fall back on the same playing video without reopening the camera.
+                startZXing()
+              } catch (error) {
+                fail(stage, error)
+              }
             }
           }
-          setState('active')
-          setMessage('Cámara activa')
           timer = window.setTimeout(() => void readFrame(), 250)
-        } else if (zxingReader) {
-          scannerControls = await zxingReader.decodeFromVideoElement(
-            video,
-            (result, cause) => {
-              if (!live) return
-              if (result) {
-                void processText(result.getText()).catch((error: unknown) => {
-                  if (!live) return
-                  live = false
-                  stop()
-                  const failure = cameraFailure(error)
-                  setState(failure.state)
-                  setMessage(failure.message)
-                })
-              } else if (cause && !isZXingNotFound(cause)) {
-                live = false
-                stop()
-                const failure = cameraFailure(cause)
-                setState(failure.state)
-                setMessage(failure.message)
-              } else {
-                markCodeMissing()
-              }
-            },
-          )
-          if (!live) {
-            scannerControls.stop()
-            return
-          }
+        } else {
+          startZXing()
+        }
+        if (live) {
           setState('active')
           setMessage('Cámara activa')
         }
       } catch (cause) {
-        if (!live) return
-        stop()
-        const failure = cameraFailure(cause)
-        setState(failure.state)
-        setMessage(failure.message)
+        fail(stage, cause)
       }
     }
-    void start()
+    // A cancelled getUserMedia cannot be aborted. Release its late stream before
+    // starting another session (camera changes, resume or StrictMode remount).
+    pendingStart.current = pendingStart.current.then(async () => {
+      if (live) await start()
+    })
     return () => {
       live = false
       stop()

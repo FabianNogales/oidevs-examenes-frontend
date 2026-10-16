@@ -3,15 +3,24 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { getEntryControlErrorMessage } from '../api/entryControlApi'
 import { getRooms } from '../api/teacherExamsApi'
 import { EntryControlStudentModal } from '../components/EntryControlStudentModal'
-import { EntryControlTable } from '../components/EntryControlTable'
+import { EntryControlStudentsList } from '../components/EntryControlStudentsList'
 import { EntryControlledRoomSelector } from '../components/EntryControlledRoomSelector'
+import { EntryHistoryModal } from '../components/EntryHistoryModal'
 import { EntryQrPanel } from '../components/EntryQrPanel'
+import { EntryRecentScans } from '../components/EntryRecentScans'
 import { ExamCard } from '../components/ExamCard'
 import { useEntryControlStudents } from '../hooks/useEntryControlStudents'
+import { useEntryRecentRecords } from '../hooks/useEntryRecentRecords'
+import type {
+  EntryMethod,
+  EntryProcessingResponse,
+  EntryStudentIdentity,
+} from '../types/entryRegistration.types'
 import type { Room } from '../types/exam.types'
 import pageStyles from './TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from './EntryControlPage.module.css'
+import qrStyles from '../components/EntryQr.module.css'
 
 function EntryControlContent({
   examId,
@@ -21,19 +30,23 @@ function EntryControlContent({
   fromTeacher: boolean
 }) {
   const list = useEntryControlStudents(examId)
+  const recent = useEntryRecentRecords()
   const [rooms, setRooms] = useState<Room[]>([])
   const [roomsLoading, setRoomsLoading] = useState(true)
   const [roomsError, setRoomsError] = useState<string | null>(null)
   const [roomsVersion, setRoomsVersion] = useState(0)
   const [studentId, setStudentId] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState<'verification' | 'qr'>(
+  const [activeTab, setActiveTab] = useState<'verification' | 'attendance'>(
     'verification',
   )
-  const searchId = useId()
+  const [qrOpen, setQrOpen] = useState(false)
+  // Mount on demand, then retain the hook instance to serialize camera restarts.
+  const [qrActivated, setQrActivated] = useState(false)
+  const [qrProcessing, setQrProcessing] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const tabsId = useId()
+  const scannerId = useId()
   const exam = list.response?.exam
-  const summary = list.response?.summary
-  const meta = list.meta
   const roomOptions =
     exam?.room && !rooms.some((room) => room.id === exam.room?.id)
       ? [exam.room, ...rooms]
@@ -46,10 +59,39 @@ function EntryControlContent({
     list.setRoomId(roomId)
   }
 
-  function selectTab(tab: 'verification' | 'qr') {
+  function selectTab(tab: 'verification' | 'attendance') {
+    if (tab === activeTab) return
     setStudentId(null)
+    setHistoryOpen(false)
+    setQrOpen(false)
     setActiveTab(tab)
   }
+
+  function handleResult(
+    response: EntryProcessingResponse,
+    method: EntryMethod,
+    student?: EntryStudentIdentity,
+  ) {
+    recent.addResult(response, method, student)
+    if (
+      response.result === 'AUTHORIZED' ||
+      response.result === 'ALREADY_REGISTERED' ||
+      method === 'MANUAL'
+    )
+      list.reload()
+  }
+
+  const roomSelector = (
+    <EntryControlledRoomSelector
+      roomId={list.roomId}
+      rooms={roomOptions}
+      loading={roomsLoading}
+      error={roomsError}
+      disabled={qrProcessing}
+      onChange={changeRoom}
+      onReload={() => setRoomsVersion((current) => current + 1)}
+    />
+  )
 
   useEffect(() => {
     let active = true
@@ -89,7 +131,7 @@ function EntryControlContent({
         </nav>
         <header className={pageStyles.pageHeader}>
           <h1>Control de ingreso</h1>
-          <p>Identificación y verificación de estudiantes para ingreso.</p>
+          <p>Verificación de estudiantes y registro de asistencia al examen.</p>
           {!fromTeacher ? (
             <p>
               Colaborador temporal · Apoyo en examen · Autorización temporal
@@ -122,9 +164,9 @@ function EntryControlContent({
               event.key === 'Home'
                 ? 'verification'
                 : event.key === 'End'
-                  ? 'qr'
+                  ? 'attendance'
                   : activeTab === 'verification'
-                    ? 'qr'
+                    ? 'attendance'
                     : 'verification'
             selectTab(next)
             document.getElementById(`${tabsId}-${next}-tab`)?.focus()
@@ -145,14 +187,14 @@ function EntryControlContent({
           <button
             type="button"
             role="tab"
-            id={`${tabsId}-qr-tab`}
-            aria-selected={activeTab === 'qr'}
-            aria-controls={`${tabsId}-qr-panel`}
+            id={`${tabsId}-attendance-tab`}
+            aria-selected={activeTab === 'attendance'}
+            aria-controls={`${tabsId}-attendance-panel`}
             className={styles.tab}
-            tabIndex={activeTab === 'qr' ? 0 : -1}
-            onClick={() => selectTab('qr')}
+            tabIndex={activeTab === 'attendance' ? 0 : -1}
+            onClick={() => selectTab('attendance')}
           >
-            Escanear QR
+            Registro de asistencia
           </button>
         </div>
         <div
@@ -161,126 +203,101 @@ function EntryControlContent({
           aria-labelledby={`${tabsId}-verification-tab`}
           hidden={activeTab !== 'verification'}
         >
-          {summary ? (
-            <dl
-              className={styles.summary}
-              aria-label="Resumen de estudiantes del examen"
-            >
-              <div>
-                <dt>Total estudiantes</dt>
-                <dd>{summary.total_students}</dd>
-              </div>
-              <div>
-                <dt>Registrados</dt>
-                <dd>{summary.registered}</dd>
-              </div>
-              <div>
-                <dt>Pendientes</dt>
-                <dd>{summary.pending}</dd>
-              </div>
-            </dl>
-          ) : null}
-          <section
-            className={sharedStyles.section}
-            aria-labelledby="entry-students-title"
-          >
-            <h2 id="entry-students-title">Estudiantes</h2>
-            <div className={styles.filters}>
-              <div className={styles.field}>
-                <label htmlFor={searchId}>Buscar estudiante</label>
-                <input
-                  id={searchId}
-                  type="search"
-                  value={list.query}
-                  placeholder="Nombre, apellido, nombre completo, SIS o CI"
-                  onChange={(event) => list.setQuery(event.target.value)}
-                />
-              </div>
-              <EntryControlledRoomSelector
-                roomId={list.roomId}
-                rooms={roomOptions}
-                loading={roomsLoading}
-                error={roomsError}
-                onChange={changeRoom}
-                onReload={() => setRoomsVersion((current) => current + 1)}
-              />
-            </div>
-            {list.error ? (
-              <section className={pageStyles.state} role="alert">
-                <p>{list.error}</p>
-                <button type="button" onClick={list.reload}>
-                  Reintentar
-                </button>
-              </section>
-            ) : null}
-            <EntryControlTable
-              items={list.items}
-              meta={meta}
-              loading={list.loading}
-              error={list.error}
+          {activeTab === 'verification' ? (
+            <EntryControlStudentsList
+              list={list}
               onView={setStudentId}
-            />
-            {meta ? (
-              <nav
-                className={styles.pagination}
-                aria-label="Paginación de estudiantes"
-              >
-                <p role="status">
-                  {meta.total} estudiantes · Página {meta.current_page} de{' '}
-                  {Math.max(1, meta.last_page)} · {meta.per_page} por página
-                </p>
-                <div>
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    disabled={list.loading || meta.current_page <= 1}
-                    onClick={() => list.setPage(meta.current_page - 1)}
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    disabled={
-                      list.loading || meta.current_page >= meta.last_page
-                    }
-                    onClick={() => list.setPage(meta.current_page + 1)}
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              </nav>
-            ) : null}
-          </section>
-          {studentId !== null ? (
-            <EntryControlStudentModal
-              key={`${examId}-${studentId}-${list.roomId}`}
-              examId={examId}
-              studentId={studentId}
-              roomId={list.roomId}
-              rooms={roomOptions}
-              onClose={() => setStudentId(null)}
+              roomSelector={roomSelector}
             />
           ) : null}
         </div>
         <div
           role="tabpanel"
-          id={`${tabsId}-qr-panel`}
-          aria-labelledby={`${tabsId}-qr-tab`}
-          hidden={activeTab !== 'qr'}
+          id={`${tabsId}-attendance-panel`}
+          aria-labelledby={`${tabsId}-attendance-tab`}
+          hidden={activeTab !== 'attendance'}
         >
-          <EntryQrPanel
+          <section
+            className={styles.attendancePanel}
+            aria-label="Registro de asistencia"
+          >
+            <h2>Registro de asistencia</h2>
+            <div className={qrStyles.toolbar}>
+              {roomSelector}
+              <button
+                type="button"
+                className={sharedStyles.secondaryButton}
+                disabled={qrProcessing}
+                onClick={() => setHistoryOpen(true)}
+              >
+                Ver historial completo
+              </button>
+            </div>
+            {list.roomId == null ? (
+              <p className={sharedStyles.note} role="status">
+                Selecciona el ambiente controlado antes de registrar un ingreso.
+              </p>
+            ) : null}
+            <EntryControlStudentsList
+              list={list}
+              manual
+              disabled={qrProcessing}
+              onView={setStudentId}
+            />
+            <div className={styles.qrLauncher}>
+              <button
+                type="button"
+                className={sharedStyles.secondaryButton}
+                aria-expanded={qrOpen}
+                aria-controls={scannerId}
+                disabled={!qrOpen && list.roomId == null}
+                onClick={() => {
+                  if (!qrOpen) setQrActivated(true)
+                  setQrOpen((current) => !current)
+                }}
+              >
+                {qrOpen ? 'Cerrar escáner QR' : 'Escanear QR'}
+              </button>
+            </div>
+            <div id={scannerId} hidden={!qrOpen}>
+              {qrActivated ? (
+                <EntryQrPanel
+                  examId={examId}
+                  active={
+                    activeTab === 'attendance' &&
+                    qrOpen &&
+                    !historyOpen &&
+                    studentId === null
+                  }
+                  roomId={list.roomId}
+                  onProcessed={(response) => handleResult(response, 'QR')}
+                  onProcessingChange={setQrProcessing}
+                />
+              ) : null}
+            </div>
+            <EntryRecentScans scans={recent.records} />
+          </section>
+        </div>
+        {studentId !== null ? (
+          <EntryControlStudentModal
+            key={`${examId}-${studentId}-${list.roomId}-${activeTab}`}
             examId={examId}
-            active={activeTab === 'qr'}
+            studentId={studentId}
             roomId={list.roomId}
             rooms={roomOptions}
-            roomsLoading={roomsLoading}
-            roomsError={roomsError}
-            onRoomChange={changeRoom}
-            onReloadRooms={() => setRoomsVersion((current) => current + 1)}
-            onAuthorized={list.reload}
+            allowManualEntry={activeTab === 'attendance'}
+            onManualResult={(response, student) =>
+              handleResult(response, 'MANUAL', student)
+            }
+            onClose={() => setStudentId(null)}
           />
-        </div>
+        ) : null}
+        {historyOpen && activeTab === 'attendance' ? (
+          <EntryHistoryModal
+            examId={examId}
+            onClose={() => setHistoryOpen(false)}
+          />
+        ) : null}
       </section>
     </main>
   )

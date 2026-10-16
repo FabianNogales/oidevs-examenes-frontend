@@ -176,12 +176,23 @@
 }
 
 .resultPanel {
-  min-height: 360px;
   overflow-wrap: anywhere;
 }
 
 .resultPanel > p {
   margin: var(--space-3) 0;
+}
+
+.resultEmpty {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.resultEmpty p {
+  margin: 0;
 }
 
 .identity {
@@ -275,15 +286,81 @@
 }
 
 .historyModal [role='dialog'] {
-  width: min(100%, 1050px);
+  width: 100%;
+  max-width: 1050px;
+  min-width: 0;
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: var(--space-4);
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.historyModal [role='dialog'] > div:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  min-width: 0;
+  margin-top: calc(-1 * var(--space-4));
+  padding-block: var(--space-4);
+  background: var(--color-surface);
+}
+
+.historyModal [role='dialog'] h2 {
+  min-width: 0;
+  font-size: clamp(var(--font-size-lg), 3vw, var(--font-size-2xl));
+}
+
+.historyModal [aria-label='Cerrar modal'] {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+
+.historyModal input {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.historyResults {
+  min-width: 0;
+  margin-top: var(--space-5);
 }
 
 .historyTableWrap {
-  margin-top: var(--space-5);
+  max-width: 100%;
 }
 
 .historyTable {
   min-width: 850px;
+}
+
+.historyCards {
+  display: none;
+}
+
+.historyStatus,
+.historyEmpty {
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-soft);
+  text-align: center;
+  font-size: var(--font-size-sm);
+}
+
+.historyEmpty p {
+  margin: 0;
+}
+
+.historyEmpty .historyEmptyTitle {
+  margin-bottom: var(--space-2);
+  color: var(--brand-navy);
+  font-weight: var(--font-weight-semibold);
 }
 
 @media (max-width: 900px) {
@@ -311,6 +388,95 @@
 }
 
 @media (max-width: 768px) {
+  .historyTableWrap {
+    display: none;
+  }
+
+  .historyCards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    list-style: none;
+  }
+
+  .historyCard {
+    min-width: 0;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .historyCard dl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  .historyCard dt {
+    margin-bottom: var(--space-1);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  .historyCard dd {
+    min-width: 0;
+    margin: 0;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .historyCard .historyStudentName {
+    color: var(--brand-navy);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .historyCard dd > span {
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+  }
+
+  .scannerGrid {
+    row-gap: var(--space-3);
+  }
+
+  .cameraHelp {
+    margin: 0 0 var(--space-3);
+  }
+
+  .cameraControls {
+    gap: var(--space-2);
+  }
+
+  .cameraChoice {
+    gap: var(--space-1);
+  }
+
+  .cameraChoice select {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .cameraControls button {
+    min-height: 44px;
+  }
+
+  .recent {
+    margin-top: var(--space-4);
+  }
+
   .recentTableWrap {
     display: none;
   }
@@ -398,8 +564,7 @@
     max-width: 100%;
   }
 
-  .recentTable,
-  .historyTable {
+  .recentTable {
     min-width: 0;
     table-layout: fixed;
   }

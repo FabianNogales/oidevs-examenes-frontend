@@ -1,52 +1,22 @@
+import type { EntryControlMeta } from './entryControl.types'
 import type {
-  EntryBlocker,
-  EntryEligibilityStatus,
-  EntryEnrollmentStatus,
-  EntryRoomStatus,
-  EntryStatus,
-  EntryControlMeta,
-  StudentEntry,
-} from './entryControl.types'
+  EntryProcessingResponse,
+  EntryRecord,
+  EntryRegistrationData,
+  EntryStudentIdentity,
+} from './entryRegistration.types'
+
+export type { EntryRecord } from './entryRegistration.types'
 
 export type EntryQrResult =
   'AUTHORIZED' | 'INVALID_QR' | 'WRONG_EXAM' | 'DENIED' | 'ALREADY_REGISTERED'
 
 export type EntryQrPayload = { qr_token: string; room_id: number }
 
-export type EntryQrStudent = {
-  student_id: number
-  first_names: string
-  last_names: string
-  sis_code: string
-  identity_number: string | null
-  profile_photo_url: string | null
-}
-
-export type EntryRecord = StudentEntry & {
-  exam_id: number
-  student_id: number
-  room_id: number
-  status: string
-}
-
-export type EntryQrData = {
-  student?: EntryQrStudent | null
-  enrollment_status?: EntryEnrollmentStatus
-  eligibility_status?: EntryEligibilityStatus
-  room_status?: EntryRoomStatus
-  entry_status?: EntryStatus
-  blockers?: EntryBlocker[]
-  reason?: string | null
-  observations?: string | null
-  entry?: EntryRecord | null
-}
-
-export type EntryQrResponse = {
-  result: EntryQrResult
-  message: string
-  processed_at: string
-  data: EntryQrData | null
-}
+// Compatibility aliases: the HU14 request/response shapes remain unchanged.
+export type EntryQrStudent = EntryStudentIdentity
+export type EntryQrData = EntryRegistrationData
+export type EntryQrResponse = EntryProcessingResponse<EntryQrResult>
 
 // This projection deliberately has no token and is never persisted.
 export type RecentEntryScan = {

@@ -279,23 +279,78 @@
 .conditions {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  align-items: start;
+  gap: var(--space-2);
   margin: 0;
 }
 
 .conditions > div {
   min-width: 0;
+  padding: var(--space-2) var(--space-3);
 }
 
 .conditions dt {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-1);
   font-weight: var(--font-weight-semibold);
 }
 
 .conditions .conditionContext {
-  margin-top: var(--space-3);
+  margin-top: var(--space-1);
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+}
+
+.conditions .badge,
+.entryStatusSummary .badge {
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.entryStatusPanel {
+  width: 100%;
+  min-width: 0;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.entryStatusSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.entryStatusSummary dt {
+  color: var(--brand-navy);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.entryStatusSummary dd {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+
+.entryStatusDetails {
+  min-width: 0;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.entryStatusDetails .examDetails {
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
 }
 
 .message {
@@ -304,6 +359,21 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow-wrap: anywhere;
+}
+
+.manualSuccessBanner {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.manualSuccessBanner p {
+  margin: 0;
 }
 
 .blockers {
@@ -321,6 +391,128 @@
 .modalActions {
   padding-top: var(--space-5);
   border-top: 1px solid var(--color-border);
+}
+
+.attendancePanel {
+  min-width: 0;
+  margin-top: var(--space-6);
+}
+
+.manualSearch {
+  min-width: 0;
+  margin-bottom: var(--space-5);
+}
+
+.manualSearch input {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.qrLauncher {
+  margin-top: var(--space-5);
+}
+
+.qrLauncher button {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.manualModalScope [role='dialog'] {
+  width: 100%;
+  max-width: 800px;
+  min-width: 0;
+  max-height: 90dvh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: var(--space-5);
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.manualModalScope [role='dialog'] > div:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  min-width: 0;
+  margin-top: calc(-1 * var(--space-5));
+  padding-block: var(--space-5);
+  background: var(--color-surface);
+}
+
+.manualModalScope [role='dialog'] h2 {
+  min-width: 0;
+  font-size: clamp(var(--font-size-lg), 3vw, var(--font-size-2xl));
+}
+
+.manualModalScope [aria-label='Cerrar modal'] {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+
+.manualModalScope .modalActions button {
+  max-width: 100%;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.confirmationName {
+  margin: 0;
+  color: var(--brand-navy);
+  overflow-wrap: anywhere;
+}
+
+.detailModalLayer .modalScope > div,
+.detailModalLayer .confirmationModalScope > div {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.detailModalLayer .modalScope > div {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  height: 100dvh;
+  min-width: 0;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.detailModalLayer .modalScope [role='dialog'] {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 800px;
+  min-width: 0;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-anchor: none;
+  scroll-behavior: auto;
+}
+
+.detailModalLayer .modalScope [role='dialog'] > div:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  min-width: 0;
+  background: var(--color-surface);
+}
+
+.detailModalLayer .modalScope [role='dialog'] h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detailModalLayer .modalScope [aria-label='Cerrar modal'] {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
 }
 
 @media (max-width: 768px) {
@@ -476,5 +668,85 @@
 @media (max-width: 480px) {
   .conditions {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .confirmationModalScope > div {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    min-width: 0;
+    padding: 12px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: none;
+    translate: none;
+  }
+
+  .confirmationModalScope [role='dialog'] {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    max-height: min(90dvh, calc(100dvh - 24px));
+    margin: auto;
+    padding: var(--space-4);
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: none;
+    translate: none;
+  }
+
+  .confirmationModalScope [role='dialog'] > * {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .confirmationModalScope [role='dialog'] > div:first-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    align-items: start;
+    gap: var(--space-3);
+    margin-top: calc(-1 * var(--space-4));
+    padding-block: var(--space-4);
+  }
+
+  .confirmationModalScope [role='dialog'] h2 {
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .confirmationModalScope .examDetails {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .confirmationModalScope .examDetails > div {
+    min-width: 0;
+  }
+
+  .confirmationModalScope .examDetails dd {
+    white-space: normal;
+  }
+
+  .confirmationModalScope .modalActions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .confirmationModalScope .modalActions button {
+    width: 100%;
   }
 }
