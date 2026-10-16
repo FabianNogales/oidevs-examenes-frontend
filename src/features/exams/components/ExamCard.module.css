@@ -48,6 +48,15 @@
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
+.badge[data-status='CANCELLED'] {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+.badge[data-status='ACTIVE'],
+.badge[data-status='IN_PROGRESS'] {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
 
 .examNameWrap {
   padding-top: var(--space-1);

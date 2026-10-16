@@ -11,6 +11,8 @@ export type ExamDetail = ManagedExam & {
   updated_at: string
   can_edit?: boolean
   edit_block_reason?: string | null
+  can_cancel?: boolean
+  cancel_block_reason?: string | null
 }
 
 export type ExamDetailResult = {
@@ -50,6 +52,9 @@ export function isExamDetail(value: unknown, id: number): value is ExamDetail {
     typeof exam.updated_at === 'string' &&
     Number.isFinite(Date.parse(exam.updated_at)) &&
     (exam.can_edit === undefined || typeof exam.can_edit === 'boolean') &&
+    (exam.can_cancel === undefined || typeof exam.can_cancel === 'boolean') &&
+    (exam.cancel_block_reason == null ||
+      typeof exam.cancel_block_reason === 'string') &&
     (exam.edit_block_reason == null ||
       typeof exam.edit_block_reason === 'string') &&
     (exam.academic_term_name == null ||

@@ -74,7 +74,7 @@ export function ExamCard({
         </div>
 
         {status ? (
-          <span className={styles.badge}>
+          <span className={styles.badge} data-status={status}>
             {STATUS_LABELS[status] ?? status}
           </span>
         ) : null}

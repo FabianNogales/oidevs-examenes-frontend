@@ -1,6 +1,7 @@
 import { Link, useLocation, useParams } from 'react-router'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { ExamTools } from '@/features/exams/components/ExamTools'
+import { ExamCancellation } from '@/features/exams/components/ExamCancellation'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import { safeExamMessage } from '@/features/exams/utils/examMessages'
@@ -98,6 +99,13 @@ function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
                   'La edición no está habilitada para este examen.',
                 )}
               </p>
+            ) : null}
+            {detail ? (
+              <ExamCancellation
+                key={`${detail.id}:${detail.updated_at}`}
+                exam={detail}
+                onReload={reload}
+              />
             ) : null}
           </div>
         ) : null}

@@ -9,34 +9,36 @@ import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardEr
 export function useManagedExams(filters: ExamListFilters) {
   const [attempt, setAttempt] = useState(0)
   const [state, setState] = useState<{
+    key: string
     result: ExamListResult | null
-    loading: boolean
     error: string | null
-  }>({ result: null, loading: true, error: null })
+  } | null>(null)
   const { view, search, page } = filters
+  const key = JSON.stringify([view, search, page, attempt])
   useEffect(() => {
     const controller = new AbortController()
-    const timer = window.setTimeout(() => {
-      setState({ result: null, loading: true, error: null })
-      void getManagedExams({ view, search, page }, controller.signal).then(
-        (result) => {
-          if (!controller.signal.aborted)
-            setState({ result, loading: false, error: null })
-        },
-        (error: unknown) => {
-          if (!controller.signal.aborted)
-            setState({
-              result: null,
-              loading: false,
-              error: getTeacherDashboardErrorMessage(error),
-            })
-        },
-      )
-    }, 0)
+    void getManagedExams({ view, search, page }, controller.signal).then(
+      (result) => {
+        if (!controller.signal.aborted) setState({ key, result, error: null })
+      },
+      (error: unknown) => {
+        if (!controller.signal.aborted)
+          setState({
+            result: null,
+            key,
+            error: getTeacherDashboardErrorMessage(error),
+          })
+      },
+    )
     return () => {
-      window.clearTimeout(timer)
       controller.abort()
     }
-  }, [view, search, page, attempt])
-  return { ...state, reload: () => setAttempt((value) => value + 1) }
+  }, [view, search, page, key])
+  const current = state?.key === key ? state : null
+  return {
+    result: current?.result ?? null,
+    error: current?.error ?? null,
+    loading: current === null,
+    reload: () => setAttempt((value) => value + 1),
+  }
 }
