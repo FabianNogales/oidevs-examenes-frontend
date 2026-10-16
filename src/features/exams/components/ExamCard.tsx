@@ -4,6 +4,7 @@ import type { EvaluationType } from '@/features/exams/types/exam.types'
 import styles from './ExamCard.module.css'
 
 type ExamCardProps = {
+  academicTermName?: string | null
   subjectCode?: string | null
   subjectName?: string | null
   examName: string
@@ -25,6 +26,11 @@ const EVALUATION_LABELS: Record<EvaluationType, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   SCHEDULED: 'Programado',
+  ACTIVE: 'Activo',
+  IN_PROGRESS: 'En curso',
+  COMPLETED: 'Finalizado',
+  FINISHED: 'Finalizado',
+  CANCELLED: 'Cancelado',
 }
 
 function formatDate(value: string): string {
@@ -46,6 +52,7 @@ function formatTime(value: string): string {
 }
 
 export function ExamCard({
+  academicTermName,
   subjectCode,
   subjectName,
   examName,
@@ -79,6 +86,7 @@ export function ExamCard({
         </div>
       ) : null}
 
+      {academicTermName ? <p>Periodo académico: {academicTermName}</p> : null}
       <div className={styles.infoGrid}>
         <div className={styles.infoItem}>
           <div className={styles.itemContent}>
