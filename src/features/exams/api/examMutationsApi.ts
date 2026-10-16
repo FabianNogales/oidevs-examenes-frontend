@@ -1,6 +1,7 @@
 import { httpClient } from '@/shared/api/httpClient'
 import {
   getApiFieldErrors,
+  getApiErrorCode,
   getRequestStatus,
 } from '@/features/auth/utils/apiErrors'
 import { isExamDetail, parseExamId, type ExamDetail } from './examDetailsApi'
@@ -71,6 +72,14 @@ export async function updateExam(
   } catch (error) {
     if (error instanceof ExamMutationError) throw error
     const status = getRequestStatus(error)
+    if (getApiErrorCode(error) === 'EXAM_VERSION_PRECISION_REQUIRED') {
+      throw new ExamMutationError(
+        'La edición no está disponible temporalmente. Contacta a administración para habilitarla antes de reintentar.',
+        status,
+        {},
+        { cause: error },
+      )
+    }
     const messages: Record<number, string> = {
       401: 'Tu sesión ha caducado. Inicia sesión nuevamente.',
       403: 'Ya no tienes autorización para editar este examen.',

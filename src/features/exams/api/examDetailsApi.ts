@@ -92,6 +92,12 @@ export async function getExamDetail(
   } catch (error) {
     if (!axios.isAxiosError(error) || error.response?.status !== 404)
       throw error
+    if (error.response.data?.code === 'EXAM_NOT_FOUND') {
+      throw new Error(
+        'El examen no existe o no está disponible para tu cuenta.',
+        { cause: error },
+      )
+    }
     // Compatibility is limited to the existing authenticated teacher summary.
     // It must never substitute another record or enable an edit with partial data.
     const response = await httpClient.get<{ data: ManagedExam[] }>(
