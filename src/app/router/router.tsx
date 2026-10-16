@@ -28,6 +28,7 @@ import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
 import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
 import { AdminManageStudentsPage } from '@/features/admin/pages/AdminManageStudentsPage'
 import { AdminStudentDetailPage } from '@/features/admin/pages/AdminStudentDetailPage'
+import { AdminTeacherDetailPage } from '@/features/admin/pages/AdminTeacherDetailPage'
 
 export const router = createBrowserRouter([
   {
@@ -72,6 +73,10 @@ export const router = createBrowserRouter([
                   {
                     path: 'teachers',
                     element: <AdminTeachersPage />,
+                  },
+                  {
+                    path: 'teachers/:teacherId',
+                    element: <AdminTeacherDetailPage />,
                   },
                   {
                     path: 'students/manage',

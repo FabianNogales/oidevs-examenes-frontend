@@ -1,53 +1,127 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { NavLink, useNavigate } from 'react-router'
-import styles from './AdminManageStudentsPage.module.css'
-import { SearchIcon } from '@/assets/icons/SearchIcon'
+import { NavLink } from 'react-router'
+
 import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
-import { getAdminStudents, updateAdminStudentStatus } from '@/features/admin/api/adminStudentsApi'
+import {
+  getAdminStudents,
+  updateAdminStudentStatus,
+} from '@/features/admin/api/adminStudentsApi'
 import type { Student } from '@/features/admin/types/student.types'
+
+import { DataTable } from '@/shared/components/DataTable/DataTable'
+import type {
+  TableColumnDef,
+  TablePaginationMeta,
+} from '@/shared/components/DataTable/dataTable.types'
+import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
+
+import styles from './AdminManageStudentsPage.module.css'
 
 const PER_PAGE = 10
 
+/**
+ * Extensión local de tipo en caso de que la interfaz base Student
+ * no tenga tipado explícito para el carnet de identidad (CI).
+ */
+type StudentRowItem = Student & {
+  identity_number?: string
+}
+
+/**
+ * Contrato declarativo de columnas y anchos para la tabla de Estudiantes.
+ * Definido fuera del componente para evitar recrear el arreglo en cada render.
+ */
+const STUDENT_COLUMNS: readonly TableColumnDef<StudentRowItem>[] = [
+  {
+    id: 'code',
+    header: 'Código',
+    width: '16%',
+    accessorKey: 'institutional_code',
+  },
+  {
+    id: 'student',
+    header: 'Estudiante',
+    width: '28%',
+    cell: (student) => (
+      <div>
+        <span className={tableStyles.primaryText}>
+          {student.last_names} {student.first_names}
+        </span>
+        {student.identity_number && (
+          <span className={tableStyles.secondaryText}>
+            CI: {student.identity_number}
+          </span>
+        )}
+      </div>
+    ),
+  },
+  {
+    id: 'email',
+    header: 'Correo Institucional',
+    width: '30%',
+    accessorKey: 'email',
+  },
+  {
+    id: 'status',
+    header: 'Estado',
+    width: '12%',
+    accessorKey: 'status',
+  },
+]
+
 export function AdminManageStudentsPage() {
-  const navigate = useNavigate()
-
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchInput, setSearchInput] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const [students, setStudents] = useState<Student[]>([])
+  const [students, setStudents] = useState<StudentRowItem[]>([])
+  const [pagination, setPagination] = useState<TablePaginationMeta | null>(null)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalRecords, setTotalRecords] = useState(0)
-  const [pendingToggle, setPendingToggle] = useState<Student | null>(null)
+
+  const [pendingToggle, setPendingToggle] = useState<StudentRowItem | null>(null)
   const [toggling, setToggling] = useState(false)
 
   const requestIdRef = useRef(0)
 
   const loadStudents = useCallback(async (page: number, search: string) => {
     const requestId = ++requestIdRef.current
+
     try {
       setLoading(true)
       setErrorMessage(null)
-      const result = await getAdminStudents({ page, perPage: PER_PAGE, search })
+
+      const result = await getAdminStudents({
+        page,
+        perPage: PER_PAGE,
+        search,
+      })
+
       if (requestId !== requestIdRef.current) return
 
       setStudents(result.students)
-      setTotalPages(result.meta.last_page)
-      setTotalRecords(result.meta.total)
+      setPagination({
+        currentPage: result.meta.current_page,
+        lastPage: result.meta.last_page,
+        total: result.meta.total,
+      })
 
       if (result.meta.last_page > 0 && page > result.meta.last_page) {
         setCurrentPage(result.meta.last_page)
       }
     } catch (error) {
       if (requestId !== requestIdRef.current) return
+
       setStudents([])
+      setPagination(null)
       setErrorMessage(
-        error instanceof Error ? error.message : 'No se pudieron cargar los estudiantes.',
+        error instanceof Error
+          ? error.message
+          : 'No se pudieron cargar los estudiantes.',
       )
     } finally {
-      if (requestId === requestIdRef.current) setLoading(false)
+      if (requestId === requestIdRef.current) {
+        setLoading(false)
+      }
     }
   }, [])
 
@@ -55,22 +129,39 @@ export function AdminManageStudentsPage() {
     void loadStudents(currentPage, searchTerm)
   }, [currentPage, searchTerm, loadStudents])
 
-  const handleSearch = () => {
+  const handleSearch = (query: string) => {
     setCurrentPage(1)
-    setSearchTerm(searchInput)
+    if (query === searchTerm && currentPage === 1) {
+      void loadStudents(1, query)
+      return
+    }
+    setSearchTerm(query)
   }
 
   const handleConfirmToggle = async () => {
     if (!pendingToggle) return
+
     const newStatus = pendingToggle.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+
     try {
       setToggling(true)
       setErrorMessage(null)
-      const updated = await updateAdminStudentStatus(pendingToggle.id, newStatus)
-      setStudents((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+
+      const updated = await updateAdminStudentStatus(
+        pendingToggle.id,
+        newStatus,
+      )
+
+      setStudents((prev) =>
+        prev.map((student) =>
+          student.id === updated.id ? { ...student, ...updated } : student,
+        ),
+      )
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'No se pudo cambiar el estado del estudiante.',
+        error instanceof Error
+          ? error.message
+          : 'No se pudo cambiar el estado del estudiante.',
       )
     } finally {
       setToggling(false)
@@ -96,136 +187,41 @@ export function AdminManageStudentsPage() {
       <header className={styles.pageHeader}>
         <div className={styles.headerTitles}>
           <h1>Gestión de estudiantes</h1>
-          <p>Consulta y administra los estudiantes registrados en el sistema EIDA.</p>
+          <p>
+            Consulta y administra los estudiantes registrados en el sistema EIDA.
+          </p>
         </div>
+
         <div className={styles.headerActions}>
-          <NavLink to="/admin/students/import" className={styles.secondaryButton}>
+          <NavLink
+            to="/admin/students/import"
+            className={styles.secondaryButton}
+          >
             + Importar CSV
           </NavLink>
         </div>
       </header>
 
-      <main className={styles.tableContainer}>
-        <div className={styles.searchBar}>
-          <div className={styles.searchInputWrapper}>
-            <SearchIcon className={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="Buscar por nombre, apellido, correo o código institucional"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className={styles.searchInput}
-            />
-          </div>
-          <button className={styles.searchButton} onClick={handleSearch}>Buscar</button>
-        </div>
-
-        {errorMessage && (
-          <p role="alert" className={styles.emptyState}>{errorMessage}</p>
-        )}
-
-        <div className={styles.tableWrapper}>
-          <table className={styles.studentsTable}>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Estudiante</th>
-                <th>Correo Institucional</th>
-                <th>Estado</th>
-                <th className={styles.textRight}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className={styles.emptyState}>Cargando estudiantes...</td>
-                </tr>
-              ) : students.length > 0 ? (
-                students.map((student) => {
-                  const isActive = student.status === 'ACTIVE'
-                  return (
-                    <tr key={student.id}>
-                      <td className={styles.cellCode}>{student.institutional_code}</td>
-                      <td>
-                        <div className={styles.studentInfo}>
-                          <span className={styles.studentName}>
-                            {student.last_names} {student.first_names}
-                          </span>
-                        </div>
-                      </td>
-                      <td className={styles.cellEmail}>{student.email}</td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${isActive ? styles.statusActive : styles.statusInactive}`}>
-                          <span className={styles.statusDot}></span>
-                          {isActive ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-                      <td>
-                        <div className={styles.actionButtons}>
-                          <button
-                            className={styles.actionBtnText}
-                            onClick={() => navigate(`/admin/students/${student.id}`)}
-                          >
-                            Ver detalle
-                          </button>
-                          <button
-                            className={styles.actionBtnText}
-                            onClick={() => navigate(`/admin/students/${student.id}?tab=editar`)}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            className={isActive ? styles.actionBtnDanger : styles.actionBtnSuccess}
-                            onClick={() => setPendingToggle(student)}
-                          >
-                            {isActive ? 'Desactivar' : 'Activar'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              ) : (
-                !errorMessage && (
-                  <tr>
-                    <td colSpan={5} className={styles.emptyState}>
-                      No se encontraron estudiantes registrados.
-                    </td>
-                  </tr>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className={styles.pagination}>
-          <span className={styles.paginationSummary}>
-            {totalRecords > 0
-              ? `Mostrando página ${currentPage} de ${totalPages} (${totalRecords} en total)`
-              : 'Mostrando 0 estudiantes'}
-          </span>
-          <div className={styles.paginationControls}>
-            <button
-              className={currentPage > 1 ? styles.pageBtn : styles.pageBtnDisabled}
-              disabled={currentPage <= 1 || loading}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Anterior
-            </button>
-            <span className={styles.pageCurrent}>
-              Página {currentPage} de {totalPages || 1}
-            </span>
-            <button
-              className={currentPage < totalPages ? styles.pageBtn : styles.pageBtnDisabled}
-              disabled={currentPage >= totalPages || loading}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Siguiente
-            </button>
-          </div>
-        </div>
-      </main>
+      <DataTable<StudentRowItem>
+        columns={STUDENT_COLUMNS}
+        data={students}
+        loading={loading}
+        error={errorMessage}
+        pagination={pagination}
+        entityLabel="estudiantes"
+        searchPlaceholder="Buscar por nombre, apellido, correo o código institucional"
+        onSearch={handleSearch}
+        onPageChange={setCurrentPage}
+        onRetry={() => void loadStudents(currentPage, searchTerm)}
+        getProfilePath={(student) => `/admin/students/${student.id}`}
+        onToggleStatus={(student) => setPendingToggle(student)}
+        emptyTitle="No se encontraron estudiantes"
+        emptyDescription={
+          searchTerm
+            ? 'Prueba con otro nombre, correo o código institucional.'
+            : 'Todavía no existen estudiantes registrados en el sistema.'
+        }
+      />
 
       <ConfirmDialog
         isOpen={pendingToggle !== null}
