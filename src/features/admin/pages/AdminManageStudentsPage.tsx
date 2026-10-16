@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { NavLink } from 'react-router'
+import { NavLink, useNavigate } from 'react-router'
 import styles from './AdminManageStudentsPage.module.css'
 import { SearchIcon } from '@/assets/icons/SearchIcon'
-import { StudentDetailModal } from '@/features/admin/components/StudentDetailModal'
 import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
 import { getAdminStudents, updateAdminStudentStatus } from '@/features/admin/api/adminStudentsApi'
-import type { Student, StudentDetail } from '@/features/admin/types/student.types'
+import type { Student } from '@/features/admin/types/student.types'
 
 const PER_PAGE = 10
 
 export function AdminManageStudentsPage() {
+  const navigate = useNavigate()
+
   const [searchTerm, setSearchTerm] = useState('')
   const [searchInput, setSearchInput] = useState('')
 
@@ -19,8 +20,6 @@ export function AdminManageStudentsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
-  const [openInEditMode, setOpenInEditMode] = useState(false)
   const [pendingToggle, setPendingToggle] = useState<Student | null>(null)
   const [toggling, setToggling] = useState(false)
 
@@ -53,36 +52,12 @@ export function AdminManageStudentsPage() {
   }, [])
 
   useEffect(() => {
-    loadStudents(currentPage, searchTerm)
+    void loadStudents(currentPage, searchTerm)
   }, [currentPage, searchTerm, loadStudents])
 
   const handleSearch = () => {
     setCurrentPage(1)
     setSearchTerm(searchInput)
-  }
-
-  const openModal = (studentId: string, editMode: boolean) => {
-    setOpenInEditMode(editMode)
-    setSelectedStudentId(studentId)
-  }
-
-  const closeModal = () => setSelectedStudentId(null)
-  const handleStudentUpdated = (updated: StudentDetail) => {
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === updated.id
-          ? {
-              ...s,
-              institutional_code: updated.institutional_code,
-              first_names: updated.first_names,
-              last_names: updated.last_names,
-              email: updated.email,
-              career: updated.career,
-              status: updated.status,
-            }
-          : s,
-      ),
-    )
   }
 
   const handleConfirmToggle = async () => {
@@ -111,7 +86,7 @@ export function AdminManageStudentsPage() {
   return (
     <div className={styles.pageContainer}>
       <nav aria-label="Breadcrumbs" className={styles.breadcrumbs}>
-        <NavLink to="/admin" className={styles.breadcrumbLink}>Inicio</NavLink>
+        <span className={styles.breadcrumbLink}>Inicio</span>
         <span className={styles.breadcrumbSeparator}>/</span>
         <span className={styles.breadcrumbLink}>Estudiantes</span>
         <span className={styles.breadcrumbSeparatorActive}>/</span>
@@ -127,9 +102,6 @@ export function AdminManageStudentsPage() {
           <NavLink to="/admin/students/import" className={styles.secondaryButton}>
             + Importar CSV
           </NavLink>
-          {/*<button className={styles.primaryButton} onClick={() => navigate('/admin/students/new')}>
-            + Registrar estudiantes
-          </button>*/}
         </div>
       </header>
 
@@ -193,13 +165,13 @@ export function AdminManageStudentsPage() {
                         <div className={styles.actionButtons}>
                           <button
                             className={styles.actionBtnText}
-                            onClick={() => openModal(student.id, false)}
+                            onClick={() => navigate(`/admin/students/${student.id}`)}
                           >
                             Ver detalle
                           </button>
                           <button
                             className={styles.actionBtnText}
-                            onClick={() => openModal(student.id, true)}
+                            onClick={() => navigate(`/admin/students/${student.id}?tab=editar`)}
                           >
                             Editar
                           </button>
@@ -254,14 +226,6 @@ export function AdminManageStudentsPage() {
           </div>
         </div>
       </main>
-
-      <StudentDetailModal
-        isOpen={selectedStudentId !== null}
-        onClose={closeModal}
-        studentId={selectedStudentId}
-        startInEditMode={openInEditMode}
-        onUpdated={handleStudentUpdated}
-      />
 
       <ConfirmDialog
         isOpen={pendingToggle !== null}

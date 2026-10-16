@@ -27,6 +27,7 @@ import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
 import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
 import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
 import { AdminManageStudentsPage } from '@/features/admin/pages/AdminManageStudentsPage'
+import { AdminStudentDetailPage } from '@/features/admin/pages/AdminStudentDetailPage'
 
 export const router = createBrowserRouter([
   {
@@ -77,6 +78,14 @@ export const router = createBrowserRouter([
                     element: <AdminManageStudentsPage />,
                   },
                   {
+                    path: 'students/import',
+                    element: <ImportStudentsPage />,
+                  },
+                  {
+                    path: 'students/:studentId',
+                    element: <AdminStudentDetailPage />,
+                  },
+                  {
                     path: 'subjects',
                     lazy: async () => {
                       const { AdminSubjectsPage } =
@@ -115,10 +124,6 @@ export const router = createBrowserRouter([
                         await import('@/features/rooms/pages/ImportRoomsPage')
                       return { Component: ImportRoomsPage }
                     },
-                  },
-                  {
-                    path: 'students/import',
-                    element: <ImportStudentsPage />,
                   },
                   {
                     path: '*',
