@@ -1,0 +1,74 @@
+@import '../../students/pages/ImportStudentsPage.module.css';
+@import '../../students/components/StudentImportDesign.module.css';
+
+.panel {
+  min-width: 0;
+  padding: var(--space-4);
+}
+.panelHeader h2 {
+  font-size: var(--font-size-lg);
+}
+.templateButton,
+.changeFileButton,
+.cancelButton,
+.continueButton {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  font-size: var(--font-size-sm);
+}
+.previewTableWrap {
+  width: 100%;
+  min-width: 0;
+  margin-block: var(--space-4);
+}
+.previewTable {
+  min-width: 600px;
+}
+.columnsIntro,
+.infoBanner {
+  font-size: var(--font-size-sm);
+}
+.dropzone {
+  gap: var(--space-3);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.dropzoneTitle {
+  font-size: var(--font-size-lg);
+}
+@media (max-width: 640px) {
+  .panel {
+    padding: var(--space-3);
+  }
+  .previewTable {
+    min-width: 0;
+  }
+  .previewTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .previewTable tbody,
+  .previewTable tr {
+    display: block;
+  }
+  .previewTable tbody td {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-right: 0;
+    text-align: left;
+  }
+  .previewTable td::before {
+    content: attr(data-label);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+  }
+  .previewTable tr + tr {
+    border-top: 2px solid var(--color-border-strong);
+  }
+}

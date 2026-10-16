@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
+import { TeacherCourseOfferings } from '@/features/course-offerings/components/TeacherCourseOfferings'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 import type { FormEvent } from 'react'
 
@@ -554,14 +556,19 @@ export function AdminTeachersPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className={styles.registerButton}
-            onClick={handleOpenCreate}
-          >
-            <span aria-hidden="true">+</span>
-            Registrar docente
-          </button>
+          <div className={styles.headerActions}>
+            <Link className={styles.assignButton} to="/admin/teachers/assignments">
+              Asignar materias
+            </Link>
+            <button
+              type="button"
+              className={styles.registerButton}
+              onClick={handleOpenCreate}
+            >
+              <span aria-hidden="true">+</span>
+              Registrar docente
+            </button>
+          </div>
         </header>
 
         <div className={styles.card}>
@@ -1116,6 +1123,8 @@ export function AdminTeachersPage() {
                     </div>
                   </dl>
 
+                  <TeacherCourseOfferings teacherId={selectedTeacher.id} />
+
                   <footer
                     className={
                       styles.modalFooter
@@ -1444,6 +1453,14 @@ export function AdminTeachersPage() {
                 </label>
               </div>
 
+              {editingTeacher && (
+                <p className={styles.assignmentHint}>
+                  Las materias se administran por periodo desde{' '}
+                  <Link to={`/admin/teachers/assignments?teacher_id=${editingTeacher.id}`}>
+                    Gestionar asignaciones
+                  </Link>. Guarda primero los cambios de los datos personales.
+                </p>
+              )}
               {!editingTeacher && (
                 <div
                   className={

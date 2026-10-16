@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type DragEvent } from 'react'
 import { formatSubjectFileSize } from '../../utils/subjectCsv'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import defaultStyles from '@/features/students/pages/ImportStudentsPage.module.css'
 
 export function SubjectCsvDropzone({
   file,
@@ -8,12 +8,16 @@ export function SubjectCsvDropzone({
   onSelect,
   onRemove,
   onError,
+  label = 'materias',
+  styles = defaultStyles,
 }: {
   file: File | null
   disabled: boolean
   onSelect: (file: File) => void
   onRemove: () => void
   onError: (message: string) => void
+  label?: string
+  styles?: Readonly<Record<string, string>>
 }) {
   const input = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
@@ -40,7 +44,7 @@ export function SubjectCsvDropzone({
       data-dragging={dragging}
       data-has-file={Boolean(file)}
       role="group"
-      aria-label="Archivo CSV de materias"
+      aria-label={`Archivo CSV de ${label}`}
       aria-describedby={descriptionId}
       onDragOver={(event) => event.preventDefault()}
       onDragEnter={(event) => {
@@ -58,7 +62,7 @@ export function SubjectCsvDropzone({
         className={styles.fileInput}
         type="file"
         accept=".csv,text/csv"
-        aria-label="Seleccionar archivo CSV de materias"
+        aria-label={`Seleccionar archivo CSV de ${label}`}
         disabled={disabled}
         onChange={(event) => {
           select(event.target.files)
