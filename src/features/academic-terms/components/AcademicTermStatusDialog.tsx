@@ -122,7 +122,9 @@ export function AcademicTermStatusDialog({
       {error && (
         <div role="alert" className={styles.error}>
           <p>{error.message}</p>
-          {error.fieldErrors.status && <p>{error.fieldErrors.status}</p>}
+          {[...new Set(Object.values(error.fieldErrors))].map((message) => (
+            <p key={message}>{message}</p>
+          ))}
           {error.conflictingPeriod && (
             <p>
               Periodo en conflicto:{' '}
