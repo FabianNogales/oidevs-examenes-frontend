@@ -3,12 +3,8 @@ import { getRequestStatus } from '@/features/auth/utils/apiErrors'
 import { getEntryControlErrorMessage } from '../api/entryControlApi'
 import { processEntryQr } from '../api/entryQrApi'
 import { useEntryQrCamera } from '../hooks/useEntryQrCamera'
-import type { EntryQrResponse, RecentEntryScan } from '../types/entryQr.types'
-import type { Room } from '../types/exam.types'
-import { EntryControlledRoomSelector } from './EntryControlledRoomSelector'
-import { EntryHistoryModal } from './EntryHistoryModal'
+import type { EntryQrResponse } from '../types/entryQr.types'
 import { EntryQrResultPanel } from './EntryQrResultPanel'
-import { EntryRecentScans } from './EntryRecentScans'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from './EntryQr.module.css'
 
@@ -16,18 +12,16 @@ type Props = {
   examId: number
   active: boolean
   roomId: number | undefined
-  rooms: Room[]
-  roomsLoading: boolean
-  roomsError: string | null
-  onRoomChange: (roomId: number) => void
-  onReloadRooms: () => void
-  onAuthorized: () => void
+  onProcessed: (response: EntryQrResponse) => void
+  onProcessingChange: (processing: boolean) => void
 }
 
 function cameraDisplayLabels(devices: MediaDeviceInfo[]): string[] {
   const directions = devices.map(({ label }) => {
     const normalized = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    if (/\b(back|rear|environment|posterior|trasera|traseira)\b/i.test(normalized))
+    if (
+      /\b(back|rear|environment|posterior|trasera|traseira)\b/i.test(normalized)
+    )
       return 'posterior'
     if (/\b(front|user|frontal|delantera|dianteira)\b/i.test(normalized))
       return 'frontal'
@@ -42,7 +36,10 @@ function cameraDisplayLabels(devices: MediaDeviceInfo[]): string[] {
       return `Cámara ${direction}${devices.length > 1 ? ` ${number}` : ''}`
     }
     const label = device.label.trim()
-    if (!label || /^(camera|cámara|camara|videoinput)\s*[-:#]?\s*\d*$/i.test(label))
+    if (
+      !label ||
+      /^(camera|cámara|camara|videoinput)\s*[-:#]?\s*\d*$/i.test(label)
+    )
       return `Cámara ${index + 1}`
     return label
   })
@@ -52,23 +49,16 @@ export function EntryQrPanel({
   examId,
   active,
   roomId,
-  rooms,
-  roomsLoading,
-  roomsError,
-  onRoomChange,
-  onReloadRooms,
-  onAuthorized,
+  onProcessed,
+  onProcessingChange,
 }: Props) {
   const [response, setResponse] = useState<EntryQrResponse | null>(null)
-  const [scans, setScans] = useState<RecentEntryScan[]>([])
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
-  const [historyOpen, setHistoryOpen] = useState(false)
   const request = useRef<AbortController | null>(null)
   const mounted = useRef(false)
-  const sequence = useRef(0)
   const cameraId = useId()
   const currentRoomId = useRef(roomId)
   const resultRef = useRef<HTMLDivElement>(null)
@@ -79,8 +69,9 @@ export function EntryQrPanel({
     return () => {
       mounted.current = false
       request.current?.abort()
+      onProcessingChange(false)
     }
-  }, [])
+  }, [onProcessingChange])
   useEffect(() => {
     currentRoomId.current = roomId
     setResponse(null)
@@ -106,13 +97,13 @@ export function EntryQrPanel({
         !mounted.current ||
         request.current ||
         roomId == null ||
-        blocked ||
-        historyOpen
+        blocked
       )
         return false
       const controller = new AbortController()
       request.current = controller
       setProcessing(true)
+      onProcessingChange(true)
       setResponse(null)
       setError(null)
       try {
@@ -123,31 +114,7 @@ export function EntryQrPanel({
         )
         if (!controller.signal.aborted && mounted.current) {
           if (currentRoomId.current === roomId) setResponse(result)
-          const student = result.data?.student
-          const recent: RecentEntryScan = {
-            id: ++sequence.current,
-            student: student
-              ? {
-                  student_id: student.student_id,
-                  first_names: student.first_names,
-                  last_names: student.last_names,
-                  sis_code: student.sis_code,
-                  identity_number: student.identity_number,
-                  profile_photo_url: student.profile_photo_url,
-                }
-              : null,
-            result: result.result,
-            message: result.message,
-            processed_at: result.processed_at,
-          }
-          setScans((current) => {
-            const studentId = recent.student?.student_id
-            const remaining = studentId == null
-              ? current
-              : current.filter((scan) => scan.student?.student_id !== studentId)
-            return [recent, ...remaining].slice(0, 20)
-          })
-          if (result.result === 'AUTHORIZED') onAuthorized()
+          onProcessed(result)
         }
       } catch (cause) {
         if (!controller.signal.aborted && mounted.current) {
@@ -165,15 +132,18 @@ export function EntryQrPanel({
         }
       } finally {
         if (request.current === controller) request.current = null
-        if (!controller.signal.aborted && mounted.current) setProcessing(false)
+        if (!controller.signal.aborted && mounted.current) {
+          setProcessing(false)
+          onProcessingChange(false)
+        }
       }
       return true
     },
-    [active, blocked, examId, historyOpen, onAuthorized, roomId],
+    [active, blocked, examId, onProcessed, onProcessingChange, roomId],
   )
 
   const camera = useEntryQrCamera({
-    active: active && roomId != null && !blocked && !historyOpen,
+    active: active && roomId != null && !blocked,
     scope: `${examId}:${roomId}`,
     onToken,
   })
@@ -187,25 +157,6 @@ export function EntryQrPanel({
       className={styles.panel}
       aria-label="Registro de ingreso mediante QR"
     >
-      <div className={styles.toolbar}>
-        <EntryControlledRoomSelector
-          roomId={roomId}
-          rooms={rooms}
-          loading={roomsLoading}
-          error={roomsError}
-          disabled={processing}
-          onChange={onRoomChange}
-          onReload={onReloadRooms}
-        />
-        <button
-          type="button"
-          className={sharedStyles.secondaryButton}
-          disabled={processing}
-          onClick={() => setHistoryOpen(true)}
-        >
-          Ver historial completo
-        </button>
-      </div>
       {roomId == null ? (
         <p className={sharedStyles.note} role="status">
           Selecciona el ambiente controlado para comenzar a escanear.
@@ -273,7 +224,10 @@ export function EntryQrPanel({
         <div ref={resultRef} className={styles.resultArea}>
           <EntryQrResultPanel response={response} processing={processing} />
         </div>
-        <section className={styles.cameraTools} aria-label="Controles de cámara">
+        <section
+          className={styles.cameraTools}
+          aria-label="Controles de cámara"
+        >
           <p className={styles.cameraHelp}>
             Coloca un solo QR dentro del marco. Retíralo del visor después del
             resultado para permitir otra lectura.
@@ -336,13 +290,6 @@ export function EntryQrPanel({
           ) : null}
         </section>
       </div>
-      <EntryRecentScans scans={scans} />
-      {historyOpen && active ? (
-        <EntryHistoryModal
-          examId={examId}
-          onClose={() => setHistoryOpen(false)}
-        />
-      ) : null}
     </section>
   )
 }

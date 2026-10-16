@@ -1,11 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { UserIcon } from '@/features/auth/components/AuthIcons'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import {
   getEntryControlErrorMessage,
   getEntryControlStudent,
 } from '../api/entryControlApi'
-import type { EntryControlStudentResponse } from '../types/entryControl.types'
+import type {
+  EntryControlStudent,
+  EntryControlStudentResponse,
+} from '../types/entryControl.types'
+import type { EntryManualResponse } from '../types/entryRegistration.types'
 import type { Room } from '../types/exam.types'
 import {
   eligibilityDisplay,
@@ -18,6 +24,9 @@ import {
   roomDisplay,
 } from '../utils/entryControlDisplay'
 import { EntryConditionBadge } from './EntryConditionBadge'
+import { EntryManualConfirmationModal } from './EntryManualConfirmationModal'
+import { EntryResultPanel } from './EntryResultPanel'
+import { canRegisterEntryManually } from '../utils/entryManualEligibility'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from '../pages/EntryControlPage.module.css'
 
@@ -27,6 +36,11 @@ type Props = {
   roomId: number | undefined
   rooms: Room[]
   onClose: () => void
+  allowManualEntry?: boolean
+  onManualResult?: (
+    response: EntryManualResponse,
+    student: EntryControlStudent,
+  ) => void
 }
 
 export function EntryControlStudentModal({
@@ -35,11 +49,45 @@ export function EntryControlStudentModal({
   roomId,
   rooms,
   onClose,
+  allowManualEntry = false,
+  onManualResult,
 }: Props) {
   const [detail, setDetail] = useState<EntryControlStudentResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null)
+  const [version, setVersion] = useState(0)
+  const [confirming, setConfirming] = useState(false)
+  const [manualResponse, setManualResponse] =
+    useState<EntryManualResponse | null>(null)
+  const modalLayer = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const dialog =
+      modalLayer.current?.querySelector<HTMLDivElement>('[role="dialog"]')
+    if (!dialog) return
+    const overlay = dialog.parentElement
+    if (overlay) {
+      overlay.scrollTop = 0
+      overlay.scrollLeft = 0
+    }
+    const smooth =
+      version > 0 &&
+      !confirming &&
+      !loading &&
+      detail !== null &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    dialog.scrollTo({ top: 0, left: 0, behavior: smooth ? 'smooth' : 'auto' })
+  }, [examId, studentId, roomId, version, confirming, loading, detail])
+
+  function renderModal(content: ReactNode) {
+    return createPortal(
+      <div ref={modalLayer} className={styles.detailModalLayer}>
+        {content}
+      </div>,
+      document.body,
+    )
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -64,7 +112,7 @@ export function EntryControlStudentModal({
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [examId, studentId, roomId])
+  }, [examId, studentId, roomId, version])
 
   const student = detail?.data
   const exam = detail?.exam
@@ -78,15 +126,77 @@ export function EntryControlStudentModal({
   const ineligible =
     student?.eligibility_status === 'INELIGIBLE' ||
     student?.blockers.some((blocker) => blocker.code === 'INELIGIBLE')
+  const manualEnabled = allowManualEntry && onManualResult !== undefined
+  // Presentation only: registration checks continue to use the original blockers.
+  const visibleBlockers = student
+    ? student.blockers.filter(
+        (blocker) =>
+          student.entry_status !== 'REGISTERED' ||
+          blocker.code !== 'ALREADY_REGISTERED',
+      )
+    : []
 
-  return (
-    <div className={styles.modalScope}>
+  if (confirming && manualEnabled && student && exam && roomId != null) {
+    return renderModal(
+      <EntryManualConfirmationModal
+        exam={exam}
+        student={student}
+        roomId={roomId}
+        onCancel={() => {
+          setConfirming(false)
+          setDetail(null)
+          setLoading(true)
+          setVersion((current) => current + 1)
+        }}
+        onResult={(response) => {
+          setManualResponse(response)
+          setConfirming(false)
+          setDetail(null)
+          setLoading(true)
+          setVersion((current) => current + 1)
+          onManualResult?.(response, student)
+        }}
+      />,
+    )
+  }
+
+  return renderModal(
+    <div
+      className={`${styles.modalScope} ${manualEnabled ? styles.manualModalScope : ''}`}
+    >
       <CollaborationModal title="Información del Estudiante" onClose={onClose}>
-        {loading ? (
+        {manualResponse && (loading || error) ? (
+          manualResponse.result === 'AUTHORIZED' ? (
+            <div
+              className={`${styles.manualSuccessBanner} ${styles.positive}`}
+              role="status"
+            >
+              <p>
+                <strong>
+                  <span aria-hidden="true">✓</span> Ingreso registrado
+                  exitosamente.
+                </strong>
+              </p>
+              {loading ? (
+                <p>Actualizando información del estudiante...</p>
+              ) : null}
+            </div>
+          ) : (
+            <EntryResultPanel
+              response={manualResponse}
+              processing={false}
+              method="MANUAL"
+            />
+          )
+        ) : null}
+        {loading && manualResponse?.result !== 'AUTHORIZED' ? (
           <p role="status">Consultando información del estudiante…</p>
         ) : null}
         {error ? (
           <p className={sharedStyles.error} role="alert">
+            {manualResponse?.result === 'AUTHORIZED'
+              ? 'No se pudo actualizar la información del estudiante. '
+              : null}
             {error}
           </p>
         ) : null}
@@ -158,6 +268,25 @@ export function EntryControlStudentModal({
             >
               <h3>Condiciones de ingreso</h3>
               <dl className={styles.conditions}>
+                {manualEnabled ? (
+                  <div>
+                    <dt>Estudiante</dt>
+                    <dd>
+                      <EntryConditionBadge
+                        label={
+                          student.student_status.toUpperCase() === 'ACTIVE'
+                            ? 'Activo'
+                            : student.student_status
+                        }
+                        tone={
+                          student.student_status.toUpperCase() === 'ACTIVE'
+                            ? 'positive'
+                            : 'negative'
+                        }
+                      />
+                    </dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt>Inscripción</dt>
                   <dd>
@@ -190,15 +319,45 @@ export function EntryControlStudentModal({
                         : `Ambiente ID ${student.controlled_room_id}`}
                   </dd>
                 </div>
-                <div>
+              </dl>
+              <div className={styles.entryStatusPanel}>
+                <dl className={styles.entryStatusSummary}>
                   <dt>Estado de ingreso</dt>
                   <dd>
                     <EntryConditionBadge
                       {...entryDisplay(student.entry_status)}
                     />
                   </dd>
-                </div>
-              </dl>
+                </dl>
+                {student.entry_status === 'REGISTERED' && student.entry ? (
+                  <section
+                    className={styles.entryStatusDetails}
+                    aria-label="Ingreso registrado"
+                  >
+                    <h3>Ingreso registrado</h3>
+                    <dl className={styles.examDetails}>
+                      <div>
+                        <dt>Fecha y hora de ingreso</dt>
+                        <dd>
+                          {formatEntryTimestamp(student.entry.entered_at)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Método de verificación</dt>
+                        <dd>
+                          {student.entry.verification_method || 'No informado'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Verificado por</dt>
+                        <dd>
+                          {student.entry.verified_by_name || 'No informado'}
+                        </dd>
+                      </div>
+                    </dl>
+                  </section>
+                ) : null}
+              </div>
             </section>
             {student.meets_entry_conditions === true ? (
               <p className={`${styles.message} ${styles.positive}`}>
@@ -206,14 +365,14 @@ export function EntryControlStudentModal({
                 examen.
               </p>
             ) : null}
-            {student.blockers.length > 0 ? (
+            {visibleBlockers.length > 0 ? (
               <section
                 className={`${styles.message} ${styles.blockerMessage}`}
                 aria-label="Observaciones del control de ingreso"
               >
                 <h3>Observaciones del control de ingreso</h3>
                 <ul className={styles.blockers}>
-                  {student.blockers.map((blocker, index) => (
+                  {visibleBlockers.map((blocker, index) => (
                     <li key={`${blocker.code}-${index}`}>{blocker.message}</li>
                   ))}
                 </ul>
@@ -235,33 +394,23 @@ export function EntryControlStudentModal({
                 ) : null}
               </dl>
             ) : null}
-            {student.entry_status === 'REGISTERED' && student.entry ? (
-              <section
-                className={styles.message}
-                aria-label="Ingreso registrado"
-              >
-                <h3>Ingreso registrado</h3>
-                <dl className={styles.examDetails}>
-                  <div>
-                    <dt>Fecha y hora de ingreso</dt>
-                    <dd>{formatEntryTimestamp(student.entry.entered_at)}</dd>
-                  </div>
-                  <div>
-                    <dt>Método de verificación</dt>
-                    <dd>
-                      {student.entry.verification_method || 'No informado'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Verificado por</dt>
-                    <dd>{student.entry.verified_by_name || 'No informado'}</dd>
-                  </div>
-                </dl>
-              </section>
-            ) : null}
           </>
         ) : null}
         <div className={`${sharedStyles.actions} ${styles.modalActions}`}>
+          {manualEnabled &&
+          !manualResponse &&
+          !loading &&
+          !error &&
+          student &&
+          canRegisterEntryManually(student, roomId) ? (
+            <button
+              type="button"
+              className={sharedStyles.primaryButton}
+              onClick={() => setConfirming(true)}
+            >
+              Registrar ingreso manual
+            </button>
+          ) : null}
           <button
             type="button"
             className={sharedStyles.secondaryButton}
@@ -271,6 +420,6 @@ export function EntryControlStudentModal({
           </button>
         </div>
       </CollaborationModal>
-    </div>
+    </div>,
   )
 }
