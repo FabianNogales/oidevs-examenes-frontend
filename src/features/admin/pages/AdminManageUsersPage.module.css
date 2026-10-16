@@ -1,0 +1,106 @@
+/* ==================================================
+   CONTENEDOR PRINCIPAL DE LA PÁGINA
+   ================================================== */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--space-8, 32px) 50px;
+  gap: var(--space-6, 24px);
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* ==================================================
+   BREADCRUMBS
+   ================================================== */
+.breadcrumbs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumbLink {
+  color: var(--brand-blue, #2563eb);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--transition-fast, 150ms ease);
+}
+
+.breadcrumbLink:hover {
+  text-decoration: underline;
+}
+
+.breadcrumbSeparator {
+  color: var(--brand-blue, #2563eb);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.breadcrumbSeparatorActive {
+  color: var(--brand-pink, #d67a8c);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.breadcrumbCurrent {
+  color: var(--brand-pink, #d67a8c);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* ==================================================
+   ENCABEZADO DE PÁGINA
+   ================================================== */
+.pageHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+.headerTitles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.headerTitles h1 {
+  margin: 0;
+  color: var(--brand-navy, #172554);
+  font-size: var(--font-size-2xl, 1.5rem);
+  font-weight: 600;
+  line-height: var(--line-height-tight, 1.25);
+}
+
+.headerTitles p {
+  margin: 0;
+  color: var(--color-text-secondary, #52627a);
+  font-size: var(--font-size-md, 1rem);
+  line-height: var(--line-height-normal, 1.5);
+}
+
+/* Permite mostrar "Estudiante \n Colaborador" en dos líneas como en el mockup */
+.roleLabel {
+  display: inline-block;
+  white-space: pre-line;
+  line-height: 1.35;
+  color: var(--brand-navy, #172554);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 20px 16px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

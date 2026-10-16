@@ -29,6 +29,7 @@ import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
 import { AdminManageStudentsPage } from '@/features/admin/pages/AdminManageStudentsPage'
 import { AdminStudentDetailPage } from '@/features/admin/pages/AdminStudentDetailPage'
 import { AdminTeacherDetailPage } from '@/features/admin/pages/AdminTeacherDetailPage'
+import { AdminManageUsersPage } from '@/features/admin/pages/AdminManageUsersPage'
 
 export const router = createBrowserRouter([
   {
@@ -69,6 +70,14 @@ export const router = createBrowserRouter([
                   {
                     index: true,
                     element: <HomePage />,
+                  },
+                  {
+                    path: 'users/manage',
+                    element: <AdminManageUsersPage />,
+                  },
+                  {
+                    path: 'users/history',
+                    element: <AdminManageUsersPage />,
                   },
                   {
                     path: 'teachers',
