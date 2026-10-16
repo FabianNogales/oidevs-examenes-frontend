@@ -9,6 +9,8 @@ export type ExamDetail = ManagedExam & {
   start_time: string
   duration_minutes: number
   updated_at: string
+  can_edit?: boolean
+  edit_block_reason?: string | null
 }
 
 export type ExamDetailResult = {
@@ -22,7 +24,7 @@ export function parseExamId(value: string | number | undefined): number | null {
   return Number.isSafeInteger(id) ? id : null
 }
 
-function isExamDetail(value: unknown, id: number): value is ExamDetail {
+export function isExamDetail(value: unknown, id: number): value is ExamDetail {
   if (typeof value !== 'object' || value === null) return false
   const exam = value as Record<string, unknown>
   const room = exam.room
@@ -47,6 +49,9 @@ function isExamDetail(value: unknown, id: number): value is ExamDetail {
     (exam.rules === null || typeof exam.rules === 'string') &&
     typeof exam.updated_at === 'string' &&
     Number.isFinite(Date.parse(exam.updated_at)) &&
+    (exam.can_edit === undefined || typeof exam.can_edit === 'boolean') &&
+    (exam.edit_block_reason == null ||
+      typeof exam.edit_block_reason === 'string') &&
     (exam.academic_term_name == null ||
       typeof exam.academic_term_name === 'string') &&
     (exam.evaluation_type == null ||

@@ -3,6 +3,7 @@ import { ExamCard } from '@/features/exams/components/ExamCard'
 import { ExamTools } from '@/features/exams/components/ExamTools'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
+import { safeExamMessage } from '@/features/exams/utils/examMessages'
 import styles from './TeacherExamsPage.module.css'
 import detailStyles from './TeacherExamDetailPage.module.css'
 import management from './ExamManagement.module.css'
@@ -83,6 +84,20 @@ function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
                     : 'No se registraron normas adicionales para este examen.'}
                 </p>
               </section>
+            ) : null}
+            {detail?.can_edit === true ? (
+              <div className={detailStyles.actions}>
+                <Link to={`/teacher/exams/${detail.id}/edit${search}`}>
+                  Editar examen
+                </Link>
+              </div>
+            ) : detail?.can_edit === false ? (
+              <p>
+                {safeExamMessage(
+                  detail.edit_block_reason,
+                  'La edición no está habilitada para este examen.',
+                )}
+              </p>
             ) : null}
           </div>
         ) : null}
