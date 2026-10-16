@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SubjectCsvDropzone as CsvDropzone } from '@/features/subjects/components/import/SubjectCsvDropzone'
 import { useOfferingImport } from '../hooks/useOfferingImport'
 import {
@@ -6,17 +6,74 @@ import {
   OFFERING_CSV_HEADERS,
 } from '../utils/offeringCsv'
 import { OfferingImportReport } from './OfferingImportReport'
+import { OfferingPeriodScope } from './OfferingPeriodScope'
 import styles from './OfferingImport.module.css'
 import local from '../pages/AdminCourseOfferingsPage.module.css'
 
 export function OfferingImportPanel({
+  onBusy,
+  onCancel,
+  onViewAssignments,
+}: {
+  onBusy: (busy: boolean) => void
+  onCancel: () => void
+  onViewAssignments: () => void
+}) {
+  const [processing, setProcessing] = useState(false)
+  function changeBusy(value: boolean) {
+    setProcessing(value)
+    onBusy(value)
+  }
+  return (
+    <section
+      className={styles.panel}
+      aria-label="Importar asignaciones CSV"
+      aria-busy={processing}
+    >
+      <div className={styles.panelHeader}>
+        <div>
+          <h2>Archivo de asignaciones</h2>
+          <p className={styles.columnsIntro}>
+            Asigna materias a docentes mediante un archivo CSV.
+          </p>
+        </div>
+        <button
+          type="button"
+          className={styles.templateButton}
+          disabled={processing}
+          onClick={downloadOfferingTemplate}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12m-5-5 5 5 5-5M5 21h14" />
+          </svg>
+          Descargar plantilla CSV
+        </button>
+      </div>
+      <OfferingPeriodScope>
+        {(term) => (
+          <OfferingImportFlow
+            key={term.id}
+            termId={term.id}
+            onBusy={changeBusy}
+            onCancel={onCancel}
+            onViewAssignments={onViewAssignments}
+          />
+        )}
+      </OfferingPeriodScope>
+    </section>
+  )
+}
+
+function OfferingImportFlow({
   termId,
   onBusy,
-  onSaved,
+  onCancel,
+  onViewAssignments,
 }: {
   termId: number
   onBusy: (busy: boolean) => void
-  onSaved: () => void
+  onCancel: () => void
+  onViewAssignments: () => void
 }) {
   const {
     flow,
@@ -27,31 +84,14 @@ export function OfferingImportPanel({
     confirm,
     processing,
     reportError,
-  } = useOfferingImport(termId, onBusy, onSaved)
-  const heading = useRef<HTMLHeadingElement>(null)
+  } = useOfferingImport(termId, onBusy, () => undefined)
+  const heading = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (flow.kind === 'preview' || flow.kind === 'success')
       heading.current?.focus()
   }, [flow.kind])
   return (
-    <section
-      className={styles.panel}
-      aria-label="Importar asignaciones CSV"
-      aria-busy={processing}
-    >
-      <div className={styles.panelHeader}>
-        <h2 ref={heading} tabIndex={-1}>
-          Archivo de asignaciones
-        </h2>
-        <button
-          type="button"
-          className={styles.templateButton}
-          disabled={processing}
-          onClick={downloadOfferingTemplate}
-        >
-          Descargar plantilla CSV
-        </button>
-      </div>
+    <div ref={heading} tabIndex={-1} aria-busy={processing}>
       {error && (
         <p role="alert" className={styles.fileObservations}>
           {error}
@@ -78,15 +118,21 @@ export function OfferingImportPanel({
             onError={reportError}
           />
           <p className={styles.infoBanner}>
-            El docente y la materia deben existir y estar activos. Validar no
-            guarda asignaciones; podrás revisar cada fila antes de confirmar.
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v6m0 3v1" />
+            </svg>
+            <span>
+              El docente y la materia deben existir y estar activos. Validar no
+              guarda asignaciones; podrás revisar cada fila antes de confirmar.
+            </span>
           </p>
           <div className={styles.panelActions}>
             <button
               type="button"
               className={styles.cancelButton}
               disabled={processing}
-              onClick={reset}
+              onClick={onCancel}
             >
               Cancelar
             </button>
@@ -145,6 +191,13 @@ export function OfferingImportPanel({
           <div className={styles.panelActions}>
             <button
               type="button"
+              className={styles.cancelButton}
+              onClick={onViewAssignments}
+            >
+              Ver materias asignadas
+            </button>
+            <button
+              type="button"
               className={styles.continueButton}
               onClick={reset}
             >
@@ -153,6 +206,6 @@ export function OfferingImportPanel({
           </div>
         </>
       )}
-    </section>
+    </div>
   )
 }

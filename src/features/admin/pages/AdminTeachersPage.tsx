@@ -558,7 +558,7 @@ export function AdminTeachersPage() {
 
           <div className={styles.headerActions}>
             <Link className={styles.assignButton} to="/admin/teachers/assignments">
-              Asignar materias
+              Asignación de materias
             </Link>
             <button
               type="button"

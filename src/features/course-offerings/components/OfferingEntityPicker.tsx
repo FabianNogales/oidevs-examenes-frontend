@@ -77,7 +77,7 @@ export function OfferingEntityPicker({
           }}
         />
       </label>
-      {selected.length > 0 && (
+      {multiple && selected.length > 0 && (
         <div className={styles.selection} aria-label="Selección actual">
           {selected.map((item) => (
             <button
@@ -107,21 +107,55 @@ export function OfferingEntityPicker({
       )}
       {state?.data && (
         <>
+          {!multiple && (
+            <label className={styles.filter}>
+              {title} seleccionado
+              <select
+                value={selected[0]?.id ?? ''}
+                onChange={(event) => {
+                  const item = [...selected, ...state.data!.items].find(
+                    (choice) => choice.id === Number(event.target.value),
+                  )
+                  onChange(item ? [item] : [])
+                }}
+              >
+                <option value="">Selecciona una opción</option>
+                {selected
+                  .filter(
+                    (item) =>
+                      !state.data!.items.some(
+                        (choice) => choice.id === item.id,
+                      ),
+                  )
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                {state.data.items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label} — {item.detail}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <div className={styles.options}>
-            {state.data.items.map((item) => (
-              <label key={item.id} className={styles.option}>
-                <input
-                  type={multiple ? 'checkbox' : 'radio'}
-                  name={id}
-                  checked={selected.some((value) => value.id === item.id)}
-                  onChange={() => toggle(item)}
-                />
-                <span>
-                  {item.label}
-                  <small>{item.detail}</small>
-                </span>
-              </label>
-            ))}
+            {multiple &&
+              state.data.items.map((item) => (
+                <label key={item.id} className={styles.option}>
+                  <input
+                    type="checkbox"
+                    name={id}
+                    checked={selected.some((value) => value.id === item.id)}
+                    onChange={() => toggle(item)}
+                  />
+                  <span>
+                    {item.label}
+                    <small>{item.detail}</small>
+                  </span>
+                </label>
+              ))}
             {!state.data.items.length && (
               <p role="status">
                 No hay opciones activas en esta página. Prueba otra búsqueda o
@@ -129,27 +163,29 @@ export function OfferingEntityPicker({
               </p>
             )}
           </div>
-          <div className={styles.formActions}>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              disabled={page === 1}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              Anterior
-            </button>
-            <span>
-              Página {page} de {state.data.lastPage}
-            </span>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              disabled={page >= state.data.lastPage}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              Siguiente
-            </button>
-          </div>
+          {state.data.lastPage > 1 && (
+            <div className={styles.formActions}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                disabled={page === 1}
+                onClick={() => setPage((value) => value - 1)}
+              >
+                Anterior
+              </button>
+              <span>
+                Página {page} de {state.data.lastPage}
+              </span>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                disabled={page >= state.data.lastPage}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
         </>
       )}
     </fieldset>

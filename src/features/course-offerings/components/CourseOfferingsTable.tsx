@@ -22,7 +22,7 @@ export function CourseOfferingsTable({
             <th scope="col">Materia</th>
             <th scope="col">Carreras</th>
             <th scope="col">Periodo</th>
-            <th scope="col">Estado de la oferta</th>
+            <th scope="col">Estado</th>
             <th scope="col">Historial</th>
             {onAction && <th scope="col">Acciones</th>}
           </tr>
@@ -87,9 +87,9 @@ export function CourseOfferingsTable({
                       type="button"
                       className={styles.secondaryButton}
                       onClick={() => onAction(offering.id, 'edit')}
-                      aria-label={`Editar oferta de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
+                      aria-label={`Editar asignación de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
                     >
-                      Editar oferta
+                      Editar asignación
                     </button>
                     <button
                       type="button"
@@ -99,7 +99,7 @@ export function CourseOfferingsTable({
                           : styles.secondaryButton
                       }
                       onClick={() => onAction(offering.id, 'status')}
-                      aria-label={`${offering.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} oferta de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
+                      aria-label={`${offering.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} asignación de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
                     >
                       {offering.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                     </button>

@@ -15,11 +15,13 @@ export function OfferingManualForm({
   teacherId,
   onSaved,
   onBusy,
+  onCancel,
 }: {
   termId: number
   teacherId?: number
-  onSaved: () => void
+  onSaved: (count: number) => void
   onBusy: (busy: boolean) => void
+  onCancel: () => void
 }) {
   const [teachers, setTeachers] = useState<OfferingChoice[]>([])
   const [subjects, setSubjects] = useState<OfferingChoice[]>([])
@@ -70,7 +72,7 @@ export function OfferingManualForm({
       })
       setSubjects([])
       setNotice(`${saved.length} asignaciones registradas correctamente.`)
-      onSaved()
+      onSaved(saved.length)
     } catch (cause) {
       const failure = mapOfferingMutationError(cause)
       setError(failure.message)
@@ -126,14 +128,9 @@ export function OfferingManualForm({
           type="button"
           className={styles.secondaryButton}
           disabled={busy}
-          onClick={() => {
-            setSubjects([])
-            setError(null)
-            setFields({})
-            setNotice(null)
-          }}
+          onClick={onCancel}
         >
-          Limpiar selección
+          Cancelar
         </button>
         <button
           type="submit"

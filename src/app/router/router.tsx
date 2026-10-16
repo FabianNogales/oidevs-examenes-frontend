@@ -81,6 +81,14 @@ export const router = createBrowserRouter([
                     },
                   },
                   {
+                    path: 'teachers/assignments/import',
+                    lazy: async () => {
+                      const { ImportCourseOfferingsPage } =
+                        await import('@/features/course-offerings/pages/ImportCourseOfferingsPage')
+                      return { Component: ImportCourseOfferingsPage }
+                    },
+                  },
+                  {
                     path: 'students/manage',
                     element: <AdminManageStudentsPage />,
                   },

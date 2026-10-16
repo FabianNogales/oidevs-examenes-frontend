@@ -3,7 +3,7 @@
 
 .panel {
   min-width: 0;
-  padding: var(--space-4);
+  padding: var(--space-6);
 }
 .panelHeader h2 {
   font-size: var(--font-size-lg);
@@ -33,9 +33,15 @@
   gap: var(--space-3);
   text-align: center;
   overflow-wrap: anywhere;
+  min-height: 300px;
+  background: var(--color-surface-soft);
 }
 .dropzoneTitle {
   font-size: var(--font-size-lg);
+}
+.infoBanner svg {
+  stroke: currentColor;
+  fill: none;
 }
 @media (max-width: 640px) {
   .panel {

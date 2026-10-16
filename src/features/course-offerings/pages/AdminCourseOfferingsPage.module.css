@@ -54,12 +54,37 @@
   font-weight: var(--font-weight-regular);
 }
 
-.workspace {
-  margin-bottom: var(--space-6);
-  padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+.periodField {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 480px;
+  margin-bottom: var(--space-5);
+  font-size: var(--font-size-sm);
+}
+.periodField label {
+  font-weight: var(--font-weight-semibold);
+}
+.periodField input {
+  min-width: 0;
+  width: 100%;
+  color: var(--color-primary);
+  background: var(--color-surface-soft);
+}
+.periodField small {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.breadcrumbs a {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
 }
 .operationScope {
   min-width: 0;
@@ -76,25 +101,6 @@
 }
 .importColumns span {
   overflow-wrap: anywhere;
-}
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-block: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
-}
-.tabs button {
-  flex: 1;
-  padding: var(--space-3);
-  color: var(--color-text-secondary);
-  background: transparent;
-  border-bottom: 3px solid transparent;
-}
-.tabs button[aria-pressed='true'] {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  font-weight: var(--font-weight-semibold);
 }
 .form {
   display: grid;
@@ -115,6 +121,8 @@
   display: grid;
   gap: var(--space-2);
   margin-block: var(--space-3);
+  max-height: 240px;
+  overflow-y: auto;
 }
 .option {
   display: flex;

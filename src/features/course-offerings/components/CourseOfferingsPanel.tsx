@@ -85,7 +85,7 @@ function OfferingCatalog({
   return (
     <section
       className={styles.card}
-      aria-label={teacherId ? 'Materias del docente' : 'Ofertas académicas'}
+      aria-label={teacherId ? 'Materias del docente' : 'Materias asignadas a docentes'}
     >
       {notice && (
         <p className={styles.notice} role="status">
@@ -101,7 +101,8 @@ function OfferingCatalog({
           onBusy={(busy) => onBusy?.(busy)}
           onSaved={() => {
             setSelection(null)
-            setNotice('La oferta se actualizó correctamente.')
+            setNotice('La asignación se actualizó correctamente.')
+            setPage(1)
             reload()
           }}
         />
@@ -127,7 +128,7 @@ function OfferingCatalog({
           </select>
         </label>
         <label className={styles.filter} htmlFor={`${id}-status`}>
-          Estado de la oferta
+          Estado de la asignación
           <select
             id={`${id}-status`}
             value={status}
@@ -162,8 +163,8 @@ function OfferingCatalog({
         </button>
       </form>
       <p className={styles.hint}>
-        Cada oferta corresponde a un docente, una materia y un periodo. Las
-        ofertas inactivas conservan su historial.
+        Cada asignación vincula un docente, una materia y un periodo. Las
+        asignaciones inactivas conservan su historial.
       </p>
       {!state && (
         <div className={styles.state} role="status">
@@ -203,7 +204,7 @@ function OfferingCatalog({
           aria-label="Paginación de asignaciones"
         >
           <p>
-            {response.meta.total} ofertas · Página {response.meta.current_page}{' '}
+            {response.meta.total} asignaciones · Página {response.meta.current_page}{' '}
             de {response.meta.last_page}
           </p>
           <div>
