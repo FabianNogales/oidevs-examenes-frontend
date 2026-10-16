@@ -36,10 +36,10 @@ export function EntryQrResultPanel({
       {!response ? (
         <>
           <h2>Resultado del escaneo</h2>
-          <p>
-            Presenta un código QR frente a la cámara. El ingreso se procesa
-            automáticamente.
-          </p>
+          <div className={styles.resultEmpty}>
+            <p>Aún no se ha escaneado ningún código QR.</p>
+            <p>Presenta un QR frente a la cámara para verificar el ingreso.</p>
+          </div>
         </>
       ) : (
         <>

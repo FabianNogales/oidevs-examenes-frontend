@@ -24,6 +24,30 @@ type Props = {
   onAuthorized: () => void
 }
 
+function cameraDisplayLabels(devices: MediaDeviceInfo[]): string[] {
+  const directions = devices.map(({ label }) => {
+    const normalized = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    if (/\b(back|rear|environment|posterior|trasera|traseira)\b/i.test(normalized))
+      return 'posterior'
+    if (/\b(front|user|frontal|delantera|dianteira)\b/i.test(normalized))
+      return 'frontal'
+    return null
+  })
+  const counts = { posterior: 0, frontal: 0 }
+
+  return devices.map((device, index) => {
+    const direction = directions[index]
+    if (direction) {
+      const number = ++counts[direction]
+      return `Cámara ${direction}${devices.length > 1 ? ` ${number}` : ''}`
+    }
+    const label = device.label.trim()
+    if (!label || /^(camera|cámara|camara|videoinput)\s*[-:#]?\s*\d*$/i.test(label))
+      return `Cámara ${index + 1}`
+    return label
+  })
+}
+
 export function EntryQrPanel({
   examId,
   active,
@@ -156,6 +180,7 @@ export function EntryQrPanel({
   const cameraError = ['denied', 'missing', 'error', 'unsupported'].includes(
     camera.state,
   )
+  const cameraLabels = cameraDisplayLabels(camera.devices)
 
   return (
     <section
@@ -265,7 +290,7 @@ export function EntryQrPanel({
                 >
                   {camera.devices.map((device, index) => (
                     <option key={device.deviceId} value={device.deviceId}>
-                      {device.label || `Cámara ${index + 1}`}
+                      {cameraLabels[index]}
                     </option>
                   ))}
                 </select>
