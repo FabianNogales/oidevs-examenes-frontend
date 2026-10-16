@@ -1,0 +1,43 @@
+@import '../../rooms/components/RoomDialog.module.css';
+
+.header h2 {
+  overflow-wrap: anywhere;
+}
+.details > div {
+  min-width: 0;
+}
+.dialog {
+  overscroll-behavior: contain;
+}
+.field select {
+  width: 100%;
+  font-size: var(--font-size-sm);
+}
+.error p {
+  margin: 0;
+}
+.error p + p {
+  margin-top: var(--space-2);
+}
+.confirmName {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+.error button {
+  margin-top: var(--space-3);
+}
+.dangerButton {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  background: var(--color-error-soft);
+  border: 1px solid var(--color-error);
+}
+.dangerButton:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--color-error) 15%,
+    var(--color-error-soft)
+  );
+}

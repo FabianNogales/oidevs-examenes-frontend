@@ -4,10 +4,8 @@ import type {
   CreateStudentPayload,
   GetStudentsParams,
   StudentDetail,
-  StudentDetailResponse,
   StudentField,
   StudentFieldErrors,
-  StudentResponse,
   Student,
   StudentsPageResult,
   StudentsResponse,
@@ -21,6 +19,23 @@ import type {
 import { httpClient } from '@/shared/api/httpClient'
 
 const STUDENTS_ENDPOINT = '/admin/students'
+type ApiStudent = Omit<Student, 'id' | 'institutional_code'> & {
+  id: string | number
+  sis_code: string
+}
+type ApiStudentDetail = ApiStudent & Omit<StudentDetail, keyof Student>
+
+function normalizeStudent<T extends ApiStudent>(student: T) {
+  return { ...student, id: String(student.id), institutional_code: student.sis_code }
+}
+
+function toApiPayload(payload: UpdateStudentPayload) {
+  const { institutional_code, ...fields } = payload
+  return institutional_code === undefined
+    ? fields
+    : { ...fields, sis_code: institutional_code }
+}
+
 const STUDENT_FIELDS: StudentField[] = [
   'institutional_code',
   'identity_number',
@@ -69,7 +84,9 @@ function getFieldErrors(data: unknown): StudentFieldErrors {
   const fieldErrors: StudentFieldErrors = {}
 
   for (const field of STUDENT_FIELDS) {
-    const messages = (errors as Record<string, unknown>)[field]
+    const messages = (errors as Record<string, unknown>)[
+      field === 'institutional_code' ? 'sis_code' : field
+    ]
 
     if (Array.isArray(messages) && messages.every((msg) => typeof msg === 'string')) {
       fieldErrors[field] = messages
@@ -121,7 +138,7 @@ export async function getAdminStudents(
   { page = 1, perPage = 10, search = '' }: GetStudentsParams = {},
 ): Promise<StudentsPageResult> {
   try {
-    const response = await httpClient.get<StudentsResponse>(STUDENTS_ENDPOINT, {
+    const response = await httpClient.get<Omit<StudentsResponse, 'data'> & { data: ApiStudent[] }>(STUDENTS_ENDPOINT, {
       params: {
         page,
         per_page: perPage,
@@ -130,7 +147,7 @@ export async function getAdminStudents(
     })
 
     return {
-      students: response.data.data,
+      students: response.data.data.map(normalizeStudent),
       meta: response.data.meta,
     }
   } catch (error) {
@@ -140,10 +157,10 @@ export async function getAdminStudents(
 
 export async function getAdminStudent(studentId: string): Promise<StudentDetail> {
   try {
-    const response = await httpClient.get<StudentDetailResponse>(
+    const response = await httpClient.get<{ data: ApiStudentDetail }>(
       `${STUDENTS_ENDPOINT}/${studentId}`,
     )
-    return response.data.data
+    return normalizeStudent(response.data.data)
   } catch (error) {
     throw mapStudentApiError(error, 'No se pudo cargar la información del estudiante.')
   }
@@ -151,8 +168,8 @@ export async function getAdminStudent(studentId: string): Promise<StudentDetail>
 
 export async function createAdminStudent(payload: CreateStudentPayload): Promise<Student> {
   try {
-    const response = await httpClient.post<StudentResponse>(STUDENTS_ENDPOINT, payload)
-    return response.data.data
+    const response = await httpClient.post<{ data: ApiStudent }>(STUDENTS_ENDPOINT, toApiPayload(payload))
+    return normalizeStudent(response.data.data)
   } catch (error) {
     throw mapStudentApiError(error, 'No se pudo registrar el estudiante.')
   }
@@ -163,11 +180,11 @@ export async function updateAdminStudent(
   payload: UpdateStudentPayload,
 ): Promise<StudentDetail> {
   try {
-    const response = await httpClient.patch<StudentDetailResponse>(
+    const response = await httpClient.patch<{ data: ApiStudentDetail }>(
       `${STUDENTS_ENDPOINT}/${studentId}`,
-      payload,
+      toApiPayload(payload),
     )
-    return response.data.data
+    return normalizeStudent(response.data.data)
   } catch (error) {
     throw mapStudentApiError(error, 'No se pudo actualizar el estudiante.')
   }
@@ -178,11 +195,11 @@ export async function updateAdminStudentStatus(
   status: StudentStatus,
 ): Promise<Student> {
   try {
-    const response = await httpClient.patch<StudentResponse>(
+    const response = await httpClient.patch<{ data: ApiStudent }>(
       `${STUDENTS_ENDPOINT}/${studentId}/status`,
       { status },
     )
-    return response.data.data
+    return normalizeStudent(response.data.data)
   } catch (error) {
     throw mapStudentApiError(error, 'No se pudo cambiar el estado del estudiante.')
   }

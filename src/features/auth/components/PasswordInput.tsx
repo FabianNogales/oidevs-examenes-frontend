@@ -37,6 +37,7 @@ export function PasswordInput({
       id={id}
       name={name}
       label={label}
+      className="auth-password-control"
       type={isVisible ? 'text' : 'password'}
       autoComplete={autoComplete}
       value={value}
@@ -52,6 +53,7 @@ export function PasswordInput({
           onClick={onVisibilityChange}
           disabled={disabled}
           aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          aria-pressed={isVisible}
         >
           {isVisible ? <EyeOffIcon /> : <EyeIcon />}
         </button>

@@ -56,26 +56,7 @@ export function HeaderAccount({
       }}
     >
       <div className={styles.notifications}>
-        {notifications ?? (
-          <button
-            type="button"
-            className={styles.iconButton}
-            aria-label="Notificaciones disponibles"
-            title="Notificaciones"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#172554"
-              strokeWidth="1.5"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" />
-              <path d="M10 21h4" />
-            </svg>
-          </button>
-        )}
+        <HeaderNotifications notifications={notifications} />
       </div>
 
       <div className={styles.accountMenu}>
@@ -110,7 +91,7 @@ export function HeaderAccount({
             className={styles.chevron}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#7A7E86" 
+            stroke="#7A7E86"
             strokeWidth="1.8"
             aria-hidden="true"
           >
@@ -142,5 +123,32 @@ export function HeaderAccount({
         )}
       </div>
     </div>
+  )
+}
+export function HeaderNotifications({ notifications }: Pick<HeaderAccountProps, 'notifications'>) {
+  return (
+    <>
+        {notifications ?? (
+          <button
+            type="button"
+            className={styles.iconButton}
+            disabled
+            aria-label="Notificaciones no disponibles"
+            title="Notificaciones no disponibles"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#172554"
+              strokeWidth="1.5"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" />
+              <path d="M10 21h4" />
+            </svg>
+          </button>
+        )}
+    </>
   )
 }

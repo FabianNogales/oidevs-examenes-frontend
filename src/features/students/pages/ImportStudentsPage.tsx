@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router'
+import { NavLink, useLocation } from 'react-router'
 import styles from './ImportStudentsPage.module.css'
 import {
   StudentImportPanel,
@@ -19,6 +19,7 @@ const TITLE_BY_STEP: Record<ImportStep, string> = {
 }
 
 export function ImportStudentsPage() {
+  const location = useLocation()
   const [step, setStep] = useState<ImportStep>('select')
 
   return (
@@ -39,7 +40,7 @@ export function ImportStudentsPage() {
       </header>
 
       <main className={styles.mainContent}>
-        <StudentImportPanel onStepChange={setStep} />
+        <StudentImportPanel key={location.key} onStepChange={setStep} />
       </main>
     </div>
   )

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 
 import { httpClient } from '@/shared/api/httpClient'
 
@@ -15,7 +16,7 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     const message = error.response?.data?.message
     if (typeof message === 'string') {
-      return message
+      return translateVisibleMessage(message)
     }
 
     if (error.response?.status === 401) {
@@ -38,8 +39,20 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
-export async function getRooms(): Promise<Room[]> {
-  const response = await httpClient.get<RoomsResponse>('/rooms')
+export type RoomSchedule = {
+  exam_date: string
+  start_time: string
+  duration_minutes: number
+}
+
+export async function getRooms(
+  schedule?: RoomSchedule,
+  signal?: AbortSignal,
+): Promise<Room[]> {
+  const response = await httpClient.get<RoomsResponse>('/rooms', {
+    params: schedule,
+    signal,
+  })
   return response.data.data
 }
 

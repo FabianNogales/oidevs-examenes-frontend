@@ -1,4 +1,5 @@
 import { backendHttpClient, httpClient } from '@/shared/api/httpClient'
+import { getRequestStatus } from '@/features/auth/utils/apiErrors'
 import type {
   AuthenticatedUser,
   ChangePasswordPayload,
@@ -24,7 +25,13 @@ export async function getCurrentUser(): Promise<AuthenticatedUser> {
 }
 
 export async function logout(): Promise<void> {
-  await httpClient.post('/auth/logout')
+  try {
+    await httpClient.post('/auth/logout')
+  } catch (error) {
+    if (getRequestStatus(error) !== 419) throw error
+    await getCsrfCookie()
+    await httpClient.post('/auth/logout')
+  }
 }
 
 export async function updatePassword(

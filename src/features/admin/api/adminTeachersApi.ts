@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 
 import type {
   GetTeachersParams,
@@ -54,7 +55,7 @@ function getResponseMessage(
   const message = (data as { message?: unknown }).message
 
   return typeof message === 'string'
-    ? message
+    ? translateVisibleMessage(message)
     : null
 }
 
@@ -91,7 +92,7 @@ function getFieldErrors(
         (message) => typeof message === 'string',
       )
     ) {
-      fieldErrors[field] = messages
+      fieldErrors[field] = messages.map(translateVisibleMessage)
     }
   }
 

@@ -119,13 +119,13 @@ export function LoginForm() {
     <form className="login-form" onSubmit={handleSubmit} noValidate>
       <header className="auth-card__header">
         <h2 id="login-title">Iniciar sesión</h2>
-        <p>Ingresa con tu correo institucional o código SIS</p>
+        <p>Ingresa con tu correo, código institucional de docente o SIS</p>
       </header>
 
       <AuthField
         id="identifier"
         name="identifier"
-        label="Correo institucional / Código SIS"
+        label="Correo institucional / Código docente / SIS"
         type="text"
         autoComplete="username"
         value={values.identifier}
@@ -134,7 +134,7 @@ export function LoginForm() {
         onChange={(event) => updateField('identifier', event.target.value)}
         onBlur={() => markFieldAsTouched('identifier')}
         icon={<UserIcon />}
-        placeholder="usuario@umss.edu.bo o código SIS"
+        placeholder="Correo institucional, código docente o SIS"
         required
       />
 

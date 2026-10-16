@@ -16,6 +16,10 @@ import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
 import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
+import { ExamEligibilitiesPage } from '@/features/eligibilities/pages/ExamEligibilitiesPage'
+import { ExamCollaboratorsPage } from '@/features/collaborations/pages/ExamCollaboratorsPage'
+import { CollaboratorPage } from '@/features/collaborations/pages/CollaboratorPage'
+import { EntryControlPage } from '@/features/exams/pages/EntryControlPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
@@ -43,6 +47,14 @@ export const router = createBrowserRouter([
                 path: AUTH_ROUTES.fallbackHome,
                 element: <AuthenticatedEntryRoute />,
               },
+              {
+                path: 'collaborator',
+                element: <CollaboratorPage />,
+              },
+              {
+                path: 'exams/:examId/entry-control',
+                element: <EntryControlPage />,
+              },
             ],
           },
           {
@@ -63,6 +75,46 @@ export const router = createBrowserRouter([
                   {
                     path: 'students/manage',
                     element: <AdminManageStudentsPage />,
+                  },
+                  {
+                    path: 'subjects',
+                    lazy: async () => {
+                      const { AdminSubjectsPage } =
+                        await import('@/features/subjects/pages/AdminSubjectsPage')
+                      return { Component: AdminSubjectsPage }
+                    },
+                  },
+                  {
+                    path: 'academic-terms',
+                    lazy: async () => {
+                      const { AdminAcademicTermsPage } =
+                        await import('@/features/academic-terms/pages/AdminAcademicTermsPage')
+                      return { Component: AdminAcademicTermsPage }
+                    },
+                  },
+                  {
+                    path: 'subjects/import',
+                    lazy: async () => {
+                      const { ImportSubjectsPage } =
+                        await import('@/features/subjects/pages/ImportSubjectsPage')
+                      return { Component: ImportSubjectsPage }
+                    },
+                  },
+                  {
+                    path: 'rooms',
+                    lazy: async () => {
+                      const { AdminRoomsPage } =
+                        await import('@/features/rooms/pages/AdminRoomsPage')
+                      return { Component: AdminRoomsPage }
+                    },
+                  },
+                  {
+                    path: 'rooms/import',
+                    lazy: async () => {
+                      const { ImportRoomsPage } =
+                        await import('@/features/rooms/pages/ImportRoomsPage')
+                      return { Component: ImportRoomsPage }
+                    },
                   },
                   {
                     path: 'students/import',
@@ -94,6 +146,14 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/exams',
                 element: <TeacherExamsPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/collaborators',
+                element: <ExamCollaboratorsPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/eligibilities',
+                element: <ExamEligibilitiesPage />,
               },
               {
                 path: 'teacher/students/:courseOfferingId',

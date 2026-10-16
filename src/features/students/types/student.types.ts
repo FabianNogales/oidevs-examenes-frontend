@@ -43,6 +43,7 @@ export interface CsvImportSummary {
   errorCount: number
   importedStudents: StudentEnrollment[]
   issues: CsvRowIssue[]
+  records?: CsvRowIssue[]
 }
 
 export type TeacherStudentSubject = Subject

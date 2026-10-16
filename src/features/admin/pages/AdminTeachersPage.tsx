@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 import type { FormEvent } from 'react'
 
 import {
@@ -160,6 +161,8 @@ export function AdminTeachersPage() {
 
   const [changingStatus, setChangingStatus] =
     useState(false)
+
+  useBodyScrollLock(detailOpen || formOpen || statusTeacher !== null)
 
   const [notice, setNotice] =
     useState<Parameters<typeof Snackbar>[0]['notice']>(

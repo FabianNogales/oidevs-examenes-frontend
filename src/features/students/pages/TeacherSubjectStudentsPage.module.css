@@ -70,8 +70,7 @@
 
 .backButton,
 .primaryButton,
-.secondaryButton,
-.toast {
+.secondaryButton {
   font-family: var(--font-family);
 }
 
@@ -221,31 +220,24 @@
   color: var(--color-text-secondary);
 }
 
-.toast {
-  position: fixed;
-  right: var(--space-5);
-  bottom: var(--space-5);
-  z-index: 40;
-  max-width: 420px;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  color: var(--color-on-primary);
-  font-weight: var(--font-weight-semibold);
-}
-
-.toastSuccess {
-  background: var(--color-success);
-}
-
-.toastError {
-  background: var(--color-error);
-}
-
 @media (max-width: 768px) {
   .pageHeader {
     display: grid;
     gap: var(--space-4);
+  }
+
+  .headingWrap {
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .headingWrap h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .backButton {
+    flex-shrink: 0;
   }
 
   .subjectMeta {

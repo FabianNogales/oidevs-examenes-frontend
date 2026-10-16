@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import { env } from '@/app/config/env'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   addStudentToSubject,
   getSubjectStudents,
@@ -17,6 +18,7 @@ import styles from './TeacherSubjectStudentsPage.module.css'
 
 export function TeacherSubjectStudentsPage() {
   const navigate = useNavigate()
+  const { notify } = useAuth()
   const { courseOfferingId } = useParams()
   const [subject, setSubject] = useState<Subject | null>(null)
   const [students, setStudents] = useState<StudentEnrollment[]>([])
@@ -24,8 +26,6 @@ export function TeacherSubjectStudentsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
   const loadSubjectData = useCallback(async () => {
     if (!courseOfferingId) {
@@ -89,8 +89,7 @@ export function TeacherSubjectStudentsPage() {
     if (addedStudent) {
       setStudents((previous) => [addedStudent, ...previous])
     }
-    setToastMessage('Estudiante agregado correctamente.')
-    setToastType('success')
+    notify('success', 'Estudiante agregado correctamente.')
     setIsModalOpen(false)
   }
 
@@ -118,12 +117,12 @@ export function TeacherSubjectStudentsPage() {
     }
 
     setStudents(mergedStudents)
-    setToastMessage(
+    notify(
+      summary.validCount > 0 ? 'success' : 'error',
       summary.validCount > 0
         ? `Se registraron ${summary.validCount} estudiantes.`
         : 'La importación no agregó estudiantes.',
     )
-    setToastType(summary.validCount > 0 ? 'success' : 'error')
 
     return summary
   }
@@ -234,17 +233,9 @@ export function TeacherSubjectStudentsPage() {
         onClose={() => setIsModalOpen(false)}
         onManualSubmit={handleManualSubmit}
         onCsvSubmit={handleCsvSubmit}
+        onCsvPreview={(file) => importStudentsCsv(courseOfferingId!, file, true)}
       />
 
-      {toastMessage ? (
-        <div
-          className={`${styles.toast} ${toastType === 'success' ? styles.toastSuccess : styles.toastError}`}
-          role="status"
-          aria-live="polite"
-        >
-          {toastMessage}
-        </div>
-      ) : null}
     </main>
   )
 }

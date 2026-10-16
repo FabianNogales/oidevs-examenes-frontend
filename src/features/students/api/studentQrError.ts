@@ -1,4 +1,5 @@
 import { isAxiosError } from 'axios'
+import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 import type {
   ApiErrorResponse,
   StudentQrError,
@@ -29,7 +30,7 @@ export function getStudentQrError(
         status,
         message:
           typeof message === 'string' && message.trim()
-            ? message
+            ? translateVisibleMessage(message)
             : resource === 'qr'
               ? 'El código QR aún no está disponible. Se habilitará 24 horas antes del examen.'
               : 'No tienes permiso para consultar estos exámenes.',

@@ -1,0 +1,155 @@
+.modalScope > div {
+  padding: var(--space-4);
+}
+
+.modalScope [role='dialog'] {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 32px));
+  max-height: 88vh;
+  max-height: 88dvh;
+  padding: var(--space-6);
+  overflow: hidden;
+}
+
+.modalScope [role='dialog'] > :not(.results) {
+  flex-shrink: 0;
+}
+
+.description {
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.results {
+  flex: 0 1 auto;
+  min-height: 64px;
+  max-height: 400px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.resultsTable {
+  width: 100%;
+  table-layout: fixed;
+  font-size: var(--font-size-sm);
+}
+
+.results .resultsTable th,
+.results .resultsTable td {
+  padding: var(--space-2) var(--space-3);
+  vertical-align: middle;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.resultsTable th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.resultsTable th:nth-child(1) {
+  width: 30%;
+}
+.resultsTable th:nth-child(2) {
+  width: 18%;
+}
+.resultsTable th:nth-child(3) {
+  width: 37%;
+}
+.resultsTable th:nth-child(4) {
+  width: 15%;
+}
+
+.resultsTable th:nth-child(2),
+.resultsTable td:nth-child(2) {
+  white-space: nowrap;
+}
+
+.resultsTable th:nth-child(4),
+.resultsTable td:nth-child(4) {
+  text-align: center;
+}
+
+.name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  max-height: 3em;
+  overflow: hidden;
+  line-height: 1.5;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.identifier,
+.email {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radioTarget {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.radioTarget .radio {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.radio:disabled {
+  cursor: not-allowed;
+}
+
+.note {
+  margin: var(--space-4) 0 0;
+}
+
+.modalScope .actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .modalScope > div {
+    padding: var(--space-3);
+  }
+  .modalScope [role='dialog'] {
+    width: calc(100vw - 24px);
+    padding: var(--space-4);
+  }
+  .resultsTable {
+    min-width: 680px;
+  }
+}
+
+@media (max-height: 640px) {
+  .modalScope [role='dialog'] {
+    overflow-y: auto;
+  }
+  .results {
+    flex-shrink: 0;
+    max-height: 40vh;
+    max-height: min(400px, 40dvh);
+  }
+}

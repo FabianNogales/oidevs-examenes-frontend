@@ -167,6 +167,36 @@
   margin-top: var(--space-3);
 }
 
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.filePicker {
+  padding: var(--space-3);
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.tabPanel:has(.fileInput:focus-visible) .filePicker {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.csvExample {
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--color-background);
+  border-radius: var(--radius-md);
+}
+
 .processing {
   display: flex;
   align-items: center;
