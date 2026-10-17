@@ -73,6 +73,13 @@ export const navigationByRole: Record<
       end: true,
     },
     {
+      label: 'Usuarios',
+      children: [
+        { label: 'Gestionar usuarios', to: '/admin/users/manage' },
+        { label: 'Historial de cambios', to: '/admin/users/history' },
+      ],
+    },
+    {
       label: 'Docentes',
       to: '/admin/teachers',
     },

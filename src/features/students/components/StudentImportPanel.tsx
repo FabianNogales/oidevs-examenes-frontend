@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router' // Añadir useLocation
+import { useNavigate, useLocation } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   confirmStudentImport,
@@ -118,11 +118,7 @@ export function StudentImportPanel({
   }
 
   function handleCancel() {
-    if (selectedFile || preview) {
-      clearSelection()
-      notify('info', 'Se cambió el archivo seleccionado.')
-      return
-    }
+    localStorage.removeItem(IMPORT_STORAGE_KEY)
     navigate(STUDENTS_PATH)
   }
 

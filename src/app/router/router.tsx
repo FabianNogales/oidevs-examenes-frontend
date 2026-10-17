@@ -29,6 +29,9 @@ import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
 import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
 import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
 import { AdminManageStudentsPage } from '@/features/admin/pages/AdminManageStudentsPage'
+import { AdminStudentDetailPage } from '@/features/admin/pages/AdminStudentDetailPage'
+import { AdminTeacherDetailPage } from '@/features/admin/pages/AdminTeacherDetailPage'
+import { AdminManageUsersPage } from '@/features/admin/pages/AdminManageUsersPage'
 
 export const router = createBrowserRouter([
   {
@@ -71,6 +74,14 @@ export const router = createBrowserRouter([
                     element: <HomePage />,
                   },
                   {
+                    path: 'users/manage',
+                    element: <AdminManageUsersPage />,
+                  },
+                  {
+                    path: 'users/history',
+                    element: <AdminManageUsersPage />,
+                  },
+                  {
                     path: 'teachers',
                     element: <AdminTeachersPage />,
                   },
@@ -91,8 +102,20 @@ export const router = createBrowserRouter([
                     },
                   },
                   {
+                    path: 'teachers/:teacherId',
+                    element: <AdminTeacherDetailPage />,
+                  },
+                  {
                     path: 'students/manage',
                     element: <AdminManageStudentsPage />,
+                  },
+                  {
+                    path: 'students/import',
+                    element: <ImportStudentsPage />,
+                  },
+                  {
+                    path: 'students/:studentId',
+                    element: <AdminStudentDetailPage />,
                   },
                   {
                     path: 'subjects',
@@ -133,10 +156,6 @@ export const router = createBrowserRouter([
                         await import('@/features/rooms/pages/ImportRoomsPage')
                       return { Component: ImportRoomsPage }
                     },
-                  },
-                  {
-                    path: 'students/import',
-                    element: <ImportStudentsPage />,
                   },
                   {
                     path: '*',

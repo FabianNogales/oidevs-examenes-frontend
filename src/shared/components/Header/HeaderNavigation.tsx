@@ -10,12 +10,12 @@ export function HeaderNavigation({
 }: HeaderNavigationProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [hasPendingImport, setHasPendingImport] = useState(false)
-  const dropdownRef = useRef<HTMLLIElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
   const location = useLocation()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (listRef.current && !listRef.current.contains(event.target as Node)) {
         setOpenDropdown(null)
       }
     }
@@ -70,7 +70,7 @@ export function HeaderNavigation({
   }
 
   return (
-    <ul className={styles.navigationList}>
+    <ul className={styles.navigationList} ref={listRef}>
       {dynamicItems.map((item) => {
         const hasChildren = item.children && item.children.length > 0
         const isParentActive = hasChildren && item.children?.some((child) => location.pathname.startsWith(child.to || ''))
@@ -78,7 +78,6 @@ export function HeaderNavigation({
         return (
           <li 
             key={`${item.label}-${item.to ?? 'nav'}`}
-            ref={hasChildren ? dropdownRef : null}
             className={styles.navigationItem}
           >
             {hasChildren ? (

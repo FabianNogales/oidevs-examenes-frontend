@@ -1,0 +1,511 @@
+/* ==================================================
+   ESTRUCTURA GENERAL DEL LAYOUT
+   ================================================== */
+.layoutWrapper {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: calc(100vh - 140px);
+  width: 100%;
+  background: #f5f9ff;
+}
+
+/* ==================================================
+   SIDEBAR (Fijo en Desktop, Compactable en Móvil)
+   ================================================== */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: #eaf3ff;
+  border-right: 1px solid #b8c9e1;
+  padding: 28px 18px;
+  user-select: none;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-inline: 8px;
+}
+
+.sidebarTitle {
+  margin: 0;
+  color: var(--brand-navy, #172554);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Botón oculto en desktop; visible solo en responsive */
+.mobileToggleBtn {
+  display: none;
+}
+
+.sidebarContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.optionsNav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionBtn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  color: var(--brand-navy, #172554);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.optionBtn svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.optionBtn:hover:not(.optionBtnActive) {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Estado activo idéntico al mockup */
+.optionBtnActive {
+  background: #f7e9ed;
+  border-color: #8b1e3f;
+  color: #8b1e3f;
+}
+
+.sidebarFooter {
+  padding-top: 16px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  background: #ffffff;
+  border: 1.5px solid var(--brand-blue, #2563eb);
+  border-radius: 10px;
+  color: var(--brand-blue, #2563eb);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.backBtn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+}
+
+.backBtn:hover {
+  background: #eaf3ff;
+}
+
+/* ==================================================
+   ÁREA PRINCIPAL Y BANNER ESTÁTICO
+   ================================================== */
+.mainArea {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 36px 48px;
+  max-width: 1340px;
+  width: 100%;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  min-height: 156px;
+  padding: 24px 32px;
+  border: 1px solid #7c8da6;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(23, 37, 84, 0.06);
+}
+
+/* Gradiente Verde para Estudiante/Usuario Activo */
+.bannerActive {
+  background: linear-gradient(90deg, #dff1ff 0%, #e2f4ee 68%, #2e7d32 100%);
+}
+
+/* Gradiente Rojo para Estudiante/Usuario Inactivo */
+.bannerInactive {
+  background: linear-gradient(90deg, #dff1ff 0%, #f9e2e6 68%, #c62828 100%);
+}
+
+.avatarCircle {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #0d285a;
+  border: 4px solid #ffffff;
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 10px rgba(13, 40, 90, 0.2);
+}
+
+.bannerDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bannerName {
+  margin: 0;
+  color: var(--brand-navy, #172554);
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.bannerBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--brand-blue, #2563eb);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.statusBannerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px 0 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.statusBannerBadge svg {
+  width: 18px;
+  height: 18px;
+}
+
+.statusBannerActive {
+  background: #2e7d32;
+}
+
+.statusBannerInactive {
+  background: #c62828;
+}
+
+/* ==================================================
+   GRILLA DE TARJETAS (TAB PERFIL)
+   ================================================== */
+.dynamicSection {
+  width: 100%;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+}
+
+.infoCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 82px;
+  padding: 16px 22px;
+  background: #ffffff;
+  border: 1px solid #e6eef8;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(23, 37, 84, 0.04);
+}
+
+.cardIconBox {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #eaf3ff;
+  color: var(--brand-blue, #2563eb);
+}
+
+.cardIconBox svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.cardIconSolid {
+  border-radius: 50%;
+  background: var(--brand-blue, #2563eb);
+  color: #ffffff;
+}
+
+.cardTextGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cardLabel {
+  color: #68778f;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.cardValue {
+  color: var(--brand-navy, #172554);
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Píldora interna para la tarjeta "Estado de la cuenta" */
+.accountStatusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.accountStatusActive {
+  background: #dcfce7;
+  border: 1.5px solid #2e7d32;
+  color: #15803d;
+}
+
+.accountStatusInactive {
+  background: #fee2e2;
+  border: 1.5px solid #c62828;
+  color: #b91c1c;
+}
+
+/* ==================================================
+   CONTENEDOR DE FORMULARIO Y SECCIONES SECUNDARIAS
+   ================================================== */
+.sectionCard {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 3px 10px rgba(23, 37, 84, 0.04);
+}
+
+.sectionCard h2 {
+  margin: 0 0 6px;
+  color: var(--brand-navy, #172554);
+  font-size: 20px;
+}
+
+.sectionCard p {
+  margin: 0 0 24px;
+  color: #68778f;
+  font-size: 14px;
+}
+
+.editForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  color: var(--brand-navy, #172554);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.formInput {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #b8c9e1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--brand-navy, #172554);
+  background: #ffffff;
+}
+
+.formInput:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.formActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.saveBtn {
+  height: 44px;
+  padding: 0 24px;
+  background: var(--brand-blue, #2563eb);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelBtn {
+  height: 44px;
+  padding: 0 20px;
+  background: #ffffff;
+  border: 1px solid var(--brand-blue, #2563eb);
+  color: var(--brand-blue, #2563eb);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feedbackMsg {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.feedbackSuccess {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.feedbackError {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* ==================================================
+   RESPONSIVE: Sidebar se vuelve compactable en Móvil
+   ================================================== */
+@media (max-width: 960px) {
+  .layoutWrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid #b8c9e1;
+    padding: 16px 20px;
+  }
+
+  .sidebarHeader {
+    margin-bottom: 0;
+    padding-inline: 0;
+  }
+
+  .mobileToggleBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 14px;
+    background: #ffffff;
+    border: 1px solid var(--brand-blue, #2563eb);
+    border-radius: 8px;
+    color: var(--brand-blue, #2563eb);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .mobileToggleBtn svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+
+  .chevronOpen {
+    transform: rotate(180deg);
+  }
+
+  /* Compactado por defecto en móvil */
+  .sidebarContent {
+    display: none;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #cfe0f5;
+  }
+
+  .sidebarContentOpen {
+    display: flex;
+  }
+
+  .mainArea {
+    padding: 20px;
+  }
+
+  .infoGrid,
+  .editForm {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .bannerBadges {
+    justify-content: center;
+  }
+}

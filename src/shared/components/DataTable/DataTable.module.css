@@ -1,0 +1,501 @@
+/* ==========================================================================
+   EIDA FLAT DESIGN 2.0 — UNIVERSAL DATA TABLE (Alineado al Mockup)
+   ========================================================================== */
+
+.tableCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgb(var(--shadow-card-rgb, 23 37 84) / 5%);
+  font-family: var(--font-family);
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   BARRA DE BÚSQUEDA
+   ========================================================================== */
+.searchBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px 24px;
+  gap: 12px;
+  width: 100%;
+  background: var(--color-surface, #ffffff);
+}
+
+.searchInputWrapper {
+  position: relative;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  gap: 10px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-text-secondary, #52627a);
+  border-radius: 10px;
+  transition:
+    border-color var(--transition-fast, 150ms ease),
+    box-shadow var(--transition-fast, 150ms ease);
+}
+
+.searchInputWrapper:focus-within {
+  border-color: var(--brand-blue, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 15%);
+}
+
+.searchIcon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-secondary, #52627a);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--brand-navy, #172554);
+  font-size: 15px;
+  font-family: var(--font-family);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted, #5b6a80);
+}
+
+.searchButton,
+.clearButton,
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.searchButton {
+  background: var(--brand-blue, #2563eb);
+  color: var(--color-on-primary, #ffffff);
+  border: none;
+}
+
+.searchButton:hover:not(:disabled) {
+  background: var(--color-primary-hover, #1d4ed8);
+}
+
+.clearButton,
+.retryButton {
+  background: var(--color-surface, #ffffff);
+  color: var(--brand-navy, #172554);
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+}
+
+.clearButton:hover:not(:disabled),
+.retryButton:hover:not(:disabled) {
+  background: var(--brand-blue-light, #eaf3ff);
+}
+
+.searchResultBanner {
+  padding: 8px 24px;
+  background: var(--color-surface-muted, #f5fbff);
+  border-top: 1px solid var(--color-border, #dce5f2);
+  color: var(--color-text-secondary, #52627a);
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   TABLA Y CABECERA (Idéntico a Mockup)
+   ========================================================================== */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: left;
+}
+
+.table th {
+  background: var(--color-soft-blue, #dff1ff);
+  color: var(--brand-navy, #172554);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 24px;
+  border-top: 1px solid #d0dfef;
+  border-bottom: 1.5px solid #6b7d99;
+}
+
+.tableRow {
+  background: var(--brand-white-warm, #fafafa);
+  transition: background-color var(--transition-fast, 150ms ease);
+}
+
+.tableRow:hover {
+  background-color: #f2f7ff;
+}
+
+.tableCell {
+  padding: 12px 24px;
+  border-bottom: 1px solid #eceff4;
+  vertical-align: middle;
+  color: var(--brand-navy, #172554);
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: break-word;
+}
+
+.textLeft {
+  text-align: left;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.textRight {
+  text-align: right;
+}
+
+/* Utilidades listas para celdas compuestas (Nombre + CI) */
+.primaryText {
+  display: block;
+  color: var(--brand-navy, #172554);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.secondaryText {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-secondary, #52627a);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* ==========================================================================
+   BADGES DE ESTADO CON PUNTO INDICADOR (• Activo / • Inactivo)
+   ========================================================================== */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.statusActive {
+  background: #ccf5d3;
+  color: #157333;
+}
+
+.statusInactive {
+  background: #ffd8dc;
+  color: #b91c1c;
+}
+
+/* ==========================================================================
+   BOTONES DE ACCIÓN (Ver perfil + Desactivar/Activar según Mockup)
+   ========================================================================== */
+.actionsCell {
+  white-space: nowrap;
+}
+
+.actionButtons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.btnViewProfile,
+.btnDeactivate,
+.btnActivate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast, 150ms ease),
+    border-color var(--transition-fast, 150ms ease),
+    transform var(--transition-fast, 150ms ease);
+}
+
+/* Botón "Ver perfil" (Blanco con borde suave y texto azul brillante) */
+.btnViewProfile {
+  padding: 0 16px;
+  background: #ffffff;
+  border: 1px solid #dce6f5;
+  color: var(--brand-blue, #2563eb);
+  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
+}
+
+.btnViewProfile:hover:not(:disabled) {
+  background: var(--brand-blue-light, #eaf3ff);
+  border-color: var(--brand-blue, #2563eb);
+}
+
+/* Botones de Estado: Ancho idéntico y relleno de color como en el Mockup */
+.btnDeactivate,
+.btnActivate {
+  width: 102px;
+  padding: 0;
+}
+
+/* Botón "Desactivar" (Fondo rosa suave y borde rojo carmesí) */
+.btnDeactivate {
+  background: #ffd8dc;
+  border: 1.5px solid #d9384a;
+  color: #9e1c2e;
+}
+
+.btnDeactivate:hover:not(:disabled) {
+  background: #ffc2c9;
+}
+
+/* Botón "Activar" (Fondo verde suave y borde verde intenso) */
+.btnActivate {
+  background: #ccf5d3;
+  border: 1.5px solid #2e7d32;
+  color: #14532d;
+}
+
+.btnActivate:hover:not(:disabled) {
+  background: #b5eec0;
+}
+
+/* ==========================================================================
+   PAGINACIÓN (Idéntica al pie del Mockup)
+   ========================================================================== */
+.paginationFooter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 14px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e6ebf2;
+}
+
+.paginationSummary {
+  color: #7c8ba1;
+  font-size: 13.5px;
+  font-weight: 400;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pageIndicator {
+  color: var(--brand-navy, #172554);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #edf2f9;
+  border-radius: 6px;
+  color: var(--brand-blue, #2563eb);
+  font-family: var(--font-family);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.pageButton:hover:not(:disabled) {
+  background: var(--brand-blue-light, #eaf3ff);
+  border-color: #cfe2ff;
+}
+
+.pageButton:disabled {
+  background: #ffffff;
+  border-color: #f1f5f9;
+  color: #64748b;
+  font-weight: 500;
+  box-shadow: none;
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   ESTADOS DE CARGA, VACÍO Y ERROR
+   ========================================================================== */
+.stateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--brand-white-warm, #fafafa);
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--color-border-soft, #dce8ff);
+  border-top-color: var(--brand-blue, #2563eb);
+  border-radius: 50%;
+  animation: tableSpin 0.75s linear infinite;
+}
+
+.emptyTitle {
+  color: var(--brand-navy, #172554);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.stateText {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary, #52627a);
+  font-size: 14px;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 24px;
+  padding: 14px 18px;
+  border: 1px solid var(--brand-pink, #d67a8c);
+  border-radius: 10px;
+  background: var(--brand-pink-light, #f7e9ed);
+  color: var(--brand-crimson, #8b1e3f);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes tableSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE (Móvil y Tablet)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .searchBar {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+
+  .searchInputWrapper {
+    flex-basis: 100%;
+  }
+
+  .searchButton,
+  .clearButton {
+    flex: 1;
+  }
+
+  .table,
+  .table tbody,
+  .tableRow,
+  .tableCell {
+    display: block;
+    width: 100%;
+  }
+
+  .table colgroup,
+  .table thead {
+    display: none;
+  }
+
+  .tableRow {
+    margin: 12px;
+    width: calc(100% - 24px);
+    border: 1px solid var(--color-border-strong, #b8c9e1);
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .tableCell {
+    display: grid;
+    grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+    gap: 12px;
+    padding: 10px 14px;
+    text-align: left !important;
+  }
+
+  .tableCell::before {
+    content: attr(data-label);
+    color: var(--color-text-secondary, #52627a);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .actionButtons {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .paginationFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .paginationControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
