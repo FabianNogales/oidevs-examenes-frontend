@@ -5,6 +5,7 @@ import { CreateExamModal } from '@/features/exams/components/CreateExamModal'
 import { createExam } from '@/features/exams/api/teacherExamsApi'
 import { getTeacherSubjects } from '@/features/subjects/api/teacherSubjectsApi'
 import { SubjectList } from '@/features/subjects/components/SubjectList'
+import { TeacherOfferingFilters } from '@/features/course-offerings/components/TeacherOfferingFilters'
 import { SubjectsSkeleton } from '@/features/subjects/components/SubjectsSkeleton'
 import type { Subject } from '@/features/subjects/types/subject.types'
 import type { CreateExamPayload } from '@/features/exams/types/exam.types'
@@ -30,6 +31,7 @@ export function TeacherSubjectsPage({
   const [loadedIsLoading, setLoadedIsLoading] = useState(true)
   const [loadedErrorMessage, setLoadedErrorMessage] = useState<string | null>(null)
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
+  const [period, setPeriod] = useState('')
   const [isSubmittingExam, setIsSubmittingExam] = useState(false)
   const [lastCreatedExamName, setLastCreatedExamName] = useState<string | null>(null)
   const subjectsRequestInFlight = useRef(false)
@@ -40,6 +42,7 @@ export function TeacherSubjectsPage({
     ? providedErrorMessage ?? null
     : loadedErrorMessage
   const hasSubjects = subjects.length > 0
+  const visibleSubjects = subjects.filter((subject) => !period || subject.academicManagement === period)
 
   const loadSubjects = useCallback(async () => {
     if (subjectsRequestInFlight.current) return
@@ -68,6 +71,7 @@ export function TeacherSubjectsPage({
   }, [hasProvidedSubjects, loadSubjects])
 
   const openCreateExamModal = useCallback((subject: Subject) => {
+    if (subject.canManage === false) return
     setSelectedSubject(subject)
   }, [])
 
@@ -127,9 +131,11 @@ export function TeacherSubjectsPage({
           </section>
         ) : null}
 
+        {!isLoading && !errorMessage && hasSubjects && <TeacherOfferingFilters subjects={subjects} term={period} onChange={setPeriod} />}
+        {!isLoading && !errorMessage && hasSubjects && visibleSubjects.length === 0 && <p role="status">No hay materias asignadas en el periodo seleccionado.</p>}
         {!isLoading && !errorMessage && hasSubjects ? (
           <SubjectList
-            subjects={subjects}
+            subjects={visibleSubjects}
             onCreateExam={openCreateExamModal}
           />
         ) : null}

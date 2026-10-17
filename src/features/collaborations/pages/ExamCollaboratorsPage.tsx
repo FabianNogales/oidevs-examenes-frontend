@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useTeacherUpcomingExams } from '@/features/exams/hooks/useTeacherUpcomingExams'
+import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import {
   assignExamCollaborator,
   revokeExamCollaborator,
@@ -23,11 +23,13 @@ type ModalState =
   | { type: 'view' | 'revoke'; collaborator: ExamCollaborator }
   | null
 
-export function ExamCollaboratorsPage() {
-  const { examId } = useParams()
-  const { exams, isLoading, errorMessage, loadExams } =
-    useTeacherUpcomingExams()
-  const exam = exams.find((item) => item.id === Number(examId))
+function ExamCollaboratorsContent({ examId }: { examId: string | undefined }) {
+  const {
+    exam,
+    isLoading,
+    errorMessage,
+    reload: loadExams,
+  } = useExamDetail(examId)
   const list = useExamCollaborators(exam?.id ?? null)
   const { notify } = useAuth()
   const { reload: reloadMyCollaborations } = useMyCollaborations()
@@ -84,7 +86,7 @@ export function ExamCollaboratorsPage() {
           </section>
         ) : !exam ? (
           <section className={pageStyles.state}>
-            <p>El examen no está disponible entre tus exámenes programados.</p>
+            <p>El examen no está disponible para tu cuenta.</p>
             <Link to="/teacher/exams">Volver a Mis exámenes</Link>
           </section>
         ) : (
@@ -150,9 +152,7 @@ export function ExamCollaboratorsPage() {
               <AssignCollaboratorModal
                 key={exam.id}
                 examId={exam.id}
-                assignedUserIds={list.collaborators.map(
-                  (item) => item.user_id,
-                )}
+                assignedUserIds={list.collaborators.map((item) => item.user_id)}
                 onClose={() => setModal(null)}
                 onAssign={assign}
               />
@@ -176,4 +176,9 @@ export function ExamCollaboratorsPage() {
       </section>
     </main>
   )
+}
+
+export function ExamCollaboratorsPage() {
+  const { examId } = useParams()
+  return <ExamCollaboratorsContent key={examId} examId={examId} />
 }
