@@ -1,12 +1,24 @@
 .page {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .page .content {
   width: min(100%, 1120px);
   max-width: 1120px;
   min-width: 0;
+  box-sizing: border-box;
+}
+
+.content > *,
+.content [role='tabpanel'],
+.attendancePanel > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 
 .tabs {
@@ -80,20 +92,32 @@
 
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--space-2);
   min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .field input,
 .field select {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   min-height: var(--input-height);
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
+}
+
+.field select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table {
@@ -395,6 +419,8 @@
 
 .attendancePanel {
   min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   margin-top: var(--space-6);
 }
 
@@ -408,13 +434,55 @@
   box-sizing: border-box;
 }
 
-.qrLauncher {
-  margin-top: var(--space-5);
+.availabilityNotice {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
 }
 
-.qrLauncher button {
+.availabilityNotice h3,
+.availabilityNotice p {
+  margin: 0;
+}
+
+.methodTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.methodTabs button {
+  min-width: 0;
   max-width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  background: transparent;
+  font-weight: var(--font-weight-semibold);
   white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.methodTabs button[aria-selected='true'] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.methodTabs button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .manualModalScope [role='dialog'] {
@@ -598,6 +666,8 @@
 
   .page {
     padding-inline: var(--space-4);
+    /* Guard against paint overflow after constraining intrinsic control widths. */
+    overflow-x: clip;
   }
 
   .page .content {
@@ -628,6 +698,33 @@
   .studentSummary {
     grid-template-columns: 1fr;
     gap: var(--space-4);
+  }
+
+  .summary.compactSummary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+    margin-block: var(--space-4);
+  }
+
+  .compactSummary > div {
+    min-width: 0;
+    padding: var(--space-2) var(--space-1);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .compactSummary dt {
+    font-size: var(--font-size-xs);
+  }
+
+  .compactSummary dd {
+    margin-top: var(--space-1);
+    font-size: var(--font-size-xl);
+  }
+
+  .methodTabs button {
+    padding-inline: var(--space-2);
+    font-size: var(--font-size-sm);
   }
 
   .avatar {

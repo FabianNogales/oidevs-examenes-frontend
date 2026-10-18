@@ -8,6 +8,7 @@ import { EntryControlledRoomSelector } from '../components/EntryControlledRoomSe
 import { EntryHistoryModal } from '../components/EntryHistoryModal'
 import { EntryQrPanel } from '../components/EntryQrPanel'
 import { EntryRecentScans } from '../components/EntryRecentScans'
+import { EntryStudentsSummary } from '../components/EntryStudentsSummary'
 import { ExamCard } from '../components/ExamCard'
 import { useEntryControlStudents } from '../hooks/useEntryControlStudents'
 import { useEntryRecentRecords } from '../hooks/useEntryRecentRecords'
@@ -17,6 +18,7 @@ import type {
   EntryStudentIdentity,
 } from '../types/entryRegistration.types'
 import type { Room } from '../types/exam.types'
+import { entryUnavailableReasonMessage } from '../utils/entryAvailabilityDisplay'
 import pageStyles from './TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from './EntryControlPage.module.css'
@@ -39,13 +41,13 @@ function EntryControlContent({
   const [activeTab, setActiveTab] = useState<'verification' | 'attendance'>(
     'verification',
   )
-  const [qrOpen, setQrOpen] = useState(false)
-  // Mount on demand, then retain the hook instance to serialize camera restarts.
-  const [qrActivated, setQrActivated] = useState(false)
+  const [attendanceMethod, setAttendanceMethod] = useState<'manual' | 'qr'>(
+    'manual',
+  )
   const [qrProcessing, setQrProcessing] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const tabsId = useId()
-  const scannerId = useId()
+  const methodTabsId = useId()
   const exam = list.response?.exam
   const roomOptions =
     exam?.room && !rooms.some((room) => room.id === exam.room?.id)
@@ -63,7 +65,7 @@ function EntryControlContent({
     if (tab === activeTab) return
     setStudentId(null)
     setHistoryOpen(false)
-    setQrOpen(false)
+    setAttendanceMethod('manual')
     setActiveTab(tab)
   }
 
@@ -230,7 +232,7 @@ function EntryControlContent({
                 disabled={qrProcessing}
                 onClick={() => setHistoryOpen(true)}
               >
-                Ver historial completo
+                Historial de ingresos
               </button>
             </div>
             {list.roomId == null ? (
@@ -238,41 +240,105 @@ function EntryControlContent({
                 Selecciona el ambiente controlado antes de registrar un ingreso.
               </p>
             ) : null}
-            <EntryControlStudentsList
-              list={list}
-              manual
-              disabled={qrProcessing}
-              onView={setStudentId}
-            />
-            <div className={styles.qrLauncher}>
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                aria-expanded={qrOpen}
-                aria-controls={scannerId}
-                disabled={!qrOpen && list.roomId == null}
-                onClick={() => {
-                  if (!qrOpen) setQrActivated(true)
-                  setQrOpen((current) => !current)
-                }}
+            {list.response?.summary ? (
+              <EntryStudentsSummary summary={list.response.summary} compact />
+            ) : null}
+            {exam?.entry_available === false ? (
+              <div
+                className={`${styles.availabilityNotice} ${styles.pending}`}
+                role="status"
               >
-                {qrOpen ? 'Cerrar escáner QR' : 'Escanear QR'}
-              </button>
+                <h3>Registro de ingresos no disponible</h3>
+                <p>
+                  {entryUnavailableReasonMessage(exam.entry_unavailable_reason)}
+                </p>
+              </div>
+            ) : null}
+            <div
+              className={styles.methodTabs}
+              role="tablist"
+              aria-label="Método de registro de asistencia"
+              onKeyDown={(event) => {
+                if (
+                  qrProcessing ||
+                  !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(
+                    event.key,
+                  )
+                )
+                  return
+                event.preventDefault()
+                const next =
+                  event.key === 'Home'
+                    ? 'manual'
+                    : event.key === 'End'
+                      ? 'qr'
+                      : attendanceMethod === 'manual'
+                        ? 'qr'
+                        : 'manual'
+                if (next === 'qr' && list.roomId == null) return
+                setAttendanceMethod(next)
+                document.getElementById(`${methodTabsId}-${next}-tab`)?.focus()
+              }}
+            >
+              {(['manual', 'qr'] as const).map((method) => (
+                <button
+                  key={method}
+                  type="button"
+                  role="tab"
+                  id={`${methodTabsId}-${method}-tab`}
+                  aria-selected={attendanceMethod === method}
+                  aria-controls={`${methodTabsId}-${method}-panel`}
+                  tabIndex={attendanceMethod === method ? 0 : -1}
+                  disabled={
+                    qrProcessing || (method === 'qr' && list.roomId == null)
+                  }
+                  onClick={() => setAttendanceMethod(method)}
+                >
+                  {method === 'manual' ? 'Registro manual' : 'Escanear QR'}
+                </button>
+              ))}
             </div>
-            <div id={scannerId} hidden={!qrOpen}>
-              {qrActivated ? (
+            <div
+              role="tabpanel"
+              id={`${methodTabsId}-manual-panel`}
+              aria-labelledby={`${methodTabsId}-manual-tab`}
+              hidden={attendanceMethod !== 'manual'}
+            >
+              {activeTab === 'attendance' && attendanceMethod === 'manual' ? (
+                <EntryControlStudentsList
+                  list={list}
+                  manual
+                  showSummary={false}
+                  onView={setStudentId}
+                />
+              ) : null}
+            </div>
+            <div
+              role="tabpanel"
+              id={`${methodTabsId}-qr-panel`}
+              aria-labelledby={`${methodTabsId}-qr-tab`}
+              hidden={attendanceMethod !== 'qr'}
+            >
+              {activeTab === 'attendance' &&
+              attendanceMethod === 'qr' &&
+              exam?.entry_available !== false ? (
                 <EntryQrPanel
                   examId={examId}
-                  active={
-                    activeTab === 'attendance' &&
-                    qrOpen &&
-                    !historyOpen &&
-                    studentId === null
-                  }
+                  active={!historyOpen && studentId === null}
                   roomId={list.roomId}
                   onProcessed={(response) => handleResult(response, 'QR')}
                   onProcessingChange={setQrProcessing}
                 />
+              ) : null}
+              {activeTab === 'attendance' &&
+              attendanceMethod === 'qr' &&
+              exam?.entry_available === false ? (
+                <div className={styles.message} role="status">
+                  <h3>Escaneo no disponible</h3>
+                  <p>
+                    {entryUnavailableReasonMessage(exam.entry_unavailable_reason)}
+                  </p>
+                </div>
               ) : null}
             </div>
             <EntryRecentScans scans={recent.records} />

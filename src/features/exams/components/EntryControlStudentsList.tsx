@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import type { useEntryControlStudents } from '../hooks/useEntryControlStudents'
 import { EntryControlTable } from './EntryControlTable'
+import { EntryStudentsSummary } from './EntryStudentsSummary'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import pageStyles from '../pages/TeacherExamsPage.module.css'
 import styles from '../pages/EntryControlPage.module.css'
@@ -11,6 +12,7 @@ type Props = {
   roomSelector?: ReactNode
   manual?: boolean
   disabled?: boolean
+  showSummary?: boolean
 }
 
 export function EntryControlStudentsList({
@@ -19,6 +21,7 @@ export function EntryControlStudentsList({
   roomSelector,
   manual = false,
   disabled = false,
+  showSummary = true,
 }: Props) {
   const searchId = useId()
   const titleId = useId()
@@ -27,24 +30,8 @@ export function EntryControlStudentsList({
 
   return (
     <>
-      {summary ? (
-        <dl
-          className={styles.summary}
-          aria-label="Resumen de estudiantes del examen"
-        >
-          <div>
-            <dt>Total estudiantes</dt>
-            <dd>{summary.total_students}</dd>
-          </div>
-          <div>
-            <dt>Registrados</dt>
-            <dd>{summary.registered}</dd>
-          </div>
-          <div>
-            <dt>Pendientes</dt>
-            <dd>{summary.pending}</dd>
-          </div>
-        </dl>
+      {showSummary && summary ? (
+        <EntryStudentsSummary summary={summary} />
       ) : null}
       <section className={sharedStyles.section} aria-labelledby={titleId}>
         <h2 id={titleId}>{manual ? 'Registro manual' : 'Estudiantes'}</h2>

@@ -10,6 +10,7 @@ import type {
 import type { EntryManualResponse } from '../types/entryRegistration.types'
 import { entryStudentName } from '../utils/entryControlDisplay'
 import { canRegisterEntryManually } from '../utils/entryManualEligibility'
+import { entryUnavailableReasonMessage } from '../utils/entryAvailabilityDisplay'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from '../pages/EntryControlPage.module.css'
 
@@ -32,7 +33,8 @@ export function EntryManualConfirmationModal({
   const [error, setError] = useState<string | null>(null)
   const request = useRef<AbortController | null>(null)
   const mounted = useRef(false)
-  const eligible = canRegisterEntryManually(student, roomId)
+  const eligible =
+    exam.entry_available !== false && canRegisterEntryManually(student, roomId)
 
   useEffect(() => {
     mounted.current = true
@@ -77,7 +79,9 @@ export function EntryManualConfirmationModal({
   }
 
   return (
-    <div className={`${styles.manualModalScope} ${styles.confirmationModalScope}`}>
+    <div
+      className={`${styles.manualModalScope} ${styles.confirmationModalScope}`}
+    >
       <CollaborationModal
         title="Confirmar registro de ingreso"
         onClose={cancel}
@@ -103,8 +107,9 @@ export function EntryManualConfirmationModal({
         </p>
         {!eligible ? (
           <p className={sharedStyles.error} role="alert">
-            El estudiante no cumple las condiciones de ingreso. Vuelve al
-            detalle.
+            {exam.entry_available === false
+              ? entryUnavailableReasonMessage(exam.entry_unavailable_reason)
+              : 'El estudiante no cumple las condiciones de ingreso. Vuelve al detalle.'}
           </p>
         ) : null}
         {error ? (

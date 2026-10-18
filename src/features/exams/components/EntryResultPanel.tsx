@@ -1,5 +1,9 @@
 import type { EntryProcessingResponse } from '../types/entryRegistration.types'
 import {
+  entryAvailabilityMessage,
+  entryBlockerMessage,
+} from '../utils/entryAvailabilityDisplay'
+import {
   eligibilityDisplay,
   enrollmentDisplay,
   entryDisplay,
@@ -25,6 +29,11 @@ export function EntryResultPanel({
   method?: 'QR' | 'MANUAL'
 }) {
   const data = response?.data
+  const message = response ? entryAvailabilityMessage(response.message) : ''
+  // Presentation only: retain all original blockers for eligibility/backend checks.
+  const blockerMessages = [
+    ...new Set(data?.blockers?.map((blocker) => entryBlockerMessage(blocker))),
+  ].filter((blockerMessage) => blockerMessage !== message)
   const ineligible =
     data?.eligibility_status === 'INELIGIBLE' ||
     data?.blockers?.some((blocker) => blocker.code === 'INELIGIBLE')
@@ -69,7 +78,7 @@ export function EntryResultPanel({
       ) : (
         <>
           <h2>{ENTRY_RESULT_LABELS[response.result]}</h2>
-          <p>{response.message}</p>
+          <p>{message}</p>
           {data?.student ? (
             <EntryQrStudentIdentity
               key={data.student.student_id}
@@ -125,10 +134,10 @@ export function EntryResultPanel({
               ) : null}
             </div>
           ) : null}
-          {data?.blockers?.length ? (
+          {blockerMessages.length ? (
             <ul className={styles.blockers}>
-              {data.blockers.map((blocker, index) => (
-                <li key={`${blocker.code}-${index}`}>{blocker.message}</li>
+              {blockerMessages.map((blockerMessage) => (
+                <li key={blockerMessage}>{blockerMessage}</li>
               ))}
             </ul>
           ) : null}
