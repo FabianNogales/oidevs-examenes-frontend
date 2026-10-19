@@ -1,10 +1,8 @@
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { getEntryControlErrorMessage } from '../api/entryControlApi'
-import { getRooms } from '../api/teacherExamsApi'
 import { EntryControlStudentModal } from '../components/EntryControlStudentModal'
 import { EntryControlStudentsList } from '../components/EntryControlStudentsList'
-import { EntryControlledRoomSelector } from '../components/EntryControlledRoomSelector'
+import { EntryControlledRoom } from '../components/EntryControlledRoom'
 import { EntryHistoryModal } from '../components/EntryHistoryModal'
 import { EntryQrPanel } from '../components/EntryQrPanel'
 import { EntryRecentScans } from '../components/EntryRecentScans'
@@ -17,7 +15,6 @@ import type {
   EntryProcessingResponse,
   EntryStudentIdentity,
 } from '../types/entryRegistration.types'
-import type { Room } from '../types/exam.types'
 import { entryUnavailableReasonMessage } from '../utils/entryAvailabilityDisplay'
 import pageStyles from './TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
@@ -33,10 +30,6 @@ function EntryControlContent({
 }) {
   const list = useEntryControlStudents(examId)
   const recent = useEntryRecentRecords()
-  const [rooms, setRooms] = useState<Room[]>([])
-  const [roomsLoading, setRoomsLoading] = useState(true)
-  const [roomsError, setRoomsError] = useState<string | null>(null)
-  const [roomsVersion, setRoomsVersion] = useState(0)
   const [studentId, setStudentId] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<'verification' | 'attendance'>(
     'verification',
@@ -49,17 +42,8 @@ function EntryControlContent({
   const tabsId = useId()
   const methodTabsId = useId()
   const exam = list.response?.exam
-  const roomOptions =
-    exam?.room && !rooms.some((room) => room.id === exam.room?.id)
-      ? [exam.room, ...rooms]
-      : rooms
   const backPath = fromTeacher ? '/teacher/exams' : '/collaborator'
   const backLabel = fromTeacher ? 'Mis exámenes' : 'Colaborador'
-
-  function changeRoom(roomId: number) {
-    setStudentId(null)
-    list.setRoomId(roomId)
-  }
 
   function selectTab(tab: 'verification' | 'attendance') {
     if (tab === activeTab) return
@@ -83,42 +67,7 @@ function EntryControlContent({
       list.reload()
   }
 
-  const roomSelector = (
-    <EntryControlledRoomSelector
-      roomId={list.roomId}
-      rooms={roomOptions}
-      loading={roomsLoading}
-      error={roomsError}
-      disabled={qrProcessing}
-      onChange={changeRoom}
-      onReload={() => setRoomsVersion((current) => current + 1)}
-    />
-  )
-
-  useEffect(() => {
-    let active = true
-    setRoomsLoading(true)
-    setRoomsError(null)
-    void getRooms()
-      .then((result) => {
-        if (active) setRooms(result)
-      })
-      .catch((cause: unknown) => {
-        if (active)
-          setRoomsError(
-            getEntryControlErrorMessage(
-              cause,
-              'No se pudo consultar el catálogo de ambientes.',
-            ),
-          )
-      })
-      .finally(() => {
-        if (active) setRoomsLoading(false)
-      })
-    return () => {
-      active = false
-    }
-  }, [roomsVersion])
+  const controlledRoom = <EntryControlledRoom room={exam?.room} />
 
   return (
     <main className={`${pageStyles.page} ${styles.page}`}>
@@ -209,7 +158,7 @@ function EntryControlContent({
             <EntryControlStudentsList
               list={list}
               onView={setStudentId}
-              roomSelector={roomSelector}
+              controlledRoom={controlledRoom}
             />
           ) : null}
         </div>
@@ -225,7 +174,7 @@ function EntryControlContent({
           >
             <h2>Registro de asistencia</h2>
             <div className={qrStyles.toolbar}>
-              {roomSelector}
+              {controlledRoom}
               <button
                 type="button"
                 className={sharedStyles.secondaryButton}
@@ -237,7 +186,8 @@ function EntryControlContent({
             </div>
             {list.roomId == null ? (
               <p className={sharedStyles.note} role="status">
-                Selecciona el ambiente controlado antes de registrar un ingreso.
+                El examen debe tener un ambiente asignado para registrar un
+                ingreso.
               </p>
             ) : null}
             {list.response?.summary ? (
@@ -336,7 +286,9 @@ function EntryControlContent({
                 <div className={styles.message} role="status">
                   <h3>Escaneo no disponible</h3>
                   <p>
-                    {entryUnavailableReasonMessage(exam.entry_unavailable_reason)}
+                    {entryUnavailableReasonMessage(
+                      exam.entry_unavailable_reason,
+                    )}
                   </p>
                 </div>
               ) : null}
@@ -350,7 +302,6 @@ function EntryControlContent({
             examId={examId}
             studentId={studentId}
             roomId={list.roomId}
-            rooms={roomOptions}
             allowManualEntry={activeTab === 'attendance'}
             onManualResult={(response, student) =>
               handleResult(response, 'MANUAL', student)

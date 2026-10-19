@@ -9,7 +9,7 @@ import styles from '../pages/EntryControlPage.module.css'
 type Props = {
   list: ReturnType<typeof useEntryControlStudents>
   onView: (studentId: number) => void
-  roomSelector?: ReactNode
+  controlledRoom?: ReactNode
   manual?: boolean
   disabled?: boolean
   showSummary?: boolean
@@ -18,7 +18,7 @@ type Props = {
 export function EntryControlStudentsList({
   list,
   onView,
-  roomSelector,
+  controlledRoom,
   manual = false,
   disabled = false,
   showSummary = true,
@@ -35,7 +35,7 @@ export function EntryControlStudentsList({
       ) : null}
       <section className={sharedStyles.section} aria-labelledby={titleId}>
         <h2 id={titleId}>{manual ? 'Registro manual' : 'Estudiantes'}</h2>
-        <div className={roomSelector ? styles.filters : styles.manualSearch}>
+        <div className={controlledRoom ? styles.filters : styles.manualSearch}>
           <div className={styles.field}>
             <label htmlFor={searchId}>Buscar estudiante</label>
             <input
@@ -47,7 +47,7 @@ export function EntryControlStudentsList({
               onChange={(event) => list.setQuery(event.target.value)}
             />
           </div>
-          {roomSelector}
+          {controlledRoom}
         </div>
         {list.error ? (
           <section className={pageStyles.state} role="alert">

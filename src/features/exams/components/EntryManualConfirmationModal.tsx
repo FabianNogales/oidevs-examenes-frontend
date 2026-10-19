@@ -61,7 +61,7 @@ export function EntryManualConfirmationModal({
       if (!controller.signal.aborted && mounted.current) {
         setError(
           getRequestStatus(cause) === 422
-            ? 'Los parámetros del registro no son válidos. Vuelve al detalle y revisa el ambiente seleccionado.'
+            ? 'Los parámetros del registro no son válidos. Actualiza el control de ingreso y vuelve a intentarlo.'
             : getEntryControlErrorMessage(
                 cause,
                 'No se pudo confirmar el registro. Consulta el historial antes de volver a intentarlo.',

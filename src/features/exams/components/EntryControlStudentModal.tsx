@@ -12,7 +12,6 @@ import type {
   EntryControlStudentResponse,
 } from '../types/entryControl.types'
 import type { EntryManualResponse } from '../types/entryRegistration.types'
-import type { Room } from '../types/exam.types'
 import {
   eligibilityDisplay,
   enrollmentDisplay,
@@ -35,7 +34,6 @@ type Props = {
   examId: number
   studentId: number
   roomId: number | undefined
-  rooms: Room[]
   onClose: () => void
   allowManualEntry?: boolean
   onManualResult?: (
@@ -48,7 +46,6 @@ export function EntryControlStudentModal({
   examId,
   studentId,
   roomId,
-  rooms,
   onClose,
   allowManualEntry = false,
   onManualResult,
@@ -119,11 +116,9 @@ export function EntryControlStudentModal({
   const exam = detail?.exam
   const photoUrl = student?.profile_photo_url?.trim()
   const assignedRoom =
-    rooms.find((room) => room.id === student?.assigned_room_id) ??
-    (exam?.room?.id === student?.assigned_room_id ? exam?.room : null)
+    exam?.room?.id === student?.assigned_room_id ? exam?.room : null
   const controlledRoom =
-    rooms.find((room) => room.id === student?.controlled_room_id) ??
-    (exam?.room?.id === student?.controlled_room_id ? exam?.room : null)
+    exam?.room?.id === student?.controlled_room_id ? exam?.room : null
   const ineligible =
     student?.eligibility_status === 'INELIGIBLE' ||
     student?.blockers.some((blocker) => blocker.code === 'INELIGIBLE')
