@@ -5,7 +5,6 @@ import {
 } from '@/features/auth/utils/apiErrors'
 import { httpClient } from '@/shared/api/httpClient'
 import type {
-  BulkEligibilityResponse,
   BulkEligibilityResult,
   EligibilitiesResponse,
   EligibilityReason,
@@ -15,19 +14,25 @@ import type {
 } from '../types/eligibility.types'
 import { getSafeEligibilityMessage } from '../utils/eligibilityErrors'
 
+export const ELIGIBILITY_CONFLICT_MESSAGE =
+  'Esta habilitación fue modificada mientras la estabas editando. Actualiza los datos antes de guardar nuevamente.'
+
 export class EligibilityApiError extends Error {
   status: number | null
   fieldErrors: Record<string, string>
+  outcomeUnknown: boolean
 
   constructor(
     message: string,
     status: number | null = null,
     fieldErrors: Record<string, string> = {},
+    outcomeUnknown = false,
   ) {
     super(message)
     this.name = 'EligibilityApiError'
     this.status = status
     this.fieldErrors = fieldErrors
+    this.outcomeUnknown = outcomeUnknown
   }
 }
 
@@ -36,6 +41,9 @@ function mapEligibilityError(
   fallback: string,
 ): EligibilityApiError {
   const status = getRequestStatus(error)
+  if (status === 409) {
+    return new EligibilityApiError(ELIGIBILITY_CONFLICT_MESSAGE, status)
+  }
   if (status === 403) {
     return new EligibilityApiError(
       'No tienes autorización para gestionar las habilitaciones de este examen.',
@@ -86,12 +94,17 @@ export async function getExamEligibilities(
     )
     if (!Array.isArray(response.data.data))
       throw new Error('Invalid eligibilities response')
-    return response.data.data.map((item) => ({
-      ...item,
-      reason_code: item.reason_code ?? null,
-      reason: item.reason ?? null,
-      observations: item.observations ?? null,
-    }))
+    return response.data.data.map((item) => {
+      if (!Number.isSafeInteger(item.revision) || item.revision < 1) {
+        throw new Error('Invalid eligibility revision')
+      }
+      return {
+        ...item,
+        reason_code: item.reason_code ?? null,
+        reason: item.reason ?? null,
+        observations: item.observations ?? null,
+      }
+    })
   } catch (error) {
     throw mapEligibilityError(
       error,
@@ -132,6 +145,59 @@ export async function getEligibilityReasons(
   }
 }
 
+const UNKNOWN_BULK_OUTCOME =
+  'No se pudo confirmar el resultado de la carga. Revisa las habilitaciones antes de volver a procesar el archivo.'
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isBulkEligibilityResult(value: unknown): value is BulkEligibilityResult {
+  if (!isRecord(value)) return false
+  const { total_rows: total, updated_rows: updated, failed_rows: failed, errors } = value
+  if (
+    ![total, updated, failed].every((count) => Number.isSafeInteger(count) && (count as number) >= 0) ||
+    !Array.isArray(errors) ||
+    total !== (updated as number) + (failed as number) ||
+    failed !== errors.length
+  ) return false
+
+  return errors.every((issue: unknown) =>
+    isRecord(issue) &&
+    Number.isSafeInteger(issue.row) && (issue.row as number) >= 1 &&
+    (typeof issue.sis_code === 'string' || issue.sis_code === null) &&
+    isRecord(issue.messages) &&
+    Object.values(issue.messages).every((messages: unknown) =>
+      Array.isArray(messages) && messages.every((message: unknown) => typeof message === 'string'),
+    ),
+  )
+}
+
+export function getBulkEligibilityNotice(result: BulkEligibilityResult): {
+  type: 'success' | 'info'
+  title: string
+  message: string
+} {
+  if (result.updated_rows > 0 && result.failed_rows === 0) {
+    return {
+      type: 'success', title: 'Carga completada',
+      message: `Carga completada: ${result.updated_rows} ${result.updated_rows === 1 ? 'fila procesada' : 'filas procesadas'} correctamente.`,
+    }
+  }
+  if (result.updated_rows > 0) {
+    return {
+      type: 'info', title: 'Carga parcial',
+      message: `Carga parcial: ${result.updated_rows} ${result.updated_rows === 1 ? 'fila actualizada' : 'filas actualizadas'} y ${result.failed_rows} ${result.failed_rows === 1 ? 'rechazada' : 'rechazadas'}.`,
+    }
+  }
+  return {
+    type: 'info', title: 'Sin cambios aplicados',
+    message: result.failed_rows > 0
+      ? 'No se aplicaron cambios. Revisa los errores por fila.'
+      : 'No se aplicaron cambios. No se procesaron registros.',
+  }
+}
+
 export async function bulkUpdateExamEligibilities(
   examId: number,
   file: File,
@@ -141,41 +207,22 @@ export async function bulkUpdateExamEligibilities(
     const formData = new FormData()
     formData.append('file', file)
     // The browser supplies multipart/form-data with its boundary.
-    const response = await httpClient.post<BulkEligibilityResponse>(
+    const response = await httpClient.post<unknown>(
       `/exams/${examId}/eligibilities/bulk`,
       formData,
       { signal },
     )
-    const result = response.data.data
-    if (
-      !result ||
-      !Array.isArray(result.errors) ||
-      ![result.total_rows, result.updated_rows, result.failed_rows].every(
-        (count) => Number.isSafeInteger(count) && count >= 0,
-      ) ||
-      result.errors.some(
-        (issue) =>
-          !issue ||
-          !Number.isSafeInteger(issue.row) ||
-          issue.row < 1 ||
-          typeof issue.sis_code !== 'string' ||
-          !issue.messages ||
-          typeof issue.messages !== 'object' ||
-          Array.isArray(issue.messages) ||
-          Object.values(issue.messages).some(
-            (messages) => !Array.isArray(messages) ||
-              messages.some((message) => typeof message !== 'string'),
-          ),
-      )
-    ) {
-      throw new Error('Invalid bulk eligibilities response')
+    if (!isRecord(response.data) || typeof response.data.message !== 'string' ||
+      !isBulkEligibilityResult(response.data.data)) {
+      throw new EligibilityApiError(UNKNOWN_BULK_OUTCOME, response.status, {}, true)
     }
-    return result
+    return response.data.data
   } catch (error) {
-    throw mapEligibilityError(
-      error,
-      'No se pudo procesar el archivo. Inténtalo nuevamente.',
-    )
+    if (error instanceof EligibilityApiError) throw error
+    const mapped = mapEligibilityError(error, 'No se pudo procesar el archivo. Revisa la solicitud antes de continuar.')
+    if ([400, 401, 403, 404, 413, 415, 419, 422, 429].includes(mapped.status ?? 0)) throw mapped
+    // A missing/invalid response or a server failure does not prove rollback.
+    throw new EligibilityApiError(UNKNOWN_BULK_OUTCOME, mapped.status, {}, true)
   }
 }
 

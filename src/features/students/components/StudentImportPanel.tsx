@@ -4,7 +4,9 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   confirmStudentImport,
   getStudentImportErrorMessage,
+  getStudentImportOutcome,
   previewStudentImport,
+  StudentImportError,
 } from '@/features/students/api/studentImportApi'
 import { CsvDropzone } from '@/features/students/components/CsvDropzone'
 import { ImportColumnsGuide } from '@/features/students/components/ImportColumnsGuide'
@@ -22,14 +24,23 @@ import {
   validateStudentImportFile,
 } from '@/features/students/utils/csvValidation'
 import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import {
+  captureStudentImportContext,
+  clearStudentImportDraft,
+  isCurrentStudentImportContext,
+  saveStudentImportDraft,
+  subscribeStudentImportInvalidation,
+  useStudentImportDraft,
+  useStudentImportContextVersion,
+  STUDENT_IMPORT_DRAFT_TTL,
+} from '@/features/students/utils/studentImportDraft'
 
-type ImportFlowState = 'idle' | 'selected' | 'validating' | 'preview' | 'confirming' | 'success'
+type ImportFlowState = 'idle' | 'selected' | 'validating' | 'preview' | 'confirming' | 'success' | 'unknown'
 
-export type ImportStep = 'select' | 'preview' | 'success'
+export type ImportStep = 'select' | 'preview' | 'success' | 'unknown'
 
 type RowFilter = 'all' | 'valid' | 'invalid'
 
-const IMPORT_STORAGE_KEY = 'eida_last_import_preview'
 const STUDENTS_PATH = '/admin/students/manage'
 const PAGE_SIZE = 10
 const EXPORT_COLUMNS: StudentImportColumn[] = [
@@ -42,18 +53,9 @@ const EXPORT_COLUMNS: StudentImportColumn[] = [
   'profile_photo',
 ]
 
-function readSavedPreview(): StudentImportPreview | null {
-  try {
-    const saved = localStorage.getItem(IMPORT_STORAGE_KEY)
-    return saved ? (JSON.parse(saved) as StudentImportPreview) : null
-  } catch {
-    localStorage.removeItem(IMPORT_STORAGE_KEY)
-    return null
-  }
-}
-
 function toStep(flowState: ImportFlowState): ImportStep {
   if (flowState === 'success') return 'success'
+  if (flowState === 'unknown') return 'unknown'
   if (flowState === 'preview' || flowState === 'confirming') return 'preview'
   return 'select'
 }
@@ -63,25 +65,76 @@ export function StudentImportPanel({
 }: {
   onStepChange?: (step: ImportStep) => void
 }) {
+  const version = useStudentImportContextVersion()
+  return <StudentImportContent key={version} onStepChange={onStepChange} />
+}
+
+function StudentImportContent({
+  onStepChange,
+}: {
+  onStepChange?: (step: ImportStep) => void
+}) {
   const navigate = useNavigate()
   const location = useLocation()
   const { notify } = useAuth()
+  const storedDraft = useStudentImportDraft()
+  const [importContext] = useState(captureStudentImportContext)
+  const operation = useRef(0)
+  const mounted = useRef(true)
   const isNewView = location.state?.view === 'new'
   const confirmationRequestInFlight = useRef(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [validationMessage, setValidationMessage] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<StudentImportConfirmation | null>(null)
+  const [unknownMessage, setUnknownMessage] = useState<string | null>(null)
+  const [reviewedUnknownResult, setReviewedUnknownResult] = useState(false)
+  const [previewExpiresAt, setPreviewExpiresAt] = useState<number | null>(() =>
+    isNewView ? null : storedDraft?.expiresAt ?? null,
+  )
   const [preview, setPreview] = useState<StudentImportPreview | null>(() =>
-    isNewView ? null : readSavedPreview()
+    isNewView ? null : storedDraft?.preview ?? null,
   )
   const [flowState, setFlowState] = useState<ImportFlowState>(() =>
-    (!isNewView && readSavedPreview()) ? 'preview' : 'idle',
+    (!isNewView && storedDraft) ? 'preview' : 'idle',
   )
   useEffect(() => {
-    if (preview && flowState !== 'success') {
-      localStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify(preview))
-    }
-  }, [preview, flowState])
+    mounted.current = true
+    const unsubscribe = subscribeStudentImportInvalidation(() => {
+      operation.current++
+      setSelectedFile(null)
+      setPreview(null)
+      setConfirmation(null)
+      setUnknownMessage(null)
+      setValidationMessage(null)
+      setPreviewExpiresAt(null)
+      setFlowState('idle')
+    })
+    return () => { mounted.current = false; unsubscribe() }
+  }, [])
+
+  useEffect(() => {
+    if (previewExpiresAt === null || flowState === 'success' || flowState === 'unknown' || flowState === 'confirming') return
+    const timer = setTimeout(() => {
+      if (!mounted.current || !isCurrentStudentImportContext(importContext)) return
+      operation.current++
+      clearStudentImportDraft()
+      setPreview(null)
+      setSelectedFile(null)
+      setPreviewExpiresAt(null)
+      setValidationMessage('La previsualización caducó después de 60 minutos. Selecciona el archivo nuevamente.')
+      setFlowState('idle')
+    }, Math.max(0, previewExpiresAt - Date.now()))
+    return () => clearTimeout(timer)
+  }, [previewExpiresAt, flowState, importContext])
+
+  function isActiveOperation(request: number) {
+    return mounted.current && operation.current === request && isCurrentStudentImportContext(importContext)
+  }
+
+  function discardDraft() {
+    clearStudentImportDraft()
+    setPreviewExpiresAt(null)
+  }
 
   useEffect(() => {
     onStepChange?.(toStep(flowState))
@@ -90,9 +143,9 @@ export function StudentImportPanel({
   const isValidating = flowState === 'validating'
   const isConfirming = flowState === 'confirming'
   const isProcessing = isValidating || isConfirming
-  const canConfirm = preview !== null && preview.valid_rows > 0 && !isProcessing
-  const showReview = preview !== null && flowState !== 'success'
-  const showInitialSelection = !showReview && flowState !== 'success'
+  const canConfirm = preview !== null && preview.valid_rows > 0 && flowState === 'preview'
+  const showReview = preview !== null && flowState !== 'success' && flowState !== 'unknown'
+  const showInitialSelection = !showReview && flowState !== 'success' && flowState !== 'unknown'
 
   function handleFileSelected(file: File) {
     const validation = validateStudentImportFile(file)
@@ -103,6 +156,7 @@ export function StudentImportPanel({
       return
     }
     setSelectedFile(file)
+    discardDraft()
     setValidationMessage(null)
     setPreview(null)
     setConfirmation(null)
@@ -110,15 +164,19 @@ export function StudentImportPanel({
   }
 
   function clearSelection() {
+    operation.current++
+    discardDraft()
     setSelectedFile(null)
     setValidationMessage(null)
     setPreview(null)
     setConfirmation(null)
+    setUnknownMessage(null)
+    setReviewedUnknownResult(false)
     setFlowState('idle')
   }
 
   function handleCancel() {
-    localStorage.removeItem(IMPORT_STORAGE_KEY)
+    clearSelection()
     navigate(STUDENTS_PATH)
   }
 
@@ -127,18 +185,20 @@ export function StudentImportPanel({
   }
 
   async function handleValidate() {
-    if (!selectedFile) {
+    if (!selectedFile || !isCurrentStudentImportContext(importContext)) {
       notify('error', 'Selecciona un archivo CSV para continuar.')
       return
     }
 
     setFlowState('validating')
+    const request = ++operation.current
     setValidationMessage(null)
     setPreview(null)
     setConfirmation(null)
 
     try {
       const validation = await validateStudentImportCsv(selectedFile)
+      if (!isActiveOperation(request)) return
 
       if (!validation.isValid) {
         notify('error', getInvalidFileMessage())
@@ -147,48 +207,72 @@ export function StudentImportPanel({
       }
 
       const nextPreview = await previewStudentImport(selectedFile)
+      if (!isActiveOperation(request)) return
+      const saved = saveStudentImportDraft(nextPreview, importContext)
+      setPreviewExpiresAt(saved?.expiresAt ?? Date.now() + STUDENT_IMPORT_DRAFT_TTL)
 
       setPreview(nextPreview)
       setFlowState('preview')
       setValidationMessage(buildPreviewMessage(nextPreview))
 
       if (nextPreview.valid_rows > 0) {
-        notify('success', 'Vista previa generada correctamente.')
+        notify(saved ? 'success' : 'info', saved ? 'Vista previa generada correctamente.'
+          : 'Vista previa generada. Solo estará disponible en esta pantalla; no pudo guardarse temporalmente.')
         return
       }
 
-      notify('info', 'No hay estudiantes listos para importar.')
+      notify('info', saved ? 'No hay estudiantes listos para importar.'
+        : 'No hay estudiantes listos para importar. La previsualización no pudo guardarse temporalmente.')
     } catch (error) {
+      if (!isActiveOperation(request)) return
       notify('error', getStudentImportErrorMessage(error))
       setFlowState('selected')
     }
   }
 
   async function handleConfirm() {
-    if (!selectedFile || !canConfirm || confirmationRequestInFlight.current) {
+    if (!selectedFile || !canConfirm || confirmationRequestInFlight.current ||
+      !isCurrentStudentImportContext(importContext) ||
+      (previewExpiresAt !== null && Date.now() >= previewExpiresAt)) {
       return
     }
 
     confirmationRequestInFlight.current = true
+    // A reload or navigation during the POST must not recover a potentially applied import.
+    clearStudentImportDraft()
+    const request = ++operation.current
     setFlowState('confirming')
 
     try {
       const result = await confirmStudentImport(selectedFile)
+      if (!isActiveOperation(request)) return
+      discardDraft()
 
       setConfirmation(result)
-      setPreview(result as any)
       setFlowState('success')
       setValidationMessage(null)
-      localStorage.removeItem(IMPORT_STORAGE_KEY)
 
-      notify('success', `Importación completada: ${result.imported_rows} estudiantes registrados.`)
+      const outcome = getStudentImportOutcome(result)
+      notify(outcome.kind === 'complete' && !outcome.auditWarning ? 'success' : 'info',
+        `${outcome.title}. ${outcome.message}${outcome.auditWarning ? ' Revisa las advertencias del resumen de auditoría.' : ''}`)
     } catch (error) {
-      notify('error', getStudentImportErrorMessage(error))
-      setFlowState('preview')
+      if (!isActiveOperation(request)) return
+      const message = getStudentImportErrorMessage(error)
+      notify('error', message)
+      if (error instanceof StudentImportError && error.outcome === 'rejected') {
+        setValidationMessage(message)
+        setFlowState('preview')
+      } else {
+        discardDraft()
+        setUnknownMessage(message)
+        setFlowState('unknown')
+      }
     } finally {
       confirmationRequestInFlight.current = false
     }
   }
+
+  if (!isCurrentStudentImportContext(importContext)) return null
 
   return (
     <section className={styles.panel} aria-label="Archivo de estudiantes">
@@ -261,6 +345,34 @@ export function StudentImportPanel({
           onImportAnotherFile={handleImportAnotherFile}
           onBackToPanel={() => navigate(STUDENTS_PATH)}
         />
+      ) : null}
+
+      {flowState === 'unknown' ? (
+        <section aria-labelledby="unknown-import-title">
+          <div className={styles.reviewMessage} data-tone="warning" role="alert">
+            <h2 id="unknown-import-title">Resultado de importación no confirmado</h2>
+            <p>{unknownMessage}</p>
+          </div>
+          <p>
+            <a href={STUDENTS_PATH} target="_blank" rel="noopener noreferrer">
+              Revisar Gestión de estudiantes en otra pestaña
+            </a>
+          </p>
+          <label>
+            <input type="checkbox" checked={reviewedUnknownResult}
+              onChange={(event) => setReviewedUnknownResult(event.target.checked)} />
+            Ya revisé el listado de estudiantes y comprobé el resultado antes de importar otro archivo.
+          </label>
+          <div className={styles.panelActions}>
+            <button type="button" className={styles.cancelButton} onClick={() => navigate(STUDENTS_PATH)}>
+              Ir a Gestión de estudiantes
+            </button>
+            <button type="button" className={styles.continueButton}
+              disabled={!reviewedUnknownResult} onClick={handleImportAnotherFile}>
+              Iniciar una nueva importación
+            </button>
+          </div>
+        </section>
       ) : null}
     </section>
   )

@@ -6,6 +6,7 @@ import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import {
   EligibilityApiError,
   bulkUpdateExamEligibilities,
+  getBulkEligibilityNotice,
   updateExamEligibility,
 } from '../api/eligibilitiesApi'
 import { EligibilityTable } from '../components/EligibilityTable'
@@ -78,7 +79,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     } catch (cause) {
       if (
         !signal.aborted &&
-        !(cause instanceof EligibilityApiError && cause.status === 422)
+        !(cause instanceof EligibilityApiError && [409, 422].includes(cause.status ?? 0))
       ) {
         notify(
           'error',
@@ -105,7 +106,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     } catch (cause) {
       if (!signal.aborted) {
         notify(
-          'error',
+          cause instanceof EligibilityApiError && cause.outcomeUnknown ? 'info' : 'error',
           cause instanceof Error
             ? cause.message
             : 'No se pudo procesar el archivo.',
@@ -115,10 +116,8 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     }
     if (!signal.aborted) {
       if (result.updated_rows > 0) void list.reload()
-      notify(
-        result.updated_rows > 0 ? 'success' : 'info',
-        `Carga procesada: ${result.updated_rows} actualizados y ${result.failed_rows} con errores.`,
-      )
+      const notice = getBulkEligibilityNotice(result)
+      notify(notice.type, notice.message)
     }
     return result
   }
@@ -298,6 +297,13 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
           <BulkEligibilitiesModal
             onClose={() => setBulkOpen(false)}
             onProcess={processFile}
+            listLoading={list.loading}
+            listError={list.error}
+            onReload={list.reload}
+            onReview={() => {
+              setBulkOpen(false)
+              void list.reload()
+            }}
           />
         ) : null}
       </section>

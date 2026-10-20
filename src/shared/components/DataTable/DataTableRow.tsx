@@ -4,6 +4,7 @@ import styles from './DataTable.module.css'
 
 export function DataTableRow<T extends BaseTableEntity>({
   item,
+  viewActionLabel = 'Ver perfil',
   columns,
   profilePath,
   onViewProfile,
@@ -70,7 +71,7 @@ export function DataTableRow<T extends BaseTableEntity>({
                 className={styles.btnViewProfile}
                 onClick={handleProfileClick}
               >
-                Ver perfil
+                {viewActionLabel}
               </button>
             )}
 

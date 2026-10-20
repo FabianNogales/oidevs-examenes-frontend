@@ -25,6 +25,7 @@ export interface TablePaginationMeta {
 }
 
 export interface DataTableRowProps<T extends BaseTableEntity> {
+  viewActionLabel?: string
   item: T
   columns: readonly TableColumnDef<T>[]
   profilePath?: string
@@ -33,6 +34,7 @@ export interface DataTableRowProps<T extends BaseTableEntity> {
 }
 
 export interface DataTableProps<T extends BaseTableEntity> {
+  viewActionLabel?: string
   columns: readonly TableColumnDef<T>[]
   data: readonly T[]
   loading: boolean

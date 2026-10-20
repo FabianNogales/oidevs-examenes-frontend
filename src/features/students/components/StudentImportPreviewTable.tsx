@@ -25,10 +25,6 @@ function tokenize(text: string): string[] {
   return text.toLowerCase().split(/[^a-záéíóúñ0-9_]+/).filter(Boolean)
 }
 
-function toCellMessage(error: string): string {
-  return /existe|registrad|duplicad/i.test(error) ? 'Ya existe' : error
-}
-
 function mapRowErrors(row: StudentImportPreviewRow) {
   const byColumn: Partial<Record<StudentImportColumn, string>> = {}
   const unmatched: string[] = []
@@ -39,7 +35,7 @@ function mapRowErrors(row: StudentImportPreviewRow) {
       c.keywords.some((k) => tokens.includes(k)),
     )
     if (column && !byColumn[column.key]) {
-      byColumn[column.key] = toCellMessage(error)
+      byColumn[column.key] = error
     } else {
       unmatched.push(error)
     }

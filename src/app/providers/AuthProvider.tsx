@@ -10,6 +10,12 @@ import { AuthContext } from '@/app/providers/AuthContext'
 import { Snackbar } from '@/shared/components/Snackbar'
 import { getMockCurrentUser } from '@/features/auth/mocks/currentUser.mock'
 import { getRequestStatus } from '@/features/auth/utils/apiErrors'
+import {
+  invalidateStudentImportSession,
+  removeLegacyStudentImportPreview,
+  setStudentImportIdentity,
+  startStudentImportSessionSync,
+} from '@/features/students/utils/studentImportDraft'
 import type {
   AuthNotice,
   AuthNoticeType,
@@ -44,12 +50,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           ? getMockCurrentUser()
           : await getCurrentUser()
         if (version !== sessionVersion.current) return null
+        setStudentImportIdentity(currentUser)
         setUser(currentUser)
         setSessionError(false)
         return currentUser
       } catch (error) {
         if (version === sessionVersion.current) {
           if (getRequestStatus(error) === 401) {
+            invalidateStudentImportSession()
             setUser(null)
             setSessionError(false)
           } else {
@@ -80,9 +88,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const clearSession = useCallback(() => {
     sessionVersion.current += 1
+    invalidateStudentImportSession()
     setUser(null)
     setSessionError(false)
   }, [])
+
+  useEffect(() => startStudentImportSessionSync(() => {
+    sessionVersion.current += 1
+    setUser(null)
+    setSessionError(false)
+  }), [])
 
   const notify = useCallback((type: AuthNoticeType, message: string) => {
     setNotice({
@@ -100,6 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let isMounted = true
 
     async function restoreSession() {
+      removeLegacyStudentImportPreview()
       try {
         await refreshUser()
         verifiedRouteKey.current = initialRouteKey.current
@@ -118,10 +134,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [refreshUser])
 
   const login = useCallback(async (credentials: LoginCredentials) => {
-    sessionVersion.current += 1
+    const version = ++sessionVersion.current
+    invalidateStudentImportSession()
     await requestLogin(credentials)
 
     const currentUser = await getCurrentUser()
+    if (version !== sessionVersion.current) throw new Error('El contexto de autenticación cambió.')
+    setStudentImportIdentity(currentUser)
     setUser(currentUser)
     setSessionError(false)
 
@@ -134,6 +153,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     setIsLoggingOut(true)
+    sessionVersion.current += 1
+    invalidateStudentImportSession()
 
     try {
       if (!env.useAuthMock) {
@@ -147,10 +168,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       sessionVersion.current += 1
       setUser(null)
       setSessionError(false)
+    } catch (error) {
+      activeVerification.current = null
+      await refreshUser()
+      throw error
     } finally {
       setIsLoggingOut(false)
     }
-  }, [isLoggingOut])
+  }, [isLoggingOut, refreshUser])
 
   const value = useMemo(
     () => ({

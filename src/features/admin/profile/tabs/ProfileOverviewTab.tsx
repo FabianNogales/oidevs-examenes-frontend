@@ -18,31 +18,31 @@ export function ProfileOverviewTab({ entity }: ProfileTabComponentProps) {
     {
       id: 'first_names',
       label: 'Nombre',
-      value: entity.first_names,
+      value: entity.first_names?.trim() || 'No registrado',
       icon: 'user',
     },
     {
       id: 'sis',
       label: 'Código institucional (SIS)',
-      value: entity.institutional_code,
+      value: entity.institutional_code?.trim() || 'No registrado',
       icon: 'institution',
     },
     {
       id: 'last_names',
       label: 'Apellidos',
-      value: entity.last_names,
+      value: entity.last_names?.trim() || 'No registrado',
       icon: 'user',
     },
     {
       id: 'career',
       label: entity.role === 'STUDENT' ? 'Carrera' : 'Unidad / Departamento',
-      value: entity.career_name || 'Ingeniería de Sistemas',
+      value: entity.career_name?.trim() || 'Información no disponible',
       icon: 'career',
     },
     {
       id: 'email',
       label: 'Correo electrónico',
-      value: entity.email,
+      value: entity.email?.trim() || 'No registrado',
       icon: 'mail',
     },
     {
@@ -64,7 +64,7 @@ export function ProfileOverviewTab({ entity }: ProfileTabComponentProps) {
     {
       id: 'ci',
       label: 'Carnet de Identidad (CI)',
-      value: entity.identity_number || 'No registrado',
+      value: entity.identity_number?.trim() || 'No registrado',
       icon: 'id-card',
     },
     {

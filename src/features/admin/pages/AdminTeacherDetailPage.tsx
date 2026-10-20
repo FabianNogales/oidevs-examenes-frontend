@@ -35,7 +35,6 @@ function mapTeacherToUnifiedProfile(data: Teacher): UnifiedEntityProfile {
     email: data.email ?? '',
     status: data.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
     role: 'TEACHER',
-    career_name: 'Departamento de Informática y Sistemas',
   }
 }
 

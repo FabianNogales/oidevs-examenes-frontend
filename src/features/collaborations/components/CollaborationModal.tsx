@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
+import { trapDialogFocus } from '@/shared/utils/trapDialogFocus'
 import modalStyles from '@/features/students/components/AddStudentsModal.module.css'
 
 type Props = {
@@ -30,6 +31,9 @@ export function CollaborationModal({
       previousFocus?.focus()
     }
   }, [])
+  useEffect(() => {
+    if (busy) dialog.current?.focus()
+  }, [busy])
 
   return (
     <div
@@ -51,33 +55,7 @@ export function CollaborationModal({
             event.stopPropagation()
             if (!busy) onClose()
           }
-          if (event.key !== 'Tab') return
-          const elements = Array.from(
-            dialog.current?.querySelectorAll<HTMLElement>(
-              'button:not(:disabled), input:not(:disabled), a[href], [tabindex="0"]',
-            ) ?? [],
-          )
-          const first = elements[0]
-          const last = elements.at(-1)
-          if (!first || !last) {
-            event.preventDefault()
-            return
-          }
-          if (
-            event.shiftKey &&
-            (document.activeElement === first ||
-              document.activeElement === dialog.current)
-          ) {
-            event.preventDefault()
-            last.focus()
-          } else if (
-            !event.shiftKey &&
-            (document.activeElement === last ||
-              document.activeElement === dialog.current)
-          ) {
-            event.preventDefault()
-            first.focus()
-          }
+          trapDialogFocus(event)
         }}
       >
         <div className={modalStyles.header}>

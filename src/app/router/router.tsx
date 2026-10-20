@@ -78,6 +78,14 @@ export const router = createBrowserRouter([
                     element: <AdminManageUsersPage />,
                   },
                   {
+                    path: 'audit-logs',
+                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="audit-logs" /> } },
+                  },
+                  {
+                    path: 'careers',
+                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="careers" /> } },
+                  },
+                  {
                     path: 'users/history',
                     element: <AdminManageUsersPage />,
                   },

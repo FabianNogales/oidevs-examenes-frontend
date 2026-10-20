@@ -1,7 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { InfoCircleIcon, UserIcon } from '@/features/auth/components/AuthIcons'
 import { CollaborationModal as Modal } from '@/features/collaborations/components/CollaborationModal'
-import { EligibilityApiError } from '../api/eligibilitiesApi'
+import {
+  ELIGIBILITY_CONFLICT_MESSAGE,
+  EligibilityApiError,
+  getExamEligibilities,
+} from '../api/eligibilitiesApi'
 import { useEligibilityReasons } from '../hooks/useEligibilityReasons'
 import type {
   ExamEligibility,
@@ -25,10 +29,11 @@ type Props = {
 
 export function ManageEligibilityModal({
   examId,
-  eligibility,
+  eligibility: initialEligibility,
   onClose,
   onSave,
 }: Props) {
+  const [eligibility, setEligibility] = useState(initialEligibility)
   const [status, setStatus] = useState<EligibilityStatus>(eligibility.status)
   const catalog = useEligibilityReasons(examId)
   const [reasonCode, setReasonCode] = useState(eligibility.reason_code ?? '')
@@ -38,6 +43,8 @@ export function ManageEligibilityModal({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [conflict, setConflict] = useState(false)
+  const [current, setCurrent] = useState<ExamEligibility | null>(null)
   const request = useRef<AbortController | null>(null)
   const reasonInput = useRef<HTMLSelectElement>(null)
   const observationsInput = useRef<HTMLTextAreaElement>(null)
@@ -68,7 +75,7 @@ export function ManageEligibilityModal({
   }
 
   async function save() {
-    if (request.current || !changed) return
+    if (request.current || !changed || conflict) return
     if (invalidReason) {
       setFieldErrors({ reason_code: 'Selecciona un motivo actual del catálogo.' })
       reasonInput.current?.focus()
@@ -86,13 +93,16 @@ export function ManageEligibilityModal({
     setFieldErrors({})
     const payload: UpdateEligibilityPayload =
       status === 'ELIGIBLE'
-        ? { status: 'ELIGIBLE' }
-        : { status: 'INELIGIBLE', reason_code: reasonCode, observations }
+        ? { status: 'ELIGIBLE', revision: eligibility.revision }
+        : { status: 'INELIGIBLE', reason_code: reasonCode, observations, revision: eligibility.revision }
     try {
       await onSave(eligibility.student_id, payload, controller.signal)
     } catch (cause) {
       if (!controller.signal.aborted) {
-        if (
+        if (cause instanceof EligibilityApiError && cause.status === 409) {
+          setConflict(true)
+          setCurrent(null)
+        } else if (
           cause instanceof EligibilityApiError &&
           cause.status === 422
         ) {
@@ -114,6 +124,43 @@ export function ManageEligibilityModal({
     }
   }
 
+  async function loadCurrent() {
+    if (request.current) return
+    const controller = new AbortController()
+    request.current = controller
+    setBusy(true)
+    setError(null)
+    setCurrent(null)
+    try {
+      const rows = await getExamEligibilities(examId, controller.signal)
+      if (controller.signal.aborted) return
+      const row = rows.find((item) => item.student_id === eligibility.student_id)
+      if (!row) throw new Error('La habilitación ya no está disponible para tu cuenta.')
+      // Show the complete server snapshot first; keep the draft and its original revision.
+      setCurrent(row)
+    } catch (cause) {
+      if (!controller.signal.aborted) {
+        setError(cause instanceof Error ? cause.message : 'No se pudieron consultar los datos actuales.')
+      }
+    } finally {
+      if (request.current === controller) request.current = null
+      if (!controller.signal.aborted) setBusy(false)
+    }
+  }
+
+  function applyCurrent() {
+    if (!current || request.current) return
+    // This explicit discard replaces every editable value together with its revision.
+    setEligibility(current)
+    setStatus(current.status)
+    setReasonCode(current.reason_code ?? '')
+    setObservations(current.observations ?? '')
+    setFieldErrors({})
+    setError(null)
+    setConflict(false)
+    setCurrent(null)
+  }
+
   return (
     <div className={styles.manageModal}>
       <Modal title="Gestionar habilitación" onClose={close} busy={busy}>
@@ -126,6 +173,32 @@ export function ManageEligibilityModal({
           <p className={styles.modalSubtitle}>
             Actualiza el estado de habilitación del estudiante para este examen
           </p>
+          <p className={sharedStyles.note}>Revisión del formulario: {eligibility.revision}</p>
+          {conflict ? (
+            <section aria-label="Conflicto de habilitación">
+              <p className={sharedStyles.error} role="alert">{ELIGIBILITY_CONFLICT_MESSAGE}</p>
+              <button type="button" className={sharedStyles.secondaryButton} disabled={busy}
+                onClick={() => void loadCurrent()}>
+                Consultar datos actuales
+              </button>
+              {current ? (
+                <div className={styles.historicalReason}>
+                  <strong>Datos actuales del servidor — Revisión {current.revision}</strong>
+                  <dl>
+                    <dt>Estado</dt><dd>{current.status === 'ELIGIBLE' ? 'Habilitado' : 'Inhabilitado'}</dd>
+                    <dt>Motivo</dt><dd>{current.reason ?? 'Sin motivo'}</dd>
+                    <dt>Observaciones</dt><dd>{current.observations ?? 'Sin observaciones'}</dd>
+                    <dt>Evaluado por</dt><dd>{current.evaluated_by ?? 'No informado'}</dd>
+                    <dt>Fecha de evaluación</dt><dd>{current.evaluated_at ?? 'No informada'}</dd>
+                  </dl>
+                  <p>Tu borrador se conserva hasta que decidas descartarlo.</p>
+                  <button type="button" className={sharedStyles.secondaryButton} disabled={busy} onClick={applyCurrent}>
+                    Descartar borrador y cargar estos datos
+                  </button>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
           <section
             className={styles.studentSummary}
             aria-label="Datos del estudiante"
@@ -296,7 +369,7 @@ export function ManageEligibilityModal({
             <button
               type="submit"
               className={sharedStyles.primaryButton}
-              disabled={busy || !changed || invalidReason || invalidObservations}
+              disabled={busy || conflict || !changed || invalidReason || invalidObservations}
             >
               {busy ? 'Guardando…' : 'Guardar'}
             </button>

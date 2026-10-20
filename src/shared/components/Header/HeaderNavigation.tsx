@@ -3,13 +3,20 @@ import { NavLink, useLocation } from 'react-router'
 
 import type { HeaderNavigationProps } from './header.types'
 import styles from './Header.module.css'
+import { useStudentImportDraft } from '@/features/students/utils/studentImportDraft'
 
-export function HeaderNavigation({
+export function HeaderNavigation(props: HeaderNavigationProps) {
+  const location = useLocation()
+  return <HeaderNavigationContent key={location.pathname} {...props} />
+}
+
+function HeaderNavigationContent({
   items,
   onNavigate,
 }: HeaderNavigationProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
-  const [hasPendingImport, setHasPendingImport] = useState(false)
+  const draft = useStudentImportDraft()
+  const hasPendingImport = draft !== null
   const listRef = useRef<HTMLUListElement>(null)
   const location = useLocation()
 
@@ -23,16 +30,8 @@ export function HeaderNavigation({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    setOpenDropdown(null)
-    setHasPendingImport(!!localStorage.getItem('eida_last_import_preview'))
-  }, [location.pathname])
-
   const toggleDropdown = (label: string) => {
-    if (label === 'Estudiantes') {
-      setHasPendingImport(!!localStorage.getItem('eida_last_import_preview'))
-    }
-    setOpenDropdown((prev) => (prev === label ? null : label))
+    setOpenDropdown((previous) => previous === label ? null : label)
   }
 
   const dynamicItems = items.map(item => {
@@ -56,7 +55,7 @@ export function HeaderNavigation({
     if (childTo === '/admin/students/import') {
       const isNewView = location.state?.view === 'new'
       const isResumeView = location.state?.view === 'resume'
-      const hasPreview = !!localStorage.getItem('eida_last_import_preview')
+      const hasPreview = hasPendingImport
 
       if (childLabel === 'Ultima importacion') {
         return isResumeView || (!isNewView && hasPreview)

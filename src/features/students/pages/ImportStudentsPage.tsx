@@ -9,13 +9,15 @@ import {
 const BREADCRUMB_BY_STEP: Record<ImportStep, string> = {
   select: 'Importar estudiantes',
   preview: 'Vista previa',
-  success: 'Importación completada',
+  success: 'Resultado de importación',
+  unknown: 'Resultado no confirmado',
 }
 
 const TITLE_BY_STEP: Record<ImportStep, string> = {
   select: 'Importar estudiantes',
   preview: 'Vista previa de la última importación',
-  success: 'Importación completada',
+  success: 'Resultado de importación',
+  unknown: 'Resultado de importación no confirmado',
 }
 
 export function ImportStudentsPage() {
