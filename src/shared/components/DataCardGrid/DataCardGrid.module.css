@@ -1,0 +1,489 @@
+/* ==========================================================================
+   EIDA FLAT DESIGN 2.0 — UNIVERSAL DATA CARD GRID (2 Columnas x 5 Filas)
+   ========================================================================== */
+
+.gridContainerCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgb(var(--shadow-card-rgb, 23 37 84) / 5%);
+  font-family: var(--font-family);
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   BARRA DE BÚSQUEDA (Idéntica a DataTable)
+   ========================================================================== */
+.searchBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px 24px;
+  gap: 12px;
+  width: 100%;
+  background: var(--color-surface, #ffffff);
+  border-bottom: 1px solid var(--color-border, #dce5f2);
+}
+
+.searchInputWrapper {
+  position: relative;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  gap: 10px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-text-secondary, #52627a);
+  border-radius: 10px;
+  transition:
+    border-color var(--transition-fast, 150ms ease),
+    box-shadow var(--transition-fast, 150ms ease);
+}
+
+.searchInputWrapper:focus-within {
+  border-color: var(--brand-blue, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 15%);
+}
+
+.searchIcon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-secondary, #52627a);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--brand-navy, #172554);
+  font-size: 15px;
+  font-family: var(--font-family);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted, #5b6a80);
+}
+
+.searchButton,
+.clearButton,
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.searchButton {
+  background: var(--brand-blue, #2563eb);
+  color: var(--color-on-primary, #ffffff);
+  border: none;
+}
+
+.searchButton:hover:not(:disabled) {
+  background: var(--color-primary-hover, #1d4ed8);
+}
+
+.clearButton,
+.retryButton {
+  background: var(--color-surface, #ffffff);
+  color: var(--brand-navy, #172554);
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+}
+
+.clearButton:hover:not(:disabled),
+.retryButton:hover:not(:disabled) {
+  background: var(--brand-blue-light, #eaf3ff);
+}
+
+.searchResultBanner {
+  padding: 8px 24px;
+  background: var(--color-surface-muted, #f5fbff);
+  border-bottom: 1px solid var(--color-border, #dce5f2);
+  color: var(--color-text-secondary, #52627a);
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   GRILLA DE TARJETAS: 2 COLUMNAS x 5 FILAS (10 ítems por página)
+   ========================================================================== */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+  padding: 20px 24px;
+  background: var(--color-surface-muted, #f5fbff);
+}
+
+.cardItem {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgb(23 37 84 / 4%);
+  overflow: hidden;
+  transition:
+    transform var(--transition-fast, 150ms ease),
+    box-shadow var(--transition-fast, 150ms ease),
+    border-color var(--transition-fast, 150ms ease);
+}
+
+.cardItem:hover {
+  border-color: #93b4db;
+  box-shadow: 0 6px 16px rgb(23 37 84 / 8%);
+}
+
+.cardFieldsList {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/*
+  ALINEACIÓN HASTA LA LÍNEA ROJA:
+  La columna de la etiqueta tiene un ancho compacto fijo (por defecto 96px)
+  para que el contenido de la derecha comience exactamente en la línea roja.
+  Las filas de campos y el pie de acciones comparten la misma estructura.
+*/
+.fieldRow,
+.cardActionsRow {
+  display: grid;
+  grid-template-columns: var(--card-label-width, 96px) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+}
+
+.fieldRow {
+  border-bottom: 1px solid #eceff4;
+}
+
+.fieldRow:last-child {
+  border-bottom: none;
+}
+
+.fieldLabel {
+  color: var(--color-text-secondary, #52627a);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.fieldValue {
+  color: var(--brand-navy, #172554);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* Bloques de ancho completo como "Grupo 1" o "II/2026" */
+.fullWidthPillGray,
+.fullWidthPillBlue,
+.fullWidthPillBlueCentered {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fullWidthPillGray {
+  justify-content: center;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: var(--brand-navy, #172554);
+}
+
+.fullWidthPillBlue,
+.fullWidthPillBlueCentered {
+  border-radius: 8px;
+  background: var(--brand-blue-light, #eaf3ff);
+  color: var(--brand-cobalt, #0049a8);
+}
+
+.fullWidthPillBlue {
+  justify-content: flex-start;
+}
+
+/* Centra el texto también en el bloque azul de Gestión */
+.fullWidthPillBlueCentered {
+  justify-content: center;
+}
+
+/* Contenedor para mostrar dos datos cortos (ej. Grupo y Gestión) en la misma fila */
+.inlinePairedRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.inlineSecondaryLabel {
+  color: var(--color-text-secondary, #52627a);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  padding-left: 8px;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   PIE DE ACCIONES EXTENSIBLE EN LA TARJETA
+   ========================================================================== */
+.cardActionsRow {
+  background: #fafcff;
+  border-top: 1px solid #eceff4;
+}
+
+.cardActionsGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.actionBtnPrimary {
+  background: var(--brand-blue, #2563eb);
+  border: 1px solid var(--brand-blue, #2563eb);
+  color: #ffffff;
+}
+
+.actionBtnPrimary:hover:not(:disabled) {
+  background: var(--color-primary-hover, #1d4ed8);
+}
+
+.actionBtnSecondary,
+.actionBtnOutline {
+  background: #ffffff;
+  border: 1px solid #dce6f5;
+  color: var(--brand-blue, #2563eb);
+  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
+}
+
+.actionBtnSecondary:hover:not(:disabled),
+.actionBtnOutline:hover:not(:disabled) {
+  background: var(--brand-blue-light, #eaf3ff);
+  border-color: var(--brand-blue, #2563eb);
+}
+
+.actionBtnSuccess {
+  background: #ccf5d3;
+  border: 1.5px solid #2e7d32;
+  color: #14532d;
+}
+
+.actionBtnSuccess:hover:not(:disabled) {
+  background: #b5eec0;
+}
+
+.actionBtnDanger {
+  background: #ffd8dc;
+  border: 1.5px solid #d9384a;
+  color: #9e1c2e;
+}
+
+.actionBtnDanger:hover:not(:disabled) {
+  background: #ffc2c9;
+}
+
+/* ==========================================================================
+   PAGINADOR (Mismo diseño exacto que DataTable)
+   ========================================================================== */
+.paginationFooter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 14px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e6ebf2;
+}
+
+.paginationSummary {
+  color: #7c8ba1;
+  font-size: 13.5px;
+  font-weight: 400;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pageIndicator {
+  color: var(--brand-navy, #172554);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #edf2f9;
+  border-radius: 6px;
+  color: var(--brand-blue, #2563eb);
+  font-family: var(--font-family);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.pageButton:hover:not(:disabled) {
+  background: var(--brand-blue-light, #eaf3ff);
+  border-color: #cfe2ff;
+}
+
+.pageButton:disabled {
+  background: #ffffff;
+  border-color: #f1f5f9;
+  color: #64748b;
+  font-weight: 500;
+  box-shadow: none;
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   ESTADOS DE CARGA, VACÍO Y ERROR
+   ========================================================================== */
+.stateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--brand-white-warm, #fafafa);
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--color-border-soft, #dce8ff);
+  border-top-color: var(--brand-blue, #2563eb);
+  border-radius: 50%;
+  animation: cardGridSpin 0.75s linear infinite;
+}
+
+.emptyTitle {
+  color: var(--brand-navy, #172554);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.stateText {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary, #52627a);
+  font-size: 14px;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 24px;
+  padding: 14px 18px;
+  border: 1px solid var(--brand-pink, #d67a8c);
+  border-radius: 10px;
+  background: var(--brand-pink-light, #f7e9ed);
+  color: var(--brand-crimson, #8b1e3f);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes cardGridSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* En pantallas menores a 900px pasa a 1 columna manteniendo la alineación interna */
+@media (max-width: 900px) {
+  .cardsGrid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .searchBar {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+
+  .searchInputWrapper {
+    flex-basis: 100%;
+  }
+
+  .searchButton,
+  .clearButton {
+    flex: 1;
+  }
+
+  .paginationFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .paginationControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
