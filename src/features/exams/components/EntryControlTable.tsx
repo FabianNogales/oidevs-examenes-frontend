@@ -17,6 +17,7 @@ type Props = {
   loading: boolean
   error: string | null
   onView: (studentId: number) => void
+  disabled?: boolean
 }
 
 export function EntryControlTable({
@@ -25,6 +26,7 @@ export function EntryControlTable({
   loading,
   error,
   onView,
+  disabled = false,
 }: Props) {
   const rows = items.map((student, index) => ({
     studentId: student.student_id,
@@ -76,6 +78,7 @@ export function EntryControlTable({
                   <button
                     type="button"
                     className={sharedStyles.secondaryButton}
+                    disabled={disabled}
                     onClick={() => onView(row.studentId)}
                     aria-label={`Ver a ${row.name}`}
                   >
@@ -125,6 +128,7 @@ export function EntryControlTable({
                 <button
                   type="button"
                   className={`${sharedStyles.secondaryButton} ${styles.verificationCardButton}`}
+                  disabled={disabled}
                   onClick={() => onView(row.studentId)}
                   aria-label={`Ver información de ${row.name}`}
                 >
