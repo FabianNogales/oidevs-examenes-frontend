@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 
 import { HeaderAccount, HeaderNotifications } from './HeaderAccount'
 import { HeaderLogo } from './HeaderLogo'
@@ -25,6 +25,30 @@ export function Header({
   const headerRef = useRef<HTMLElement>(null)
   const navigationRef = useRef<HTMLElement>(null)
   const [smallScreen, setSmallScreen] = useState(() => window.matchMedia('(max-width: 479px)').matches)
+
+  useLayoutEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+
+    const rootStyle = document.documentElement.style
+    const previousHeight = rootStyle.getPropertyValue('--app-header-height')
+    const previousPriority = rootStyle.getPropertyPriority('--app-header-height')
+    const updateHeight = () => {
+      rootStyle.setProperty('--app-header-height', `${header.getBoundingClientRect().height}px`)
+    }
+    updateHeight()
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(header)
+
+    return () => {
+      observer.disconnect()
+      if (previousHeight) {
+        rootStyle.setProperty('--app-header-height', previousHeight, previousPriority)
+      } else {
+        rootStyle.removeProperty('--app-header-height')
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 479px)')

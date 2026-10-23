@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type DragEvent } from 'react'
 import { formatSubjectFileSize } from '../../utils/subjectCsv'
-import defaultStyles from '@/features/students/pages/ImportStudentsPage.module.css'
+import defaultStyles from '@/features/students/components/StudentImportDesign.module.css'
 
 export function SubjectCsvDropzone({
   file,

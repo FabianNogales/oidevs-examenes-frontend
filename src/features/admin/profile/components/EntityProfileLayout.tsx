@@ -241,7 +241,7 @@ export function EntityProfileLayout({
         </header>
 
         {/* CONTENIDO DE LA SUBPÁGINA ACTIVA */}
-        <div className={styles.tabContentArea}>{children}</div>
+        <div>{children}</div>
       </main>
     </div>
   )

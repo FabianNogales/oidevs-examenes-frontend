@@ -53,6 +53,7 @@
   --content-max-width: 1280px;
   --content-gutter: var(--space-4);
   --header-height: 7rem;
+  --app-header-height: 7rem;
   --footer-height: 3rem;
 
   --transition-fast: 150ms ease;
@@ -441,7 +442,7 @@ svg {
 
 .auth-info {
   position: relative;
-  min-height: min(31rem, calc(100vh - var(--header-height) - var(--footer-height)));
+  min-height: min(31rem, calc(100vh - var(--app-header-height) - var(--footer-height)));
   overflow: hidden;
 }
 

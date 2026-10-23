@@ -1,6 +1,6 @@
 .overlay {
   position: fixed;
-  inset: var(--app-header-height, 136px) 0 0;
+  inset: var(--app-header-height) 0 0;
   z-index: 30;
   display: flex;
   align-items: flex-start;
@@ -12,7 +12,7 @@
 
 .modal {
   width: min(100%, 620px);
-  max-height: calc(100dvh - var(--app-header-height, 136px) - 2rem);
+  max-height: calc(100dvh - var(--app-header-height) - 2rem);
   margin-block: auto;
   overflow-y: auto;
   overflow-x: hidden;
@@ -251,7 +251,7 @@ textarea:disabled {
 
   .modal {
     width: 100%;
-    max-height: calc(100dvh - var(--app-header-height, 136px) - 1.5rem);
+    max-height: calc(100dvh - var(--app-header-height) - 1.5rem);
     padding: var(--space-4);
   }
 

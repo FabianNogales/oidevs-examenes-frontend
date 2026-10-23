@@ -3,7 +3,7 @@ import type {
   SubjectImportConfirmation,
 } from '../../types/subjectImport.types'
 import { SubjectImportTable } from './SubjectImportTable'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/features/students/components/StudentImportDesign.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
 
 export function SubjectImportReport({

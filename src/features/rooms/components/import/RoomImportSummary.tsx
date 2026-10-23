@@ -2,7 +2,7 @@ import type {
   RoomImportConfirmation,
   RoomImportReport,
 } from '../../types/roomImport.types'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/features/students/components/StudentImportDesign.module.css'
 
 export function RoomImportSummary({
   report,

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { RoomImportRow } from '../../types/roomImport.types'
 import { ROOM_CSV_COLUMNS } from '../../utils/roomCsv'
 import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import design from '@/features/students/components/StudentImportDesign.module.css'
 import local from '../../pages/ImportRoomsPage.module.css'
 
 const PAGE_SIZE = 20
@@ -25,8 +26,8 @@ export function RoomImportTable({
     currentPage * PAGE_SIZE,
   )
   return (
-    <section className={styles.studentsPreview} aria-label="Reporte de aulas">
-      <div className={styles.studentsPreviewHeader}>
+    <section className={design.studentsPreview} aria-label="Reporte de aulas">
+      <div className={design.studentsPreviewHeader}>
         <h3>{confirmed ? 'Resultado por aula' : 'Aulas encontradas'}</h3>
         <label className={local.filter}>
           Mostrar registros
@@ -48,8 +49,8 @@ export function RoomImportTable({
         </label>
       </div>
       {visible.length ? (
-        <div className={styles.previewTableWrap}>
-          <table className={styles.previewTable}>
+        <div className={design.previewTableWrap}>
+          <table className={design.previewTable}>
             <caption className={local.srOnly}>
               Reporte de aulas por fila del CSV
             </caption>
@@ -73,11 +74,11 @@ export function RoomImportTable({
                   ))}
                   <td data-label="Estado">
                     {row.valid ? (
-                      <span className={styles.readyBadge}>
+                      <span>
                         {confirmed ? 'Importada' : 'Lista para importar'}
                       </span>
                     ) : (
-                      <div className={styles.rowObservations}>
+                      <div className={design.rowObservations}>
                         <strong>Fila {row.row}</strong>
                         <ul>
                           {row.errors.map((error, index) => (

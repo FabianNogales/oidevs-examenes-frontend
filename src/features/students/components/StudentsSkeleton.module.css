@@ -100,7 +100,7 @@
 }
 
 .studentPage {
-  min-height: calc(100vh - 136px);
+  min-height: calc(100dvh - var(--app-header-height) - var(--footer-height));
   padding: var(--space-10) var(--content-gutter);
 }
 

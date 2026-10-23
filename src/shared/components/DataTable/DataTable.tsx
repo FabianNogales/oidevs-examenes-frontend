@@ -122,7 +122,7 @@ export function DataTable<T extends BaseTableEntity>({
       {/* ESTADO DE ERROR */}
       {!loading && error && (
         <div className={styles.errorBanner} role="alert">
-          <div className={styles.errorContent}>
+          <div>
             <strong>No se pudo cargar la información</strong>
             <p>{error}</p>
           </div>

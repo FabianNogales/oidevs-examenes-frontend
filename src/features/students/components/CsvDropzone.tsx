@@ -122,7 +122,7 @@ export function CsvDropzone({
       )}
 
       {validationMessage ? (
-        <p className={styles.validationReady} role="status">
+        <p role="status">
           {validationMessage}
         </p>
       ) : null}
