@@ -26,6 +26,9 @@ export type EntryControlExam = {
   status: string
   entry_available: boolean
   entry_unavailable_reason: string | null
+  entry_opens_at: string | null
+  entry_closes_at: string | null
+  server_time: string
   room: Room | null
 }
 

@@ -6,7 +6,6 @@ import {
   EligibilityApiError,
   getExamEligibilities,
 } from '../api/eligibilitiesApi'
-import { useEligibilityReasons } from '../hooks/useEligibilityReasons'
 import type {
   ExamEligibility,
   EligibilityStatus,
@@ -35,8 +34,7 @@ export function ManageEligibilityModal({
 }: Props) {
   const [eligibility, setEligibility] = useState(initialEligibility)
   const [status, setStatus] = useState<EligibilityStatus>(eligibility.status)
-  const catalog = useEligibilityReasons(examId)
-  const [reasonCode, setReasonCode] = useState(eligibility.reason_code ?? '')
+  const [reason, setReason] = useState(eligibility.reason ?? '')
   const [observations, setObservations] = useState(eligibility.observations ?? '')
   const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null)
   const photoUrl = eligibility.profile_photo_url
@@ -46,20 +44,16 @@ export function ManageEligibilityModal({
   const [conflict, setConflict] = useState(false)
   const [current, setCurrent] = useState<ExamEligibility | null>(null)
   const request = useRef<AbortController | null>(null)
-  const reasonInput = useRef<HTMLSelectElement>(null)
+  const reasonInput = useRef<HTMLTextAreaElement>(null)
   const observationsInput = useRef<HTMLTextAreaElement>(null)
   const fieldId = useId()
-  const validReason = catalog.items.some((item) => item.code === reasonCode)
-  const originalReasonAvailable = catalog.items.some(
-    (item) => item.code === eligibility.reason_code,
-  )
-  const reasonDisabled = busy || catalog.loading || !!catalog.error || !catalog.items.length
   const changed =
     status !== eligibility.status ||
     (status === 'INELIGIBLE' &&
-      (reasonCode !== (eligibility.reason_code ?? '') ||
+      (reason !== (eligibility.reason ?? '') ||
         observations !== (eligibility.observations ?? '')))
-  const invalidReason = status === 'INELIGIBLE' && !validReason
+  const reasonTooLong = reason.length > 500
+  const invalidReason = status === 'INELIGIBLE' && (!reason.trim() || reasonTooLong)
   const invalidObservations = status === 'INELIGIBLE' && observations.length > 500
 
   useEffect(() => () => request.current?.abort(), [])
@@ -77,7 +71,11 @@ export function ManageEligibilityModal({
   async function save() {
     if (request.current || !changed || conflict) return
     if (invalidReason) {
-      setFieldErrors({ reason_code: 'Selecciona un motivo actual del catálogo.' })
+      setFieldErrors({
+        reason: reasonTooLong
+          ? 'El motivo admite hasta 500 caracteres.'
+          : 'Escribe un motivo de inhabilitación.',
+      })
       reasonInput.current?.focus()
       return
     }
@@ -94,7 +92,7 @@ export function ManageEligibilityModal({
     const payload: UpdateEligibilityPayload =
       status === 'ELIGIBLE'
         ? { status: 'ELIGIBLE', revision: eligibility.revision }
-        : { status: 'INELIGIBLE', reason_code: reasonCode, observations, revision: eligibility.revision }
+        : { status: 'INELIGIBLE', reason: reason.trim(), observations, revision: eligibility.revision }
     try {
       await onSave(eligibility.student_id, payload, controller.signal)
     } catch (cause) {
@@ -108,7 +106,7 @@ export function ManageEligibilityModal({
         ) {
           setFieldErrors(cause.fieldErrors)
           setError(cause.message)
-          if (cause.fieldErrors.reason_code) reasonInput.current?.focus()
+          if (cause.fieldErrors.reason) reasonInput.current?.focus()
           else if (cause.fieldErrors.observations) observationsInput.current?.focus()
         } else {
           setError(
@@ -153,7 +151,7 @@ export function ManageEligibilityModal({
     // This explicit discard replaces every editable value together with its revision.
     setEligibility(current)
     setStatus(current.status)
-    setReasonCode(current.reason_code ?? '')
+    setReason(current.reason ?? '')
     setObservations(current.observations ?? '')
     setFieldErrors({})
     setError(null)
@@ -261,57 +259,35 @@ export function ManageEligibilityModal({
           </fieldset>
           {status === 'INELIGIBLE' ? (
             <div className={styles.ineligibilityFields}>
-              {!eligibility.reason_code && eligibility.reason ? (
-                <div className={styles.historicalReason}>
-                  <strong>Motivo histórico</strong>
-                  <p>{eligibility.reason}</p>
-                  <small>Para guardar una nueva inhabilitación, selecciona un motivo actual.</small>
-                </div>
-              ) : null}
               <div className={styles.field}>
                 <label htmlFor={fieldId}>Motivo de inhabilitación *</label>
-                <select
+                <textarea
                   id={fieldId}
                   ref={reasonInput}
-                  tabIndex={reasonDisabled ? -1 : 0}
-                  value={validReason ? reasonCode : ''}
+                  tabIndex={busy ? -1 : 0}
+                  rows={3}
+                  maxLength={500}
+                  value={reason}
                   required
-                  disabled={reasonDisabled}
-                  aria-invalid={fieldErrors.reason_code ? true : undefined}
-                  aria-describedby={`${fieldId}-hint${fieldErrors.reason_code ? ` ${fieldId}-error` : ''}`}
+                  disabled={busy}
+                  placeholder="Describe el motivo de inhabilitación..."
+                  aria-invalid={fieldErrors.reason || reasonTooLong ? true : undefined}
+                  aria-describedby={`${fieldId}-hint ${fieldId}-reason-counter${fieldErrors.reason || reasonTooLong ? ` ${fieldId}-error` : ''}`}
                   onChange={(event) => {
-                    setReasonCode(event.target.value)
+                    setReason(event.target.value)
                     setFieldErrors({})
                     setError(null)
                   }}
-                >
-                  <option value="">Selecciona un motivo</option>
-                  {catalog.items.map((item) => (
-                    <option key={item.code} value={item.code}>{item.label}</option>
-                  ))}
-                </select>
+                />
                 <small id={`${fieldId}-hint`} className={sharedStyles.note}>
                   El motivo es obligatorio para inhabilitar al estudiante.
                 </small>
-                {catalog.loading ? <p role="status">Cargando motivos…</p> : null}
-                {catalog.error ? (
-                  <div role="alert">
-                    <p className={sharedStyles.error}>{catalog.error}</p>
-                    <button
-                      type="button"
-                      className={sharedStyles.secondaryButton}
-                      disabled={busy}
-                      onClick={() => void catalog.reload()}
-                    >Reintentar motivos</button>
-                  </div>
-                ) : !catalog.loading && !catalog.items.length ? (
-                  <p role="status">No hay motivos disponibles. No se puede guardar una inhabilitación.</p>
-                ) : !catalog.loading && eligibility.reason_code && !originalReasonAvailable ? (
-                  <p className={sharedStyles.note}>El motivo anterior ya no está disponible. Selecciona un motivo actual.</p>
-                ) : null}
-                {fieldErrors.reason_code ? (
+                <small id={`${fieldId}-reason-counter`} className={styles.characterCounter}>
+                  {reason.length} / 500
+                </small>
+                {fieldErrors.reason || reasonTooLong ? (
                   <p id={`${fieldId}-error`} className={sharedStyles.error} role="alert">
-                    {fieldErrors.reason_code}
+                    {fieldErrors.reason ?? 'El motivo admite hasta 500 caracteres.'}
                   </p>
                 ) : null}
               </div>

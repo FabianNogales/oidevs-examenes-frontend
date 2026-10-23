@@ -46,11 +46,12 @@ function EntryControlContent({
   const exam = list.response?.exam
   const backPath = fromTeacher ? '/teacher/exams' : '/collaborator'
   const backLabel = fromTeacher ? 'Mis exámenes' : 'Colaborador'
-
-  function selectAttendanceMethod(method: 'manual' | 'qr') {
-    if (method === 'qr') setQrActivated(true)
-    setAttendanceMethod(method)
-  }
+  const canMountQr =
+    activeTab === 'attendance' &&
+    attendanceMethod === 'qr' &&
+    exam?.entry_available === true
+  // Latch the first authorized mount; later API updates only pause the same reader.
+  if (canMountQr && !qrActivated) setQrActivated(true)
 
   function selectTab(tab: 'verification' | 'attendance') {
     if (tab === activeTab) return
@@ -233,7 +234,7 @@ function EntryControlContent({
                         ? 'qr'
                         : 'manual'
                 if (next === 'qr' && list.roomId == null) return
-                selectAttendanceMethod(next)
+                setAttendanceMethod(next)
                 document.getElementById(`${methodTabsId}-${next}-tab`)?.focus()
               }}
             >
@@ -249,7 +250,7 @@ function EntryControlContent({
                   disabled={
                     qrProcessing || (method === 'qr' && list.roomId == null)
                   }
-                  onClick={() => selectAttendanceMethod(method)}
+                  onClick={() => setAttendanceMethod(method)}
                 >
                   {method === 'manual' ? 'Registro manual' : 'Escanear QR'}
                 </button>
@@ -276,14 +277,14 @@ function EntryControlContent({
               aria-labelledby={`${methodTabsId}-qr-tab`}
               hidden={attendanceMethod !== 'qr'}
             >
-              <div hidden={exam?.entry_available === false}>
-                {qrActivated ? (
+              <div hidden={exam?.entry_available !== true}>
+                {qrActivated || canMountQr ? (
                   <EntryQrPanel
                     examId={examId}
                     active={
                       activeTab === 'attendance' &&
                       attendanceMethod === 'qr' &&
-                      exam?.entry_available !== false &&
+                      exam?.entry_available === true &&
                       !historyOpen &&
                       studentId === null
                     }
@@ -315,6 +316,7 @@ function EntryControlContent({
             examId={examId}
             studentId={studentId}
             roomId={list.roomId}
+            examContext={exam}
             allowManualEntry={activeTab === 'attendance'}
             onManualResult={(response, student) =>
               handleResult(response, 'MANUAL', student)

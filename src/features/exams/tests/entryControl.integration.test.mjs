@@ -167,7 +167,65 @@ test('entry: refreshed availability pauses the retained scanner and prevents sta
   unavailable.list.response.exam.entry_available = false
   unavailable.click('Registro de asistencia')
   unavailable.click('Escanear QR')
-  assert.equal(unavailable.scanner().props.active, false)
+  assert.equal(unavailable.scanner(), undefined)
+})
+
+test('entry: missing API availability cannot start QR and pauses an already authorized reader', () => {
+  const h = setup()
+  h.list.response.exam = undefined
+  h.click('Registro de asistencia')
+  h.click('Escanear QR')
+  assert.equal(h.scanner(), undefined)
+  h.list.response.exam = { id: 1, room: { id: 7 } }
+  h.render()
+  assert.equal(
+    h.scanner(),
+    undefined,
+    'A missing flag cannot authorize the first mount',
+  )
+  h.list.response.exam.entry_available = true
+  h.render()
+  assert.equal(h.scanner().props.active, true)
+  for (const availability of [undefined, null, false]) {
+    h.list.response.exam.entry_available = availability
+    const tree = h.render()
+    assert.ok(
+      h.scanner(),
+      'Retain the camera startup queue after its first authorized use',
+    )
+    assert.equal(h.scanner().props.active, false)
+    assert.ok(
+      nodes(
+        tree,
+        (node) =>
+          node.type === 'div' &&
+          node.props.hidden === true &&
+          nodes(node.props.children, (child) => child.type === 'EntryQrPanel')
+            .length > 0,
+      ).length > 0,
+      'The retained reader must be hidden while availability is not explicitly true',
+    )
+  }
+  h.list.response.exam.entry_available = true
+  h.render()
+  assert.equal(h.scanner().props.active, true)
+})
+
+test('entry: an open student modal receives each refreshed exam context', () => {
+  const h = setup()
+  h.viewStudent()
+  assert.equal(
+    h.modal('EntryControlStudentModal').props.examContext,
+    h.list.response.exam,
+  )
+  const refreshed = {
+    ...h.list.response.exam,
+    entry_available: false,
+    entry_unavailable_reason: 'EXAM_ENDED',
+  }
+  h.list.response.exam = refreshed
+  h.render()
+  assert.equal(h.modal('EntryControlStudentModal').props.examContext, refreshed)
 })
 
 test('entry: an in-flight QR registration keeps method changes disabled', () => {
