@@ -32,41 +32,85 @@ export function useEntryControlStudents(examId: number) {
   const key = JSON.stringify([examId, search, filters.page, roomId, version])
 
   useEffect(() => {
-    const controller = new AbortController()
+    let controller: AbortController | null = null
+    let boundaryTimer: ReturnType<typeof setTimeout> | undefined
+    let resumeTimer: ReturnType<typeof setTimeout> | undefined
+    let disposed = false
+    let pending = false
     const delay = previousSearch.current === search ? 0 : 300
     previousSearch.current = search
-    setState((current) => ({ ...current, key, loading: true, error: null }))
-    const timeout = window.setTimeout(() => {
-      void getEntryControlStudents(
-        examId,
-        {
-          search,
-          page: filters.page,
-          per_page: 10,
-          room_id: roomId,
-        },
-        controller.signal,
+
+    function scheduleBoundary(response: EntryControlStudentsResponse) {
+      const exam = response.exam
+      const boundary = exam.entry_available
+        ? exam.entry_closes_at
+        : exam.entry_unavailable_reason === 'EXAM_NOT_STARTED'
+          ? exam.entry_opens_at
+          : null
+      if (!boundary) return
+      // Server timestamps only schedule the next GET; they never grant entry.
+      const remaining = Date.parse(boundary) - Date.parse(exam.server_time)
+      if (!Number.isFinite(remaining) || remaining < 0) return
+      // Allow a small margin after the boundary and respect the browser timer limit.
+      boundaryTimer = setTimeout(
+        () => void refresh(),
+        Math.min(remaining + 250, 2_147_483_647),
       )
-        .then((response) => {
-          if (!controller.signal.aborted) {
-            setState({ key, response, loading: false, error: null })
-          }
-        })
-        .catch((cause: unknown) => {
-          if (!controller.signal.aborted) {
-            // Retain the last exam context on failure without retrying with no room.
-            setState((current) => ({
-              ...current,
-              key,
-              loading: false,
-              error: getEntryControlErrorMessage(cause),
-            }))
-          }
-        })
-    }, delay)
+    }
+
+    async function refresh() {
+      if (disposed || pending) return
+      clearTimeout(timeout)
+      clearTimeout(boundaryTimer)
+      clearTimeout(resumeTimer)
+      const request = new AbortController()
+      controller = request
+      pending = true
+      setState((current) => ({ ...current, key, loading: true, error: null }))
+      try {
+        const response = await getEntryControlStudents(
+          examId,
+          { search, page: filters.page, per_page: 10, room_id: roomId },
+          request.signal,
+        )
+        if (!disposed && !request.signal.aborted) {
+          setState({ key, response, loading: false, error: null })
+          scheduleBoundary(response)
+        }
+      } catch (cause: unknown) {
+        if (!disposed && !request.signal.aborted) {
+          // Retain the last exam context on failure without retrying with no room.
+          setState((current) => ({
+            ...current,
+            key,
+            loading: false,
+            error: getEntryControlErrorMessage(cause),
+          }))
+        }
+      } finally {
+        pending = false
+      }
+    }
+
+    function resume() {
+      clearTimeout(resumeTimer)
+      if (document.visibilityState !== 'visible' || pending) return
+      // Focus and visibility usually arrive together; share one pending refresh.
+      resumeTimer = setTimeout(() => void refresh(), 200)
+    }
+
+    setState((current) => ({ ...current, key, loading: true, error: null }))
+    const timeout = setTimeout(() => void refresh(), delay)
+    window.addEventListener('focus', resume)
+    document.addEventListener('visibilitychange', resume)
     return () => {
-      window.clearTimeout(timeout)
-      controller.abort()
+      disposed = true
+      clearTimeout(timeout)
+      clearTimeout(boundaryTimer)
+      clearTimeout(resumeTimer)
+      controller?.abort()
+      window.removeEventListener('focus', resume)
+      document.removeEventListener('visibilitychange', resume)
     }
   }, [examId, search, filters.page, roomId, key])
 

@@ -32,7 +32,7 @@ export type EligibilityReasonsResponse = { data: EligibilityReason[] }
 
 export type UpdateEligibilityPayload =
   | { status: 'ELIGIBLE'; revision: number }
-  | { status: 'INELIGIBLE'; reason_code: string; observations: string; revision: number }
+  | { status: 'INELIGIBLE'; reason: string; observations: string; revision: number }
 
 export type BulkEligibilityRowError = {
   row: number

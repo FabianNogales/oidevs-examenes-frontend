@@ -34,7 +34,7 @@ export function EntryManualConfirmationModal({
   const request = useRef<AbortController | null>(null)
   const mounted = useRef(false)
   const eligible =
-    exam.entry_available !== false && canRegisterEntryManually(student, roomId)
+    exam.entry_available === true && canRegisterEntryManually(student, roomId)
 
   useEffect(() => {
     mounted.current = true

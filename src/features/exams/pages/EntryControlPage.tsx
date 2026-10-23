@@ -271,7 +271,7 @@ function EntryControlContent({
             >
               {activeTab === 'attendance' &&
               attendanceMethod === 'qr' &&
-              exam?.entry_available !== false ? (
+              exam?.entry_available === true ? (
                 <EntryQrPanel
                   examId={examId}
                   active={!historyOpen && studentId === null}
@@ -302,6 +302,7 @@ function EntryControlContent({
             examId={examId}
             studentId={studentId}
             roomId={list.roomId}
+            examContext={exam}
             allowManualEntry={activeTab === 'attendance'}
             onManualResult={(response, student) =>
               handleResult(response, 'MANUAL', student)

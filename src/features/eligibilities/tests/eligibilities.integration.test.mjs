@@ -277,9 +277,6 @@ function modal(api, eligibility, onSave) {
     '@/features/auth/components/AuthIcons': { InfoCircleIcon: 'info-icon', UserIcon: 'user-icon' },
     '@/features/collaborations/components/CollaborationModal': { CollaborationModal: 'modal' },
     '../api/eligibilitiesApi': api,
-    '../hooks/useEligibilityReasons': { useEligibilityReasons: () => ({
-      items: [{ code: 'OTHER', label: 'Otro motivo' }], loading: false, error: null,
-    }) },
     '../utils/eligibilityDisplay': { getEligibilityStudentName: () => 'Alumno Prueba' },
   }
   const source = readFileSync(resolve(moduleDirectory, 'components/ManageEligibilityModal.tsx'), 'utf8')
@@ -301,6 +298,7 @@ function modal(api, eligibility, onSave) {
   return {
     render() { cursor = 0; tree = module.exports.ManageEligibilityModal(props); return tree },
     find(type) { return nodes(tree).find((node) => node.type === type) },
+    field(id) { return nodes(tree).find((node) => node.props?.id === id) },
     button(label) { return nodes(tree).find((node) => node.type === 'button' && textOf(node).trim() === label) },
     text() { return textOf(tree) },
     alerts() { return nodes(tree).filter((node) => node.props?.role === 'alert').map(textOf) },
@@ -325,7 +323,7 @@ test('modal success sends its revision and preserves the existing close/notice/r
   ui.render()
   ui.find('form').props.onSubmit({ preventDefault() {} })
   await tick()
-  assert.deepEqual(calls[0].args[1], { status: 'INELIGIBLE', reason_code: 'OTHER', observations: 'Decisión nueva', revision: 3 })
+  assert.deepEqual(calls[0].args[1], { status: 'INELIGIBLE', reason: 'Decisión nueva', observations: original.observations, revision: 3 })
   assert.deepEqual(closed, [null])
   assert.equal(notices.length, 1)
   assert.equal(notices[0][0], 'success')
@@ -334,7 +332,7 @@ test('modal success sends its revision and preserves the existing close/notice/r
 
 for (const source of ['another tab', 'CSV update']) {
   test('conflict after ' + source + ' preserves draft until explicit server review and discard', async () => {
-    const current = { ...original, revision: 4, observations: 'Última decisión del servidor' }
+    const current = { ...original, revision: 4, reason: 'Última decisión del servidor', observations: 'Observaciones actualizadas' }
     let conflict = true
     const { api, calls } = client({
       patch: () => {
@@ -377,7 +375,8 @@ for (const source of ['another tab', 'CSV update']) {
 
     ui.button('Descartar borrador y cargar estos datos').props.onClick()
     ui.render()
-    assert.equal(ui.find('textarea').props.value, current.observations)
+    assert.equal(ui.find('textarea').props.value, current.reason)
+    assert.equal(ui.field('modal-id-observations').props.value, current.observations)
     assert.match(ui.text(), /Revisión del formulario: 4/)
     assert.deepEqual(ui.alerts(), [])
     assert.equal(ui.button('Guardar').props.disabled, true, 'No change after replacing the whole snapshot')
@@ -388,7 +387,8 @@ for (const source of ['another tab', 'CSV update']) {
     await tick()
     assert.equal(calls.length, 3)
     assert.equal(calls[2].args[1].revision, 4)
-    assert.equal(calls[2].args[1].observations, 'Decisión revisada')
+    assert.equal(calls[2].args[1].reason, 'Decisión revisada')
+    assert.equal(calls[2].args[1].observations, current.observations)
     assert.deepEqual(closed, [null])
     assert.equal(notices[0][0], 'success')
   })
@@ -421,4 +421,102 @@ test('failed explicit refresh preserves the conflicted draft and its original re
   assert.equal(ui.button('Descartar borrador y cargar estos datos'), undefined)
   assert.equal(ui.button('Guardar').props.disabled, true)
   assert.equal(calls.length, 2)
+})
+
+test('inhabilitation rejects empty and whitespace-only reasons without sending PATCH', async () => {
+  const { api, calls } = client()
+  const ui = modal(api, original, api.updateExamEligibility.bind(null, 17))
+  for (const reason of ['', '   \n ']) {
+    ui.render()
+    ui.find('textarea').props.onChange({ target: { value: reason } })
+    ui.render()
+    assert.equal(ui.find('textarea').props.required, true)
+    assert.equal(ui.button('Guardar').props.disabled, true)
+    ui.find('form').props.onSubmit({ preventDefault() {} })
+    await tick()
+    ui.render()
+    assert.match(ui.alerts().join(' '), /Escribe un motivo de inhabilitación/)
+  }
+  assert.equal(calls.length, 0)
+})
+
+for (const reason of ['A', 'á'.repeat(500)]) {
+  test('inhabilitation accepts a reason of ' + reason.length + ' characters with its original revision', async () => {
+    const { api, calls } = client({ patch: () => ({ status: 200 }) })
+    const ui = modal(api, original, api.updateExamEligibility.bind(null, 17))
+    ui.render()
+    ui.find('textarea').props.onChange({ target: { value: reason } })
+    ui.render()
+    assert.equal(ui.find('textarea').props.maxLength, 500)
+    assert.equal(ui.button('Guardar').props.disabled, false)
+    ui.find('form').props.onSubmit({ preventDefault() {} })
+    await tick()
+    assert.equal(calls.length, 1)
+    assert.equal(calls[0].args[1].reason, reason)
+    assert.equal(calls[0].args[1].revision, original.revision)
+    assert.equal('reason_code' in calls[0].args[1], false)
+  })
+}
+
+test('501-character reason is rejected by logic even when HTML constraints are bypassed', async () => {
+  const { api, calls } = client()
+  const ui = modal(api, original, api.updateExamEligibility.bind(null, 17))
+  ui.render()
+  ui.find('textarea').props.onChange({ target: { value: 'á'.repeat(501) } })
+  ui.render()
+  assert.equal(ui.button('Guardar').props.disabled, true)
+  assert.equal(ui.find('textarea').props['aria-invalid'], true)
+  ui.find('form').props.onSubmit({ preventDefault() {} })
+  await tick()
+  ui.render()
+  assert.equal(calls.length, 0)
+  assert.match(ui.alerts().join(' '), /El motivo admite hasta 500 caracteres/)
+  ui.find('input').props.onChange()
+  ui.render()
+  assert.equal(ui.button('Guardar').props.disabled, false, 'ELIGIBLE ignores the ineligible draft')
+})
+
+test('free-text reason is trimmed and sent without a predefined reason code or catalog request', async () => {
+  const { api, calls } = client({ patch: () => ({ status: 200 }) })
+  const ui = modal(api, { ...original, reason_code: null }, api.updateExamEligibility.bind(null, 17))
+  ui.render()
+  ui.find('textarea').props.onChange({ target: { value: '  No presentó el trabajo requerido.  ' } })
+  ui.render()
+  ui.find('form').props.onSubmit({ preventDefault() {} })
+  await tick()
+  assert.equal(calls.length, 1)
+  assert.deepEqual(calls[0].args[1], {
+    status: 'INELIGIBLE', reason: 'No presentó el trabajo requerido.',
+    observations: original.observations, revision: original.revision,
+  })
+})
+
+test('HTTP 422 reason validation preserves the draft and displays the field error', async () => {
+  const message = 'El motivo ingresado no es válido.'
+  const { api, calls } = client({ patch: () => {
+    throw httpError(422, { message, errors: { reason: [message] } })
+  } })
+  const ui = modal(api, original, api.updateExamEligibility.bind(null, 17))
+  ui.render()
+  ui.find('textarea').props.onChange({ target: { value: 'Motivo a corregir' } })
+  ui.render()
+  ui.find('form').props.onSubmit({ preventDefault() {} })
+  await tick()
+  ui.render()
+  assert.equal(ui.find('textarea').props.value, 'Motivo a corregir')
+  assert.equal(ui.find('textarea').props['aria-invalid'], true)
+  assert.ok(ui.alerts().includes(message))
+  assert.equal(calls.length, 1)
+})
+
+test('switching to eligible preserves revision and omits ineligibility fields', async () => {
+  const { api, calls } = client({ patch: () => ({ status: 200 }) })
+  const ui = modal(api, original, api.updateExamEligibility.bind(null, 17))
+  ui.render()
+  ui.find('input').props.onChange()
+  ui.render()
+  assert.equal(ui.find('textarea'), undefined)
+  ui.find('form').props.onSubmit({ preventDefault() {} })
+  await tick()
+  assert.deepEqual(calls[0].args[1], { status: 'ELIGIBLE', revision: original.revision })
 })

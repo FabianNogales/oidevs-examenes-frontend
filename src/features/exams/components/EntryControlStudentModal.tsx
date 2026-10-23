@@ -8,6 +8,7 @@ import {
   getEntryControlStudent,
 } from '../api/entryControlApi'
 import type {
+  EntryControlExam,
   EntryControlStudent,
   EntryControlStudentResponse,
 } from '../types/entryControl.types'
@@ -26,7 +27,10 @@ import { EntryConditionBadge } from './EntryConditionBadge'
 import { EntryManualConfirmationModal } from './EntryManualConfirmationModal'
 import { EntryResultPanel } from './EntryResultPanel'
 import { canRegisterEntryManually } from '../utils/entryManualEligibility'
-import { entryBlockerMessage } from '../utils/entryAvailabilityDisplay'
+import {
+  entryBlockerMessage,
+  entryUnavailableReasonMessage,
+} from '../utils/entryAvailabilityDisplay'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from '../pages/EntryControlPage.module.css'
 
@@ -34,6 +38,7 @@ type Props = {
   examId: number
   studentId: number
   roomId: number | undefined
+  examContext?: EntryControlExam
   onClose: () => void
   allowManualEntry?: boolean
   onManualResult?: (
@@ -46,6 +51,7 @@ export function EntryControlStudentModal({
   examId,
   studentId,
   roomId,
+  examContext,
   onClose,
   allowManualEntry = false,
   onManualResult,
@@ -89,7 +95,7 @@ export function EntryControlStudentModal({
 
   useEffect(() => {
     const controller = new AbortController()
-    setDetail(null)
+    // Keep an open confirmation mounted while its context is revalidated.
     setLoading(true)
     setError(null)
     void getEntryControlStudent(examId, studentId, roomId, controller.signal)
@@ -110,10 +116,10 @@ export function EntryControlStudentModal({
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [examId, studentId, roomId, version])
+  }, [examId, studentId, roomId, version, examContext])
 
   const student = detail?.data
-  const exam = detail?.exam
+  const exam = examContext ?? detail?.exam
   const photoUrl = student?.profile_photo_url?.trim()
   const assignedRoom =
     exam?.room?.id === student?.assigned_room_id ? exam?.room : null
@@ -133,9 +139,7 @@ export function EntryControlStudentModal({
     : []
   const blockerMessages = [
     ...new Set(
-      visibleBlockers.map((blocker) =>
-        entryBlockerMessage(blocker, exam?.entry_unavailable_reason),
-      ),
+      visibleBlockers.map((blocker) => entryBlockerMessage(blocker)),
     ),
   ]
 
@@ -362,6 +366,11 @@ export function EntryControlStudentModal({
                 ) : null}
               </div>
             </section>
+            {exam.entry_available === false ? (
+              <p className={`${styles.message} ${styles.pending}`} role="status">
+                {entryUnavailableReasonMessage(exam.entry_unavailable_reason)}
+              </p>
+            ) : null}
             {student.meets_entry_conditions === true ? (
               <p className={`${styles.message} ${styles.positive}`}>
                 El estudiante se encuentra inscrito y habilitado para este
@@ -405,7 +414,7 @@ export function EntryControlStudentModal({
           !loading &&
           !error &&
           student &&
-          exam?.entry_available !== false &&
+          exam?.entry_available === true &&
           canRegisterEntryManually(student, roomId) ? (
             <button
               type="button"
