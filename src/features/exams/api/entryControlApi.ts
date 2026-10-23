@@ -19,7 +19,7 @@ export function getEntryControlErrorMessage(
     case 404:
       return 'El recurso solicitado no fue encontrado.'
     case 422:
-      return 'Los parámetros de consulta no son válidos. Revisa la búsqueda y el ambiente seleccionado.'
+      return 'Los parámetros de consulta no son válidos. Revisa la búsqueda y actualiza el control de ingreso.'
     default:
       return fallback
   }

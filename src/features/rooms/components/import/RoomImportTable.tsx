@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import type { RoomImportRow } from '../../types/roomImport.types'
 import { ROOM_CSV_COLUMNS } from '../../utils/roomCsv'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
-import design from '@/features/students/components/StudentImportDesign.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportRoomsPage.module.css'
 
 const PAGE_SIZE = 20
@@ -26,8 +25,8 @@ export function RoomImportTable({
     currentPage * PAGE_SIZE,
   )
   return (
-    <section className={design.studentsPreview} aria-label="Reporte de aulas">
-      <div className={design.studentsPreviewHeader}>
+    <section className={styles.report} aria-label="Reporte de aulas">
+      <div className={styles.reportHeader}>
         <h3>{confirmed ? 'Resultado por aula' : 'Aulas encontradas'}</h3>
         <label className={local.filter}>
           Mostrar registros
@@ -49,8 +48,8 @@ export function RoomImportTable({
         </label>
       </div>
       {visible.length ? (
-        <div className={design.previewTableWrap}>
-          <table className={design.previewTable}>
+        <div className={styles.previewTableWrap}>
+          <table className={styles.previewTable}>
             <caption className={local.srOnly}>
               Reporte de aulas por fila del CSV
             </caption>
@@ -74,11 +73,11 @@ export function RoomImportTable({
                   ))}
                   <td data-label="Estado">
                     {row.valid ? (
-                      <span>
+                      <span className={styles.readyBadge}>
                         {confirmed ? 'Importada' : 'Lista para importar'}
                       </span>
                     ) : (
-                      <div className={design.rowObservations}>
+                      <div className={styles.rowObservations}>
                         <strong>Fila {row.row}</strong>
                         <ul>
                           {row.errors.map((error, index) => (

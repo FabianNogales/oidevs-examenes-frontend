@@ -1,6 +1,8 @@
 .panel {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   margin-top: var(--space-6);
 }
 
@@ -11,6 +13,18 @@
   flex-wrap: wrap;
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.toolbar button,
+.cameraControls button {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .toolbar > div {
@@ -27,7 +41,9 @@
     'controls result';
   grid-template-rows: min-content auto;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   align-items: start;
   gap: 0 var(--space-5);
 }
@@ -36,6 +52,7 @@
 .cameraTools,
 .resultPanel {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   padding: var(--space-4);
   box-sizing: border-box;
@@ -62,6 +79,8 @@
 .resultArea {
   grid-area: result;
   min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   scroll-margin-top: calc(var(--app-header-height) + var(--space-4));
 }
 
@@ -156,23 +175,33 @@
   align-items: end;
   flex-wrap: wrap;
   gap: var(--space-3);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .cameraChoice {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
   min-width: 0;
+  max-width: 100%;
   flex: 1 1 200px;
 }
 
 .cameraChoice select {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   min-height: var(--input-height);
   padding: var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .resultPanel {
@@ -239,6 +268,7 @@
 .resultConditions,
 .details {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   margin-block: var(--space-4);
 }
@@ -266,6 +296,13 @@
 
 .recent {
   margin-top: var(--space-6);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.recentTableWrap {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .recentTable {
@@ -452,6 +489,29 @@
     row-gap: var(--space-3);
   }
 
+  .resultPanel {
+    padding: var(--space-3);
+  }
+
+  .resultPanel > p {
+    margin-block: var(--space-2);
+  }
+
+  .identity {
+    gap: var(--space-2);
+    margin-block: var(--space-3);
+  }
+
+  .resultConditions,
+  .details {
+    gap: var(--space-2);
+    margin-block: var(--space-3);
+  }
+
+  .blockers {
+    margin-block: var(--space-3);
+  }
+
   .cameraHelp {
     margin: 0 0 var(--space-3);
   }
@@ -496,6 +556,17 @@
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .recentToggle {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    margin-top: var(--space-3);
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .recentCard {

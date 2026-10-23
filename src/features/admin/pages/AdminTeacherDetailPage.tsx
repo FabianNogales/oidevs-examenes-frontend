@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
 
 import { EntityProfileLayout } from '@/features/admin/profile/components/EntityProfileLayout'
@@ -172,6 +173,15 @@ export function AdminTeacherDetailPage({
       onOptionChange={handleOptionChange}
       onBack={() => navigate(backRoute)}
     >
+      {moduleContext === 'teachers' && (
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/admin' },
+            { label: 'Docentes', to: '/admin/teachers' },
+            { label: currentTabConfig.label },
+          ]}
+        />
+      )}
       {currentTabConfig.render({
         entity: unifiedEntity,
         moduleContext,

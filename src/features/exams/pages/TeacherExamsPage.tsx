@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ExamCard } from '@/features/exams/components/ExamCard'
@@ -45,6 +46,9 @@ export function TeacherExamsPage() {
   return (
     <main className={styles.page}>
       <section className={styles.content}>
+        <Breadcrumbs
+          items={[{ label: 'Inicio', to: '/' }, { label: 'Mis exámenes' }]}
+        />
         <header className={styles.pageHeader}>
           <div>
             <h1>Mis exámenes</h1>

@@ -16,12 +16,8 @@ export function useEntryControlStudents(examId: number) {
   const [filters, setFilters] = useState({
     search: '',
     page: 1,
-    roomId: null as number | null,
   })
   const [version, setVersion] = useState(0)
-  const [defaultRoomId, setDefaultRoomId] = useState<number | undefined>(
-    undefined,
-  )
   const [state, setState] = useState<ListState>({
     key: '',
     response: null,
@@ -29,9 +25,9 @@ export function useEntryControlStudents(examId: number) {
     error: null,
   })
   const previousSearch = useRef('')
-  // The first GET obtains the exam. All subsequent requests explicitly use its room
-  // unless the operator selects a different controlled room.
-  const roomId = filters.roomId ?? defaultRoomId
+  // The first GET obtains the exam; later requests use its current assigned room.
+  // Derive the ID from the response so a refreshed exam cannot retain an old selection.
+  const roomId = state.response?.exam.room?.id
   const search = filters.search.trim()
   const key = JSON.stringify([examId, search, filters.page, roomId, version])
 
@@ -53,18 +49,18 @@ export function useEntryControlStudents(examId: number) {
       )
         .then((response) => {
           if (!controller.signal.aborted) {
-            setDefaultRoomId(response.exam.room?.id)
             setState({ key, response, loading: false, error: null })
           }
         })
         .catch((cause: unknown) => {
           if (!controller.signal.aborted) {
-            setState({
+            // Retain the last exam context on failure without retrying with no room.
+            setState((current) => ({
+              ...current,
               key,
-              response: null,
               loading: false,
               error: getEntryControlErrorMessage(cause),
-            })
+            }))
           }
         })
     }, delay)
@@ -91,8 +87,6 @@ export function useEntryControlStudents(examId: number) {
     setQuery: (value: string) =>
       setFilters((current) => ({ ...current, search: value, page: 1 })),
     setPage: (page: number) => setFilters((current) => ({ ...current, page })),
-    setRoomId: (roomId: number) =>
-      setFilters((current) => ({ ...current, roomId, page: 1 })),
     reload: () => setVersion((current) => current + 1),
   }
 }

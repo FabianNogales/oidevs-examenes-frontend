@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useEffect } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -19,16 +20,14 @@ function TeacherExamEditContent({ examId }: { examId: string | undefined }) {
   return (
     <main className={styles.page}>
       <section className={styles.content}>
-        <nav
-          className={detailStyles.breadcrumb}
-          aria-label="Ruta de navegación"
-        >
-          <Link to={`/teacher/exams${search}`}>Mis exámenes</Link>
-          <span aria-hidden="true">/</span>
-          <Link to={backTo}>Detalle del examen</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Editar examen</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Mis exámenes', to: `/teacher/exams${search}` },
+            { label: 'Detalle del examen', to: backTo },
+            { label: 'Editar examen' },
+          ]}
+        />
         <header className={`${styles.pageHeader} ${detailStyles.header}`}>
           <h1>Editar examen</h1>
           <p>Actualiza la información de tu evaluación.</p>

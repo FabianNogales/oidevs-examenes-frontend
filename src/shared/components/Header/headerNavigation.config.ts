@@ -34,7 +34,16 @@ export const navigationByRole: Record<
     },
     {
       label: 'Mis exámenes',
-      to: '/teacher/exams',
+      children: [
+        {
+          label: 'Próximos y en curso',
+          to: '/teacher/exams?view=upcoming',
+          defaultSearchParams: { view: 'upcoming' },
+        },
+        { label: 'Exámenes anteriores', to: '/teacher/exams?view=past' },
+        { label: 'Exámenes cancelados', to: '/teacher/exams?view=cancelled' },
+        { label: 'Todos los exámenes', to: '/teacher/exams?view=all' },
+      ],
     },
     {
       label: 'Información',
@@ -81,7 +90,14 @@ export const navigationByRole: Record<
     },
     {
       label: 'Docentes',
-      to: '/admin/teachers',
+      children: [
+        { label: 'Gestionar docentes', to: '/admin/teachers' },
+        { label: 'Asignación de materias', to: '/admin/teachers/assignments' },
+        {
+          label: 'Importar asignaciones',
+          to: '/admin/teachers/assignments/import',
+        },
+      ],
     },
     {
       label: 'Estudiantes',
@@ -92,11 +108,17 @@ export const navigationByRole: Record<
     },
     {
       label: 'Aulas',
-      to: '/admin/rooms',
+      children: [
+        { label: 'Gestionar aulas', to: '/admin/rooms' },
+        { label: 'Importar aulas', to: '/admin/rooms/import' },
+      ],
     },
     {
       label: 'Materias',
-      to: '/admin/subjects',
+      children: [
+        { label: 'Gestionar materias', to: '/admin/subjects' },
+        { label: 'Importar materias', to: '/admin/subjects/import' },
+      ],
     },
     { label: 'Carreras', to: '/admin/careers' },
     { label: 'Auditoría', to: '/admin/audit-logs' },

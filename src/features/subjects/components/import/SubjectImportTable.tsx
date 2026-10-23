@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import type { SubjectImportRow } from '../../types/subjectImport.types'
 import { SUBJECT_CSV_COLUMNS } from '../../utils/subjectCsv'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
-import design from '@/features/students/components/StudentImportDesign.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
 
 const PAGE_SIZE = 20
@@ -23,10 +22,10 @@ export function SubjectImportTable({
   const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
   return (
     <section
-      className={design.studentsPreview}
+      className={styles.report}
       aria-label="Reporte de materias"
     >
-      <div className={design.studentsPreviewHeader}>
+      <div className={styles.reportHeader}>
         <h3>
           {confirmed ? 'Resultado por fila' : 'Materias y carreras encontradas'}
         </h3>
@@ -49,8 +48,8 @@ export function SubjectImportTable({
         </label>
       </div>
       {visible.length ? (
-        <div className={design.previewTableWrap}>
-          <table className={design.previewTable}>
+        <div className={styles.previewTableWrap}>
+          <table className={styles.previewTable}>
             <caption className={local.srOnly}>
               Reporte por fila del CSV de materias
             </caption>
@@ -81,11 +80,11 @@ export function SubjectImportTable({
                   ))}
                   <td data-label="Estado">
                     {row.status === 'VALID' || row.status === 'IMPORTED' ? (
-                      <span>
+                      <span className={styles.readyBadge}>
                         {confirmed ? 'Importada' : 'Lista para importar'}
                       </span>
                     ) : (
-                      <div className={design.rowObservations}>
+                      <div className={styles.rowObservations}>
                         <strong>
                           {row.status === 'OMITTED' ? 'Omitida' : 'Con errores'}
                         </strong>

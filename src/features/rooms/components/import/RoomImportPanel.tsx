@@ -10,8 +10,7 @@ import {
 } from '../../utils/roomCsv'
 import { RoomCsvDropzone } from './RoomCsvDropzone'
 import { RoomImportReport } from './RoomImportReport'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
-import design from '@/features/students/components/StudentImportDesign.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportRoomsPage.module.css'
 
 export function RoomImportPanel() {
@@ -73,7 +72,7 @@ export function RoomImportPanel() {
             Incluye estas columnas en el orden indicado. Código y nombre son
             obligatorios; los demás valores son opcionales.
           </p>
-          <div className={`${design.columnsGuide} ${local.columns}`}>
+          <div className={`${styles.columnsGuide} ${local.columns}`}>
             {ROOM_CSV_COLUMNS.map((column) => (
               <span key={column.key} title={column.header}>
                 {column.label}
@@ -186,8 +185,8 @@ export function RoomImportPanel() {
       )}
       {flow.kind === 'success' && (
         <>
-          <div className={design.successPanel}>
-            <div className={design.successHeader}>
+          <div className={styles.successPanel}>
+            <div className={styles.successHeader}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" />
                 <path d="m8 12 3 3 5-6" />

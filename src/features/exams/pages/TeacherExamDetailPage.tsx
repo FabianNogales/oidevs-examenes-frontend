@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useLocation, useParams } from 'react-router'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { ExamTools } from '@/features/exams/components/ExamTools'
@@ -18,14 +19,13 @@ function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
   return (
     <main className={styles.page}>
       <section className={styles.content}>
-        <nav
-          className={detailStyles.breadcrumb}
-          aria-label="Ruta de navegación"
-        >
-          <Link to={backToList}>Mis exámenes</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Detalle del examen</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Mis exámenes', to: backToList },
+            { label: 'Detalle del examen' },
+          ]}
+        />
         <header className={`${styles.pageHeader} ${detailStyles.header}`}>
           <h1>{exam?.name ?? 'Detalle del examen'}</h1>
           <p>Consulta la información y las herramientas de tu evaluación.</p>

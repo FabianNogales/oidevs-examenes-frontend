@@ -10,8 +10,7 @@ import {
 } from '../../utils/subjectCsv'
 import { SubjectCsvDropzone } from './SubjectCsvDropzone'
 import { SubjectImportReport } from './SubjectImportReport'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
-import design from '@/features/students/components/StudentImportDesign.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
 
 export function SubjectImportPanel() {
@@ -74,7 +73,7 @@ export function SubjectImportPanel() {
             el mismo nombre si pertenece a varias carreras. Las tres columnas
             son obligatorias.
           </p>
-          <div className={`${design.columnsGuide} ${local.columns}`}>
+          <div className={`${styles.columnsGuide} ${local.columns}`}>
             {SUBJECT_CSV_COLUMNS.map((column) => (
               <span key={column.key} title={column.header}>
                 {column.header}
@@ -181,8 +180,8 @@ export function SubjectImportPanel() {
       )}
       {flow.kind === 'success' && (
         <>
-          <div className={design.successPanel}>
-            <div className={design.successHeader}>
+          <div className={styles.successPanel}>
+            <div className={styles.successHeader}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" />
                 <path d="m8 12 3 3 5-6" />
