@@ -4,7 +4,7 @@ import type {
 } from '../../types/roomImport.types'
 import { RoomImportSummary } from './RoomImportSummary'
 import { RoomImportTable } from './RoomImportTable'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 
 export function RoomImportReport({
   report,

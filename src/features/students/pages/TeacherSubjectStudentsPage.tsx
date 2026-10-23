@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
@@ -137,6 +138,13 @@ export function TeacherSubjectStudentsPage() {
     return (
       <main className={styles.page}>
         <section className={styles.content}>
+          <Breadcrumbs
+            items={[
+              { label: 'Inicio', to: '/' },
+              { label: 'Estudiantes', to: '/teacher/students' },
+              { label: 'Estudiantes de la materia' },
+            ]}
+          />
           <div className={styles.state} role="alert">
             <h1>No se pudo acceder a la materia</h1>
             <p>{errorMessage ?? 'La materia no existe o no está disponible.'}</p>
@@ -152,6 +160,13 @@ export function TeacherSubjectStudentsPage() {
   return (
     <main className={styles.page}>
       <section className={styles.content}>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Estudiantes', to: '/teacher/students' },
+            { label: subject.name },
+          ]}
+        />
         <header className={styles.pageHeader}>
           <div className={styles.headingWrap}>
             <button

@@ -10,7 +10,7 @@ import {
 } from '../../utils/subjectCsv'
 import { SubjectCsvDropzone } from './SubjectCsvDropzone'
 import { SubjectImportReport } from './SubjectImportReport'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
 
 export function SubjectImportPanel() {

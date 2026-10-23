@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { RoomImportRow } from '../../types/roomImport.types'
 import { ROOM_CSV_COLUMNS } from '../../utils/roomCsv'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportRoomsPage.module.css'
 
 const PAGE_SIZE = 20
@@ -25,8 +25,8 @@ export function RoomImportTable({
     currentPage * PAGE_SIZE,
   )
   return (
-    <section className={styles.studentsPreview} aria-label="Reporte de aulas">
-      <div className={styles.studentsPreviewHeader}>
+    <section className={styles.report} aria-label="Reporte de aulas">
+      <div className={styles.reportHeader}>
         <h3>{confirmed ? 'Resultado por aula' : 'Aulas encontradas'}</h3>
         <label className={local.filter}>
           Mostrar registros

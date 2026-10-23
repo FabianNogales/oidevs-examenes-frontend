@@ -6,7 +6,8 @@ export interface HeaderNavigationItem {
   label: string
   to?: string
   end?: boolean
-  children?: HeaderNavigationItem[];
+  defaultSearchParams?: Readonly<Record<string, string>>
+  children?: HeaderNavigationItem[]
 }
 
 export interface HeaderUser {

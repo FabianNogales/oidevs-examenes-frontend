@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
 import { useAcademicTerms } from '../hooks/useAcademicTerms'
@@ -62,14 +63,12 @@ export function AdminAcademicTermsPage() {
         <Link to="/admin" className={styles.backLink}>
           <span aria-hidden="true">←</span>Volver al inicio
         </Link>
-        <nav className={styles.breadcrumb} aria-label="Ruta de navegación">
-          <ol>
-            <li>
-              <Link to="/admin">Inicio</Link>
-            </li>
-            <li aria-current="page">Periodos académicos</li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/admin' },
+            { label: 'Periodos académicos' },
+          ]}
+        />
         <header className={styles.pageHeader}>
           <div>
             <p className={styles.eyebrow}>Administrador</p>

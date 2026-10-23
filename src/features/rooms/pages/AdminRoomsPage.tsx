@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { Snackbar } from '@/shared/components/Snackbar'
@@ -76,6 +77,13 @@ export function AdminRoomsPage() {
   return (
     <section className={styles.page} aria-labelledby="rooms-title">
       <div className={styles.container}>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/admin' },
+            { label: 'Aulas' },
+            { label: 'Gestionar aulas' },
+          ]}
+        />
         <header className={styles.pageHeader}>
           <div>
             <p className={styles.eyebrow}>Administrador</p>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { SubjectImportRow } from '../../types/subjectImport.types'
 import { SUBJECT_CSV_COLUMNS } from '../../utils/subjectCsv'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
 
 const PAGE_SIZE = 20
@@ -22,10 +22,10 @@ export function SubjectImportTable({
   const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
   return (
     <section
-      className={styles.studentsPreview}
+      className={styles.report}
       aria-label="Reporte de materias"
     >
-      <div className={styles.studentsPreviewHeader}>
+      <div className={styles.reportHeader}>
         <h3>
           {confirmed ? 'Resultado por fila' : 'Materias y carreras encontradas'}
         </h3>

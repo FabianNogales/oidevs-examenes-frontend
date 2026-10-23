@@ -1,5 +1,6 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { OfferingImportPanel } from '../components/OfferingImportPanel'
 import { useOfferingNavigationGuard } from '../hooks/useOfferingNavigationGuard'
 import styles from './AdminCourseOfferingsPage.module.css'
@@ -20,15 +21,14 @@ export function ImportCourseOfferingsPage() {
   return (
     <section className={styles.page}>
       <div className={styles.container}>
-        <nav className={styles.breadcrumbs} aria-label="Ruta de navegación">
-          <Link to="/admin">Inicio</Link>
-          <span aria-hidden="true">/</span>
-          <Link to="/admin/teachers">Docentes</Link>
-          <span aria-hidden="true">/</span>
-          <Link to={back}>Materias asignadas</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Importar asignaciones</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/admin' },
+            { label: 'Docentes', to: '/admin/teachers' },
+            { label: 'Asignación de materias', to: back },
+            { label: 'Importar asignaciones' },
+          ]}
+        />
         <header className={styles.pageHeader}>
           <div>
             <h1>Importar asignaciones de materias</h1>

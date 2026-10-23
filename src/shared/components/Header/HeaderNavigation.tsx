@@ -1,23 +1,30 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { NavLink, useLocation } from 'react-router'
 
-import type { HeaderNavigationProps } from './header.types'
+import type {
+  HeaderNavigationItem,
+  HeaderNavigationProps,
+} from './header.types'
+import { isHeaderDestinationActive } from './headerNavigationActive'
 import styles from './Header.module.css'
 import { useStudentImportDraft } from '@/features/students/utils/studentImportDraft'
 
 export function HeaderNavigation(props: HeaderNavigationProps) {
   const location = useLocation()
-  return <HeaderNavigationContent key={location.pathname} {...props} />
+  return (
+    <HeaderNavigationContent
+      key={`${location.pathname}${location.search}`}
+      {...props}
+    />
+  )
 }
 
-function HeaderNavigationContent({
-  items,
-  onNavigate,
-}: HeaderNavigationProps) {
+function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const draft = useStudentImportDraft()
   const hasPendingImport = draft !== null
   const listRef = useRef<HTMLUListElement>(null)
+  const navigationId = useId()
   const location = useLocation()
 
   useEffect(() => {
@@ -31,27 +38,31 @@ function HeaderNavigationContent({
   }, [])
 
   const toggleDropdown = (label: string) => {
-    setOpenDropdown((previous) => previous === label ? null : label)
+    setOpenDropdown((previous) => (previous === label ? null : label))
   }
 
-  const dynamicItems = items.map(item => {
+  const dynamicItems = items.map((item) => {
     if (item.label === 'Estudiantes' && hasPendingImport) {
-      const alreadyHasItem = item.children?.some(c => c.label === 'Ultima importacion')
+      const alreadyHasItem = item.children?.some(
+        (c) => c.label === 'Ultima importacion',
+      )
       if (!alreadyHasItem) {
         return {
           ...item,
           children: [
             ...(item.children || []),
-            { label: 'Ultima importacion', to: '/admin/students/import' }
-          ]
+            { label: 'Ultima importacion', to: '/admin/students/import' },
+          ],
         }
       }
     }
     return item
   })
 
-  const isDropdownItemActive = (childLabel: string, childTo: string) => {
-    if (!location.pathname.startsWith(childTo)) return false
+  const isDropdownItemActive = (child: HeaderNavigationItem) => {
+    if (!isHeaderDestinationActive(child, location)) return false
+    const childLabel = child.label
+    const childTo = child.to
     if (childTo === '/admin/students/import') {
       const isNewView = location.state?.view === 'new'
       const isResumeView = location.state?.view === 'resume'
@@ -70,14 +81,26 @@ function HeaderNavigationContent({
 
   return (
     <ul className={styles.navigationList} ref={listRef}>
-      {dynamicItems.map((item) => {
+      {dynamicItems.map((item, index) => {
         const hasChildren = item.children && item.children.length > 0
-        const isParentActive = hasChildren && item.children?.some((child) => location.pathname.startsWith(child.to || ''))
+        const activeChild = item.children
+          ?.filter(isDropdownItemActive)
+          .sort((a, b) => (b.to?.length ?? 0) - (a.to?.length ?? 0))[0]
+        const isParentActive = Boolean(activeChild)
+        const dropdownId = `${navigationId}-${index}`
 
         return (
-          <li 
+          <li
             key={`${item.label}-${item.to ?? 'nav'}`}
             className={styles.navigationItem}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && openDropdown === item.label) {
+                event.preventDefault()
+                event.stopPropagation()
+                setOpenDropdown(null)
+                event.currentTarget.querySelector('button')?.focus()
+              }
+            }}
           >
             {hasChildren ? (
               <>
@@ -86,6 +109,7 @@ function HeaderNavigationContent({
                   className={`${styles.navigationLink} ${isParentActive ? styles.active : ''}`}
                   onClick={() => toggleDropdown(item.label)}
                   aria-expanded={openDropdown === item.label}
+                  aria-controls={dropdownId}
                 >
                   {item.label}
                   <svg
@@ -103,27 +127,35 @@ function HeaderNavigationContent({
                 </button>
 
                 {openDropdown === item.label && (
-                  <div className={styles.navigationDropdownMenu}>
+                  <div
+                    id={dropdownId}
+                    className={styles.navigationDropdownMenu}
+                  >
                     {item.children?.map((child) => {
-                      const linkState = child.label === 'Importar estudiantes'
-                        ? { view: 'new' }
-                        : child.label === 'Ultima importacion'
-                          ? { view: 'resume' }
-                          : undefined
+                      const linkState =
+                        child.label === 'Importar estudiantes'
+                          ? { view: 'new' }
+                          : child.label === 'Ultima importacion'
+                            ? { view: 'resume' }
+                            : undefined
 
                       return (
                         <NavLink
                           key={child.label}
                           to={child.to!}
                           state={linkState}
+                          aria-current={activeChild === child ? 'page' : false}
                           className={() =>
                             `${styles.navigationDropdownItem} ${
-                              isDropdownItemActive(child.label, child.to!) 
-                                ? styles.navigationDropdownItemActive 
+                              activeChild === child
+                                ? styles.navigationDropdownItemActive
                                 : ''
                             }`
                           }
-                          onClick={onNavigate}
+                          onClick={() => {
+                            setOpenDropdown(null)
+                            onNavigate?.()
+                          }}
                         >
                           {child.label}
                         </NavLink>

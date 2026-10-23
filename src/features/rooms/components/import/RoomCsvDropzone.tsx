@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type DragEvent } from 'react'
 import { formatRoomFileSize } from '../../utils/roomCsv'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 
 export function RoomCsvDropzone({
   file,

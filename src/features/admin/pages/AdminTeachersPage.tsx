@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useEffect, useState, useRef, useCallback, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
@@ -328,6 +329,13 @@ export function AdminTeachersPage() {
   return (
     <section className={styles.page}>
       <div className={styles.container}>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/admin' },
+            { label: 'Docentes' },
+            { label: 'Gestionar docentes' },
+          ]}
+        />
         <header className={styles.pageHeader}>
           <div>
             <p className={styles.eyebrow}>Administración</p>

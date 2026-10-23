@@ -45,6 +45,7 @@ function harness({ initialSession = [], opener = null, currentUser = A, navigati
       if (!(index in state)) state[index] = typeof initial === 'function' ? initial() : initial
       return [state[index], (value) => { state[index] = typeof value === 'function' ? value(state[index]) : value; rerenderRequested = true }]
     },
+    useId: () => `test-id-${cursor++}`,
     useRef: (initial) => { const index = cursor++; return state[index] ??= { current: initial } },
     useCallback: (callback) => callback, useMemo: (callback) => callback(),
     useSyncExternalStore: (_subscribe, snapshot) => snapshot(),

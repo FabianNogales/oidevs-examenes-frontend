@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react'
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { CreateExamModal } from '@/features/exams/components/CreateExamModal'
@@ -100,6 +101,9 @@ export function TeacherSubjectsPage({
   return (
     <main className={styles.page}>
       <section className={styles.content}>
+        <Breadcrumbs
+          items={[{ label: 'Inicio', to: '/' }, { label: 'Mis materias' }]}
+        />
         <header className={styles.pageHeader}>
           <div>
             <h1>Mis materias</h1>

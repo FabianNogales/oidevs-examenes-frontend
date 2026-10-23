@@ -10,7 +10,7 @@ import {
 } from '../../utils/roomCsv'
 import { RoomCsvDropzone } from './RoomCsvDropzone'
 import { RoomImportReport } from './RoomImportReport'
-import styles from '@/features/students/pages/ImportStudentsPage.module.css'
+import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportRoomsPage.module.css'
 
 export function RoomImportPanel() {

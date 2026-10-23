@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useSearchParams } from 'react-router'
 import { useCallback, useState } from 'react'
 import { CourseOfferingsPanel } from '../components/CourseOfferingsPanel'
@@ -30,6 +31,13 @@ export function AdminCourseOfferingsPage() {
   return (
     <section className={styles.page}>
       <div className={styles.container}>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/admin' },
+            { label: 'Docentes', to: '/admin/teachers' },
+            { label: 'Asignación de materias' },
+          ]}
+        />
         <Link to="/admin/teachers" className={styles.backLink}>
           ← Volver a Gestión de docentes
         </Link>

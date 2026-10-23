@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -44,6 +45,13 @@ export function TeacherStudentsPage() {
   return (
     <main className={styles.page}>
       <section className={styles.content}>
+        <Breadcrumbs
+          items={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Estudiantes' },
+            { label: 'Gestionar estudiantes' },
+          ]}
+        />
         <header className={styles.pageHeader}>
           <div>
             <h1>Estudiantes</h1>
