@@ -11,12 +11,30 @@
   font-family: var(--font-family);
 }
 
+.sidebar,
+.sidebarTop,
+.optionsNav,
+.mainArea,
+.bannerIdentity,
+.infoCardBody,
+.formGroup,
+.tabContentStack,
+.sectionTitleGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Rejillas de 2 columnas (base compartida) */
+.infoGrid,
+.editForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 /* ==========================================================================
    SIDEBAR LATERAL ("Opciones")
    ========================================================================== */
 .sidebar {
-  display: flex;
-  flex-direction: column;
   justify-content: space-between;
   padding: 28px 20px;
   background: var(--brand-blue-light, #eaf3ff);
@@ -24,8 +42,6 @@
 }
 
 .sidebarTop {
-  display: flex;
-  flex-direction: column;
   gap: 20px;
 }
 
@@ -38,8 +54,6 @@
 }
 
 .optionsNav {
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
@@ -66,7 +80,6 @@
   background: rgb(37 99 235 / 8%);
 }
 
-/* Estado activo en rosa/carmesí idéntico a los mockups */
 .optionBtnActive {
   background: var(--brand-pink-light, #f7e9ed);
   border-color: var(--brand-crimson, #8b1e3f);
@@ -114,8 +127,6 @@
    ÁREA PRINCIPAL Y BANNER SUPERIOR
    ========================================================================== */
 .mainArea {
-  display: flex;
-  flex-direction: column;
   gap: 24px;
   padding: 28px 36px;
   max-width: 1200px;
@@ -132,23 +143,12 @@
   box-shadow: 0 6px 20px rgb(23 37 84 / 6%);
 }
 
-/* Degradado horizontal suave celeste -> verde como en el mockup */
 .bannerActive {
-  background: linear-gradient(
-    90deg,
-    #e3f2fd 0%,
-    #d7f4e2 58%,
-    #2e7d32 100%
-  );
+  background: linear-gradient(90deg, #e3f2fd 0%, #d7f4e2 58%, #2e7d32 100%);
 }
 
 .bannerInactive {
-  background: linear-gradient(
-    90deg,
-    #e3f2fd 0%,
-    #fde8ec 58%,
-    #8b1e3f 100%
-  );
+  background: linear-gradient(90deg, #e3f2fd 0%, #fde8ec 58%, #8b1e3f 100%);
 }
 
 .avatarCircle {
@@ -165,7 +165,6 @@
   box-shadow: 0 4px 14px rgb(23 37 84 / 15%);
 }
 
-/* Colores de Avatar según Rol (Mockups) */
 .avatarStudent {
   background: var(--brand-navy, #172554);
 }
@@ -175,8 +174,6 @@
 }
 
 .bannerIdentity {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 
@@ -207,7 +204,6 @@
   font-weight: 600;
 }
 
-/* Píldora de Rol según Mockup */
 .roleBadgeStudent {
   background: var(--brand-blue, #2563eb);
 }
@@ -240,8 +236,6 @@
    GRILLA DE TARJETAS DE INFORMACIÓN (Pestaña "Perfil")
    ========================================================================== */
 .infoGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 24px;
 }
 
@@ -273,8 +267,6 @@
 }
 
 .infoCardBody {
-  display: flex;
-  flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
@@ -338,14 +330,10 @@
 }
 
 .editForm {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 22px;
 }
 
 .formGroup {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
@@ -419,10 +407,308 @@
   color: #ffffff;
 }
 
+/* ==========================================================================
+   DROPDOWN
+   ========================================================================== */
+.customSelectWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.statusSelect {
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--radius-md, 10px);
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.customSelectButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.customSelectIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast, 150ms ease);
+}
+
+.customSelectIconOpen {
+  transform: rotate(180deg);
+}
+
+.statusSelectActive {
+  background-color: #d1f4d9 !important;
+  border: 1.5px solid #2e7d32 !important;
+  color: #14532d !important;
+}
+
+.statusSelectActive:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, #2e7d32 20%, transparent);
+}
+
+.statusSelectInactive {
+  background-color: #fde8ec !important;
+  border: 1.5px solid #d9384a !important;
+  color: #9e1c2e !important;
+}
+
+.statusSelectInactive:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, #d9384a 20%, transparent);
+}
+
+/* Contenedor de las opciones */
+.customOptionsList {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+  border-radius: var(--radius-md, 10px);
+  box-shadow: var(--shadow-md);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 50;
+  overflow: hidden;
+}
+
+/* Opciones individuales */
+.customOption {
+  padding: 12px 14px;
+  color: var(--brand-navy, #172554);
+  font-family: var(--font-family, 'Poppins', sans-serif);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+/* Hover genérico */
+.customOption:hover {
+  background-color: var(--brand-blue-light, #eaf3ff);
+  color: var(--brand-blue, #2563eb);
+}
+
+/* Opción "Activo" seleccionada - Verde Universal */
+.customOptionActiveSuccess {
+  background-color: var(--color-success-soft, #dcfce7);
+  color: var(--color-success, #15803d);
+}
+
+.customOptionActiveSuccess:hover {
+  background-color: #cbf4d8;
+}
+
+/* Opción "Inactivo" seleccionada */
+.customOptionActiveDanger {
+  background-color: var(--color-error-soft, #fee2e2);
+  color: var(--color-error, #b91c1c);
+}
+
+.customOptionActiveDanger:hover {
+  background-color: #fdd4d4;
+}
+
+/* ==========================================================================
+   ESTILOS DE TABLAS Y SECCIONES
+   ========================================================================== */
+.tabContentStack {
+  gap: 24px;
+}
+
+.sectionHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sectionTitleGroup {
+  gap: 4px;
+}
+
+.sectionTitleGroup h2,
+.sectionTitleGroup h3 {
+  margin: 0;
+  color: var(--brand-navy, #172554);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sectionTitleGroup p {
+  margin: 0;
+  color: var(--color-text-secondary, #52627a);
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   PESTAÑAS DE FILTRO INTERNO ("Activas" / "Concluidas")
+   ========================================================================== */
+.filterTabsContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  background: var(--brand-blue-light, #eaf3ff);
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+  border-radius: 12px;
+}
+
+.filterTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 16px;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary, #52627a);
+  font-family: var(--font-family, 'Poppins', sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.filterTabBtn:hover:not(.filterTabBtnActive):not(.filterTabBtnCompletedActive) {
+  color: var(--brand-navy, #172554);
+  background: rgb(255 255 255 / 60%);
+}
+
+/* Pestaña "Activas" seleccionada (Énfasis verde semántico) */
+.filterTabBtnActive {
+  background: var(--color-surface, #ffffff);
+  border-color: #2e7d32;
+  color: #15803d;
+  box-shadow: 0 2px 6px rgb(23 37 84 / 8%);
+}
+
+/* Pestaña "Concluidas" seleccionada (Énfasis azul institucional) */
+.filterTabBtnCompletedActive {
+  background: var(--color-surface, #ffffff);
+  border-color: var(--brand-blue, #2563eb);
+  color: var(--brand-blue, #2563eb);
+  box-shadow: 0 2px 6px rgb(23 37 84 / 8%);
+}
+
+.filterTabCounter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgb(23 37 84 / 8%);
+  color: inherit;
+}
+
+.filterTabBtnActive .filterTabCounter {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.filterTabBtnCompletedActive .filterTabCounter {
+  background: var(--brand-blue-light, #eaf3ff);
+  color: var(--brand-blue, #2563eb);
+}
+
+/* Badges para Aprobado / Reprobado / Periodo / Exámenes / Roles */
+.termBadge,
+.examTypeBadge,
+.rolePill {
+  display: inline-flex;
+  align-items: center;
+}
+
+.termBadge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--brand-blue-light, #eaf3ff);
+  color: var(--brand-cobalt, #0049a8);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.groupBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: var(--brand-navy, #172554);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.examTypeBadge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--brand-pink-light, #f7e9ed);
+  color: var(--brand-crimson, #8b1e3f);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rolePill {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.rolePillStudent {
+  background: var(--brand-blue-light, #eaf3ff);
+  color: var(--brand-blue, #2563eb);
+  border: 1px solid #bfdbfe;
+}
+
+.rolePillCollaborator {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.rolePillTeacher {
+  background: var(--brand-pink-light, #f7e9ed);
+  color: var(--brand-crimson, #8b1e3f);
+  border: 1px solid var(--brand-pink, #d67a8c);
+}
+
+.rolePillAdmin {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 1150px) {
+  .collaboratorSplitGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .layoutWrapper {
     grid-template-columns: 1fr;
   }
+
   .infoGrid,
   .editForm {
     grid-template-columns: 1fr;

@@ -221,44 +221,6 @@ body,
   font-weight: var(--font-weight-bold);
 }
 
-.auth-info h1 {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
-  text-transform: uppercase;
-}
-
-.auth-card__header h2 {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-tight);
-}
-
-.auth-field label {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-normal);
-}
-
-.primary-button,
-.secondary-button {
-  display: inline-flex;
-  min-height: 2.8rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7rem;
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold); 
-  line-height: 1.14;
-}
-
 :where(h2) {
   font-size: var(--font-size-2xl);
 }
@@ -542,16 +504,13 @@ svg {
   height: 1.25rem;
 }
 
-.auth-info__benefit-icon--secure {
+.auth-info__benefit-icon--secure,
+.auth-info__benefit-icon--fast {
   color: var(--color-accent);
 }
 
 .auth-info__benefit-icon--trusted {
   color: var(--color-info);
-}
-
-.auth-info__benefit-icon--fast {
-  color: var(--color-accent);
 }
 
 .auth-info__benefits strong,
@@ -636,6 +595,7 @@ svg {
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
 }
 
 .auth-field__control {
@@ -737,6 +697,7 @@ svg {
   padding: 0.75rem 1rem;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
+  line-height: 1.14;
 }
 
 .primary-button {
@@ -943,10 +904,7 @@ svg {
     padding: 1.2rem;
   }
 
-  .auth-card__header h2 {
-    font-size: 1.65rem;
-  }
-
+  .auth-card__header h2,
   .auth-info h1 {
     font-size: 1.65rem;
   }

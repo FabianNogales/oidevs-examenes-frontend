@@ -1,7 +1,7 @@
-import { Link } from 'react-router'
 import { useState, useEffect, type FormEvent } from 'react'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
+import { ChevronDownIcon } from '@/assets/icons/ChevronDownIcon'
 
 export function ProfileEditTab({
   entity,
@@ -11,8 +11,10 @@ export function ProfileEditTab({
   const [firstNames, setFirstNames] = useState(entity.first_names)
   const [lastNames, setLastNames] = useState(entity.last_names)
   const [email, setEmail] = useState(entity.email)
-  const [institutionalCode, setInstitutionalCode] = useState(entity.institutional_code)
-  const [identityNumber, setIdentityNumber] = useState(entity.identity_number ?? '')
+  const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>(entity.status)
+  const [institutionalCode, setInstitutionalCode] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error'
@@ -23,8 +25,7 @@ export function ProfileEditTab({
     setFirstNames(entity.first_names)
     setLastNames(entity.last_names)
     setEmail(entity.email)
-    setInstitutionalCode(entity.institutional_code)
-    setIdentityNumber(entity.identity_number ?? '')
+    setStatus(entity.status)
   }, [entity])
 
   const handleSubmit = async (event: FormEvent) => {
@@ -45,7 +46,6 @@ export function ProfileEditTab({
 
     if (entity.role === 'TEACHER' && (
       !institutionalCode.trim() || institutionalCode.trim().length > 50 ||
-      !identityNumber.trim() || identityNumber.trim().length > 50 ||
       trimmedFirst.length > 100 || trimmedLast.length > 100 ||
       !trimmedEmail || trimmedEmail.length > 255 ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
@@ -61,10 +61,7 @@ export function ProfileEditTab({
         first_names: trimmedFirst,
         last_names: trimmedLast,
         email: trimmedEmail,
-        ...(entity.role === 'TEACHER' ? {
-          institutional_code: institutionalCode.trim(),
-          identity_number: identityNumber.trim(),
-        } : {}),
+        status: status,
       })
       setFeedback({
         type: 'success',
@@ -86,7 +83,7 @@ export function ProfileEditTab({
   return (
     <section className={layoutStyles.sectionCard}>
       <h2>Editar datos del perfil</h2>
-      <p>Modifica los nombres y los campos habilitados para administración.</p>
+      <p>Modifica los nombres, correo y el estado de habilitación de la cuenta.</p>
 
       <form className={layoutStyles.editForm} onSubmit={handleSubmit}>
         {feedback && (
@@ -168,29 +165,60 @@ export function ProfileEditTab({
           />
         </div>
 
-        {entity.role === 'TEACHER' && (
-          <>
-            <div className={layoutStyles.formGroup}>
-              <label htmlFor="edit-identity-number">Carnet de identidad</label>
-              <input
-                id="edit-identity-number"
-                type="text"
-                className={layoutStyles.formInput}
-                value={identityNumber}
-                onChange={(event) => setIdentityNumber(event.target.value)}
-                maxLength={50}
-                required
-                disabled={saving}
+        {/* CAMPO DE ESTADO - CUSTOM DROPDOWN*/}
+        <div className={layoutStyles.formGroup}>
+          <label id="edit-status-label">Estado de la cuenta</label>
+          <div className={layoutStyles.customSelectWrapper}>
+            <button
+              type="button"
+              aria-labelledby="edit-status-label"
+              className={`${layoutStyles.formInput} ${layoutStyles.statusSelect} ${layoutStyles.customSelectButton} ${
+                status === 'ACTIVE'
+                  ? layoutStyles.statusSelectActive
+                  : layoutStyles.statusSelectInactive
+              }`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              disabled={saving}
+            >
+              <span>
+                {status === 'ACTIVE' ? 'Activo (Habilitado)' : 'Inactivo (Inhabilitado)'}
+              </span>
+              
+              <ChevronDownIcon 
+                className={`${layoutStyles.customSelectIcon} ${
+                  isDropdownOpen ? layoutStyles.customSelectIconOpen : ''
+                }`} 
               />
-            </div>
-            <p>
-              Las materias se administran por periodo desde{' '}
-              <Link to={`/admin/teachers/assignments?teacher_id=${entity.id}`}>
-                Gestionar asignaciones
-              </Link>. Guarda primero los cambios de los datos personales.
-            </p>
-          </>
-        )}
+            </button>
+
+            {isDropdownOpen && !saving && (
+              <ul className={layoutStyles.customOptionsList}>
+                <li
+                  className={`${layoutStyles.customOption} ${
+                    status === 'ACTIVE' ? layoutStyles.customOptionActiveSuccess : ''
+                  }`}
+                  onClick={() => {
+                    setStatus('ACTIVE')
+                    setIsDropdownOpen(false)
+                  }}
+                >
+                  Activo
+                </li>
+                <li
+                  className={`${layoutStyles.customOption} ${
+                    status === 'INACTIVE' ? layoutStyles.customOptionActiveDanger : ''
+                  }`}
+                  onClick={() => {
+                    setStatus('INACTIVE')
+                    setIsDropdownOpen(false)
+                  }}
+                >
+                  Inactivo
+                </li>
+              </ul>
+            )}
+          </div>
+        </div>
 
         <div className={layoutStyles.formActions}>
           <button

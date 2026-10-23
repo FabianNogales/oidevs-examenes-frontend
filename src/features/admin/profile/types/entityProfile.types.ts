@@ -42,6 +42,7 @@ export interface EditableEntityValues {
   first_names: string
   last_names: string
   email: string
+  status: 'ACTIVE' | 'INACTIVE'
 }
 
 /** Props que recibe cualquier subpágina/pestaña de opción */

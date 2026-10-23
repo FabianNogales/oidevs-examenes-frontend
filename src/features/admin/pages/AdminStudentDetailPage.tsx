@@ -16,6 +16,7 @@ import type {
 import {
   getAdminStudent,
   updateAdminStudent,
+  updateAdminStudentStatus,
 } from '@/features/admin/api/adminStudentsApi'
 import type { StudentDetail } from '@/features/admin/types/student.types'
 
@@ -113,10 +114,32 @@ export function AdminStudentDetailPage({
     })
   }
 
+  // 2. FUNCIÓN ACTUALIZADA PARA MANEJAR TEXTO Y ESTADO
   const handleUpdateStudent = async (values: EditableEntityValues) => {
     if (!student) return
-    const updated = await updateAdminStudent(student.id, values)
-    setStudent(updated)
+    let currentStudentData = { ...student }
+    if (values.status !== student.status) {
+      await updateAdminStudentStatus(student.id.toString(), values.status)
+      currentStudentData.status = values.status
+    }
+    const hasTextChanges =
+      values.first_names !== student.first_names ||
+      values.last_names !== student.last_names ||
+      values.email !== student.email
+
+    if (hasTextChanges) {
+      const textPayload = {
+        first_names: values.first_names,
+        last_names: values.last_names,
+        email: values.email,
+        institutional_code: student.institutional_code, 
+      }
+      
+      const updatedDetail = await updateAdminStudent(student.id.toString(), textPayload)
+      currentStudentData = updatedDetail
+    }
+
+    setStudent(currentStudentData)
   }
 
   const backRoute = getBackRouteByContext(moduleContext)
