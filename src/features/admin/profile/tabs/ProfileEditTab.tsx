@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { useState, useEffect, type FormEvent } from 'react'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
@@ -40,6 +41,17 @@ export function ProfileEditTab({
         type: 'error',
         text: 'Los nombres y apellidos son obligatorios y no pueden quedar vacíos.',
       })
+      return
+    }
+
+    if (entity.role === 'TEACHER' && (
+      !institutionalCode.trim() || institutionalCode.trim().length > 50 ||
+      !identityNumber.trim() || identityNumber.trim().length > 50 ||
+      trimmedFirst.length > 100 || trimmedLast.length > 100 ||
+      !trimmedEmail || trimmedEmail.length > 255 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
+    )) {
+      setFeedback({ type: 'error', text: 'Revisa los campos obligatorios, sus longitudes y el formato del correo.' })
       return
     }
 
@@ -146,8 +158,11 @@ export function ProfileEditTab({
             id="edit-sis"
             type="text"
             className={layoutStyles.formInput}
-            value={entity.institutional_code}
-            disabled
+            value={institutionalCode}
+            onChange={(event) => setInstitutionalCode(event.target.value)}
+            maxLength={50}
+            required={entity.role === 'TEACHER'}
+            disabled={entity.role !== 'TEACHER' || saving}
           />
         </div>
 

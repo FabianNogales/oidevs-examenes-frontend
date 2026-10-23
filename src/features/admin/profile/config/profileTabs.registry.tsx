@@ -129,6 +129,6 @@ export function getBackRouteByContext(context: ProfileModuleContext): string {
     case 'teachers':
       return '/admin/teachers'
     case 'users':
-      return '/admin/users'
+      return '/admin/users/manage'
   }
 }

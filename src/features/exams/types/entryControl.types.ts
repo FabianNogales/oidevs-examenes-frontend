@@ -24,6 +24,8 @@ export type EntryControlExam = {
   duration_minutes: number
   evaluation_type: EvaluationType
   status: string
+  entry_available: boolean
+  entry_unavailable_reason: string | null
   room: Room | null
 }
 

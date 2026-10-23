@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 
 import {
@@ -336,14 +337,19 @@ export function AdminTeachersPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className={styles.registerButton}
-            onClick={handleOpenCreate}
-          >
-            <span aria-hidden="true">+</span>
-            Registrar docente
-          </button>
+          <div className={styles.headerActions}>
+            <Link className={styles.assignButton} to="/admin/teachers/assignments">
+              Asignación de materias
+            </Link>
+            <button
+              type="button"
+              className={styles.registerButton}
+              onClick={handleOpenCreate}
+            >
+              <span aria-hidden="true">+</span>
+              Registrar docente
+            </button>
+          </div>
         </header>
 
         {/* Redirige automáticamente a /admin/teachers/:id al pulsar "Ver perfil" */}

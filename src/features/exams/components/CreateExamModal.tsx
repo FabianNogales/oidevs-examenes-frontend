@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
+import { ExamFormFields } from './ExamFormFields'
 import { useAvailableRooms } from '@/features/exams/hooks/useAvailableRooms'
 import {
   getApiFieldErrors,
   getRequestStatus,
 } from '@/features/auth/utils/apiErrors'
-import {
-  getLocalDate,
-  validateExamForm,
-} from '@/features/exams/utils/examValidation'
+import { validateExamForm } from '@/features/exams/utils/examValidation'
 import type {
   CreateExamPayload,
   EvaluationType,
@@ -36,12 +34,6 @@ const DEFAULT_FORM = {
   rules: '',
 }
 
-const EVALUATION_LABELS: Record<EvaluationType, string> = {
-  partial: 'Parcial',
-  final: 'Final',
-  makeup: '2da instancia',
-}
-
 export function CreateExamModal({
   isOpen,
   subject,
@@ -62,13 +54,6 @@ export function CreateExamModal({
     )
   const submittingRef = useRef(false)
   const firstInputRef = useRef<HTMLInputElement>(null)
-  const nameId = useId()
-  const evaluationTypeId = useId()
-  const dateId = useId()
-  const timeId = useId()
-  const durationId = useId()
-  const rulesId = useId()
-  const roomId = useId()
   const subjectId = useId()
   const selectedSubject = subject
 
@@ -234,168 +219,19 @@ export function CreateExamModal({
           </p>
         ) : null}
 
-        <div className={styles.formGrid}>
-          <div className={styles.fieldFull}>
-            <label htmlFor={nameId}>Nombre del examen *</label>
-            <input
-              id={nameId}
-              {...fieldAccessibility('name', nameId)}
-              ref={firstInputRef}
-              type="text"
-              maxLength={255}
-              value={formValues.name}
-              onChange={(event) =>
-                handleInputChange('name', event.target.value)
-              }
-              placeholder="Ej. Primer parcial"
-              disabled={isSubmitting}
-            />
-            {renderFieldError('name', nameId)}
-          </div>
-
-          <div className={styles.fieldHalf}>
-            <label htmlFor={evaluationTypeId}>Tipo de evaluación *</label>
-            <select
-              id={evaluationTypeId}
-              {...fieldAccessibility('evaluation_type', evaluationTypeId)}
-              aria-describedby={
-                [
-                  errorFor('evaluation_type') ? `${evaluationTypeId}-error` : null,
-                  formValues.evaluation_type === 'makeup'
-                    ? `${evaluationTypeId}-info`
-                    : null,
-                ].filter(Boolean).join(' ') || undefined
-              }
-              value={formValues.evaluation_type}
-              onChange={(event) =>
-                handleInputChange(
-                  'evaluation_type',
-                  event.target.value as EvaluationType,
-                )
-              }
-              disabled={isSubmitting}
-            >
-              {Object.entries(EVALUATION_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            {formValues.evaluation_type === 'makeup' ? (
-              <p id={`${evaluationTypeId}-info`} className={styles.inlineInfo}>
-                Este tipo de examen requiere validación de habilitaciones antes
-                del control de ingreso.
-              </p>
-            ) : null}
-            {renderFieldError('evaluation_type', evaluationTypeId)}
-          </div>
-
-          <div className={styles.fieldHalf}>
-            <label htmlFor={dateId}>Fecha *</label>
-            <input
-              id={dateId}
-              {...fieldAccessibility('exam_date', dateId)}
-              type="date"
-              min={getLocalDate()}
-              value={formValues.exam_date}
-              onChange={(event) =>
-                handleInputChange('exam_date', event.target.value)
-              }
-              disabled={isSubmitting}
-            />
-            {renderFieldError('exam_date', dateId)}
-          </div>
-
-          <div className={styles.fieldHalf}>
-            <label htmlFor={timeId}>Hora *</label>
-            <input
-              id={timeId}
-              {...fieldAccessibility('start_time', timeId)}
-              type="time"
-              value={formValues.start_time}
-              onChange={(event) =>
-                handleInputChange('start_time', event.target.value)
-              }
-              disabled={isSubmitting}
-            />
-            {renderFieldError('start_time', timeId)}
-          </div>
-
-          <div className={styles.fieldHalf}>
-            <label htmlFor={durationId}>Duración (minutos) *</label>
-            <input
-              id={durationId}
-              {...fieldAccessibility('duration_minutes', durationId)}
-              type="number"
-              min={1}
-              step={1}
-              value={formValues.duration_minutes}
-              onChange={(event) =>
-                handleInputChange('duration_minutes', event.target.value)
-              }
-              disabled={isSubmitting}
-            />
-            {renderFieldError('duration_minutes', durationId)}
-          </div>
-
-          <div className={styles.fieldHalf}>
-            <label htmlFor={roomId}>Ambiente *</label>
-            <select
-              id={roomId}
-              {...fieldAccessibility('room_id', roomId)}
-              value={selectedRoomAvailable ? formValues.room_id : ''}
-              onChange={(event) =>
-                handleInputChange('room_id', event.target.value)
-              }
-              disabled={isSubmitting || isLoadingRooms || rooms.length === 0}
-            >
-              {!hasSchedule ? (
-                <option value="">Completa fecha, hora y duración</option>
-              ) : isLoadingRooms ? (
-                <option value="">Cargando ambientes...</option>
-              ) : rooms.length > 0 ? (
-                <>
-                  <option value="">Selecciona un ambiente</option>
-                  {rooms.map((room) => (
-                    <option key={room.id} value={String(room.id)}>
-                      {room.code} — {room.name}
-                      {room.location ? ` (${room.location})` : ''}
-                    </option>
-                  ))}
-                </>
-              ) : (
-                <option value="">
-                  {roomError
-                    ? 'No se pudieron consultar los ambientes'
-                    : 'No hay ambientes disponibles para este horario'}
-                </option>
-              )}
-            </select>
-            {renderFieldError('room_id', roomId)}
-          </div>
-
-          <div className={styles.fieldFull}>
-            <label htmlFor={rulesId}>Normas / restricciones</label>
-            <textarea
-              id={rulesId}
-              {...fieldAccessibility('rules', rulesId)}
-              rows={4}
-              value={formValues.rules}
-              onChange={(event) =>
-                handleInputChange('rules', event.target.value)
-              }
-              placeholder="Ej. Sin calculadoras durante la prueba."
-              disabled={isSubmitting}
-            />
-            {renderFieldError('rules', rulesId)}
-          </div>
-
+        <ExamFormFields
+          values={formValues}
+          errors={fieldErrors}
+          roomsState={{ rooms, roomError, isLoadingRooms, hasSchedule }}
+          disabled={isSubmitting}
+          onChange={handleInputChange}
+          nameInputRef={firstInputRef}
+        >
           <div className={styles.stateRow}>
             <span className={styles.stateLabel}>Estado inicial</span>
             <span className={styles.badge}>Programado</span>
           </div>
-        </div>
-
+        </ExamFormFields>
         {submitError ? (
           <p className={styles.inlineError} role="alert">
             {submitError}

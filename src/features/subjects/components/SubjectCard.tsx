@@ -30,6 +30,9 @@ export function SubjectCard({
       <div className={styles.subjectInfo}>
         <span className={styles.label}>Gestion academica</span>
         <span>{subject.academicManagement}</span>
+        {subject.canManage === false && (
+          <small>Solo consulta · Asignación no habilitada</small>
+        )}
       </div>
 
       <div className={styles.actions} aria-label={`Acciones para ${subject.name}`}>
@@ -37,6 +40,7 @@ export function SubjectCard({
           <button
             type="button"
             onClick={() => onCreateExam?.(subject)}
+            disabled={subject.canManage === false}
             title="Crear examen"
           >
             Crear examen

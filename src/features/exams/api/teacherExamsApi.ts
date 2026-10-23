@@ -43,6 +43,7 @@ export type RoomSchedule = {
   exam_date: string
   start_time: string
   duration_minutes: number
+  exclude_exam_id?: number
 }
 
 export async function getRooms(

@@ -35,7 +35,6 @@ function mapTeacherToUnifiedProfile(data: Teacher): UnifiedEntityProfile {
     email: data.email ?? '',
     status: data.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
     role: 'TEACHER',
-    career_name: 'Departamento de Informática y Sistemas',
   }
 }
 
@@ -115,8 +114,8 @@ export function AdminTeacherDetailPage({
     if (!teacher) return
 
     const updated = await updateAdminTeacher(teacher.id, {
-      institutional_code: teacher.institutional_code,
-      identity_number: teacher.identity_number,
+      institutional_code: (values.institutional_code ?? teacher.institutional_code).trim(),
+      identity_number: (values.identity_number ?? teacher.identity_number).trim(),
       first_names: values.first_names.trim(),
       last_names: values.last_names.trim(),
       email: values.email.trim().toLowerCase(),

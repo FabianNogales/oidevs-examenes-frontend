@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { CollaborationModal as Modal } from '@/features/collaborations/components/CollaborationModal'
+import { EligibilityApiError, getBulkEligibilityNotice } from '../api/eligibilitiesApi'
 import type { BulkEligibilityResult } from '../types/eligibility.types'
 import { getSafeEligibilityMessage } from '../utils/eligibilityErrors'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
@@ -10,6 +11,10 @@ const MAX_FILE_BYTES = 5 * 1024 * 1024
 type Props = {
   onClose: () => void
   onProcess: (file: File, signal: AbortSignal) => Promise<BulkEligibilityResult>
+  listLoading: boolean
+  listError: string | null
+  onReload: () => Promise<void>
+  onReview: () => void
 }
 
 function validateFile(file: File): string | null {
@@ -18,15 +23,17 @@ function validateFile(file: File): string | null {
   return null
 }
 
-export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
+export function BulkEligibilitiesModal({ onClose, onProcess, listLoading, listError, onReload, onReview }: Props) {
   const fieldId = useId()
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<BulkEligibilityResult | null>(null)
+  const [outcomeUnknown, setOutcomeUnknown] = useState(false)
   const request = useRef<AbortController | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const fileError = file ? validateFile(file) : null
+  const notice = result ? getBulkEligibilityNotice(result) : null
 
   useEffect(() => () => request.current?.abort(), [])
 
@@ -35,7 +42,7 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
   }
 
   async function process() {
-    if (request.current || result) return
+    if (request.current || result || outcomeUnknown) return
     if (!file || fileError) {
       setError(fileError ?? 'Selecciona un archivo CSV para procesar.')
       fileInput.current?.focus()
@@ -50,6 +57,7 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
       if (!controller.signal.aborted) setResult(processed)
     } catch (cause) {
       if (!controller.signal.aborted) {
+        setOutcomeUnknown(!(cause instanceof EligibilityApiError) || cause.outcomeUnknown)
         setError(cause instanceof Error ? cause.message : 'No se pudo procesar el archivo.')
       }
     } finally {
@@ -88,7 +96,7 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
               ref={fileInput}
               type="file"
               accept=".csv"
-              disabled={busy}
+              disabled={busy || outcomeUnknown}
               aria-describedby={`${fieldId}-format${error ? ` ${fieldId}-error` : ''}`}
               aria-invalid={fileError ? true : undefined}
               onChange={(event) => {
@@ -110,7 +118,8 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
               className={styles.bulkResult}
               aria-labelledby={`${fieldId}-result`}
             >
-              <h3 id={`${fieldId}-result`}>Resultado de la carga</h3>
+              <h3 id={`${fieldId}-result`}>{notice?.title}</h3>
+              <p className={sharedStyles.note}>{notice?.message}</p>
               <dl className={styles.bulkSummary} role="status" aria-live="polite">
                 <div>
                   <dt>Total de registros</dt>
@@ -125,7 +134,7 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
                   <dd>{result.failed_rows}</dd>
                 </div>
               </dl>
-              {result.failed_rows > 0 ? (
+              {result.updated_rows > 0 && result.failed_rows > 0 ? (
                 <p className={sharedStyles.note}>
                   Las filas con errores no se actualizaron. Las actualizaciones
                   correctas se conservaron.
@@ -152,7 +161,7 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
                         {result.errors.map((issue, index) => (
                           <tr key={`${issue.row}-${index}`}>
                             <td>{issue.row}</td>
-                            <td className={styles.sisCode}>{issue.sis_code}</td>
+                            <td className={styles.sisCode}>{issue.sis_code?.trim() ? issue.sis_code : '—'}</td>
                             <td>
                               <ul>
                                 {Object.values(issue.messages).flat().map((message, messageIndex) => (
@@ -171,6 +180,27 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
               ) : null}
             </section>
           ) : null}
+          {result && result.updated_rows > 0 ? (
+            <div aria-live="polite">
+              {listLoading ? <p role="status">Actualizando listado de habilitaciones…</p> : null}
+              {listError ? (
+                <>
+                  <p className={sharedStyles.error} role="alert">
+                    La carga está confirmada, pero no se pudo actualizar el listado de habilitaciones.
+                  </p>
+                  <button type="button" className={sharedStyles.secondaryButton}
+                    onClick={() => void onReload()} disabled={listLoading}>
+                    Actualizar listado
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+          {outcomeUnknown ? (
+            <button type="button" className={sharedStyles.primaryButton} onClick={onReview}>
+              Revisar habilitaciones
+            </button>
+          ) : null}
           <div className={styles.modalActions}>
             <button
               type="button"
@@ -178,12 +208,12 @@ export function BulkEligibilitiesModal({ onClose, onProcess }: Props) {
               onClick={close}
               disabled={busy}
             >
-              {result ? 'Cerrar' : 'Cancelar'}
+              {result || outcomeUnknown ? 'Cerrar' : 'Cancelar'}
             </button>
             <button
               type="submit"
               className={sharedStyles.primaryButton}
-              disabled={busy || !file || !!fileError || !!result}
+              disabled={busy || !file || !!fileError || !!result || outcomeUnknown}
             >
               {busy ? 'Procesando…' : 'Procesar'}
             </button>

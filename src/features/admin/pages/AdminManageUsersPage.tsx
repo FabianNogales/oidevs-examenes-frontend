@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 
-import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
+import { useLocation } from 'react-router'
 import {
   getAdminUsersMock,
-  updateAdminUserStatusMock,
   type AdminUserItem,
 } from '@/features/admin/api/adminUsersMock'
 
@@ -77,8 +76,7 @@ export function AdminManageUsersPage() {
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const [pendingToggle, setPendingToggle] = useState<AdminUserItem | null>(null)
-  const [toggling, setToggling] = useState(false)
+  const historyView = useLocation().pathname === '/admin/users/history'
 
   const requestIdRef = useRef(0)
 
@@ -125,8 +123,10 @@ export function AdminManageUsersPage() {
   }, [])
 
   useEffect(() => {
-    void loadUsers(currentPage, searchTerm)
-  }, [currentPage, searchTerm, loadUsers])
+    let cancelled = false
+    void Promise.resolve().then(() => { if (!cancelled && !historyView) void loadUsers(currentPage, searchTerm) })
+    return () => { cancelled = true; requestIdRef.current += 1 }
+  }, [currentPage, searchTerm, loadUsers, historyView])
 
   const handleSearch = (query: string) => {
     setCurrentPage(1)
@@ -136,57 +136,6 @@ export function AdminManageUsersPage() {
     }
     setSearchTerm(query)
   }
-
-  const handleConfirmToggle = async () => {
-    if (!pendingToggle) return
-
-    const newStatus = pendingToggle.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-
-    try {
-      setToggling(true)
-      setErrorMessage(null)
-
-      const updated = await updateAdminUserStatusMock(
-        pendingToggle.id,
-        newStatus,
-      )
-
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === updated.id ? { ...user, ...updated } : user,
-        ),
-      )
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo cambiar el estado del usuario.',
-      )
-    } finally {
-      setToggling(false)
-      setPendingToggle(null)
-    }
-  }
-
-  /**
-   * Resuelve la ruta de "Ver perfil" según el rol del usuario
-   * reutilizando las vistas de detalle existentes en el módulo Admin.
-   */
-  const resolveProfilePath = (user: AdminUserItem): string => {
-    const targetId = user.entity_id ?? user.id
-    if (user.role === 'TEACHER') {
-      return `/admin/teachers/${targetId}`
-    }
-    if (user.role === 'STUDENT' || user.role === 'COLLABORATOR') {
-      return `/admin/students/${targetId}`
-    }
-    return `/admin/users/${user.id}`
-  }
-
-  const pendingWillDeactivate = pendingToggle?.status === 'ACTIVE'
-  const pendingName = pendingToggle
-    ? `${pendingToggle.first_names} ${pendingToggle.last_names}`
-    : ''
 
   return (
     <div className={styles.pageContainer}>
@@ -200,14 +149,14 @@ export function AdminManageUsersPage() {
 
       <header className={styles.pageHeader}>
         <div className={styles.headerTitles}>
-          <h1>Gestión de usuarios</h1>
+          <h1>{historyView ? 'Historial de usuarios y roles' : 'Gestión de usuarios'}</h1>
           <p>
-            Consulta y administra los usuarios y roles registrados en el sistema EIDA.
+            Vista de demostración con datos simulados. Usuarios y roles aún no están integrados; no se aplican cambios.
           </p>
         </div>
       </header>
 
-      <DataTable<AdminUserItem>
+      {historyView ? <p role="status">El historial real de usuarios y roles está pendiente de integración.</p> : <DataTable<AdminUserItem>
         columns={USER_COLUMNS}
         data={users}
         loading={loading}
@@ -218,30 +167,15 @@ export function AdminManageUsersPage() {
         onSearch={handleSearch}
         onPageChange={setCurrentPage}
         onRetry={() => void loadUsers(currentPage, searchTerm)}
-        getProfilePath={resolveProfilePath}
-        onToggleStatus={(user) => setPendingToggle(user)}
         emptyTitle="No se encontraron usuarios"
         emptyDescription={
           searchTerm
             ? 'Prueba con otro nombre, correo o código institucional.'
             : 'Todavía no existen usuarios registrados en el sistema.'
         }
-      />
+      />}
 
-      <ConfirmDialog
-        isOpen={pendingToggle !== null}
-        title={pendingWillDeactivate ? 'Desactivar cuenta' : 'Activar cuenta'}
-        message={
-          pendingWillDeactivate
-            ? `¿Seguro que deseas desactivar la cuenta de ${pendingName}? El usuario no podrá acceder al sistema hasta que la actives nuevamente.`
-            : `¿Seguro que deseas activar la cuenta de ${pendingName}? El usuario podrá volver a acceder al sistema.`
-        }
-        confirmLabel={pendingWillDeactivate ? 'Sí, desactivar' : 'Sí, activar'}
-        variant={pendingWillDeactivate ? 'danger' : 'success'}
-        loading={toggling}
-        onConfirm={handleConfirmToggle}
-        onCancel={() => setPendingToggle(null)}
-      />
+
     </div>
   )
 }

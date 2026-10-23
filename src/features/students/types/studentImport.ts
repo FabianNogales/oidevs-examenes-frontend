@@ -30,9 +30,21 @@ export type StudentImportPreview = {
   rows: StudentImportPreviewRow[]
 }
 
+export type StudentImportResult = {
+  row: number
+  sis_code: string
+  status: 'IMPORTED' | 'SKIPPED' | 'FAILED'
+  errors: string[]
+  student_id: number | null
+}
+
 export type StudentImportConfirmation = StudentImportPreview & {
   imported_rows: number
+  skipped_rows: number
   failed_rows: number
+  results: StudentImportResult[]
+  audit_status: 'RECORDED' | 'FAILED'
+  warnings: string[]
 }
 
 export type StudentImportPreviewResponse = {

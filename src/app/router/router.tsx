@@ -16,6 +16,8 @@ import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
 import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
+import { TeacherExamDetailPage } from '@/features/exams/pages/TeacherExamDetailPage'
+import { TeacherExamEditPage } from '@/features/exams/pages/TeacherExamEditPage'
 import { ExamEligibilitiesPage } from '@/features/eligibilities/pages/ExamEligibilitiesPage'
 import { ExamCollaboratorsPage } from '@/features/collaborations/pages/ExamCollaboratorsPage'
 import { CollaboratorPage } from '@/features/collaborations/pages/CollaboratorPage'
@@ -76,12 +78,36 @@ export const router = createBrowserRouter([
                     element: <AdminManageUsersPage />,
                   },
                   {
+                    path: 'audit-logs',
+                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="audit-logs" /> } },
+                  },
+                  {
+                    path: 'careers',
+                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="careers" /> } },
+                  },
+                  {
                     path: 'users/history',
                     element: <AdminManageUsersPage />,
                   },
                   {
                     path: 'teachers',
                     element: <AdminTeachersPage />,
+                  },
+                  {
+                    path: 'teachers/assignments',
+                    lazy: async () => {
+                      const { AdminCourseOfferingsPage } =
+                        await import('@/features/course-offerings/pages/AdminCourseOfferingsPage')
+                      return { Component: AdminCourseOfferingsPage }
+                    },
+                  },
+                  {
+                    path: 'teachers/assignments/import',
+                    lazy: async () => {
+                      const { ImportCourseOfferingsPage } =
+                        await import('@/features/course-offerings/pages/ImportCourseOfferingsPage')
+                      return { Component: ImportCourseOfferingsPage }
+                    },
                   },
                   {
                     path: 'teachers/:teacherId',
@@ -165,6 +191,14 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/exams',
                 element: <TeacherExamsPage />,
+              },
+              {
+                path: 'teacher/exams/:examId',
+                element: <TeacherExamDetailPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/edit',
+                element: <TeacherExamEditPage />,
               },
               {
                 path: 'teacher/exams/:examId/collaborators',

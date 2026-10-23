@@ -3,6 +3,8 @@ export interface Subject {
   code: string | null
   name: string
   academicManagement: string
+  offeringStatus?: 'ACTIVE' | 'INACTIVE'
+  canManage?: boolean
 }
 
 export interface LegacySubjectDto {
@@ -14,12 +16,16 @@ export interface LegacySubjectDto {
 
 export interface TeacherDashboardSubjectDto {
   course_offering_id: string | number
+  status?: 'ACTIVE' | 'INACTIVE'
+  can_manage?: boolean
   subject: {
     code: string
     name: string
+    status?: 'ACTIVE' | 'INACTIVE'
   }
   academic_term: {
     name: string
+    status?: 'ACTIVE' | 'INACTIVE'
   }
 }
 
@@ -35,5 +41,12 @@ export function mapTeacherDashboardSubject(
     code: dto.subject.code,
     name: dto.subject.name,
     academicManagement: dto.academic_term.name,
+    offeringStatus: dto.status,
+    canManage:
+      dto.status === 'INACTIVE' ||
+      dto.subject.status === 'INACTIVE' ||
+      dto.academic_term.status === 'INACTIVE'
+        ? false
+        : dto.can_manage,
   }
 }

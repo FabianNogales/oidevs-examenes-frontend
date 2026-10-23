@@ -17,7 +17,7 @@ const statusOrder: Record<StudentQrStatus, number> = {
 
 export function StudentQrPage() {
   const exams = useStudentExams()
-  const qr = useStudentQr()
+  const qr = useStudentQr(exams.data)
   const orderedExams = useMemo(
     () =>
       [...exams.data].sort((first, second) => {

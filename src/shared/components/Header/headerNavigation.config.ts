@@ -98,6 +98,8 @@ export const navigationByRole: Record<
       label: 'Materias',
       to: '/admin/subjects',
     },
+    { label: 'Carreras', to: '/admin/careers' },
+    { label: 'Auditoría', to: '/admin/audit-logs' },
     {
       label: 'Información',
     },

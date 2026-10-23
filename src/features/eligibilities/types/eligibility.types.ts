@@ -10,10 +10,11 @@ export type ExamEligibility = {
   email: string
   profile_photo_url: string | null
   status: EligibilityStatus
+  revision: number
   reason_code: string | null
   reason: string | null
   observations: string | null
-  evaluated_by: number | null
+  evaluated_by: string | null
   evaluated_at: string | null
 }
 
@@ -30,12 +31,12 @@ export type EligibilityReason = { code: string; label: string }
 export type EligibilityReasonsResponse = { data: EligibilityReason[] }
 
 export type UpdateEligibilityPayload =
-  | { status: 'ELIGIBLE' }
-  | { status: 'INELIGIBLE'; reason_code: string; observations: string }
+  | { status: 'ELIGIBLE'; revision: number }
+  | { status: 'INELIGIBLE'; reason_code: string; observations: string; revision: number }
 
 export type BulkEligibilityRowError = {
   row: number
-  sis_code: string
+  sis_code: string | null
   messages: Record<string, string[]>
 }
 

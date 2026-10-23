@@ -81,6 +81,7 @@ export function TeacherSubjectStudentsPage() {
   }, [loadSubjectData])
 
   async function handleManualSubmit(sis: string) {
+    if (subject?.canManage === false) throw new Error('Esta oferta es de solo consulta. No se pueden agregar estudiantes.')
     if (!courseOfferingId) {
       throw new Error('No se seleccionó una materia válida.')
     }
@@ -94,6 +95,7 @@ export function TeacherSubjectStudentsPage() {
   }
 
   async function handleCsvSubmit(file: File): Promise<CsvImportSummary> {
+    if (subject?.canManage === false) throw new Error('Esta oferta es de solo consulta. No se pueden importar estudiantes.')
     if (!courseOfferingId) {
       throw new Error('No se seleccionó una materia válida.')
     }
@@ -177,11 +179,12 @@ export function TeacherSubjectStudentsPage() {
           </div>
         </header>
 
+        {subject.canManage === false && <p role="status">Oferta de solo consulta: se conserva el historial de estudiantes, pero no se permiten nuevas inscripciones.</p>}
         <div className={styles.toolbar}>
           <div>
             <h2>Estudiantes inscritos</h2>
           </div>
-          <button type="button" className={styles.primaryButton} onClick={() => setIsModalOpen(true)}>
+          <button type="button" className={styles.primaryButton} disabled={subject?.canManage === false} onClick={() => setIsModalOpen(true)}>
             Agregar estudiantes
           </button>
         </div>
@@ -196,7 +199,7 @@ export function TeacherSubjectStudentsPage() {
           <section className={styles.emptyState}>
             <h3>No hay estudiantes inscritos en esta materia.</h3>
             <p>Agrega estudiantes por SIS o CSV para comenzar.</p>
-            <button type="button" className={styles.primaryButton} onClick={() => setIsModalOpen(true)}>
+            <button type="button" className={styles.primaryButton} disabled={subject?.canManage === false} onClick={() => setIsModalOpen(true)}>
               Agregar estudiantes
             </button>
           </section>

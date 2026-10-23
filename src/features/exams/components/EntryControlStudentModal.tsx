@@ -12,7 +12,6 @@ import type {
   EntryControlStudentResponse,
 } from '../types/entryControl.types'
 import type { EntryManualResponse } from '../types/entryRegistration.types'
-import type { Room } from '../types/exam.types'
 import {
   eligibilityDisplay,
   enrollmentDisplay,
@@ -27,6 +26,7 @@ import { EntryConditionBadge } from './EntryConditionBadge'
 import { EntryManualConfirmationModal } from './EntryManualConfirmationModal'
 import { EntryResultPanel } from './EntryResultPanel'
 import { canRegisterEntryManually } from '../utils/entryManualEligibility'
+import { entryBlockerMessage } from '../utils/entryAvailabilityDisplay'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from '../pages/EntryControlPage.module.css'
 
@@ -34,7 +34,6 @@ type Props = {
   examId: number
   studentId: number
   roomId: number | undefined
-  rooms: Room[]
   onClose: () => void
   allowManualEntry?: boolean
   onManualResult?: (
@@ -47,7 +46,6 @@ export function EntryControlStudentModal({
   examId,
   studentId,
   roomId,
-  rooms,
   onClose,
   allowManualEntry = false,
   onManualResult,
@@ -118,11 +116,9 @@ export function EntryControlStudentModal({
   const exam = detail?.exam
   const photoUrl = student?.profile_photo_url?.trim()
   const assignedRoom =
-    rooms.find((room) => room.id === student?.assigned_room_id) ??
-    (exam?.room?.id === student?.assigned_room_id ? exam?.room : null)
+    exam?.room?.id === student?.assigned_room_id ? exam?.room : null
   const controlledRoom =
-    rooms.find((room) => room.id === student?.controlled_room_id) ??
-    (exam?.room?.id === student?.controlled_room_id ? exam?.room : null)
+    exam?.room?.id === student?.controlled_room_id ? exam?.room : null
   const ineligible =
     student?.eligibility_status === 'INELIGIBLE' ||
     student?.blockers.some((blocker) => blocker.code === 'INELIGIBLE')
@@ -135,6 +131,13 @@ export function EntryControlStudentModal({
           blocker.code !== 'ALREADY_REGISTERED',
       )
     : []
+  const blockerMessages = [
+    ...new Set(
+      visibleBlockers.map((blocker) =>
+        entryBlockerMessage(blocker, exam?.entry_unavailable_reason),
+      ),
+    ),
+  ]
 
   if (confirming && manualEnabled && student && exam && roomId != null) {
     return renderModal(
@@ -365,15 +368,15 @@ export function EntryControlStudentModal({
                 examen.
               </p>
             ) : null}
-            {visibleBlockers.length > 0 ? (
+            {blockerMessages.length > 0 ? (
               <section
                 className={`${styles.message} ${styles.blockerMessage}`}
                 aria-label="Observaciones del control de ingreso"
               >
                 <h3>Observaciones del control de ingreso</h3>
                 <ul className={styles.blockers}>
-                  {visibleBlockers.map((blocker, index) => (
-                    <li key={`${blocker.code}-${index}`}>{blocker.message}</li>
+                  {blockerMessages.map((message) => (
+                    <li key={message}>{message}</li>
                   ))}
                 </ul>
               </section>
@@ -402,6 +405,7 @@ export function EntryControlStudentModal({
           !loading &&
           !error &&
           student &&
+          exam?.entry_available !== false &&
           canRegisterEntryManually(student, roomId) ? (
             <button
               type="button"

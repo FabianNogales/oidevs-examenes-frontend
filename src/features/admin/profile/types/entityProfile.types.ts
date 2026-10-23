@@ -37,6 +37,8 @@ export interface UnifiedEntityProfile {
 
 /** Datos editables desde la pestaña "Editar datos" */
 export interface EditableEntityValues {
+  institutional_code?: string
+  identity_number?: string
   first_names: string
   last_names: string
   email: string

@@ -48,6 +48,15 @@
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
+.badge[data-status='CANCELLED'] {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+.badge[data-status='ACTIVE'],
+.badge[data-status='IN_PROGRESS'] {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
 
 .examNameWrap {
   padding-top: var(--space-1);
@@ -67,6 +76,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--space-3);
+}
+
+.academicTerm {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
 }
 
 .infoItem {

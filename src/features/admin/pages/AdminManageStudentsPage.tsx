@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { NavLink } from 'react-router'
 
 import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
+import { CreateStudentModal } from '@/features/admin/components/CreateStudentModal'
 import {
   getAdminStudents,
   updateAdminStudentStatus,
@@ -80,6 +81,8 @@ export function AdminManageStudentsPage() {
 
   const [pendingToggle, setPendingToggle] = useState<StudentRowItem | null>(null)
   const [toggling, setToggling] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createdNotice, setCreatedNotice] = useState<string | null>(null)
 
   const requestIdRef = useRef(0)
 
@@ -126,7 +129,9 @@ export function AdminManageStudentsPage() {
   }, [])
 
   useEffect(() => {
-    void loadStudents(currentPage, searchTerm)
+    let cancelled = false
+    void Promise.resolve().then(() => { if (!cancelled) void loadStudents(currentPage, searchTerm) })
+    return () => { cancelled = true; requestIdRef.current += 1 }
   }, [currentPage, searchTerm, loadStudents])
 
   const handleSearch = (query: string) => {
@@ -193,6 +198,9 @@ export function AdminManageStudentsPage() {
         </div>
 
         <div className={styles.headerActions}>
+          <button type="button" className={styles.secondaryButton} onClick={() => { setCreatedNotice(null); setCreating(true) }}>
+            + Registrar estudiante
+          </button>
           <NavLink
             to="/admin/students/import"
             className={styles.secondaryButton}
@@ -201,6 +209,13 @@ export function AdminManageStudentsPage() {
           </NavLink>
         </div>
       </header>
+
+      {createdNotice && <p role="status">{createdNotice}</p>}
+      {creating && <CreateStudentModal onClose={() => setCreating(false)} onCreated={() => {
+        setCreating(false)
+        setCreatedNotice('Estudiante registrado correctamente.')
+        void loadStudents(currentPage, searchTerm)
+      }} />}
 
       <DataTable<StudentRowItem>
         columns={STUDENT_COLUMNS}

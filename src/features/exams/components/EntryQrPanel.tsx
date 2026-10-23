@@ -121,7 +121,7 @@ export function EntryQrPanel({
           const status = getRequestStatus(cause)
           setError(
             status === 422
-              ? 'Los parámetros del escaneo no son válidos. Revisa el ambiente seleccionado y vuelve a intentarlo.'
+              ? 'Los parámetros del escaneo no son válidos. Actualiza el control de ingreso y vuelve a intentarlo.'
               : getEntryControlErrorMessage(
                   cause,
                   'No se pudo confirmar el resultado del escaneo. Consulta el historial antes de volver a presentar este QR.',
@@ -159,7 +159,7 @@ export function EntryQrPanel({
     >
       {roomId == null ? (
         <p className={sharedStyles.note} role="status">
-          Selecciona el ambiente controlado para comenzar a escanear.
+          El examen debe tener un ambiente asignado para comenzar a escanear.
         </p>
       ) : null}
       {error ? (

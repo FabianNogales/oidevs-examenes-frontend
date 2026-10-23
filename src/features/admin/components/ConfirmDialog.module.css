@@ -104,3 +104,13 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.dialog button:focus-visible {
+  outline: 3px solid var(--brand-blue, #2563EB);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .dialog { padding: 20px; max-height: calc(100dvh - 40px); overflow-y: auto; }
+  .actions { flex-wrap: wrap; }
+}

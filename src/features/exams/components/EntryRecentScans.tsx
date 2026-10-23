@@ -1,4 +1,6 @@
+import { useId, useState } from 'react'
 import type { RecentEntryRecord } from '../types/entryRegistration.types'
+import { entryAvailabilityMessage } from '../utils/entryAvailabilityDisplay'
 import {
   entryStudentName,
   formatEntryTimestamp,
@@ -12,6 +14,8 @@ import entryStyles from '../pages/EntryControlPage.module.css'
 import styles from './EntryQr.module.css'
 
 export function EntryRecentScans({ scans }: { scans: RecentEntryRecord[] }) {
+  const [expanded, setExpanded] = useState(false)
+  const mobileListId = useId()
   const rows = scans.map((scan) => ({
     id: scan.id,
     studentName: scan.student
@@ -21,9 +25,10 @@ export function EntryRecentScans({ scans }: { scans: RecentEntryRecord[] }) {
     resultLabel: ENTRY_RESULT_LABELS[scan.result],
     resultTone: entryResultTone(scan.result),
     method: scan.verification_method || 'No informado',
-    message: scan.message,
+    message: entryAvailabilityMessage(scan.message),
     processedAt: formatEntryTimestamp(scan.processed_at),
   }))
+  const mobileRows = expanded ? rows : rows.slice(0, 3)
 
   return (
     <section className={styles.recent} aria-labelledby="entry-recent-title">
@@ -77,11 +82,12 @@ export function EntryRecentScans({ scans }: { scans: RecentEntryRecord[] }) {
       <div className={styles.recentCards}>
         {rows.length ? (
           <ul
+            id={mobileListId}
             className={styles.recentCardList}
             role="list"
             aria-label="Resultados de registros recientes"
           >
-            {rows.map((row) => (
+            {mobileRows.map((row) => (
               <li key={row.id} className={styles.recentCard}>
                 <dl>
                   <div>
@@ -125,6 +131,17 @@ export function EntryRecentScans({ scans }: { scans: RecentEntryRecord[] }) {
             Aún no hay registros en esta sesión.
           </p>
         )}
+        {rows.length > 3 ? (
+          <button
+            type="button"
+            className={`${sharedStyles.secondaryButton} ${styles.recentToggle}`}
+            aria-expanded={expanded}
+            aria-controls={mobileListId}
+            onClick={() => setExpanded((current) => !current)}
+          >
+            {expanded ? 'Mostrar menos' : 'Ver todos los registros recientes'}
+          </button>
+        ) : null}
       </div>
     </section>
   )

@@ -5,6 +5,7 @@ import styles from './DataTable.module.css'
 
 export function DataTable<T extends BaseTableEntity>({
   columns,
+  viewActionLabel,
   data,
   loading,
   error = null,
@@ -168,6 +169,7 @@ export function DataTable<T extends BaseTableEntity>({
 
                   return (
                     <th
+                      scope="col"
                       key={col.id}
                       style={{ width: col.width }}
                       className={alignClass}
@@ -177,7 +179,7 @@ export function DataTable<T extends BaseTableEntity>({
                   )
                 })}
                 {hasActions && (
-                  <th className={styles.textRight}>Acciones</th>
+                  <th scope="col" className={styles.textRight}>Acciones</th>
                 )}
               </tr>
             </thead>
@@ -187,6 +189,7 @@ export function DataTable<T extends BaseTableEntity>({
                 <DataTableRow
                   key={item.id}
                   item={item}
+                  viewActionLabel={viewActionLabel}
                   columns={columns}
                   profilePath={getProfilePath ? getProfilePath(item) : undefined}
                   onViewProfile={onViewProfile}
