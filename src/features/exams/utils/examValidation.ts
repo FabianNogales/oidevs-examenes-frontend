@@ -20,9 +20,10 @@ export function getLocalDate(now = new Date()): string {
   return `${part('year')}-${part('month')}-${part('day')}`
 }
 
-export function validateExamForm(
+// Creation sends institutional wall-clock values to Laravel. Only the server
+// decides whether they are still in the future, independently of device clocks.
+export function validateCreateExamForm(
   values: ExamFormValues,
-  now = new Date(),
 ): Record<string, string> {
   const errors: Record<string, string> = {}
   if (!values.name.trim()) errors.name = 'El nombre del examen es obligatorio.'
@@ -43,17 +44,6 @@ export function validateExamForm(
     errors.exam_date = 'Selecciona una fecha válida.'
   if (values.start_time && !validTime)
     errors.start_time = 'Selecciona una hora válida.'
-  if (validDate && validTime) {
-    // Scheduling follows Bolivia time, independently of the browser's time zone.
-    const scheduledAt = new Date(
-      `${values.exam_date}T${values.start_time}:00-04:00`,
-    )
-    if (scheduledAt.getTime() <= now.getTime()) {
-      const field =
-        values.exam_date < getLocalDate(now) ? 'exam_date' : 'start_time'
-      errors[field] = 'La fecha y hora del examen no pueden estar en el pasado.'
-    }
-  }
   const duration = Number(values.duration_minutes)
   if (
     !Number.isSafeInteger(duration) ||
@@ -68,6 +58,25 @@ export function validateExamForm(
     !Number.isSafeInteger(Number(values.room_id))
   ) {
     errors.room_id = 'Debes seleccionar un ambiente.'
+  }
+  return errors
+}
+
+// Preserve the existing local precheck for editing and rescheduling.
+export function validateExamForm(
+  values: ExamFormValues,
+  now = new Date(),
+): Record<string, string> {
+  const errors = validateCreateExamForm(values)
+  if (!errors.exam_date && !errors.start_time) {
+    const scheduledAt = new Date(
+      `${values.exam_date}T${values.start_time}:00-04:00`,
+    )
+    if (scheduledAt.getTime() <= now.getTime()) {
+      const field =
+        values.exam_date < getLocalDate(now) ? 'exam_date' : 'start_time'
+      errors[field] = 'La fecha y hora del examen no pueden estar en el pasado.'
+    }
   }
   return errors
 }

@@ -6,7 +6,7 @@ import {
   getApiFieldErrors,
   getRequestStatus,
 } from '@/features/auth/utils/apiErrors'
-import { validateExamForm } from '@/features/exams/utils/examValidation'
+import { validateCreateExamForm } from '@/features/exams/utils/examValidation'
 import type {
   CreateExamPayload,
   EvaluationType,
@@ -120,7 +120,7 @@ export function CreateExamModal({
 
   const handleSubmit = async () => {
     if (isSubmitDisabled || submittingRef.current) return
-    const errors = validateExamForm(formValues)
+    const errors = validateCreateExamForm(formValues)
     if (!rooms.some((room) => String(room.id) === formValues.room_id)) {
       errors.room_id = 'Selecciona un ambiente disponible para este horario.'
     }
@@ -220,6 +220,7 @@ export function CreateExamModal({
         ) : null}
 
         <ExamFormFields
+          enforceDateMinimum={false}
           values={formValues}
           errors={fieldErrors}
           roomsState={{ rooms, roomError, isLoadingRooms, hasSchedule }}

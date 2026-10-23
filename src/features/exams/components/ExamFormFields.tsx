@@ -11,6 +11,7 @@ type Props = {
     'rooms' | 'roomError' | 'isLoadingRooms' | 'hasSchedule'
   >
   disabled: boolean
+  enforceDateMinimum?: boolean
   onChange: (field: keyof ExamFormValues, value: string) => void
   nameInputRef?: Ref<HTMLInputElement>
   children?: ReactNode
@@ -21,6 +22,7 @@ export function ExamFormFields({
   errors,
   roomsState,
   disabled,
+  enforceDateMinimum = true,
   onChange,
   nameInputRef,
   children,
@@ -118,7 +120,7 @@ export function ExamFormFields({
         <input
           {...accessibility('exam_date')}
           type="date"
-          min={getLocalDate()}
+          min={enforceDateMinimum ? getLocalDate() : undefined}
           value={values.exam_date}
           onChange={(e) => onChange('exam_date', e.target.value)}
           disabled={disabled}
