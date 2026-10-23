@@ -1,4 +1,3 @@
-import { Link } from 'react-router'
 import { useState, useEffect, type FormEvent } from 'react'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
@@ -13,6 +12,7 @@ export function ProfileEditTab({
   const [lastNames, setLastNames] = useState(entity.last_names)
   const [email, setEmail] = useState(entity.email)
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>(entity.status)
+  const [institutionalCode, setInstitutionalCode] = useState('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   
   const [saving, setSaving] = useState(false)
@@ -46,7 +46,6 @@ export function ProfileEditTab({
 
     if (entity.role === 'TEACHER' && (
       !institutionalCode.trim() || institutionalCode.trim().length > 50 ||
-      !identityNumber.trim() || identityNumber.trim().length > 50 ||
       trimmedFirst.length > 100 || trimmedLast.length > 100 ||
       !trimmedEmail || trimmedEmail.length > 255 ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)

@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-
 import { useLocation } from 'react-router'
+
+import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
 import {
   getAdminUsersMock,
+  updateAdminUserStatusMock,
   type AdminUserItem,
 } from '@/features/admin/api/adminUsersMock'
 
@@ -76,6 +78,10 @@ export function AdminManageUsersPage() {
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  // Estados para el cuadro de diálogo de confirmación de Activar/Desactivar
+  const [pendingToggle, setPendingToggle] = useState<AdminUserItem | null>(null)
+  const [toggling, setToggling] = useState(false)
+
   const historyView = useLocation().pathname === '/admin/users/history'
 
   const requestIdRef = useRef(0)
@@ -124,8 +130,13 @@ export function AdminManageUsersPage() {
 
   useEffect(() => {
     let cancelled = false
-    void Promise.resolve().then(() => { if (!cancelled && !historyView) void loadUsers(currentPage, searchTerm) })
-    return () => { cancelled = true; requestIdRef.current += 1 }
+    void Promise.resolve().then(() => {
+      if (!cancelled && !historyView) void loadUsers(currentPage, searchTerm)
+    })
+    return () => {
+      cancelled = true
+      requestIdRef.current += 1
+    }
   }, [currentPage, searchTerm, loadUsers, historyView])
 
   const handleSearch = (query: string) => {
@@ -136,6 +147,43 @@ export function AdminManageUsersPage() {
     }
     setSearchTerm(query)
   }
+
+  // Manejador para ejecutar el cambio de estado simulado
+  const handleConfirmToggle = async () => {
+    if (!pendingToggle) return
+
+    const newStatus = pendingToggle.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+
+    try {
+      setToggling(true)
+      setErrorMessage(null)
+
+      const updated = await updateAdminUserStatusMock(
+        pendingToggle.id,
+        newStatus,
+      )
+
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === updated.id ? { ...user, ...updated } : user,
+        ),
+      )
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo cambiar el estado del usuario.',
+      )
+    } finally {
+      setToggling(false)
+      setPendingToggle(null)
+    }
+  }
+
+  const pendingWillDeactivate = pendingToggle?.status === 'ACTIVE'
+  const pendingName = pendingToggle
+    ? `${pendingToggle.first_names} ${pendingToggle.last_names}`
+    : ''
 
   return (
     <div className={styles.pageContainer}>
@@ -151,31 +199,53 @@ export function AdminManageUsersPage() {
         <div className={styles.headerTitles}>
           <h1>{historyView ? 'Historial de usuarios y roles' : 'Gestión de usuarios'}</h1>
           <p>
-            Vista de demostración con datos simulados. Usuarios y roles aún no están integrados; no se aplican cambios.
+            Vista de demostración con datos simulados. Usuarios y roles aún no están integrados; no se aplican cambios reales en BD.
           </p>
         </div>
       </header>
 
-      {historyView ? <p role="status">El historial real de usuarios y roles está pendiente de integración.</p> : <DataTable<AdminUserItem>
-        columns={USER_COLUMNS}
-        data={users}
-        loading={loading}
-        error={errorMessage}
-        pagination={pagination}
-        entityLabel="usuarios"
-        searchPlaceholder="Buscar por nombre, apellido, correo o código institucional"
-        onSearch={handleSearch}
-        onPageChange={setCurrentPage}
-        onRetry={() => void loadUsers(currentPage, searchTerm)}
-        emptyTitle="No se encontraron usuarios"
-        emptyDescription={
-          searchTerm
-            ? 'Prueba con otro nombre, correo o código institucional.'
-            : 'Todavía no existen usuarios registrados en el sistema.'
+      {historyView ? (
+        <p role="status">El historial real de usuarios y roles está pendiente de integración.</p>
+      ) : (
+        <DataTable<AdminUserItem>
+          columns={USER_COLUMNS}
+          data={users}
+          loading={loading}
+          error={errorMessage}
+          pagination={pagination}
+          entityLabel="usuarios"
+          searchPlaceholder="Buscar por nombre, apellido, correo o código institucional"
+          onSearch={handleSearch}
+          onPageChange={setCurrentPage}
+          onRetry={() => void loadUsers(currentPage, searchTerm)}
+          // 1. Añadimos el link directo a su perfil usando su ID de usuario general
+          getProfilePath={(user) => `/admin/users/${user.id}`}
+          // 2. Añadimos la función para capturar cuando se hace clic en Activar/Desactivar
+          onToggleStatus={(user) => setPendingToggle(user)}
+          emptyTitle="No se encontraron usuarios"
+          emptyDescription={
+            searchTerm
+              ? 'Prueba con otro nombre, correo o código institucional.'
+              : 'Todavía no existen usuarios registrados en el sistema.'
+          }
+        />
+      )}
+
+      {/* Cuadro de diálogo de confirmación para Activar / Desactivar */}
+      <ConfirmDialog
+        isOpen={pendingToggle !== null}
+        title={pendingWillDeactivate ? 'Desactivar cuenta' : 'Activar cuenta'}
+        message={
+          pendingWillDeactivate
+            ? `¿Seguro que deseas desactivar la cuenta de ${pendingName}? El usuario no podrá acceder al sistema hasta que la actives nuevamente.`
+            : `¿Seguro que deseas activar la cuenta de ${pendingName}? El usuario podrá volver a acceder al sistema.`
         }
-      />}
-
-
+        confirmLabel={pendingWillDeactivate ? 'Sí, desactivar' : 'Sí, activar'}
+        variant={pendingWillDeactivate ? 'danger' : 'success'}
+        loading={toggling}
+        onConfirm={handleConfirmToggle}
+        onCancel={() => setPendingToggle(null)}
+      />
     </div>
   )
 }

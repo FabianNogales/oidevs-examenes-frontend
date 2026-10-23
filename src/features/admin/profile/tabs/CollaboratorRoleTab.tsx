@@ -9,15 +9,16 @@ import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
 /**
  * ============================================================================
- * CONTRATO DE BACKEND PARA "ROL COLABORADOR"
+ * CONTRATO DE BACKEND PARA "ROL COLABORADOR" (ESTUDIANTE / DOCENTE / USUARIO)
  * ============================================================================
  * 1. Endpoint sugerido:
- *    GET /api/v1/admin/students/{studentId}/collaborations
- *    (O a nivel usuario: GET /api/v1/admin/users/{userId}/collaborations)
+ *    GET /api/v1/admin/users/{userId}/collaborations
+ *    (O por rol: GET /api/v1/admin/students/{studentId}/collaborations
+ *                GET /api/v1/admin/teachers/{teacherId}/collaborations)
  *
- * 2. Parámetros de consulta (Query Params):
- *    - status?: 'ACTIVE' | 'COMPLETED' (Permite filtrar o traer todas para filtrado local)
- *    - search?: string (Filtra por materia, código, docente, correo, grupo o tipo de examen)
+ * 2. Parámetros de consulta (Query Params / Inputs requeridos):
+ *    - status?: 'ACTIVE' | 'COMPLETED'
+ *    - search?: string (Filtra por materia, código, docente, correo, grupo, gestión o examen)
  *    - page?: number
  *    - per_page?: number (10 por defecto para la grilla 2x5)
  *
@@ -27,29 +28,7 @@ import type { ProfileTabComponentProps } from '../types/entityProfile.types'
  *    - CourseOffering (group_code, subject_id, teacher_id, academic_term_id)
  *    - Subject (name, code)
  *    - Teacher (first_names, last_names, email)
- *
- * 4. Estructura JSON esperada en la respuesta (Response 200 OK):
- *    {
- *      "data": [
- *        {
- *          "id": 301,
- *          "subject_name": "Base de Datos I",
- *          "subject_code": "2006032",
- *          "group_code": "2",
- *          "teacher_full_name": "Ing. Daniel Flores Condarco",
- *          "teacher_email": "demo1@umss.edu.bo",
- *          "evaluation_type": "FIRST_PARTIAL",
- *          "evaluation_type_label": "Primer parcial",
- *          "assigned_at": "15/10/2026 - 09:30",
- *          "collaboration_status": "ACTIVE" // 'ACTIVE' (Activas) | 'COMPLETED' (Concluidas)
- *        }
- *      ],
- *      "meta": {
- *        "current_page": 1,
- *        "last_page": 1,
- *        "total": 5
- *      }
- *    }
+ *    - AcademicTerm (name)
  * ============================================================================
  */
 
@@ -58,6 +37,7 @@ export type ExamEvaluationTypeLabel =
   | 'Segundo parcial'
   | 'Examen final'
   | 'Segunda instancia'
+  | 'Mesa'
 
 export type CollaborationTabFilter = 'ACTIVE' | 'COMPLETED'
 
@@ -66,6 +46,7 @@ interface CollaboratorAssignmentItem extends BaseTableEntity {
   subjectName: string
   subjectCode: string
   groupCode: string
+  academicTerm: string
   teacherFullName: string
   teacherEmail: string
   examType: ExamEvaluationTypeLabel
@@ -80,6 +61,7 @@ const MOCK_COLLABORATOR_ASSIGNMENTS: readonly CollaboratorAssignmentItem[] = [
     subjectName: 'Base de Datos I',
     subjectCode: '2006032',
     groupCode: '2',
+    academicTerm: 'II/2026',
     teacherFullName: 'Ing. Daniel Flores Condarco',
     teacherEmail: 'demo1@umss.edu.bo',
     examType: 'Primer parcial',
@@ -91,6 +73,7 @@ const MOCK_COLLABORATOR_ASSIGNMENTS: readonly CollaboratorAssignmentItem[] = [
     subjectName: 'Elementos de Programación y Estructura de Datos',
     subjectCode: '2006025',
     groupCode: '1',
+    academicTerm: 'II/2026',
     teacherFullName: 'Ing. Joel Fernandez Cordoba',
     teacherEmail: 'demo2@umss.edu.bo',
     examType: 'Segundo parcial',
@@ -103,6 +86,7 @@ const MOCK_COLLABORATOR_ASSIGNMENTS: readonly CollaboratorAssignmentItem[] = [
     subjectName: 'Introducción a la Programación',
     subjectCode: '2006018',
     groupCode: '1',
+    academicTerm: 'I/2026',
     teacherFullName: 'Ing. Patricia Erika Rodriguez Bilbao',
     teacherEmail: 'p.rodriguez@umss.edu.bo',
     examType: 'Examen final',
@@ -114,6 +98,7 @@ const MOCK_COLLABORATOR_ASSIGNMENTS: readonly CollaboratorAssignmentItem[] = [
     subjectName: 'Introducción a la Programación',
     subjectCode: '2006018',
     groupCode: '1',
+    academicTerm: 'I/2026',
     teacherFullName: 'Ing. Patricia Erika Rodriguez Bilbao',
     teacherEmail: 'p.rodriguez@umss.edu.bo',
     examType: 'Segunda instancia',
@@ -125,6 +110,7 @@ const MOCK_COLLABORATOR_ASSIGNMENTS: readonly CollaboratorAssignmentItem[] = [
     subjectName: 'Cálculo I',
     subjectCode: '2008011',
     groupCode: '4',
+    academicTerm: 'I/2026',
     teacherFullName: 'Ing. Juan Jose Arnez',
     teacherEmail: 'demo3@umss.edu.bo',
     examType: 'Primer parcial',
@@ -137,7 +123,7 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
   const [selectedTab, setSelectedTab] =
     useState<CollaborationTabFilter>('ACTIVE')
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   const totalActiveCount = useMemo(
     () =>
       MOCK_COLLABORATOR_ASSIGNMENTS.filter(
@@ -154,7 +140,6 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
     [],
   )
 
-  // Filtrado por pestaña ("Activas" vs "Concluidas")
   const filteredCollaborations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
 
@@ -169,6 +154,7 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         item.teacherEmail.toLowerCase().includes(query) ||
         item.examType.toLowerCase().includes(query) ||
         item.groupCode.toLowerCase().includes(query) ||
+        item.academicTerm.toLowerCase().includes(query) ||
         item.assignedAt.toLowerCase().includes(query)
       )
     })
@@ -205,28 +191,42 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         ),
       },
       {
-        id: 'groupAndExam',
+        id: 'groupAndTerm',
         label: 'Grupo',
         cell: (item) => (
           <div className={cardStyles.inlinePairedRow}>
             <span className={cardStyles.fullWidthPillGray}>
               Grupo {item.groupCode}
             </span>
-            <span className={cardStyles.inlineSecondaryLabel}>Examen</span>
-            <span className={layoutStyles.examTypeBadge}>{item.examType}</span>
+            <span className={cardStyles.inlineSecondaryLabel}>Gestión</span>
+            <span className={cardStyles.fullWidthPillBlueCentered}>
+              {item.academicTerm}
+            </span>
           </div>
         ),
       },
       {
-        id: 'assignedAt',
+        id: 'assignedAtAndExam',
         label: 'Designación',
-        accessorKey: 'assignedAt',
+        cell: (item) => (
+          <div className={cardStyles.inlinePairedRow}>
+            <span className={tableStyles.primaryText}>{item.assignedAt}</span>
+            <span className={cardStyles.inlineSecondaryLabel}>Examen</span>
+            <span className={layoutStyles.examTypeBadge}>{item.examType}</span>
+          </div>
+        ),
       },
     ],
     [],
   )
 
   const isShowingActive = selectedTab === 'ACTIVE'
+  const entityRoleLabel =
+    entity.role === 'TEACHER'
+      ? 'el docente'
+      : entity.role === 'ADMIN'
+        ? 'el administrador'
+        : 'el estudiante'
 
   return (
     <section className={layoutStyles.sectionCard}>
@@ -240,7 +240,6 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
           </p>
         </div>
 
-        {/* SELECTOR DE PESTAÑAS FRONTEND ("Activas" / "Concluidas") */}
         <div
           className={layoutStyles.filterTabsContainer}
           role="tablist"
@@ -292,8 +291,8 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         }
         searchPlaceholder={
           isShowingActive
-            ? 'Buscar en colaboraciones activas por materia, código, docente o examen...'
-            : 'Buscar en colaboraciones concluidas por materia, código, docente o examen...'
+            ? 'Buscar en colaboraciones activas por materia, código, docente, gestión o examen...'
+            : 'Buscar en colaboraciones concluidas por materia, código, docente, gestión o examen...'
         }
         initialSearch={searchQuery}
         onSearch={setSearchQuery}
@@ -304,8 +303,8 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         }
         emptyDescription={
           isShowingActive
-            ? 'El estudiante no tiene designaciones activas como colaborador en este momento.'
-            : 'No se encontraron registros históricos de colaboración para este estudiante.'
+            ? `Actualmente ${entityRoleLabel} no tiene designaciones activas como colaborador.`
+            : `No se encontraron registros históricos de colaboración para ${entityRoleLabel}.`
         }
       />
     </section>
