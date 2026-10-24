@@ -1,3 +1,4 @@
+import { useProfileRecords } from '../hooks/useProfileRecords'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
@@ -6,47 +7,6 @@ import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
-
-/**
- * ============================================================================
- * CONTRATO DE BACKEND PARA "HISTORIAL DE MATERIAS DICTADAS"
- * ============================================================================
- * 1. Endpoint sugerido:
- *    GET /api/v1/admin/teachers/{teacherId}/course-offerings/history
- *    (Alternativa: GET /api/v1/admin/teachers/{teacherId}/course-offerings?term_status=CLOSED)
- *
- * 2. Parámetros de consulta (Query Params / Inputs requeridos):
- *    - search?: string (Filtra por materia, código, grupo, gestión, tipo de grupo o carrera)
- *    - academic_term_id?: number (Opcional para filtrar por gestión específica)
- *    - page?: number
- *    - per_page?: number (10 por defecto para la grilla 2x5)
- *
- * 3. Modelos de Base de Datos / Laravel involucrados:
- *    - CourseOffering (id, group_code, teacher_id, subject_id, academic_term_id)
- *    - Subject (id, name, code)
- *    - Career (relación `career_subject` para obtener carreras del grupo)
- *    - AcademicTerm (gestiones cerradas/culminadas, ej. "I/2026", "II/2025")
- *
- * 4. Estructura JSON esperada en la respuesta (Response 200 OK):
- *    {
- *      "data": [
- *        {
- *          "id": 601,
- *          "subject_name": "Ingeniería de Software",
- *          "subject_code": "2006042",
- *          "group_code": "1",
- *          "academic_term": "I/2026",
- *          "careers": ["Ing. Informática", "Ing. de Sistemas"]
- *        }
- *      ],
- *      "meta": {
- *        "current_page": 1,
- *        "last_page": 1,
- *        "total": 4
- *      }
- *    }
- * ============================================================================
- */
 
 interface TeacherSubjectHistoryItem extends BaseTableEntity {
   id: number
@@ -57,66 +17,15 @@ interface TeacherSubjectHistoryItem extends BaseTableEntity {
   careers: readonly string[]
 }
 
-const MOCK_TEACHER_SUBJECT_HISTORY: readonly TeacherSubjectHistoryItem[] = [
-  {
-    id: 601,
-    subjectName: 'Ingeniería de Software',
-    subjectCode: '2006042',
-    groupCode: '1',
-    academicTerm: 'I/2026',
-    careers: ['Ing. Informática', 'Ing. de Sistemas'],
-  },
-  {
-    id: 602,
-    subjectName: 'Base de Datos II',
-    subjectCode: '2006038',
-    groupCode: '2',
-    academicTerm: 'I/2026',
-    careers: ['Ing. de Sistemas'],
-  },
-  {
-    id: 603,
-    subjectName: 'Elementos de Programación y Estructura de Datos',
-    subjectCode: '2006025',
-    groupCode: '3',
-    academicTerm: 'II/2025',
-    careers: ['Ing. Informática', 'Ing. de Sistemas'],
-  },
-  {
-    id: 604,
-    subjectName: 'Introducción a la Programación',
-    subjectCode: '2006018',
-    groupCode: '1',
-    academicTerm: 'I/2025',
-    careers: ['Ing. Informática'],
-  },
-]
-
-function getGroupTypeLabel(careersCount: number): 'Grupo mixto' | 'Grupo individual' {
-  return careersCount > 1 ? 'Grupo mixto' : 'Grupo individual'
+function getGroupTypeLabel(careersCount: number): string {
+  return careersCount > 1 ? 'Varias carreras asociadas' : careersCount === 1 ? 'Una carrera asociada' : 'Sin carreras asociadas'
 }
 
 export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredHistory = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-    if (!query) return MOCK_TEACHER_SUBJECT_HISTORY
-
-    return MOCK_TEACHER_SUBJECT_HISTORY.filter((item) => {
-      const groupType = getGroupTypeLabel(item.careers.length).toLowerCase()
-      const careersString = item.careers.join(' - ').toLowerCase()
-
-      return (
-        item.subjectName.toLowerCase().includes(query) ||
-        item.subjectCode.toLowerCase().includes(query) ||
-        item.groupCode.toLowerCase().includes(query) ||
-        item.academicTerm.toLowerCase().includes(query) ||
-        groupType.includes(query) ||
-        careersString.includes(query)
-      )
-    })
-  }, [searchQuery])
+  const records = useProfileRecords<TeacherSubjectHistoryItem>(entity, 'subject-history', searchQuery)
+  const filteredHistory = records.items
 
   const cardFields = useMemo<readonly CardFieldDef<TeacherSubjectHistoryItem>[]>(
     () => [
@@ -149,7 +58,7 @@ export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
       },
       {
         id: 'groupType',
-        label: 'Tipo grupo',
+        label: 'Vinculacion',
         cell: (item) => {
           const isMixed = item.careers.length > 1
           return (
@@ -196,11 +105,15 @@ export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
       <DataCardGrid
         fields={cardFields}
         data={filteredHistory}
-        loading={false}
+        loading={records.loading}
+        error={records.error}
+        pagination={records.pagination}
+        onPageChange={records.onPageChange}
+        onRetry={records.reload}
         pageSize={10}
         labelWidth="92px"
         entityLabel="materias históricas"
-        searchPlaceholder="Buscar por materia, código, grupo, gestión (ej. I/2026) o carrera..."
+        searchPlaceholder="Buscar por materia, codigo, docente o gestion..."
         onSearch={setSearchQuery}
         emptyTitle="Sin historial de materias dictadas"
         emptyDescription="No se encontraron asignaturas impartidas en gestiones anteriores con ese criterio."

@@ -1,3 +1,4 @@
+import { useProfileRecords } from '../hooks/useProfileRecords'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
@@ -7,32 +8,10 @@ import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.ty
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
-/**
- * ============================================================================
- * CONTRATO DE BACKEND PARA "ROL COLABORADOR" (ESTUDIANTE / DOCENTE / USUARIO)
- * ============================================================================
- * 1. Endpoint sugerido:
- *    GET /api/v1/admin/users/{userId}/collaborations
- *    (O por rol: GET /api/v1/admin/students/{studentId}/collaborations
- *                GET /api/v1/admin/teachers/{teacherId}/collaborations)
- *
- * 2. Parámetros de consulta (Query Params / Inputs requeridos):
- *    - status?: 'ACTIVE' | 'COMPLETED'
- *    - search?: string (Filtra por materia, código, docente, correo, grupo, gestión o examen)
- *    - page?: number
- *    - per_page?: number (10 por defecto para la grilla 2x5)
- *
- * 3. Modelos de Base de Datos / Laravel involucrados:
- *    - ExamCollaborator (user_id, exam_id, assigned_by, created_at)
- *    - Exam (evaluation_type, exam_date, status)
- *    - CourseOffering (group_code, subject_id, teacher_id, academic_term_id)
- *    - Subject (name, code)
- *    - Teacher (first_names, last_names, email)
- *    - AcademicTerm (name)
- * ============================================================================
- */
-
 export type ExamEvaluationTypeLabel =
+  | 'Parcial'
+  | 'Recuperatorio'
+  | 'No registrado'
   | 'Primer parcial'
   | 'Segundo parcial'
   | 'Examen final'
@@ -54,111 +33,15 @@ interface CollaboratorAssignmentItem extends BaseTableEntity {
   collaborationStatus: CollaborationTabFilter
 }
 
-const MOCK_COLLABORATOR_ASSIGNMENTS: readonly CollaboratorAssignmentItem[] = [
-  // DESIGNACIONES ACTIVAS
-  {
-    id: 301,
-    subjectName: 'Base de Datos I',
-    subjectCode: '2006032',
-    groupCode: '2',
-    academicTerm: 'II/2026',
-    teacherFullName: 'Ing. Daniel Flores Condarco',
-    teacherEmail: 'demo1@umss.edu.bo',
-    examType: 'Primer parcial',
-    assignedAt: '15/10/2026 - 09:30',
-    collaborationStatus: 'ACTIVE',
-  },
-  {
-    id: 302,
-    subjectName: 'Elementos de Programación y Estructura de Datos',
-    subjectCode: '2006025',
-    groupCode: '1',
-    academicTerm: 'II/2026',
-    teacherFullName: 'Ing. Joel Fernandez Cordoba',
-    teacherEmail: 'demo2@umss.edu.bo',
-    examType: 'Segundo parcial',
-    assignedAt: '18/10/2026 - 11:00',
-    collaborationStatus: 'ACTIVE',
-  },
-  // DESIGNACIONES CONCLUIDAS (HISTORIAL)
-  {
-    id: 303,
-    subjectName: 'Introducción a la Programación',
-    subjectCode: '2006018',
-    groupCode: '1',
-    academicTerm: 'I/2026',
-    teacherFullName: 'Ing. Patricia Erika Rodriguez Bilbao',
-    teacherEmail: 'p.rodriguez@umss.edu.bo',
-    examType: 'Examen final',
-    assignedAt: '12/06/2026 - 14:20',
-    collaborationStatus: 'COMPLETED',
-  },
-  {
-    id: 304,
-    subjectName: 'Introducción a la Programación',
-    subjectCode: '2006018',
-    groupCode: '1',
-    academicTerm: 'I/2026',
-    teacherFullName: 'Ing. Patricia Erika Rodriguez Bilbao',
-    teacherEmail: 'p.rodriguez@umss.edu.bo',
-    examType: 'Segunda instancia',
-    assignedAt: '25/06/2026 - 08:45',
-    collaborationStatus: 'COMPLETED',
-  },
-  {
-    id: 305,
-    subjectName: 'Cálculo I',
-    subjectCode: '2008011',
-    groupCode: '4',
-    academicTerm: 'I/2026',
-    teacherFullName: 'Ing. Juan Jose Arnez',
-    teacherEmail: 'demo3@umss.edu.bo',
-    examType: 'Primer parcial',
-    assignedAt: '10/04/2026 - 16:00',
-    collaborationStatus: 'COMPLETED',
-  },
-]
-
 export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
   const [selectedTab, setSelectedTab] =
     useState<CollaborationTabFilter>('ACTIVE')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const totalActiveCount = useMemo(
-    () =>
-      MOCK_COLLABORATOR_ASSIGNMENTS.filter(
-        (item) => item.collaborationStatus === 'ACTIVE',
-      ).length,
-    [],
-  )
-
-  const totalCompletedCount = useMemo(
-    () =>
-      MOCK_COLLABORATOR_ASSIGNMENTS.filter(
-        (item) => item.collaborationStatus === 'COMPLETED',
-      ).length,
-    [],
-  )
-
-  const filteredCollaborations = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-
-    return MOCK_COLLABORATOR_ASSIGNMENTS.filter((item) => {
-      if (item.collaborationStatus !== selectedTab) return false
-      if (!query) return true
-
-      return (
-        item.subjectName.toLowerCase().includes(query) ||
-        item.subjectCode.toLowerCase().includes(query) ||
-        item.teacherFullName.toLowerCase().includes(query) ||
-        item.teacherEmail.toLowerCase().includes(query) ||
-        item.examType.toLowerCase().includes(query) ||
-        item.groupCode.toLowerCase().includes(query) ||
-        item.academicTerm.toLowerCase().includes(query) ||
-        item.assignedAt.toLowerCase().includes(query)
-      )
-    })
-  }, [selectedTab, searchQuery])
+  const records = useProfileRecords<CollaboratorAssignmentItem>(entity, 'collaborations', searchQuery, selectedTab)
+  const filteredCollaborations = records.items
+  const totalActiveCount = records.summary?.active ?? 0
+  const totalCompletedCount = records.summary?.completed ?? 0
 
   const cardFields = useMemo<
     readonly CardFieldDef<CollaboratorAssignmentItem>[]
@@ -236,7 +119,7 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
           <p>
             {isShowingActive
               ? `Designaciones vigentes donde ${entity.first_names} ${entity.last_names} es colaborador actualmente.`
-              : `Historial de evaluaciones pasadas donde ${entity.first_names} ${entity.last_names} fue colaborador.`}
+              : `Ultima asignacion conservada por examen donde ${entity.first_names} ${entity.last_names} fue colaborador.`}
           </p>
         </div>
 
@@ -277,11 +160,16 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         </div>
       </div>
 
+      <p>Última asignación conservada por examen. Los períodos anteriores con auditoría se consultan en Historial de roles y autorizaciones.</p>
       <DataCardGrid
         key={selectedTab}
         fields={cardFields}
         data={filteredCollaborations}
-        loading={false}
+        loading={records.loading}
+        error={records.error}
+        pagination={records.pagination}
+        onPageChange={records.onPageChange}
+        onRetry={records.reload}
         pageSize={10}
         labelWidth="92px"
         entityLabel={
@@ -289,11 +177,7 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
             ? 'colaboraciones activas'
             : 'colaboraciones concluidas'
         }
-        searchPlaceholder={
-          isShowingActive
-            ? 'Buscar en colaboraciones activas por materia, código, docente, gestión o examen...'
-            : 'Buscar en colaboraciones concluidas por materia, código, docente, gestión o examen...'
-        }
+        searchPlaceholder="Buscar por materia, código, docente o gestión..."
         initialSearch={searchQuery}
         onSearch={setSearchQuery}
         emptyTitle={

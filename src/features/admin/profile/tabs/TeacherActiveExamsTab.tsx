@@ -1,3 +1,5 @@
+import { useProfileRecords } from '../hooks/useProfileRecords'
+import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
@@ -7,53 +9,10 @@ import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.ty
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
-/**
- * ============================================================================
- * CONTRATO DE BACKEND PARA "EXÁMENES ACTIVOS" (DOCENTE)
- * ============================================================================
- * 1. Endpoint sugerido:
- *    GET /api/v1/admin/teachers/{teacherId}/exams/active
- *    (Alternativa: GET /api/v1/admin/teachers/{teacherId}/exams?status=UPCOMING)
- *
- * 2. Parámetros de consulta (Query Params / Inputs requeridos):
- *    - search?: string (Filtra por materia, fecha, tipo de examen, grupo, gestión o carrera)
- *    - evaluation_type?: 'FIRST_PARTIAL' | 'SECOND_PARTIAL' | 'FINAL' | 'SECOND_INSTANCE' | 'TABLE_EXAM'
- *    - page?: number
- *    - per_page?: number (10 por defecto para la grilla 2x5)
- *
- * 3. Modelos de Base de Datos / Laravel involucrados:
- *    - Exam (id, course_offering_id, evaluation_type, exam_date, start_time, status)
- *      * Filtrado por exámenes cuya fecha/hora programada aún está vigente.
- *    - CourseOffering (group_code, subject_id, teacher_id, academic_term_id)
- *    - Subject (name, code)
- *    - Career (relación `career_subject` para determinar carreras e inferir grupo mixto/individual)
- *    - AcademicTerm (name, ej. "II/2026")
- *
- * 4. Estructura JSON esperada en la respuesta (Response 200 OK):
- *    {
- *      "data": [
- *        {
- *          "id": 701,
- *          "subject_name": "Taller de Ingeniería de Software",
- *          "subject_code": "2006048",
- *          "exam_date": "28/10/2026 - 14:15",
- *          "evaluation_type": "FIRST_PARTIAL",
- *          "evaluation_type_label": "Primer parcial",
- *          "group_code": "1",
- *          "academic_term": "II/2026",
- *          "careers": ["Ing. Informática", "Ing. de Sistemas"]
- *        }
- *      ],
- *      "meta": {
- *        "current_page": 1,
- *        "last_page": 1,
- *        "total": 3
- *      }
- *    }
- * ============================================================================
- */
-
 export type TeacherExamTypeLabel =
+  | 'Parcial'
+  | 'Recuperatorio'
+  | 'No registrado'
   | 'Primer parcial'
   | 'Segundo parcial'
   | 'Examen final'
@@ -71,66 +30,15 @@ interface TeacherExamItem extends BaseTableEntity {
   careers: readonly string[]
 }
 
-const MOCK_ACTIVE_TEACHER_EXAMS: readonly TeacherExamItem[] = [
-  {
-    id: 701,
-    subjectName: 'Taller de Ingeniería de Software',
-    subjectCode: '2006048',
-    examDate: '28/10/2026 - 14:15',
-    examType: 'Primer parcial',
-    groupCode: '1',
-    academicTerm: 'II/2026',
-    careers: ['Ing. Informática', 'Ing. de Sistemas'],
-  },
-  {
-    id: 702,
-    subjectName: 'Base de Datos I',
-    subjectCode: '2006032',
-    examDate: '04/11/2026 - 09:45',
-    examType: 'Segundo parcial',
-    groupCode: '2',
-    academicTerm: 'II/2026',
-    careers: ['Ing. de Sistemas'],
-  },
-  {
-    id: 703,
-    subjectName: 'Física General (Laboratorio)',
-    subjectCode: '2008019',
-    examDate: '12/11/2026 - 11:15',
-    examType: 'Mesa',
-    groupCode: '1C',
-    academicTerm: 'II/2026',
-    careers: ['Ing. Informática', 'Ing. de Sistemas', 'Ing. Electrónica'],
-  },
-]
-
-function getGroupTypeLabel(careersCount: number): 'Grupo mixto' | 'Grupo individual' {
-  return careersCount > 1 ? 'Grupo mixto' : 'Grupo individual'
+function getGroupTypeLabel(careersCount: number): string {
+  return careersCount > 1 ? 'Varias carreras asociadas' : careersCount === 1 ? 'Una carrera asociada' : 'Sin carreras asociadas'
 }
 
 export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredExams = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-    if (!query) return MOCK_ACTIVE_TEACHER_EXAMS
-
-    return MOCK_ACTIVE_TEACHER_EXAMS.filter((item) => {
-      const groupType = getGroupTypeLabel(item.careers.length).toLowerCase()
-      const careersString = item.careers.join(' - ').toLowerCase()
-
-      return (
-        item.subjectName.toLowerCase().includes(query) ||
-        item.subjectCode.toLowerCase().includes(query) ||
-        item.examDate.toLowerCase().includes(query) ||
-        item.examType.toLowerCase().includes(query) ||
-        item.groupCode.toLowerCase().includes(query) ||
-        item.academicTerm.toLowerCase().includes(query) ||
-        groupType.includes(query) ||
-        careersString.includes(query)
-      )
-    })
-  }, [searchQuery])
+  const records = useProfileRecords<TeacherExamItem>(entity, 'exams', searchQuery)
+  const filteredExams = records.items
 
   const cardFields = useMemo<readonly CardFieldDef<TeacherExamItem>[]>(
     () => [
@@ -174,7 +82,7 @@ export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
       },
       {
         id: 'groupType',
-        label: 'Tipo grupo',
+        label: 'Vinculacion',
         cell: (item) => {
           const isMixed = item.careers.length > 1
           return (
@@ -217,17 +125,21 @@ export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
             .
           </p>
         </div>
-        <span className={layoutStyles.termBadge}>Gestión activa: II/2026</span>
+        <ProfileActiveTermBadge className={layoutStyles.termBadge} label="Gestión activa" />
       </div>
 
       <DataCardGrid
         fields={cardFields}
         data={filteredExams}
-        loading={false}
+        loading={records.loading}
+        error={records.error}
+        pagination={records.pagination}
+        onPageChange={records.onPageChange}
+        onRetry={records.reload}
         pageSize={10}
         labelWidth="92px"
         entityLabel="exámenes activos"
-        searchPlaceholder="Buscar por materia, fecha, tipo de examen (ej. Primer parcial, Mesa), grupo o carrera..."
+        searchPlaceholder="Buscar por materia, codigo, docente o gestion..."
         onSearch={setSearchQuery}
         emptyTitle="Sin exámenes activos programados"
         emptyDescription="El docente no tiene evaluaciones pendientes de realización o no hay coincidencias con la búsqueda."

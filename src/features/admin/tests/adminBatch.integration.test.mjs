@@ -17,7 +17,8 @@ function harness() {
   const h = sourceHarness({ '@/shared/api/httpClient': { httpClient: {
     get: (...args) => { calls.push(['get', ...args]); return get(...args) },
     post: (...args) => { calls.push(['post', ...args]); return post(...args) },
-  } }, '@/features/subjects/api/adminSubjectsApi': { getSubjectCareers: (...args) => catalog(...args) },
+  } }, '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { id: 1 }, notify() {}, clearSession() {} }) },
+    '@/features/subjects/api/adminSubjectsApi': { getSubjectCareers: (...args) => catalog(...args) },
     'react-router': { NavLink: 'link', useLocation: () => ({ pathname: h.pathname }) },
     '@/features/admin/api/adminUsersMock': { getAdminUsersMock: async () => { calls.push(['mock']); return { users: [], meta: meta(0) } } },
   })
@@ -178,23 +179,22 @@ test('024: malformed pagination and mismatched detail identity are rejected', as
   await assert.rejects(() => api.readAuditEvent(5, new AbortController().signal))
 })
 
-test('020: mock users are explicitly labeled and expose no fictitious mutations or profile links', async () => {
+test('HU21 replaces the operational mock with the real account adapter', () => {
   const h = harness()
   const { AdminManageUsersPage } = h.load('features/admin/pages/AdminManageUsersPage.tsx')
-  h.render(AdminManageUsersPage); await settle(); const tree = h.render()
-  assert.match(textContent(tree), /demostración con datos simulados/)
-  const grid = nodes(tree, (node) => node.props?.entityLabel === 'usuarios')[0]
-  assert.equal(grid.props.onToggleStatus, undefined); assert.equal(grid.props.getProfilePath, undefined)
-  assert.equal(nodes(tree, (node) => node.props?.onConfirm).length, 0); h.unmount()
+  const tree = h.render(AdminManageUsersPage)
+  assert.equal(tree.type.name, 'ManageAccounts')
+  assert.equal(h.calls.length, 0)
+  h.unmount()
 })
 
-test('020: pending role history never pretends that a mock user list is a real history', async () => {
+test('account history has its own persisted-event screen', () => {
   const h = harness(); h.pathname = '/admin/users/history'
   const { AdminManageUsersPage } = h.load('features/admin/pages/AdminManageUsersPage.tsx')
-  h.render(AdminManageUsersPage); await settle(); const tree = h.render()
-  assert.match(textContent(tree), /historial real de usuarios y roles está pendiente/)
+  const tree = h.render(AdminManageUsersPage)
+  assert.equal(tree.type.name, 'AdminUserHistoryPage')
   assert.equal(h.calls.length, 0)
-  assert.equal(nodes(tree, (node) => node.props?.entityLabel === 'usuarios').length, 0); h.unmount()
+  h.unmount()
 })
 
 test('024/022: new navigation links belong only to the administrator menu', () => {

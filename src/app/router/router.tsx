@@ -78,6 +78,10 @@ export const router = createBrowserRouter([
                     element: <AdminManageUsersPage />,
                   },
                   {
+                    path: 'users/roles',
+                    element: <AdminManageUsersPage />,
+                  },
+                  {
                     path: 'audit-logs',
                     lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="audit-logs" /> } },
                   },
@@ -88,6 +92,10 @@ export const router = createBrowserRouter([
                   {
                     path: 'users/history',
                     element: <AdminManageUsersPage />,
+                  },
+                  {
+                    path: 'users/:userId/roles',
+                    lazy: async () => { const { AdminUserRolesPage } = await import('@/features/admin/pages/AdminUserRolesPage'); return { Component: AdminUserRolesPage } },
                   },
                   {
                     path: 'teachers',

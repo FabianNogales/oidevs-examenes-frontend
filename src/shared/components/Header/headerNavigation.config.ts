@@ -85,6 +85,7 @@ export const navigationByRole: Record<
       label: 'Usuarios',
       children: [
         { label: 'Gestionar usuarios', to: '/admin/users/manage' },
+        { label: 'Roles y permisos', to: '/admin/users/roles' },
         { label: 'Historial de cambios', to: '/admin/users/history' },
       ],
     },
@@ -140,8 +141,22 @@ export const roleLabelByRole: Record<HeaderRole, string> = {
 export function getHeaderNavigation(
   role?: HeaderRole | null,
   hasCollaborations = false,
+  additionalRoles: readonly HeaderRole[] = [],
 ): readonly HeaderNavigationItem[] {
-  const navigation = role ? navigationByRole[role] : publicNavigation
+  const seen = new Set<string>()
+  const roles = role ? [...new Set([role, ...additionalRoles])] : []
+  const entries = role ? roles.flatMap((itemRole) =>
+    navigationByRole[itemRole].map((item) => ({ ...item,
+      label: roles.length > 1 && item.to === '/teacher/students' ? 'Estudiantes de mis materias'
+        : roles.length > 1 && item.to === '/students/qr' ? 'Mis exámenes como estudiante' : item.label,
+    }))).filter((item) => {
+      const key = item.to ?? item.label
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    }) : publicNavigation
+  const navigation = [...entries.filter((item) => !['Información', 'Servicios'].includes(item.label)),
+    ...entries.filter((item) => ['Información', 'Servicios'].includes(item.label))]
   if (!hasCollaborations) return navigation
   const insertionIndex = navigation.findIndex(
     (item) => item.label === 'Información',

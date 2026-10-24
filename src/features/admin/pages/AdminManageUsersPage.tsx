@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useLocation } from 'react-router'
+import { Link, useLocation } from 'react-router'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
+import { AdminUserHistoryPage } from './AdminUserHistoryPage'
 
 import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
 import {
-  getAdminUsersMock,
-  updateAdminUserStatusMock,
+  getAdminUsers,
+  getAdminUser,
+  updateAdminUserStatus,
   type AdminUserItem,
-} from '@/features/admin/api/adminUsersMock'
+} from '@/features/admin/api/adminUsersApi'
 
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type {
@@ -37,7 +41,7 @@ const USER_COLUMNS: readonly TableColumnDef<AdminUserItem>[] = [
     cell: (user) => (
       <div>
         <span className={tableStyles.primaryText}>
-          {user.last_names} {user.first_names}
+          {user.last_names || user.first_names ? `${user.last_names} ${user.first_names}` : user.full_name}
         </span>
         {user.identity_number && (
           <span className={tableStyles.secondaryText}>
@@ -70,6 +74,12 @@ const USER_COLUMNS: readonly TableColumnDef<AdminUserItem>[] = [
 ]
 
 export function AdminManageUsersPage() {
+  const path = useLocation().pathname
+  return path === '/admin/users/history' ? <AdminUserHistoryPage /> : <ManageAccounts rolesView={path === '/admin/users/roles'} />
+}
+
+export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = {}) {
+  const { user: currentUser, notify } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -82,7 +92,22 @@ export function AdminManageUsersPage() {
   const [pendingToggle, setPendingToggle] = useState<AdminUserItem | null>(null)
   const [toggling, setToggling] = useState(false)
 
-  const historyView = useLocation().pathname === '/admin/users/history'
+  const [detail, setDetail] = useState<{ open: boolean; account: AdminUserItem | null; error: string | null }>({ open: false, account: null, error: null })
+  const detailRequest = useRef<AbortController | null>(null)
+  const mutationInFlight = useRef(false)
+  useEffect(() => () => detailRequest.current?.abort(), [])
+  function closeDetail() { detailRequest.current?.abort(); setDetail({ open: false, account: null, error: null }) }
+  async function openDetail(account: AdminUserItem) {
+    detailRequest.current?.abort()
+    const controller = new AbortController(); detailRequest.current = controller
+    setDetail({ open: true, account: null, error: null })
+    try {
+      const result = await getAdminUser(account.id, controller.signal)
+      if (!controller.signal.aborted) setDetail({ open: true, account: result, error: null })
+    } catch (error) {
+      if (!controller.signal.aborted) setDetail({ open: true, account: null, error: error instanceof Error ? error.message : 'No se pudo consultar la cuenta.' })
+    }
+  }
 
   const requestIdRef = useRef(0)
 
@@ -93,7 +118,7 @@ export function AdminManageUsersPage() {
       setLoading(true)
       setErrorMessage(null)
 
-      const result = await getAdminUsersMock({
+      const result = await getAdminUsers({
         page,
         perPage: PER_PAGE,
         search,
@@ -106,6 +131,8 @@ export function AdminManageUsersPage() {
         currentPage: result.meta.current_page,
         lastPage: result.meta.last_page,
         total: result.meta.total,
+        from: result.meta.from,
+        to: result.meta.to,
       })
 
       if (result.meta.last_page > 0 && page > result.meta.last_page) {
@@ -131,13 +158,13 @@ export function AdminManageUsersPage() {
   useEffect(() => {
     let cancelled = false
     void Promise.resolve().then(() => {
-      if (!cancelled && !historyView) void loadUsers(currentPage, searchTerm)
+      if (!cancelled) void loadUsers(currentPage, searchTerm)
     })
     return () => {
       cancelled = true
       requestIdRef.current += 1
     }
-  }, [currentPage, searchTerm, loadUsers, historyView])
+  }, [currentPage, searchTerm, loadUsers])
 
   const handleSearch = (query: string) => {
     setCurrentPage(1)
@@ -148,9 +175,10 @@ export function AdminManageUsersPage() {
     setSearchTerm(query)
   }
 
-  // Manejador para ejecutar el cambio de estado simulado
+  // Confirma el cambio global de cuenta y vuelve a consultar el listado.
   const handleConfirmToggle = async () => {
-    if (!pendingToggle) return
+    if (!pendingToggle || mutationInFlight.current) return
+    mutationInFlight.current = true
 
     const newStatus = pendingToggle.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
 
@@ -158,7 +186,7 @@ export function AdminManageUsersPage() {
       setToggling(true)
       setErrorMessage(null)
 
-      const updated = await updateAdminUserStatusMock(
+      const updated = await updateAdminUserStatus(
         pendingToggle.id,
         newStatus,
       )
@@ -168,6 +196,8 @@ export function AdminManageUsersPage() {
           user.id === updated.id ? { ...user, ...updated } : user,
         ),
       )
+      notify('success', `Cuenta ${newStatus === 'ACTIVE' ? 'activada' : 'desactivada'} correctamente.`)
+      await loadUsers(currentPage, searchTerm)
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -176,6 +206,7 @@ export function AdminManageUsersPage() {
       )
     } finally {
       setToggling(false)
+      mutationInFlight.current = false
       setPendingToggle(null)
     }
   }
@@ -192,21 +223,19 @@ export function AdminManageUsersPage() {
         <span className={styles.breadcrumbSeparator}>/</span>
         <span className={styles.breadcrumbLink}>Usuarios</span>
         <span className={styles.breadcrumbSeparatorActive}>/</span>
-        <span className={styles.breadcrumbCurrent}>Gestionar usuarios</span>
+        <span className={styles.breadcrumbCurrent}>{rolesView ? 'Roles y permisos' : 'Gestionar usuarios'}</span>
       </nav>
 
       <header className={styles.pageHeader}>
         <div className={styles.headerTitles}>
-          <h1>{historyView ? 'Historial de usuarios y roles' : 'Gestión de usuarios'}</h1>
+          <h1>{rolesView ? 'Roles y permisos' : 'Gestión de usuarios'}</h1>
           <p>
-            Vista de demostración con datos simulados. Usuarios y roles aún no están integrados; no se aplican cambios reales en BD.
+            Cuentas institucionales. El estado de cuenta es global y no modifica el estado particular de sus perfiles. Los roles se administran por separado en HU22.
           </p>
         </div>
       </header>
 
-      {historyView ? (
-        <p role="status">El historial real de usuarios y roles está pendiente de integración.</p>
-      ) : (
+      <>
         <DataTable<AdminUserItem>
           columns={USER_COLUMNS}
           data={users}
@@ -218,10 +247,13 @@ export function AdminManageUsersPage() {
           onSearch={handleSearch}
           onPageChange={setCurrentPage}
           onRetry={() => void loadUsers(currentPage, searchTerm)}
-          // 1. Añadimos el link directo a su perfil usando su ID de usuario general
-          getProfilePath={(user) => `/admin/users/${user.id}`}
-          // 2. Añadimos la función para capturar cuando se hace clic en Activar/Desactivar
-          onToggleStatus={(user) => setPendingToggle(user)}
+          viewActionLabel={rolesView ? 'Gestionar roles' : 'Ver detalle'}
+          getProfilePath={rolesView ? (account) => `/admin/users/${account.id}/roles` : undefined}
+          onViewProfile={rolesView ? undefined : (account) => void openDetail(account)}
+          onToggleStatus={rolesView ? undefined : (account) => {
+            if (account.id === currentUser?.id) { notify('error', 'No puedes desactivar tu propia cuenta.'); return }
+            setPendingToggle(account)
+          }}
           emptyTitle="No se encontraron usuarios"
           emptyDescription={
             searchTerm
@@ -229,7 +261,18 @@ export function AdminManageUsersPage() {
               : 'Todavía no existen usuarios registrados en el sistema.'
           }
         />
-      )}
+      </>
+      {detail.open && <CollaborationModal title="Detalle de cuenta" onClose={closeDetail}>
+        {detail.error ? <p role="alert">{detail.error}</p> : detail.account ? <>
+          <dl><dt>Nombre</dt><dd>{detail.account.full_name}</dd><dt>Código institucional</dt><dd>{detail.account.institutional_code ?? 'No registrado'}</dd>
+            <dt>CI</dt><dd>{detail.account.identity_number ?? 'No registrado'}</dd><dt>Correo</dt><dd>{detail.account.email}</dd>
+            <dt>Estado global</dt><dd>{detail.account.status}</dd><dt>Roles permanentes</dt><dd>{detail.account.role_label}</dd>
+            <dt>Perfil docente</dt><dd>{detail.account.teacher_status ?? 'Sin perfil'}</dd><dt>Perfil estudiantil</dt><dd>{detail.account.student_status ?? 'Sin perfil'}</dd></dl>
+          <Link to={`/admin/users/${detail.account.id}/roles`} onClick={closeDetail}>Gestionar roles y permisos (HU22)</Link>
+          {detail.account.teacher_id && <p><Link to={`/admin/teachers/${detail.account.teacher_id}`} onClick={closeDetail}>Ver perfil docente</Link></p>}
+          {detail.account.student_id && <p><Link to={`/admin/students/${detail.account.student_id}`} onClick={closeDetail}>Ver perfil estudiantil</Link></p>}
+        </> : <p role="status">Cargando cuenta…</p>}
+      </CollaborationModal>}
 
       {/* Cuadro de diálogo de confirmación para Activar / Desactivar */}
       <ConfirmDialog
