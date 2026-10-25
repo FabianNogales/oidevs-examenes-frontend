@@ -3,11 +3,11 @@
   "rewrites": [
     {
       "source": "/backend/:path*",
-      "destination": "https://oidevs-examenes-backend-production-08d6.up.railway.app/:path*"
+      "destination": "https://oidevs-examenes-backend.onrender.com/:path*"
     },
     {
       "source": "/api/:path*",
-      "destination": "https://oidevs-examenes-backend-production-08d6.up.railway.app/api/:path*"
+      "destination": "https://oidevs-examenes-backend.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
