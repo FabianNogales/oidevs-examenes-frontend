@@ -15,6 +15,10 @@ dist-ssr
 .env
 .env.*
 !.env.example
+!.env.local.example
+
+# Local TLS material for the offline LAN demo. Never commit private keys.
+/.certs/
 
 # Editor directories and files
 .vscode/*
