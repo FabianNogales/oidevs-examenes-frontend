@@ -159,8 +159,10 @@ test('HU22 keeps navigation for all server-authorized permanent roles without gr
   const multi = getHeaderNavigation('admin', false, ['admin', 'teacher', 'student'])
   const paths = multi.flatMap((item) => [item.to, ...(item.children ?? []).map((child) => child.to)])
     .filter(Boolean).map((path) => path.split('?')[0])
-  for (const path of ['/admin/teachers', '/teacher/subjects', '/teacher/students', '/teacher/exams', '/students/profile', '/students/qr'])
+  for (const path of ['/admin/teachers', '/teacher/subjects', '/teacher/exams', '/students/profile', '/students/qr'])
     assert.ok(paths.includes(path))
+  // Teacher enrollments are reached from each subject, not a separate header entry.
+  assert.ok(!paths.includes('/teacher/students'))
   assert.equal(multi.filter((item) => item.to === '/').length, 1)
   assert.ok(!multi.some((item) => item.to === '/collaborator'))
   assert.ok(!getHeaderNavigation('student', false, ['student']).some((item) => item.to?.startsWith('/admin')))
