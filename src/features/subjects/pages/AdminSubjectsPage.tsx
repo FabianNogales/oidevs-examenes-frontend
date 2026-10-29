@@ -225,9 +225,6 @@ export function AdminSubjectsPage() {
               (catalog.result.data.length ? (
                 <AdminSubjectsTable
                   subjects={catalog.result.data}
-                  onDetail={(subjectId) =>
-                    setSelection({ mode: 'detail', subjectId })
-                  }
                   onEdit={(subjectId) =>
                     setSelection({ mode: 'edit', subjectId })
                   }

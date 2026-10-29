@@ -39,17 +39,25 @@ export function RoomDetails({
           </div>
         ))}
       </dl>
-      {room.current_exam && (
-        <section className={styles.exam} aria-label="Examen actual">
-          <h3>Examen actual</h3>
-          <p>{room.current_exam.name}</p>
+      <section className={styles.exam} aria-label="Examen actual">
+        <h3>Examen actual</h3>
+        {room.current_exam ? (
+          <>
+            <p>{room.current_exam.name}</p>
+            <p>
+              {room.current_exam.exam_date} ·{' '}
+              {room.current_exam.start_time.slice(0, 5)} –{' '}
+              {room.current_exam.end_time.slice(0, 5)}
+            </p>
+          </>
+        ) : (
           <p>
-            {room.current_exam.exam_date} ·{' '}
-            {room.current_exam.start_time.slice(0, 5)} –{' '}
-            {room.current_exam.end_time.slice(0, 5)}
+            {room.current_exam === null
+              ? 'Sin examen en curso'
+              : 'Sin información'}
           </p>
-        </section>
-      )}
+        )}
+      </section>
       <footer className={styles.actions}>
         <button
           type="button"

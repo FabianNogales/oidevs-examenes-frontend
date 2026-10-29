@@ -1,0 +1,8 @@
+.actions {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.actions button {
+  max-width: 100%;
+}

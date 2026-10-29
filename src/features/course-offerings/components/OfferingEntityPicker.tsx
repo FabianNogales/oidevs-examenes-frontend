@@ -69,6 +69,8 @@ export function OfferingEntityPicker({
         Buscar por nombre o código
         <input
           id={`${id}-search`}
+          type="search"
+          placeholder={`Escribe el nombre o código de ${title.toLowerCase()}`}
           value={search}
           maxLength={100}
           onChange={(event) => {
@@ -77,8 +79,9 @@ export function OfferingEntityPicker({
           }}
         />
       </label>
-      {multiple && selected.length > 0 && (
+      {selected.length > 0 && (
         <div className={styles.selection} aria-label="Selección actual">
+          <span className={styles.selectionLabel}>Selección actual:</span>
           {selected.map((item) => (
             <button
               key={item.id}
@@ -107,61 +110,26 @@ export function OfferingEntityPicker({
       )}
       {state?.data && (
         <>
-          {!multiple && (
-            <label className={styles.filter}>
-              {title} seleccionado
-              <select
-                value={selected[0]?.id ?? ''}
-                onChange={(event) => {
-                  const item = [...selected, ...state.data!.items].find(
-                    (choice) => choice.id === Number(event.target.value),
-                  )
-                  onChange(item ? [item] : [])
-                }}
-              >
-                <option value="">Selecciona una opción</option>
-                {selected
-                  .filter(
-                    (item) =>
-                      !state.data!.items.some(
-                        (choice) => choice.id === item.id,
-                      ),
-                  )
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                {state.data.items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label} — {item.detail}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          <p className={styles.choiceHint} role="status" aria-live="polite">
+            {state.data.items.length
+              ? `${state.data.items.length} ${state.data.items.length === 1 ? 'resultado' : 'resultados'} en esta página. ${multiple ? 'Selecciona una o varias materias.' : `Selecciona ${title.toLowerCase() === 'docente' ? 'un docente' : 'una materia'} de la lista.`}`
+              : 'No se encontraron opciones activas. Prueba otro nombre o código.'}
+          </p>
           <div className={styles.options}>
-            {multiple &&
-              state.data.items.map((item) => (
-                <label key={item.id} className={styles.option}>
-                  <input
-                    type="checkbox"
-                    name={id}
-                    checked={selected.some((value) => value.id === item.id)}
-                    onChange={() => toggle(item)}
-                  />
-                  <span>
-                    {item.label}
-                    <small>{item.detail}</small>
-                  </span>
-                </label>
-              ))}
-            {!state.data.items.length && (
-              <p role="status">
-                No hay opciones activas en esta página. Prueba otra búsqueda o
-                página.
-              </p>
-            )}
+            {state.data.items.map((item) => (
+              <label key={item.id} className={styles.option}>
+                <input
+                  type={multiple ? 'checkbox' : 'radio'}
+                  name={id}
+                  checked={selected.some((value) => value.id === item.id)}
+                  onChange={() => toggle(item)}
+                />
+                <span>
+                  {item.label}
+                  {item.detail && <small>{item.detail}</small>}
+                </span>
+              </label>
+            ))}
           </div>
           {state.data.lastPage > 1 && (
             <div className={styles.formActions}>

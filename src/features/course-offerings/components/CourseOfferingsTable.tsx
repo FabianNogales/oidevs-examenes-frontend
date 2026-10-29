@@ -1,5 +1,8 @@
+import { DataTable } from '@/shared/components/DataTable/DataTable'
+import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
+import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { CourseOffering } from '../types/courseOffering.types'
-import styles from '../pages/AdminCourseOfferingsPage.module.css'
+import local from './CourseOfferingsTable.module.css'
 
 export function CourseOfferingsTable({
   offerings,
@@ -10,106 +13,109 @@ export function CourseOfferingsTable({
   showTeacher?: boolean
   onAction?: (id: number, mode: 'edit' | 'status') => void
 }) {
-  return (
-    <div className={styles.tableScroll}>
-      <table className={styles.table}>
-        <caption className={styles.srOnly}>
-          Materias asignadas por periodo académico
-        </caption>
-        <thead>
-          <tr>
-            {showTeacher && <th scope="col">Docente</th>}
-            <th scope="col">Materia</th>
-            <th scope="col">Carreras</th>
-            <th scope="col">Periodo</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Historial</th>
-            {onAction && <th scope="col">Acciones</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {offerings.map((offering) => (
-            <tr key={offering.id}>
-              {showTeacher && (
-                <td data-label="Docente">
-                  <strong>
-                    {offering.teacher.first_names} {offering.teacher.last_names}
-                  </strong>
-                  <small>{offering.teacher.institutional_code}</small>
-                  <small>{offering.teacher.email}</small>
-                </td>
-              )}
-              <th scope="row" data-label="Materia">
-                {offering.subject.name}
-                <small>{offering.subject.code}</small>
-                {offering.subject.status === 'INACTIVE' && (
-                  <small>Materia inactiva en el catálogo</small>
-                )}
-              </th>
-              <td data-label="Carreras">
-                <div className={styles.careerList}>
-                  {offering.subject.careers.length ? (
-                    offering.subject.careers.map((career) => (
-                      <span key={career.id} className={styles.careerChip}>
-                        {career.name}
-                      </span>
-                    ))
-                  ) : (
-                    <span>Sin carreras asociadas</span>
-                  )}
-                </div>
-              </td>
-              <td data-label="Periodo">
-                {offering.academic_term.name}
-                {offering.academic_term.status === 'INACTIVE' && (
-                  <small>Periodo inactivo</small>
-                )}
-              </td>
-              <td data-label="Estado">
-                <span
+  const columns: TableColumnDef<CourseOffering>[] = [
+    ...(showTeacher
+      ? [
+          {
+            id: 'teacher',
+            header: 'Docente',
+            width: '20%',
+            cell: (offering: CourseOffering) =>
+              `${offering.teacher.first_names} ${offering.teacher.last_names}`,
+          },
+        ]
+      : []),
+    {
+      id: 'subject',
+      header: 'Materia',
+      width: showTeacher ? '24%' : undefined,
+      cell: (offering) => (
+        <>
+          <strong className={tableStyles.primaryText}>
+            {offering.subject.name}
+          </strong>
+          <small className={tableStyles.secondaryText}>
+            {offering.subject.code}
+          </small>
+          {offering.subject.status === 'INACTIVE' && (
+            <small className={tableStyles.secondaryText}>
+              Materia inactiva en el catálogo
+            </small>
+          )}
+        </>
+      ),
+    },
+    {
+      id: 'period',
+      header: 'Periodo',
+      width: showTeacher ? '18%' : undefined,
+      cell: (offering) => (
+        <>
+          {offering.academic_term.name}
+          {offering.academic_term.status === 'INACTIVE' && (
+            <small className={tableStyles.secondaryText}>
+              Periodo inactivo
+            </small>
+          )}
+        </>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Estado',
+      accessorKey: 'status',
+      width: showTeacher ? '12%' : undefined,
+      cell: (offering) => (
+        <span
+          className={`${tableStyles.statusBadge} ${offering.status === 'ACTIVE' ? tableStyles.statusActive : tableStyles.statusInactive}`}
+        >
+          <span className={tableStyles.statusDot} aria-hidden="true" />
+          {offering.status === 'ACTIVE' ? 'Activa' : 'Inactiva'}
+        </span>
+      ),
+    },
+    ...(onAction
+      ? [
+          {
+            id: 'actions',
+            header: 'Acciones',
+            width: showTeacher ? '26%' : undefined,
+            cell: (offering: CourseOffering) => (
+              <div className={`${tableStyles.actionButtons} ${local.actions}`}>
+                <button
+                  type="button"
+                  className={tableStyles.btnViewProfile}
+                  onClick={() => onAction(offering.id, 'edit')}
+                  aria-label={`Editar asignación de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
+                >
+                  Editar asignación
+                </button>
+                <button
+                  type="button"
                   className={
                     offering.status === 'ACTIVE'
-                      ? styles.successBadge
-                      : styles.neutralBadge
+                      ? tableStyles.btnDeactivate
+                      : tableStyles.btnActivate
                   }
+                  onClick={() => onAction(offering.id, 'status')}
+                  aria-label={`${offering.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} asignación de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
                 >
-                  {offering.status === 'ACTIVE' ? 'Activa' : 'Inactiva'}
-                </span>
-              </td>
-              <td data-label="Historial">
-                {offering.enrollments_count} inscripciones
-                <small>{offering.exams_count} exámenes</small>
-              </td>
-              {onAction && (
-                <td data-label="Acciones">
-                  <div className={styles.rowActions}>
-                    <button
-                      type="button"
-                      className={styles.secondaryButton}
-                      onClick={() => onAction(offering.id, 'edit')}
-                      aria-label={`Editar asignación de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
-                    >
-                      Editar asignación
-                    </button>
-                    <button
-                      type="button"
-                      className={
-                        offering.status === 'ACTIVE'
-                          ? styles.deactivateButton
-                          : styles.secondaryButton
-                      }
-                      onClick={() => onAction(offering.id, 'status')}
-                      aria-label={`${offering.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} asignación de ${offering.subject.name} para ${offering.teacher.first_names} ${offering.teacher.last_names}`}
-                    >
-                      {offering.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
-                    </button>
-                  </div>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                  {offering.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
+                </button>
+              </div>
+            ),
+          },
+        ]
+      : []),
+  ]
+  return (
+    <section aria-label="Materias asignadas por periodo académico">
+      <DataTable
+        columns={columns}
+        data={offerings}
+        loading={false}
+        entityLabel="asignaciones"
+      />
+    </section>
   )
 }
