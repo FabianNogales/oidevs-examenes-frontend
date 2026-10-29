@@ -114,9 +114,6 @@ export function AdminAcademicTermsPage() {
               (state.result.data.length ? (
                 <AcademicTermsTable
                   terms={state.result.data}
-                  onDetail={(termId) =>
-                    setSelection({ mode: 'detail', termId })
-                  }
                   onEdit={(termId) => setSelection({ mode: 'edit', termId })}
                   onStatus={(term) =>
                     setStatusSelection({

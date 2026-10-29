@@ -29,10 +29,6 @@ export const navigationByRole: Record<
       to: '/teacher/subjects',
     },
     {
-      label: 'Estudiantes',
-      to: '/teacher/students',
-    },
-    {
       label: 'Mis exámenes',
       children: [
         {

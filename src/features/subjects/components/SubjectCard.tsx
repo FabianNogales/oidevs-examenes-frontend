@@ -52,7 +52,7 @@ export function SubjectCard({
             title="Gestionar estudiantes"
             onClick={() => onAddStudents(subject)}
           >
-            Gestionar estudiantes
+            Estudiantes
           </button>
         ) : null}
       </div>

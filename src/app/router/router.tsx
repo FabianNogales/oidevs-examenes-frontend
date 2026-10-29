@@ -12,6 +12,7 @@ import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { HomePage } from '@/features/home/pages/HomePage'
 import { TeacherStudentsPage } from '@/features/students/pages/TeacherStudentsPage'
 import { TeacherSubjectStudentsPage } from '@/features/students/pages/TeacherSubjectStudentsPage'
+import { ImportSubjectStudentsPage } from '@/features/students/pages/ImportSubjectStudentsPage'
 import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
@@ -219,6 +220,10 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/students/:courseOfferingId',
                 element: <TeacherSubjectStudentsPage />,
+              },
+              {
+                path: 'teacher/students/:courseOfferingId/import',
+                element: <ImportSubjectStudentsPage />,
               },
             ],
           },

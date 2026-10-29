@@ -1,5 +1,6 @@
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { CreateExamModal } from '@/features/exams/components/CreateExamModal'
@@ -32,7 +33,17 @@ export function TeacherSubjectsPage({
   const [loadedIsLoading, setLoadedIsLoading] = useState(true)
   const [loadedErrorMessage, setLoadedErrorMessage] = useState<string | null>(null)
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
-  const [period, setPeriod] = useState('')
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const period = searchParams.get('period') ?? ''
+  function setPeriod(value: string) {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous)
+      if (value) next.set('period', value)
+      else next.delete('period')
+      return next
+    })
+  }
   const [isSubmittingExam, setIsSubmittingExam] = useState(false)
   const [lastCreatedExamName, setLastCreatedExamName] = useState<string | null>(null)
   const subjectsRequestInFlight = useRef(false)
@@ -141,6 +152,9 @@ export function TeacherSubjectsPage({
           <SubjectList
             subjects={visibleSubjects}
             onCreateExam={openCreateExamModal}
+            onAddStudents={(subject) =>
+              navigate(`/teacher/students/${subject.courseOfferingId}${period ? `?period=${encodeURIComponent(period)}` : ''}`)
+            }
           />
         ) : null}
 

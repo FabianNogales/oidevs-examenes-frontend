@@ -168,8 +168,14 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
               <NavLink
                 to={item.to}
                 end={item.to === '/' ? true : item.end}
+                aria-current={
+                  item.to === '/teacher/subjects' &&
+                  location.pathname.startsWith('/teacher/students/')
+                    ? 'page'
+                    : undefined
+                }
                 className={({ isActive }) =>
-                  `${styles.navigationLink} ${isActive ? styles.active : ''}`
+                  `${styles.navigationLink} ${isActive || (item.to === '/teacher/subjects' && location.pathname.startsWith('/teacher/students/')) ? styles.active : ''}`
                 }
                 onClick={onNavigate}
               >
