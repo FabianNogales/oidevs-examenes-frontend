@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { hasExamEnded } from '../utils/examDisplayStatus'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import type { ExamDetail } from '../api/examDetailsApi'
@@ -22,6 +23,7 @@ export function ExamCancellation({
   const guard = useExamNavigationGuard(false, busy)
   const cancelled = exam.status === 'CANCELLED'
   const permitted = exam.can_cancel === true && !cancelled
+  const reasonId = useId()
   useEffect(() => () => request.current?.abort(), [])
 
   function close() {
@@ -68,21 +70,28 @@ export function ExamCancellation({
         <p>
           {cancelled
             ? 'Este examen está cancelado. Su información y relaciones se conservan para consulta.'
-            : 'Al cancelar esta evaluación, su información permanecerá en el historial.'}
+            : 'El examen cancelado seguirá disponible en Mis exámenes → Cancelados.'}
         </p>
         {!cancelled && !permitted ? (
-          <p>
-            {safeExamMessage(
-              exam.cancel_block_reason,
-              'La cancelación no está habilitada para este examen.',
-            )}
+          <p id={reasonId} className={styles.blockReason}>
+            {hasExamEnded(exam) &&
+            ['SCHEDULED', 'ACTIVE', 'IN_PROGRESS'].includes(exam.status)
+              ? 'El horario de este examen ya terminó. Se conserva para consulta y no se puede cancelar.'
+              : exam.status === 'IN_PROGRESS'
+                ? 'Este examen ya está en curso y no se puede cancelar.'
+                : safeExamMessage(
+                    exam.cancel_block_reason,
+                    'La cancelación no está habilitada para este examen.',
+                  )}
           </p>
         ) : null}
       </div>
-      {permitted ? (
+      {!cancelled ? (
         <button
           type="button"
           className={styles.danger}
+          disabled={!permitted}
+          aria-describedby={!permitted ? reasonId : undefined}
           onClick={() => setOpen(true)}
         >
           Cancelar examen

@@ -19,6 +19,7 @@ import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPa
 import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
 import { TeacherExamDetailPage } from '@/features/exams/pages/TeacherExamDetailPage'
 import { TeacherExamEditPage } from '@/features/exams/pages/TeacherExamEditPage'
+import { TeacherExamCreatePage } from '@/features/exams/pages/TeacherExamCreatePage'
 import { ExamEligibilitiesPage } from '@/features/eligibilities/pages/ExamEligibilitiesPage'
 import { ExamCollaboratorsPage } from '@/features/collaborations/pages/ExamCollaboratorsPage'
 import { CollaboratorPage } from '@/features/collaborations/pages/CollaboratorPage'
@@ -84,11 +85,23 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'audit-logs',
-                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="audit-logs" /> } },
+                    lazy: async () => {
+                      const { AdminReadPage } =
+                        await import('@/features/admin/pages/AdminReadPage')
+                      return {
+                        Component: () => <AdminReadPage kind="audit-logs" />,
+                      }
+                    },
                   },
                   {
                     path: 'careers',
-                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="careers" /> } },
+                    lazy: async () => {
+                      const { AdminReadPage } =
+                        await import('@/features/admin/pages/AdminReadPage')
+                      return {
+                        Component: () => <AdminReadPage kind="careers" />,
+                      }
+                    },
                   },
                   {
                     path: 'users/history',
@@ -96,7 +109,11 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'users/:userId/roles',
-                    lazy: async () => { const { AdminUserRolesPage } = await import('@/features/admin/pages/AdminUserRolesPage'); return { Component: AdminUserRolesPage } },
+                    lazy: async () => {
+                      const { AdminUserRolesPage } =
+                        await import('@/features/admin/pages/AdminUserRolesPage')
+                      return { Component: AdminUserRolesPage }
+                    },
                   },
                   {
                     path: 'teachers',
@@ -192,6 +209,10 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/subjects',
                 element: <TeacherSubjectsPage />,
+              },
+              {
+                path: 'teacher/subjects/:courseOfferingId/exams/create',
+                element: <TeacherExamCreatePage />,
               },
               {
                 path: 'teacher/students',

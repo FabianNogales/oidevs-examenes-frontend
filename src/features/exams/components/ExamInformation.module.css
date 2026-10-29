@@ -1,0 +1,132 @@
+.panel {
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.header h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+}
+.status {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+.status[data-status='IN_PROGRESS'] {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+.status[data-status='CANCELLED'] {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-6);
+  margin: 0;
+}
+.summary {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 2fr);
+  align-items: stretch;
+  gap: var(--space-6);
+  padding-top: var(--space-5);
+}
+.datePanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+.dateHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary);
+}
+.dateHeading svg {
+  flex-shrink: 0;
+}
+.datePanel span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.datePanel time {
+  color: var(--color-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.datePanel .weekday {
+  text-transform: capitalize;
+}
+.grid div {
+  min-width: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.grid dt {
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.grid dd {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+.grid small {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+}
+@media (max-width: 760px) {
+  .summary {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  .datePanel {
+    gap: var(--space-3);
+    padding: var(--space-5);
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.status[data-status='EXPIRED'],
+.status[data-status='TIME_ENDED'],
+.status[data-status='COMPLETED'],
+.status[data-status='FINISHED'] {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-soft);
+}

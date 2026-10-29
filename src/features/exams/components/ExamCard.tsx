@@ -1,3 +1,4 @@
+import { examDisplayStatus, examStatusLabel } from '../utils/examDisplayStatus'
 import type { ReactNode } from 'react'
 import type { EvaluationType } from '@/features/exams/types/exam.types'
 
@@ -22,15 +23,6 @@ const EVALUATION_LABELS: Record<EvaluationType, string> = {
   partial: 'Parcial',
   final: 'Final',
   makeup: '2da instancia',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  SCHEDULED: 'Programado',
-  ACTIVE: 'Activo',
-  IN_PROGRESS: 'En curso',
-  COMPLETED: 'Finalizado',
-  FINISHED: 'Finalizado',
-  CANCELLED: 'Cancelado',
 }
 
 function formatDate(value: string): string {
@@ -65,6 +57,12 @@ export function ExamCard({
   status,
   children,
 }: ExamCardProps) {
+  const displayStatus = examDisplayStatus({
+    status,
+    exam_date: examDate,
+    start_time: examTime,
+    duration_minutes: durationMinutes,
+  })
   return (
     <article className={styles.card}>
       <div className={styles.headerRow}>
@@ -74,8 +72,8 @@ export function ExamCard({
         </div>
 
         {status ? (
-          <span className={styles.badge} data-status={status}>
-            {STATUS_LABELS[status] ?? status}
+          <span className={styles.badge} data-status={displayStatus}>
+            {examStatusLabel(displayStatus)}
           </span>
         ) : null}
       </div>
