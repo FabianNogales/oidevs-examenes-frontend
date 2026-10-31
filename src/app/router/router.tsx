@@ -24,6 +24,9 @@ import { ExamEligibilitiesPage } from '@/features/eligibilities/pages/ExamEligib
 import { ExamCollaboratorsPage } from '@/features/collaborations/pages/ExamCollaboratorsPage'
 import { CollaboratorPage } from '@/features/collaborations/pages/CollaboratorPage'
 import { EntryControlPage } from '@/features/exams/pages/EntryControlPage'
+import { OfflineEntryPage } from '@/features/offline-entry/pages/OfflineEntryPage'
+import { OfflineHomePage } from '@/features/offline-entry/pages/OfflineHomePage'
+import { TeacherDistributionPage } from '@/features/offline-entry/pages/TeacherDistributionPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
@@ -39,6 +42,9 @@ export const router = createBrowserRouter([
   {
     element: <AuthEventHandler />,
     children: [
+      // These routes have a narrowly scoped local continuity gate; online routes retain ProtectedRoute.
+      { path: '/offline', element: <OfflineHomePage /> },
+      { path: '/exams/:examId/offline', element: <OfflineEntryPage /> },
       {
         path: '/',
         element: <AppLayout />,
@@ -233,6 +239,10 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/exams/:examId/collaborators',
                 element: <ExamCollaboratorsPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/offline/assignments',
+                element: <TeacherDistributionPage />,
               },
               {
                 path: 'teacher/exams/:examId/eligibilities',

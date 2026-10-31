@@ -55,6 +55,13 @@ function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
               </p>
             ) : null}
             <ExamInformation exam={exam} />
+            <section className={detailStyles.editSection} aria-label="Preparación del ingreso">
+              <h2 className={detailStyles.sectionTitle}>Preparación del ingreso</h2>
+              <div className={detailStyles.actions}>
+                <Link to={`/teacher/exams/${exam.id}/offline/assignments`}>Distribución de listas</Link>
+                <Link to={`/exams/${exam.id}/offline`}>Control sin conexión</Link>
+              </div>
+            </section>
             <div className={detailStyles.bodyGrid}>
               {detail ? (
                 <section

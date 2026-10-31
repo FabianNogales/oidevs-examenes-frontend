@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "EIDA · Control de exámenes",
+  "short_name": "EIDA",
+  "lang": "es-BO",
+  "start_url": "/offline",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#eaf3ff",
+  "theme_color": "#172554",
+  "icons": [
+    {
+      "src": "/eida-offline.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

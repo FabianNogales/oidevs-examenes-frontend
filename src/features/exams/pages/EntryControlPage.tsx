@@ -91,6 +91,11 @@ function EntryControlContent({
         <header className={pageStyles.pageHeader}>
           <h1>Control de ingreso</h1>
           <p>Verificación de estudiantes y registro de asistencia al examen.</p>
+          <p>
+            <Link className={sharedStyles.secondaryButton} to={`/exams/${examId}/offline`}>
+              Control sin conexión
+            </Link>
+          </p>
           {!fromTeacher ? (
             <p>
               Colaborador temporal · Apoyo en examen · Autorización temporal
