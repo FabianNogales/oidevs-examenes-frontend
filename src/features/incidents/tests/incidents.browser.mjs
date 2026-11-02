@@ -34,16 +34,20 @@ const fixture = {
 const demo = `import React from 'react';import {createRoot} from 'react-dom/client';
 import {createMemoryRouter,RouterProvider} from 'react-router';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';import '@fontsource/poppins/600.css';
+import '/src/features/exams/components/CreateExamModal.module.css';
+import {IncidentControlDialog} from '/src/features/incidents/components/IncidentControlDialog.tsx';
 import {httpClient} from '/src/shared/api/httpClient.ts';
 import {CreateIncidentPage} from '/src/features/incidents/pages/CreateIncidentPage.tsx';
 import {IncidentDetailPage} from '/src/features/incidents/pages/IncidentDetailPage.tsx';
 import {ExamIncidentsPage} from '/src/features/incidents/pages/ExamIncidentsPage.tsx';
 httpClient.defaults.baseURL='/__hu27-api';httpClient.defaults.headers.common.Authorization='Bearer hu27-fixture';
+function Control(){const [open,setOpen]=React.useState(false);return React.createElement(React.Fragment,null,React.createElement('button',{onClick:()=>setOpen(true)},'Abrir incidencia'),open&&React.createElement(IncidentControlDialog,{examId:4,mode:{context:{student:null,type:undefined}},onClose:()=>setOpen(false)}))}
 const router=createMemoryRouter([
+{path:'/control',Component:Control},
 {path:'/exams/:examId/incidents/create',Component:CreateIncidentPage},
 {path:'/exams/:examId/incidents/:incidentId',Component:IncidentDetailPage},
 {path:'/exams/:examId/incidents',Component:ExamIncidentsPage}],{initialEntries:['/exams/4/incidents/create?from=teacher']});
-window.__hu27Router=router;createRoot(document.getElementById('root')).render(React.createElement(RouterProvider,{router}));`
+window.__hu27Router=router;createRoot(document.getElementById('root')).render(React.createElement(React.Fragment,null,React.createElement('header',{style:{position:'sticky',top:0,zIndex:50,height:100,background:'#EAF3FF'}},'Encabezado de prueba'),React.createElement(RouterProvider,{router})));`
 
 try {
   process.env.EIDA_DEV_HTTPS_KEY = ''
@@ -335,6 +339,52 @@ try {
   )
   assert.equal(await evaluate("document.querySelector('article')===null"), true)
   checks.push('HTTP403 detail contains no prior evidence')
+  permitted = true
+  behavior = 'ok'
+  for (const modal of [false, true]) {
+    await navigate(modal ? '/control' : '/exams/4/incidents/create')
+    if (modal) await click('Abrir incidencia')
+    await wait("document.querySelector('form')")
+    for (const width of [1440, 768, 390, 320]) {
+      await send('Emulation.setDeviceMetricsOverride', {
+        width,
+        height: 844,
+        deviceScaleFactor: 1,
+        mobile: width < 640,
+      })
+      const geometry = await evaluate(`(()=>{
+        const radios=[...document.querySelectorAll('input[type=radio]')];
+        return {overflow:document.documentElement.scrollWidth>innerWidth,
+          radios:radios.map(r=>{const b=r.getBoundingClientRect(),l=r.closest('label').getBoundingClientRect();return {width:b.width,height:b.height,left:b.left-l.left}}),
+          visibleClose:(()=>{const b=document.querySelector('[aria-label="Cerrar modal"]');if(!b)return true;const r=b.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&!!document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest('[role=dialog]')})()};})()`)
+      assert.equal(
+        geometry.overflow,
+        false,
+        `${modal ? 'Modal' : 'Page'} overflow at ${width}`,
+      )
+      assert.equal(geometry.radios.length, 2)
+      for (const radio of geometry.radios) {
+        assert.equal(radio.width, 18)
+        assert.equal(radio.height, 18)
+        assert.ok(radio.left < 2)
+      }
+      assert.equal(
+        geometry.visibleClose,
+        true,
+        'Modal close must not be covered by header',
+      )
+      await shot(`${modal ? 'modal' : 'pagina'}-${width}`)
+    }
+    await evaluate("document.querySelectorAll('input[type=radio]')[1].click()")
+    await wait("document.querySelector('input[type=search]')")
+    checks.push(
+      `${modal ? 'Modal' : 'Page'}: compact aligned radios, student selection and no overflow at 1440/768/390/320px`,
+    )
+    if (modal)
+      await evaluate(
+        'document.querySelector(\'[aria-label="Cerrar modal"]\').click()',
+      )
+  }
   assert.deepEqual(errors, [])
   await writeFile(
     join(output, 'resultados.json'),

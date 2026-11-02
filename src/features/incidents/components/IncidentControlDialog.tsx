@@ -7,6 +7,7 @@ import { useIncidents } from '../hooks/useIncidents'
 import { useIncidentDetail } from '../hooks/useIncidentDetail'
 import type { Incident } from '../types/incident.types'
 import type { IncidentEntryContext } from '../utils/incidentEntryContext'
+import styles from './IncidentControlDialog.module.css'
 
 export type IncidentControlMode =
   { context: IncidentEntryContext } | { incidentId: number }
@@ -104,26 +105,30 @@ export function IncidentControlDialog({
 }) {
   const [busy, setBusy] = useState(false)
   return createPortal(
-    <CollaborationModal
-      title={
-        'incidentId' in mode ? 'Detalle de incidencia' : 'Registrar incidencia'
-      }
-      busy={busy}
-      onClose={() => {
-        if (!busy) onClose()
-      }}
-    >
-      {'incidentId' in mode ? (
-        <ExistingIncident examId={examId} incidentId={mode.incidentId} />
-      ) : (
-        <RegisterFromControl
-          examId={examId}
-          context={mode.context}
-          onClose={onClose}
-          onBusyChange={setBusy}
-        />
-      )}
-    </CollaborationModal>,
+    <div className={styles.layer}>
+      <CollaborationModal
+        title={
+          'incidentId' in mode
+            ? 'Detalle de incidencia'
+            : 'Registrar incidencia'
+        }
+        busy={busy}
+        onClose={() => {
+          if (!busy) onClose()
+        }}
+      >
+        {'incidentId' in mode ? (
+          <ExistingIncident examId={examId} incidentId={mode.incidentId} />
+        ) : (
+          <RegisterFromControl
+            examId={examId}
+            context={mode.context}
+            onClose={onClose}
+            onBusyChange={setBusy}
+          />
+        )}
+      </CollaborationModal>
+    </div>,
     document.body,
   )
 }
