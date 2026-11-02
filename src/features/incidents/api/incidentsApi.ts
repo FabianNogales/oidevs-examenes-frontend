@@ -4,6 +4,7 @@ import type {
   CreateIncidentPayload,
   Incident,
   IncidentFieldErrors,
+  IncidentsPage,
 } from '../types/incident.types'
 import {
   isIncidentType,
@@ -24,6 +25,52 @@ export class IncidentApiError extends Error {
     this.name = 'IncidentApiError'
     this.status = status
     this.fieldErrors = fieldErrors
+  }
+}
+
+export async function getIncidents(
+  examId: number,
+  page = 1,
+  signal?: AbortSignal,
+): Promise<IncidentsPage> {
+  const url = endpoint(examId)
+  if (!isPositiveId(page)) throw new IncidentApiError('La página no es válida.')
+  try {
+    const response = await httpClient.get<IncidentsPage>(url, {
+      params: { page, per_page: 10 },
+      signal,
+    })
+    const result = response.data
+    const meta = result?.meta
+    if (
+      result?.exam?.id !== examId ||
+      typeof result.exam.name !== 'string' ||
+      typeof result.exam.subject_name !== 'string' ||
+      typeof result.permissions?.can_create !== 'boolean' ||
+      !Array.isArray(result.data) ||
+      !meta ||
+      meta.current_page !== page ||
+      !isPositiveId(meta.last_page) ||
+      !isPositiveId(meta.per_page) ||
+      meta.per_page > 100 ||
+      !Number.isSafeInteger(meta.total) ||
+      meta.total < 0 ||
+      meta.last_page !== Math.max(1, Math.ceil(meta.total / meta.per_page)) ||
+      meta.current_page > meta.last_page ||
+      result.data.length !==
+        Math.min(
+          meta.per_page,
+          Math.max(0, meta.total - (page - 1) * meta.per_page),
+        ) ||
+      new Set(result.data.map((item) => item?.id)).size !== result.data.length
+    )
+      throw new IncidentApiError(
+        'El servidor devolvió un listado de incidencias inválido. Vuelve a intentarlo.',
+      )
+    result.data.forEach((item) => readIncident(item, examId))
+    return result
+  } catch (error) {
+    return mapError(error)
   }
 }
 

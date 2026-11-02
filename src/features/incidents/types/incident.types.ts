@@ -38,3 +38,15 @@ export type CreateIncidentPayload = {
 export type IncidentFieldErrors = Partial<
   Record<keyof CreateIncidentPayload, string>
 >
+
+export type IncidentsPage = {
+  exam: { id: number; name: string; subject_name: string }
+  permissions: { can_create: boolean }
+  data: Incident[]
+  meta: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+  }
+}

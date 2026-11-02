@@ -62,6 +62,13 @@ export const router = createBrowserRouter([
                 path: 'exams/:examId/entry-control',
                 element: <EntryControlPage />,
               },
+              {
+                path: 'exams/:examId/incidents',
+                lazy: async () => {
+                  const { ExamIncidentsPage } = await import('@/features/incidents/pages/ExamIncidentsPage')
+                  return { Component: ExamIncidentsPage }
+                },
+              },
             ],
           },
           {

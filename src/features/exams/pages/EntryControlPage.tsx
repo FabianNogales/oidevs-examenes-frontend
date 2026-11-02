@@ -20,6 +20,7 @@ import { entryUnavailableReasonMessage } from '../utils/entryAvailabilityDisplay
 import pageStyles from './TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from './EntryControlPage.module.css'
+import incidentStyles from '@/features/incidents/pages/Incidents.module.css'
 
 function EntryControlContent({
   examId,
@@ -112,6 +113,9 @@ function EntryControlContent({
           ) : null}
         </header>
         {exam ? <EntryControlExamHeader exam={exam} /> : null}
+        {exam ? <div className={incidentStyles.access}>
+          <Link to={`/exams/${examId}/incidents${fromTeacher ? '?from=teacher' : ''}`}>Incidencias del examen</Link>
+        </div> : null}
         {list.response?.summary ? (
           <EntryStudentsSummary
             summary={list.response.summary}

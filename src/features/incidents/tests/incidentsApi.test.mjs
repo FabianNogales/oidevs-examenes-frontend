@@ -170,3 +170,32 @@ test('HU27 cancelled requests remain cancellations', async () => {
   })
   await assert.rejects(api.getIncident(4, 9), (error) => error === cancellation)
 })
+
+test('HU27 listing validates exam scope, server permissions and complete pagination', async () => {
+  const page = {
+    exam: { id: 4, name: 'Parcial', subject_name: 'Redes' },
+    permissions: { can_create: true },
+    data: [saved],
+    meta: { current_page: 1, last_page: 1, per_page: 10, total: 1 },
+  }
+  const api = setup(async () => ({ data: page }))
+  assert.deepEqual(await api.getIncidents(4), page)
+  assert.deepEqual(api.calls[0], [
+    'get',
+    '/exams/4/incidents',
+    { params: { page: 1, per_page: 10 }, signal: undefined },
+  ])
+  for (const invalid of [
+    { ...page, exam: { ...page.exam, id: 5 } },
+    { ...page, permissions: {} },
+    { ...page, data: [{ ...saved, exam_id: 5 }] },
+    { ...page, data: [saved, saved] },
+    { ...page, meta: { ...page.meta, total: 5 } },
+  ])
+    await assert.rejects(setup(async () => ({ data: invalid })).getIncidents(4))
+  const empty = { ...page, data: [], meta: { ...page.meta, total: 0 } }
+  assert.deepEqual(
+    await setup(async () => ({ data: empty })).getIncidents(4),
+    empty,
+  )
+})
