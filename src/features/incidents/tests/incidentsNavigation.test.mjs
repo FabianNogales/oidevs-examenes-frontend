@@ -68,9 +68,10 @@ test('HU27 listing renders actual empty results but not an authorization error a
     const table = nodes(tree, (n) => n.type === 'data-table')[0]
     assert.equal(table.props.loading, false)
     assert.equal(Boolean(table.props.error), denied)
-    assert.equal(
-      nodes(tree, (n) => n.type === 'link')[0].props.to,
-      '/exams/4/entry-control?from=teacher',
+    assert.ok(
+      nodes(tree, (n) => n.type === 'link').some(
+        (n) => n.props.to === '/exams/4/entry-control?from=teacher',
+      ),
     )
     h.unmount()
   }

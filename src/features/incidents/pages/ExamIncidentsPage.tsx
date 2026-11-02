@@ -88,6 +88,13 @@ function IncidentsContent({ examId }: { examId: number }) {
           <ExamIncidentNavigation examId={examId} />
         ) : null}
         <div className={styles.access}>
+          {response?.permissions.can_create ? (
+            <Link
+              to={`/exams/${examId}/incidents/create${teacherOrigin ? '?from=teacher' : ''}`}
+            >
+              Registrar incidencia
+            </Link>
+          ) : null}
           <Link
             to={`/exams/${examId}/entry-control${teacherOrigin ? '?from=teacher' : ''}`}
           >

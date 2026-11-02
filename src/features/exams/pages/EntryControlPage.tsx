@@ -114,6 +114,7 @@ function EntryControlContent({
         </header>
         {exam ? <EntryControlExamHeader exam={exam} /> : null}
         {exam ? <div className={incidentStyles.access}>
+          <Link to={`/exams/${examId}/incidents/create${fromTeacher ? '?from=teacher' : ''}`}>Registrar incidencia</Link>
           <Link to={`/exams/${examId}/incidents${fromTeacher ? '?from=teacher' : ''}`}>Incidencias del examen</Link>
         </div> : null}
         {list.response?.summary ? (
