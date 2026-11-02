@@ -2,6 +2,7 @@ export function formatIncidentDate(value: string): string {
   return new Intl.DateTimeFormat('es-BO', {
     dateStyle: 'long',
     timeStyle: 'medium',
+    hour12: false,
     timeZone: 'America/La_Paz',
   }).format(new Date(value))
 }

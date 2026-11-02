@@ -1,6 +1,7 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import { IncidentStudentPicker } from './IncidentStudentPicker'
+import { IncidentNavigationGuard } from './IncidentNavigationGuard'
 import { useIncidentSubmission } from '../hooks/useIncidentSubmission'
 import { INCIDENT_TYPE_LABELS } from '../utils/incidentValidation'
 import type {
@@ -28,6 +29,7 @@ export function IncidentForm({
   onBusyChange?: (busy: boolean) => void
 }) {
   const id = useId()
+  const form = useRef<HTMLFormElement>(null)
   const [type, setType] = useState<IncidentType | ''>(initialType)
   const [description, setDescription] = useState('')
   const [identify, setIdentify] = useState(initialStudent !== null)
@@ -36,6 +38,10 @@ export function IncidentForm({
   const request = useIncidentSubmission(examId)
   const disabled = request.saving || request.forbidden
   const errors = request.fieldErrors
+  useEffect(() => {
+    if (Object.keys(errors).length || selectionError)
+      form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+  }, [errors, selectionError])
   useEffect(() => {
     onBusyChange?.(request.saving)
   }, [request.saving, onBusyChange])
@@ -64,6 +70,7 @@ export function IncidentForm({
 
   return (
     <form
+      ref={form}
       className={styles.panel}
       noValidate
       aria-busy={request.saving}
@@ -83,6 +90,7 @@ export function IncidentForm({
         Los campos con * son obligatorios. El examen, autor, fecha y hora se
         registran según el contexto y la sesión del servidor.
       </p>
+      <IncidentNavigationGuard busy={request.saving} />
       {request.error ? (
         <p className={styles.error} role="alert">
           {request.error}
@@ -112,7 +120,17 @@ export function IncidentForm({
           </p>
         ) : null}
       </div>
-      <fieldset className={styles.student} disabled={disabled}>
+      <fieldset
+        className={styles.student}
+        disabled={disabled}
+        tabIndex={-1}
+        aria-invalid={selectionError || Boolean(errors.student_id)}
+        aria-describedby={
+          selectionError || errors.student_id
+            ? `${id}-student-error`
+            : undefined
+        }
+      >
         <legend>Estudiante involucrado</legend>
         <label className={styles.choice}>
           <input
@@ -148,7 +166,7 @@ export function IncidentForm({
           />
         ) : null}
         {selectionError || errors.student_id ? (
-          <p className={styles.error} role="alert">
+          <p id={`${id}-student-error`} className={styles.error} role="alert">
             {errors.student_id ??
               'Selecciona un estudiante o indica que no fue identificado.'}
           </p>

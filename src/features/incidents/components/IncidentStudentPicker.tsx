@@ -6,6 +6,7 @@ import {
 import type { EntryControlStudent } from '@/features/exams/types/entryControl.types'
 import type { IncidentStudent } from '../types/incident.types'
 import styles from './IncidentForm.module.css'
+import { incidentStudent } from '../utils/incidentEntryContext'
 
 export function IncidentStudentPicker({
   value,
@@ -40,7 +41,11 @@ export function IncidentStudentPicker({
         (response) => {
           if (!controller.signal.aborted)
             setState(
-              response.exam.id === examId
+              response?.exam?.id === examId &&
+                Array.isArray(response.data) &&
+                response.data.every(
+                  (student) => incidentStudent(student) !== null,
+                )
                 ? { key, students: response.data, error: null }
                 : {
                     key,

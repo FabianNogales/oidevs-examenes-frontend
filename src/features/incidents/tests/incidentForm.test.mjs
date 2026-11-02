@@ -283,3 +283,44 @@ test('HU27 embedded form preselects the identified student and returns its saved
   assert.equal(nodes(tree, (n) => n.type === 'navigate').length, 0)
   h.unmount()
 })
+
+test('HU27 student picker rejects incomplete or foreign exam responses without exposing selectable identities', async () => {
+  for (const response of [
+    null,
+    { exam: { id: 5 }, data: [] },
+    { exam: { id: 4 }, data: null },
+    { exam: { id: 4 }, data: [{ student_id: 0, first_names: 'Incorrecto' }] },
+  ]) {
+    const { h } = setup(undefined, {
+      '@/features/exams/api/entryControlApi': {
+        getEntryControlStudents: async () => response,
+        getEntryControlErrorMessage: () => 'Error de consulta',
+      },
+    })
+    const { IncidentStudentPicker } = h.load(
+      'features/incidents/components/IncidentStudentPicker.tsx',
+    )
+    const render = () =>
+      h.render(() =>
+        IncidentStudentPicker({
+          examId: 4,
+          value: null,
+          disabled: false,
+          onChange() {
+            assert.fail('No invalid selection')
+          },
+        }),
+      )
+    let tree = render()
+    nodes(tree, (n) => n.type === 'input')[0].props.onChange({
+      target: { value: 'Ana' },
+    })
+    render()
+    h.advance(300)
+    await settle()
+    tree = render()
+    assert.equal(nodes(tree, (n) => n.props?.role === 'alert').length, 1)
+    assert.equal(nodes(tree, (n) => n.type === 'ul').length, 0)
+    h.unmount()
+  }
+})
