@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { Link, useLocation, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -30,6 +31,9 @@ import styles from './Eligibilities.module.css'
 const PAGE_SIZE = 10
 
 function ExamEligibilitiesContent({ examId }: { examId: number }) {
+  const { search: originSearch } = useLocation()
+  const examsPath = `/teacher/exams${originSearch}`
+  const examPath = `/teacher/exams/${examId}${originSearch}`
   const {
     exam,
     isLoading: examLoading,
@@ -68,6 +72,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
   const currentPage = Math.min(page, totalPages)
   const startIndex = (currentPage - 1) * PAGE_SIZE
   const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE)
+  const examLabel = exam?.name ?? `Examen #${examId}`
 
   async function save(
     studentId: number,
@@ -125,20 +130,16 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
   return (
     <main className={pageStyles.page}>
       <section className={pageStyles.content}>
-        <nav
-          className={sharedStyles.breadcrumb}
-          aria-label="Ruta de navegación"
-        >
-          <Link to="/teacher/exams">Mis exámenes</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Habilitaciones</span>
-        </nav>
+        <Breadcrumbs
+          items={[{ label: 'Mis exámenes', to: examsPath }, { label: 'Habilitaciones' }]}
+        />
         <header className={pageStyles.pageHeader}>
           <h1>Habilitaciones del examen</h1>
           <p>
             Consulta y gestiona el estado de habilitación de los estudiantes
             para este examen.
           </p>
+          <Link to={examPath}>Volver al examen</Link>
         </header>
         {examLoading ? (
           <p role="status">Cargando información del examen…</p>
@@ -288,6 +289,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
           <ManageEligibilityModal
             key={selected.id}
             examId={examId}
+            examLabel={examLabel}
             eligibility={selected}
             onClose={() => setSelected(null)}
             onSave={save}
@@ -295,6 +297,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
         ) : null}
         {bulkOpen ? (
           <BulkEligibilitiesModal
+            examLabel={examLabel}
             onClose={() => setBulkOpen(false)}
             onProcess={processFile}
             listLoading={list.loading}
@@ -313,6 +316,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
 
 export function ExamEligibilitiesPage() {
   const { examId } = useParams()
+  const { search } = useLocation()
   const id = Number(examId)
   if (!Number.isSafeInteger(id) || id <= 0) {
     return (
@@ -320,7 +324,7 @@ export function ExamEligibilitiesPage() {
         <section className={pageStyles.content}>
           <h1>Habilitaciones del examen</h1>
           <p>El identificador del examen no es válido.</p>
-          <Link to="/teacher/exams">Volver a Mis exámenes</Link>
+          <Link to={`/teacher/exams${search}`}>Volver a Mis exámenes</Link>
         </section>
       </main>
     )

@@ -186,17 +186,69 @@ export function EntryQrPanel({
           aria-label="Lector QR por cámara"
         >
           <div className={styles.cameraHeading}>
-            <h2>Escanear QR</h2>
-            <span
-              className={`${styles.cameraStatus} ${camera.state === 'active' ? styles.cameraActive : ''}`}
-              role="status"
-            >
-              {camera.state === 'active'
-                ? 'Cámara activa'
-                : camera.state === 'loading'
-                  ? 'Cargando cámara…'
-                  : 'Cámara inactiva'}
-            </span>
+            <h2>Cámara</h2>
+            <div className={styles.cameraControls}>
+              {camera.devices.length > 1 ? (
+                <div className={styles.cameraChoice}>
+                  <label htmlFor={cameraId}>Cambiar cámara</label>
+                  <select
+                    id={cameraId}
+                    value={camera.deviceId}
+                    disabled={processing || camera.state === 'loading'}
+                    onChange={(event) => camera.setDeviceId(event.target.value)}
+                  >
+                    {camera.devices.map((device, index) => (
+                      <option key={device.deviceId} value={device.deviceId}>
+                        {cameraLabels[index]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+              <span
+                className={`${styles.cameraStatus} ${camera.state === 'active' ? styles.cameraActive : ''}`}
+                role="status"
+              >
+                {camera.state === 'active'
+                  ? 'Activa'
+                  : camera.state === 'loading'
+                    ? 'Cargando…'
+                    : camera.state === 'paused'
+                      ? 'Pausada'
+                      : 'Sin señal'}
+              </span>
+              {camera.state === 'active' ? (
+                <button
+                  type="button"
+                  className={sharedStyles.secondaryButton}
+                  disabled={processing}
+                  onClick={camera.pause}
+                >
+                  Pausar
+                </button>
+              ) : camera.state !== 'loading' &&
+                camera.state !== 'unsupported' ? (
+                <button
+                  type="button"
+                  className={sharedStyles.secondaryButton}
+                  disabled={processing || blocked || roomId == null}
+                  onClick={camera.resume}
+                >
+                  {camera.state === 'paused' ? 'Reanudar' : 'Reintentar cámara'}
+                </button>
+              ) : null}
+              {camera.torchSupported && camera.state === 'active' ? (
+                <button
+                  type="button"
+                  className={sharedStyles.secondaryButton}
+                  disabled={processing || camera.torchBusy}
+                  aria-pressed={camera.torchOn}
+                  onClick={() => void camera.toggleTorch()}
+                >
+                  {camera.torchOn ? 'Apagar linterna' : 'Encender linterna'}
+                </button>
+              ) : null}
+            </div>
           </div>
           <div className={styles.viewport}>
             <video
@@ -220,75 +272,18 @@ export function EntryQrPanel({
               <div className={styles.processing}>Procesando ingreso…</div>
             ) : null}
           </div>
-        </section>
-        <div ref={resultRef} className={styles.resultArea}>
-          <EntryQrResultPanel response={response} processing={processing} />
-        </div>
-        <section
-          className={styles.cameraTools}
-          aria-label="Controles de cámara"
-        >
           <p className={styles.cameraHelp}>
-            Coloca un solo QR dentro del marco. Retíralo del visor después del
-            resultado para permitir otra lectura.
+            Coloca el código QR dentro del área de lectura.
           </p>
-          <div className={styles.cameraControls}>
-            {camera.devices.length > 1 ? (
-              <div className={styles.cameraChoice}>
-                <label htmlFor={cameraId}>Cambiar cámara</label>
-                <select
-                  id={cameraId}
-                  value={camera.deviceId}
-                  disabled={processing || camera.state === 'loading'}
-                  onChange={(event) => camera.setDeviceId(event.target.value)}
-                >
-                  {camera.devices.map((device, index) => (
-                    <option key={device.deviceId} value={device.deviceId}>
-                      {cameraLabels[index]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-            {camera.state === 'active' ? (
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                disabled={processing}
-                onClick={camera.pause}
-              >
-                Pausar cámara
-              </button>
-            ) : camera.state !== 'loading' && camera.state !== 'unsupported' ? (
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                disabled={processing || blocked || roomId == null}
-                onClick={camera.resume}
-              >
-                {camera.state === 'paused'
-                  ? 'Reanudar cámara'
-                  : 'Reintentar cámara'}
-              </button>
-            ) : null}
-            {camera.torchSupported && camera.state === 'active' ? (
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                disabled={processing || camera.torchBusy}
-                aria-pressed={camera.torchOn}
-                onClick={() => void camera.toggleTorch()}
-              >
-                {camera.torchOn ? 'Apagar linterna' : 'Encender linterna'}
-              </button>
-            ) : null}
-          </div>
           {camera.controlError ? (
             <p className={sharedStyles.error} role="alert">
               {camera.controlError}
             </p>
           ) : null}
         </section>
+        <div ref={resultRef} className={styles.resultArea}>
+          <EntryQrResultPanel response={response} processing={processing} />
+        </div>
       </div>
     </section>
   )

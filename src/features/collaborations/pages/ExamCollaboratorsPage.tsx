@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -64,11 +65,9 @@ function ExamCollaboratorsContent({ examId }: { examId: string | undefined }) {
   return (
     <main className={pageStyles.page}>
       <section className={pageStyles.content}>
-        <nav className={styles.breadcrumb} aria-label="Ruta de navegación">
-          <Link to="/teacher/exams">Mis exámenes</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Colaboradores</span>
-        </nav>
+        <Breadcrumbs
+          items={[{ label: 'Mis exámenes', to: '/teacher/exams' }, { label: 'Colaboradores' }]}
+        />
         <header className={pageStyles.pageHeader}>
           <h1>Colaboradores temporales</h1>
           <p>

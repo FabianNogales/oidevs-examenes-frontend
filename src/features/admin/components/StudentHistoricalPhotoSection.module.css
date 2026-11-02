@@ -1,0 +1,70 @@
+.section {
+  margin-top: 24px;
+}
+.content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+}
+.photo {
+  display: grid;
+  place-items: center;
+  flex: 0 1 160px;
+  width: 160px;
+  min-height: 180px;
+  border: 1px solid var(--color-border, #dce5f2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface-muted, #f5fbff);
+  color: var(--color-text-secondary, #52627a);
+  text-align: center;
+}
+.photo img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+}
+.photo span {
+  padding: 8px;
+}
+.details {
+  flex: 1 1 260px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.form {
+  display: grid;
+  gap: 16px;
+}
+.form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.form input,
+.form textarea {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+.form textarea {
+  border: 1px solid var(--color-border-strong, #b8c9e1);
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+  resize: vertical;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.section button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.section [role='alert'] {
+  color: var(--color-error, #b42318);
+}

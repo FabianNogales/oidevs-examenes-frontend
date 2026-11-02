@@ -1,7 +1,8 @@
-import { useId, type ReactNode } from 'react'
+import { useId } from 'react'
 import type { useEntryControlStudents } from '../hooks/useEntryControlStudents'
+import type { EntryControlFilter } from '../types/entryControl.types'
 import { EntryControlTable } from './EntryControlTable'
-import { EntryStudentsSummary } from './EntryStudentsSummary'
+import { canRegisterEntryManually } from '../utils/entryManualEligibility'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import pageStyles from '../pages/TeacherExamsPage.module.css'
 import styles from '../pages/EntryControlPage.module.css'
@@ -9,33 +10,48 @@ import styles from '../pages/EntryControlPage.module.css'
 type Props = {
   list: ReturnType<typeof useEntryControlStudents>
   onView: (studentId: number) => void
-  controlledRoom?: ReactNode
+  onFilterChange?: (filter: EntryControlFilter) => void
   manual?: boolean
   disabled?: boolean
-  showSummary?: boolean
 }
+
+const STUDENT_FILTERS: { value: EntryControlFilter; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'registered', label: 'Registrados' },
+  { value: 'pending', label: 'Pendientes' },
+  { value: 'incidents', label: 'Incidencias' },
+]
 
 export function EntryControlStudentsList({
   list,
   onView,
-  controlledRoom,
+  onFilterChange,
   manual = false,
   disabled = false,
-  showSummary = true,
 }: Props) {
   const searchId = useId()
-  const titleId = useId()
-  const summary = list.response?.summary
+  const filterHelpId = useId()
   const meta = list.meta
+  const filterHelp =
+    manual
+      ? null
+      : list.filter === 'incidents'
+      ? 'Estudiantes inactivos, sin habilitación evaluada o inhabilitados. Pueden aparecer también en otros grupos.'
+      : list.query.trim()
+        ? 'Los contadores corresponden a la búsqueda actual.'
+        : null
 
   return (
     <>
-      {showSummary && summary ? (
-        <EntryStudentsSummary summary={summary} />
-      ) : null}
-      <section className={sharedStyles.section} aria-labelledby={titleId}>
-        <h2 id={titleId}>{manual ? 'Registro manual' : 'Estudiantes'}</h2>
-        <div className={controlledRoom ? styles.filters : styles.manualSearch}>
+      <section
+        className={sharedStyles.section}
+        aria-label={
+          manual
+            ? 'Estudiantes para registro manual'
+            : 'Consulta de estudiantes'
+        }
+      >
+        <div className={styles.studentToolbar}>
           <div className={styles.field}>
             <label htmlFor={searchId}>Buscar estudiante</label>
             <input
@@ -43,12 +59,37 @@ export function EntryControlStudentsList({
               type="search"
               disabled={disabled}
               value={list.query}
-              placeholder="Nombre, apellido, nombre completo, SIS o CI"
+              placeholder="Nombre, apellido, SIS o CI"
               onChange={(event) => list.setQuery(event.target.value)}
             />
           </div>
-          {controlledRoom}
+          {!manual ? (
+            <div
+              className={styles.studentFilters}
+              role="group"
+              aria-label="Filtrar estudiantes por ingreso"
+              aria-describedby={filterHelp ? filterHelpId : undefined}
+              aria-busy={list.loading}
+            >
+              {STUDENT_FILTERS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={list.filter === value}
+                  disabled={disabled}
+                  onClick={() => (onFilterChange ?? list.setFilter)(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
+        {filterHelp ? (
+          <p id={filterHelpId} className={sharedStyles.note}>
+            {filterHelp}
+          </p>
+        ) : null}
         {list.error ? (
           <section className={pageStyles.state} role="alert">
             <p>{list.error}</p>
@@ -64,6 +105,14 @@ export function EntryControlStudentsList({
           error={list.error}
           onView={onView}
           disabled={disabled}
+          manual={manual}
+          canRegister={
+            manual
+              ? (student) =>
+                  list.response?.exam.entry_available === true &&
+                  canRegisterEntryManually(student, list.roomId)
+              : undefined
+          }
         />
         {meta ? (
           <nav

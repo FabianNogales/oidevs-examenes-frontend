@@ -8,6 +8,7 @@ import {
   formatEntryTimestamp,
 } from '../utils/entryControlDisplay'
 import { EntryConditionBadge } from './EntryConditionBadge'
+import { EntryQrStudentIdentity } from './EntryQrStudentIdentity'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import entryStyles from '../pages/EntryControlPage.module.css'
 import styles from './EntryQr.module.css'
@@ -33,7 +34,6 @@ export function EntryHistoryModal({
 
   useEffect(() => {
     const controller = new AbortController()
-    setState({ key, response: null, loading: true, error: null })
     const timeout = window.setTimeout(() => {
       void getEntryHistory(
         examId,
@@ -70,6 +70,7 @@ export function EntryHistoryModal({
   const meta = response?.meta
   const records = (response?.data ?? []).map(({ student, entry }) => ({
     id: entry.id,
+    student,
     valid: entry.status === 'VALID',
     fields: [
       { label: 'Estudiante', value: entryStudentName(student) },
@@ -139,7 +140,9 @@ export function EntryHistoryModal({
                     {records.map((record) => (
                       <tr key={record.id}>
                         {record.fields.map((field) => (
-                          <td key={field.label}>{field.value}</td>
+                          <td key={field.label}>
+                            {field.label === 'Estudiante' ? <EntryQrStudentIdentity student={record.student} /> : field.value}
+                          </td>
                         ))}
                       </tr>
                     ))}
@@ -163,7 +166,9 @@ export function EntryHistoryModal({
                                 : undefined
                             }
                           >
-                            {field.label === 'Estado' ? (
+                            {field.label === 'Estudiante' ? (
+                              <EntryQrStudentIdentity student={record.student} />
+                            ) : field.label === 'Estado' ? (
                               <EntryConditionBadge
                                 label={field.value}
                                 tone={record.valid ? 'positive' : 'neutral'}

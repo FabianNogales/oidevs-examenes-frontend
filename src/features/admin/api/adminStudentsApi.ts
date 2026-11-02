@@ -11,6 +11,8 @@ import type {
   StudentsResponse,
   StudentStatus,
   UpdateStudentPayload,
+  HistoricalPhotoField,
+  HistoricalPhotoFieldErrors,
 } from '@/features/admin/types/student.types'
 import type {
   StudentImportConfirmation,
@@ -134,11 +136,15 @@ function mapStudentApiError(error: unknown, fallbackMessage: string): StudentApi
   return new StudentApiError(message, status, getFieldErrors(data))
 }
 
-export async function getAdminStudents(
-  { page = 1, perPage = 10, search = '' }: GetStudentsParams = {},
-): Promise<StudentsPageResult> {
+export async function getAdminStudents({
+  page = 1,
+  perPage = 10,
+  search = '',
+}: GetStudentsParams = {}): Promise<StudentsPageResult> {
   try {
-    const response = await httpClient.get<Omit<StudentsResponse, 'data'> & { data: ApiStudent[] }>(STUDENTS_ENDPOINT, {
+    const response = await httpClient.get<
+      Omit<StudentsResponse, 'data'> & { data: ApiStudent[] }
+    >(STUDENTS_ENDPOINT, {
       params: {
         page,
         per_page: perPage,
@@ -155,15 +161,116 @@ export async function getAdminStudents(
   }
 }
 
-export async function getAdminStudent(studentId: string): Promise<StudentDetail> {
+export async function getAdminStudent(
+  studentId: string,
+  signal?: AbortSignal,
+): Promise<StudentDetail> {
   try {
     const response = await httpClient.get<{ data: ApiStudentDetail }>(
       `${STUDENTS_ENDPOINT}/${studentId}`,
+      { signal },
     )
     return normalizeStudent(response.data.data)
   } catch (error) {
-    throw mapStudentApiError(error, 'No se pudo cargar la información del estudiante.')
+    throw mapStudentApiError(
+      error,
+      'No se pudo cargar la información del estudiante.',
+    )
   }
+}
+
+export class HistoricalPhotoApiError extends Error {
+  status: number | null
+  code: string | null
+  currentRevision: number | null
+  fieldErrors: HistoricalPhotoFieldErrors
+
+  constructor(
+    message: string,
+    status: number | null,
+    code: string | null,
+    currentRevision: number | null,
+    fieldErrors: HistoricalPhotoFieldErrors,
+  ) {
+    super(message)
+    this.name = 'HistoricalPhotoApiError'
+    this.status = status
+    this.code = code
+    this.currentRevision = currentRevision
+    this.fieldErrors = fieldErrors
+  }
+}
+
+async function sendHistoricalPhoto(
+  studentId: string,
+  photo: File,
+  revision: number,
+  reason: string | undefined,
+  signal?: AbortSignal,
+): Promise<StudentDetail> {
+  const form = new FormData()
+  form.append('photo', photo)
+  form.append('revision', String(revision))
+  if (reason !== undefined) form.append('reason', reason.trim())
+  try {
+    const response = await httpClient.post<{ data: ApiStudentDetail }>(
+      `${STUDENTS_ENDPOINT}/${studentId}/historical-photo${reason === undefined ? '' : '/corrections'}`,
+      form,
+      { signal },
+    )
+    return normalizeStudent(response.data.data)
+  } catch (cause) {
+    const status = axios.isAxiosError(cause)
+      ? (cause.response?.status ?? null)
+      : null
+    const body = axios.isAxiosError(cause) ? cause.response?.data : null
+    const fields: HistoricalPhotoFieldErrors = {}
+    for (const field of [
+      'photo',
+      'revision',
+      'reason',
+    ] as HistoricalPhotoField[]) {
+      const messages: unknown = body?.errors?.[field]
+      if (
+        Array.isArray(messages) &&
+        messages.every((message) => typeof message === 'string')
+      )
+        fields[field] = messages
+    }
+    const message =
+      status === 401
+        ? 'Tu sesión expiró. Inicia sesión nuevamente.'
+        : status === 403
+          ? 'No tienes permisos para gestionar la fotografía institucional.'
+          : (getResponseMessage(body) ??
+            'No se pudo guardar la fotografía institucional.')
+    throw new HistoricalPhotoApiError(
+      message,
+      status,
+      typeof body?.code === 'string' ? body.code : null,
+      typeof body?.current_revision === 'number' ? body.current_revision : null,
+      fields,
+    )
+  }
+}
+
+export function uploadHistoricalPhoto(
+  studentId: string,
+  photo: File,
+  revision: number,
+  signal?: AbortSignal,
+) {
+  return sendHistoricalPhoto(studentId, photo, revision, undefined, signal)
+}
+
+export function correctHistoricalPhoto(
+  studentId: string,
+  photo: File,
+  revision: number,
+  reason: string,
+  signal?: AbortSignal,
+) {
+  return sendHistoricalPhoto(studentId, photo, revision, reason, signal)
 }
 
 export async function createAdminStudent(payload: CreateStudentPayload): Promise<Student> {

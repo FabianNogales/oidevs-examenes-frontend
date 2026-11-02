@@ -32,6 +32,10 @@ export function sourceHarness(overrides = {}) {
     setProperty: (_key, value) => { style.overflow = value }, removeProperty: () => { style.overflow = '' } }
   const document = { ...eventTarget('document:'), visibilityState: 'visible', activeElement: null, body: { style } }
   const window = eventTarget('window:')
+  const setTimer = (callback, delay) => { const id = ++nextTimer; timers.set(id, { at: now + delay, callback }); return id }
+  const clearTimer = (id) => timers.delete(id)
+  window.setTimeout = setTimer
+  window.clearTimeout = clearTimer
   class Element {
     constructor(options = {}) { Object.assign(this, { tabIndex: 0, hidden: false, disabled: false, isConnected: true, children: [] }, options) }
     focus() { document.activeElement = this }
@@ -69,6 +73,7 @@ export function sourceHarness(overrides = {}) {
       }
     },
   }
+  hooks.useLayoutEffect = hooks.useEffect
   const cache = new Map()
   function load(relative) {
     const filename = resolve(sourceRoot, relative)
@@ -77,7 +82,8 @@ export function sourceHarness(overrides = {}) {
     const localRequire = (specifier) => {
       if (specifier in overrides) return overrides[specifier]
       if (specifier === 'react') return hooks
-      if (specifier.endsWith('.css')) return { default: new Proxy({}, { get: (_, key) => key }) }
+      if (specifier === 'react-dom') return { createPortal: (children) => children }
+      if (specifier.endsWith('.css')) return { __esModule: true, default: new Proxy({}, { get: (_, key) => key }) }
       if (specifier.startsWith('@/') || specifier.startsWith('.')) {
         const base = specifier.startsWith('@/') ? resolve(sourceRoot, specifier.slice(2)) : resolve(dirname(filename), specifier)
         return load(existsSync(base + '.ts') ? base + '.ts' : base + '.tsx')
@@ -87,8 +93,7 @@ export function sourceHarness(overrides = {}) {
     class Clock extends Date { static now() { return now } }
     new Function('require', 'module', 'exports', 'window', 'document', 'HTMLElement', 'Date', 'setTimeout', 'clearTimeout',
       compile(readFileSync(filename, 'utf8')))(localRequire, module, module.exports, window, document, Element, Clock,
-      (callback, delay) => { const id = ++nextTimer; timers.set(id, { at: now + delay, callback }); return id },
-      (id) => timers.delete(id))
+      setTimer, clearTimer)
     return module.exports
   }
   return {
