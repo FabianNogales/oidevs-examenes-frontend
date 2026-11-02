@@ -95,7 +95,6 @@ export function StudentExamCard({
         aria-label={`Ver QR: ${exam.subject}, ${exam.exam_title}`}
         onClick={() => onSelect(exam.exam_id)}
       >
-        <StudentQrIcon name="qr" />
         Ver QR
       </button>
       {children}

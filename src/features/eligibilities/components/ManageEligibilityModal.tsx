@@ -17,6 +17,7 @@ import styles from '../pages/Eligibilities.module.css'
 
 type Props = {
   examId: number
+  examLabel?: string
   eligibility: ExamEligibility
   onClose: () => void
   onSave: (
@@ -28,6 +29,7 @@ type Props = {
 
 export function ManageEligibilityModal({
   examId,
+  examLabel = `Examen #${examId}`,
   eligibility: initialEligibility,
   onClose,
   onSave,
@@ -169,7 +171,7 @@ export function ManageEligibilityModal({
           }}
         >
           <p className={styles.modalSubtitle}>
-            Actualiza el estado de habilitación del estudiante para este examen
+            Actualiza el estado de habilitación del estudiante para {examLabel}.
           </p>
           <p className={sharedStyles.note}>Revisión del formulario: {eligibility.revision}</p>
           {conflict ? (
