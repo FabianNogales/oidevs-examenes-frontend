@@ -120,6 +120,10 @@ function IncidentsContent({ examId }: { examId: number }) {
               : null
           }
           onPageChange={list.setPage}
+          viewActionLabel="Ver detalle"
+          getProfilePath={(item) =>
+            `/exams/${examId}/incidents/${item.id}${teacherOrigin ? '?from=teacher' : ''}`
+          }
         />
         <p className={styles.note}>
           Una incidencia documenta lo ocurrido; no confirma una infracción ni

@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, Navigate } from 'react-router'
 import { IncidentStudentPicker } from './IncidentStudentPicker'
 import { useIncidentSubmission } from '../hooks/useIncidentSubmission'
 import { INCIDENT_TYPE_LABELS } from '../utils/incidentValidation'
@@ -26,6 +26,11 @@ export function IncidentForm({
   if (request.saved)
     return (
       <section className={styles.panel} role="status">
+        <Navigate
+          to={`${backTo.split('?')[0]}/${request.saved.id}${backTo.includes('?') ? `?${backTo.split('?')[1]}` : ''}`}
+          replace
+          state={{ createdIncidentId: request.saved.id }}
+        />
         <h2>Incidencia registrada</h2>
         <p>El servidor confirmó el registro #{request.saved.id}.</p>
         <p>La incidencia documenta lo ocurrido y no confirma una infracción.</p>

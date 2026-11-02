@@ -37,7 +37,7 @@ function setup(
         },
       },
     },
-    'react-router': { Link: 'link' },
+    'react-router': { Link: 'link', Navigate: 'navigate' },
     ...overrides,
   })
   return { h, calls }
@@ -173,6 +173,10 @@ test('HU27 choosing identified requires a selection; unidentified student posts 
   await settle()
   assert.equal(calls[0][1].student_id, null)
   assert.match(textContent(h.render()), /Incidencia registrada/)
+  const redirect = nodes(h.render(), (n) => n.type === 'navigate')[0]
+  assert.equal(redirect.props.to, '/exams/4/incidents/9')
+  assert.equal(redirect.props.replace, true)
+  assert.equal(redirect.props.state.createdIncidentId, 9)
   h.unmount()
 })
 
