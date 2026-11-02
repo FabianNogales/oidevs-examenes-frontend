@@ -15,6 +15,7 @@ function pageHarness() {
     filterCounts: { all: 30, registered: 10, pending: 20, incidents: 2 },
     setFilter: value => { list.filter = value }, setPage() {}, reload() { reloads++ } }
   const overrides = {
+    '@/features/incidents/components/IncidentControlDialog': { IncidentControlDialog: 'incident-dialog' },
     'react-router': { Link: 'Link', useParams: () => ({ examId: '1' }), useSearchParams: () => [new URLSearchParams('from=teacher')] },
     '@/features/collaborations/components/CollaborationModal': { CollaborationModal: 'success-modal' },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify: (...notice) => notifications.push(notice) }) },

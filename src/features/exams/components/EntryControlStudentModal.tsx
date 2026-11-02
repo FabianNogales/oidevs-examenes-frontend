@@ -32,6 +32,7 @@ import {
 } from '../utils/entryAvailabilityDisplay'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from '../pages/EntryControlPage.module.css'
+import type { EntryStudentIdentity } from '../types/entryRegistration.types'
 
 type Props = {
   examId: number
@@ -39,6 +40,7 @@ type Props = {
   roomId: number | undefined
   examContext?: EntryControlExam
   onClose: () => void
+  onReportIncident?: (student: EntryStudentIdentity) => void
   allowManualEntry?: boolean
   onManualResult?: (
     response: EntryManualResponse,
@@ -54,6 +56,7 @@ export function EntryControlStudentModal({
   onClose,
   allowManualEntry = false,
   onManualResult,
+  onReportIncident,
 }: Props) {
   const [detail, setDetail] = useState<EntryControlStudentResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -205,6 +208,7 @@ export function EntryControlStudentModal({
           ) : null}
           {!loading && !error && student && exam ? (
             <>
+              {onReportIncident ? <div className={sharedStyles.actions}><button type="button" className={sharedStyles.secondaryButton} onClick={() => onReportIncident(student)}>Reportar una situación</button></div> : null}
               <section
                 className={styles.studentSummary}
                 aria-label="Datos del estudiante"

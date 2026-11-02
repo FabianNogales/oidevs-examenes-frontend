@@ -16,6 +16,7 @@ function setup() {
     reload: () => {},
   }
   const overrides = {
+    '@/features/incidents/components/IncidentControlDialog': { IncidentControlDialog: 'incident-dialog' },
     '@/shared/hooks/useAuthenticatedImage': { useAuthenticatedImage: () => ({ src: null, loading: false, failed: false }) },
     'react-router': {
       Link: 'Link',

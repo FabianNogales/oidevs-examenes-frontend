@@ -238,3 +238,48 @@ test('HU27 student search is debounced and cannot show stale results from a prev
   assert.match(textContent(render()), /No se encontraron estudiantes/)
   h.unmount()
 })
+
+test('HU27 embedded form preselects the identified student and returns its saved evidence without redirecting away from control', async () => {
+  const student = {
+    id: 7,
+    first_names: 'Ana',
+    last_names: 'Prueba',
+    sis_code: '00123',
+    identity_number: '0099',
+  }
+  const confirmations = []
+  const { h, calls } = setup(async () => ({
+    data: { data: { ...saved, type: 'INELIGIBILITY', student } },
+  }))
+  const { IncidentForm } = h.load(
+    'features/incidents/components/IncidentForm.tsx',
+  )
+  const onCreated = (value) => confirmations.push(value)
+  let tree = h.render(() =>
+    IncidentForm({
+      examId: 4,
+      backTo: '/exams/4/incidents',
+      initialStudent: student,
+      initialType: 'INELIGIBILITY',
+      onCreated,
+      onCancel() {},
+    }),
+  )
+  assert.equal(
+    nodes(tree, (n) => n.type?.name === 'IncidentStudentPicker')[0].props.value
+      .id,
+    7,
+  )
+  nodes(tree, (n) => n.type === 'textarea')[0].props.onChange({
+    target: { value: payload.description },
+  })
+  tree = h.render()
+  tree.props.onSubmit({ preventDefault() {} })
+  await settle()
+  tree = h.render()
+  assert.equal(calls[0][1].student_id, 7)
+  assert.equal(calls[0][1].type, 'INELIGIBILITY')
+  assert.equal(confirmations[0].id, 9)
+  assert.equal(nodes(tree, (n) => n.type === 'navigate').length, 0)
+  h.unmount()
+})

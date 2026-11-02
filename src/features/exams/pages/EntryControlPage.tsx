@@ -21,6 +21,9 @@ import pageStyles from './TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from './EntryControlPage.module.css'
 import incidentStyles from '@/features/incidents/pages/Incidents.module.css'
+import { IncidentControlDialog } from '@/features/incidents/components/IncidentControlDialog'
+import type { IncidentControlMode } from '@/features/incidents/components/IncidentControlDialog'
+import { incidentStudent } from '@/features/incidents/utils/incidentEntryContext'
 
 function EntryControlContent({
   examId,
@@ -42,6 +45,7 @@ function EntryControlContent({
   // Retain the camera hook after first use so pending starts remain serialized.
   const [qrActivated, setQrActivated] = useState(false)
   const [qrProcessing, setQrProcessing] = useState(false)
+  const [incidentMode, setIncidentMode] = useState<IncidentControlMode | null>(null)
   const tabsId = useId()
   const methodTabsId = useId()
   const exam = list.response?.exam
@@ -114,7 +118,7 @@ function EntryControlContent({
         </header>
         {exam ? <EntryControlExamHeader exam={exam} /> : null}
         {exam ? <div className={incidentStyles.access}>
-          <Link to={`/exams/${examId}/incidents/create${fromTeacher ? '?from=teacher' : ''}`}>Registrar incidencia</Link>
+          <button type="button" disabled={qrProcessing} onClick={() => setIncidentMode({ context: { student: null } })}>Registrar incidencia</button>
           <Link to={`/exams/${examId}/incidents${fromTeacher ? '?from=teacher' : ''}`}>Incidencias del examen</Link>
         </div> : null}
         {list.response?.summary ? (
@@ -283,11 +287,13 @@ function EntryControlContent({
                       activeTab === 'attendance' &&
                       attendanceMethod === 'qr' &&
                       exam?.entry_available === true &&
-                      studentId === null
+                      studentId === null && incidentMode === null
                     }
                     roomId={list.roomId}
                     onProcessed={(response) => handleResult(response, 'QR')}
                     onProcessingChange={setQrProcessing}
+                    onReportIncident={context => setIncidentMode({ context })}
+                    onViewIncident={incidentId => setIncidentMode({ incidentId })}
                   />
                 ) : null}
               </div>
@@ -306,7 +312,7 @@ function EntryControlContent({
             </div>
           </section>
         </div>
-        {studentId !== null ? (
+        {studentId !== null && incidentMode === null ? (
           <EntryControlStudentModal
             key={`${examId}-${studentId}-${list.roomId}-${activeTab}`}
             examId={examId}
@@ -318,9 +324,10 @@ function EntryControlContent({
               handleResult(response, 'MANUAL', entryStudentName(student))
             }
             onClose={() => setStudentId(null)}
+            onReportIncident={student => setIncidentMode({ context: { student: incidentStudent(student) } })}
           />
         ) : null}
-        {manualSuccessName ? (
+        {manualSuccessName && incidentMode === null ? (
           <CollaborationModal
             title="Ingreso registrado"
             onClose={() => setManualSuccessName(null)}
@@ -328,6 +335,7 @@ function EntryControlContent({
             <p>{manualSuccessName} fue registrada para el examen.</p>
             {manualSuccessStudent ? <EntryQrStudentIdentity student={manualSuccessStudent} /> : null}
             <div className={sharedStyles.actions}>
+              <button type="button" className={sharedStyles.secondaryButton} onClick={() => setIncidentMode({ context: { student: incidentStudent(manualSuccessStudent) } })}>Reportar una situación</button>
               <button
                 type="button"
                 className={sharedStyles.secondaryButton}
@@ -338,6 +346,7 @@ function EntryControlContent({
             </div>
           </CollaborationModal>
         ) : null}
+        {incidentMode ? <IncidentControlDialog examId={examId} mode={incidentMode} onClose={() => setIncidentMode(null)} /> : null}
       </section>
     </main>
   )

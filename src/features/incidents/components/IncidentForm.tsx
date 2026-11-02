@@ -1,36 +1,58 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import { IncidentStudentPicker } from './IncidentStudentPicker'
 import { useIncidentSubmission } from '../hooks/useIncidentSubmission'
 import { INCIDENT_TYPE_LABELS } from '../utils/incidentValidation'
-import type { IncidentStudent, IncidentType } from '../types/incident.types'
+import type {
+  Incident,
+  IncidentStudent,
+  IncidentType,
+} from '../types/incident.types'
 import styles from './IncidentForm.module.css'
 
 export function IncidentForm({
   examId,
   backTo,
+  initialStudent = null,
+  initialType = '',
+  onCreated,
+  onCancel,
+  onBusyChange,
 }: {
   examId: number
   backTo: string
+  initialStudent?: IncidentStudent | null
+  initialType?: IncidentType | ''
+  onCreated?: (incident: Incident) => void
+  onCancel?: () => void
+  onBusyChange?: (busy: boolean) => void
 }) {
   const id = useId()
-  const [type, setType] = useState<IncidentType | ''>('')
+  const [type, setType] = useState<IncidentType | ''>(initialType)
   const [description, setDescription] = useState('')
-  const [identify, setIdentify] = useState(false)
-  const [student, setStudent] = useState<IncidentStudent | null>(null)
+  const [identify, setIdentify] = useState(initialStudent !== null)
+  const [student, setStudent] = useState<IncidentStudent | null>(initialStudent)
   const [selectionError, setSelectionError] = useState(false)
   const request = useIncidentSubmission(examId)
   const disabled = request.saving || request.forbidden
   const errors = request.fieldErrors
+  useEffect(() => {
+    onBusyChange?.(request.saving)
+  }, [request.saving, onBusyChange])
+  useEffect(() => {
+    if (request.saved) onCreated?.(request.saved)
+  }, [request.saved, onCreated])
 
   if (request.saved)
     return (
       <section className={styles.panel} role="status">
-        <Navigate
-          to={`${backTo.split('?')[0]}/${request.saved.id}${backTo.includes('?') ? `?${backTo.split('?')[1]}` : ''}`}
-          replace
-          state={{ createdIncidentId: request.saved.id }}
-        />
+        {!onCreated ? (
+          <Navigate
+            to={`${backTo.split('?')[0]}/${request.saved.id}${backTo.includes('?') ? `?${backTo.split('?')[1]}` : ''}`}
+            replace
+            state={{ createdIncidentId: request.saved.id }}
+          />
+        ) : null}
         <h2>Incidencia registrada</h2>
         <p>El servidor confirmó el registro #{request.saved.id}.</p>
         <p>La incidencia documenta lo ocurrido y no confirma una infracción.</p>
@@ -157,15 +179,21 @@ export function IncidentForm({
         ) : null}
       </div>
       <div className={styles.actions}>
-        <Link
-          to={backTo}
-          onClick={(event) => {
-            if (request.saving) event.preventDefault()
-          }}
-          aria-disabled={request.saving}
-        >
-          Cancelar
-        </Link>
+        {onCancel ? (
+          <button type="button" disabled={request.saving} onClick={onCancel}>
+            Cancelar
+          </button>
+        ) : (
+          <Link
+            to={backTo}
+            onClick={(event) => {
+              if (request.saving) event.preventDefault()
+            }}
+            aria-disabled={request.saving}
+          >
+            Cancelar
+          </Link>
+        )}
         <button type="submit" disabled={disabled}>
           {request.saving ? 'Registrando…' : 'Registrar incidencia'}
         </button>

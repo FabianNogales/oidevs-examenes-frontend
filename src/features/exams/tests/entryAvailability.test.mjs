@@ -44,6 +44,7 @@ function pageHarness(initialExam) {
     EntryStudentsSummary: 'summary', ExamCard: 'exam-card',
   }
   const h = sourceHarness({
+    '@/features/incidents/components/IncidentControlDialog': { IncidentControlDialog: 'incident-dialog' },
     '@/shared/hooks/useAuthenticatedImage': { useAuthenticatedImage: () => ({ src: null, loading: false, failed: false }) },
     'react-router': { Link: 'link', useParams: () => ({ examId: '17' }), useSearchParams: () => [new URLSearchParams()] },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },

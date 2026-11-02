@@ -3,13 +3,21 @@ import { entryResultTone } from '../utils/entryRegistrationDisplay'
 import { EntryQrStudentIdentity } from './EntryQrStudentIdentity'
 import entryStyles from '../pages/EntryControlPage.module.css'
 import styles from './EntryQr.module.css'
+import { EntryIncidentActions } from '@/features/incidents/components/EntryIncidentActions'
+import type { IncidentEntryContext } from '@/features/incidents/utils/incidentEntryContext'
 
 export function EntryQrResultPanel({
   response,
   processing,
+  examId,
+  onReportIncident,
+  onViewIncident,
 }: {
   response: EntryQrResponse | null
   processing: boolean
+  examId?: number
+  onReportIncident?: (context: IncidentEntryContext) => void
+  onViewIncident?: (incidentId: number) => void
 }) {
   const student = response?.data?.student
   const processed = response ? new Date(response.processed_at) : null
@@ -41,6 +49,7 @@ export function EntryQrResultPanel({
               : response.processed_at}
           </time>
           <p>{response.message}</p>
+          {examId && onReportIncident && onViewIncident ? <EntryIncidentActions response={response} examId={examId} disabled={processing} onReport={onReportIncident} onView={onViewIncident} /> : null}
         </>
       ) : (
         <div className={styles.resultEmpty}>
