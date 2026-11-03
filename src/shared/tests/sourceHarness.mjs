@@ -31,7 +31,11 @@ export function sourceHarness(overrides = {}) {
   const style = { overflow: '', getPropertyValue: () => style.overflow, getPropertyPriority: () => '',
     setProperty: (_key, value) => { style.overflow = value }, removeProperty: () => { style.overflow = '' } }
   const document = { ...eventTarget('document:'), visibilityState: 'visible', activeElement: null, body: { style } }
-  const window = eventTarget('window:')
+  const window = {
+    ...eventTarget('window:'),
+    setTimeout: (callback, delay = 0) => { const id = ++nextTimer; timers.set(id, { at: now + delay, callback }); return id },
+    clearTimeout: (id) => timers.delete(id),
+  }
   class Element {
     constructor(options = {}) { Object.assign(this, { tabIndex: 0, hidden: false, disabled: false, isConnected: true, children: [] }, options) }
     focus() { document.activeElement = this }
@@ -69,6 +73,7 @@ export function sourceHarness(overrides = {}) {
       }
     },
   }
+  hooks.useLayoutEffect = hooks.useEffect
   const cache = new Map()
   function load(relative) {
     const filename = resolve(sourceRoot, relative)
@@ -77,7 +82,7 @@ export function sourceHarness(overrides = {}) {
     const localRequire = (specifier) => {
       if (specifier in overrides) return overrides[specifier]
       if (specifier === 'react') return hooks
-      if (specifier.endsWith('.css')) return { default: new Proxy({}, { get: (_, key) => key }) }
+      if (specifier.endsWith('.css')) return { __esModule: true, default: new Proxy({}, { get: (_, key) => key }) }
       if (specifier.startsWith('@/') || specifier.startsWith('.')) {
         const base = specifier.startsWith('@/') ? resolve(sourceRoot, specifier.slice(2)) : resolve(dirname(filename), specifier)
         return load(existsSync(base + '.ts') ? base + '.ts' : base + '.tsx')

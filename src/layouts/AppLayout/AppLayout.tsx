@@ -69,7 +69,9 @@ function AppLayoutContent() {
   const navigation = getHeaderNavigation(
     headerUser?.role,
     collaborations.length > 0,
-    user?.roles.map((role) => HEADER_ROLE_BY_AUTH_ROLE[role]) ?? [],
+    user?.roles
+      .filter((role) => ROLE_PRIORITY.includes(role))
+      .map((role) => HEADER_ROLE_BY_AUTH_ROLE[role]) ?? [],
   )
 
   const navigationState = location.state as NavigationState | null

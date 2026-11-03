@@ -1,0 +1,59 @@
+.history {
+  margin-block: 16px;
+}
+
+.panel {
+  max-height: 420px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.entries {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.entry + .entry {
+  border-top: 1px solid var(--color-border);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.entry h3,
+.change h4 {
+  margin-block: 8px;
+}
+
+.change {
+  white-space: pre-wrap;
+}
+
+.change dl {
+  margin-block: 8px;
+}
+
+.change dt {
+  font-weight: 600;
+}
+
+.change dd {
+  margin-inline-start: 16px;
+  margin-bottom: 8px;
+}
+
+.pager,
+.pager > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pager {
+  justify-content: space-between;
+}
