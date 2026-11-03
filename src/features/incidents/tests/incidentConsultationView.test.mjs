@@ -46,6 +46,9 @@ function setup(handler = async () => page) {
   let search = 'from=teacher',
     examId = 4
   const h = sourceHarness({
+    '../components/IncidentExportActions': {
+      IncidentExportActions: 'export-actions',
+    },
     '../api/incidentConsultationApi': {
       getIncidentConsultation: (...args) => {
         calls.push(args)
@@ -93,15 +96,13 @@ test('HU29 hook commits applied filters to the URL, resets pagination, and remov
   ui.h.render(() => useIncidentConsultation(4))
   await settle()
   assert.equal(ui.h.render().response.data[0].id, 9)
-  ui.h
-    .render()
-    .apply({
-      search: '  00123  ',
-      type: '',
-      status: 'REPORTED',
-      date_from: '',
-      date_to: '',
-    })
+  ui.h.render().apply({
+    search: '  00123  ',
+    type: '',
+    status: 'REPORTED',
+    date_from: '',
+    date_to: '',
+  })
   assert.equal(new URLSearchParams(ui.search()).get('search'), '00123')
   assert.equal(new URLSearchParams(ui.search()).has('page'), false)
   assert.equal(ui.h.render().response, null)
@@ -309,5 +310,50 @@ test('HU29 permission failure clears rows and counters instead of pretending an 
   const table = nodes(tree, (n) => n.type?.name === 'IncidentRecordsTable')[0]
   assert.equal(table.props.error, 'Acceso no autorizado.')
   assert.deepEqual(table.props.data, [])
+  ui.h.unmount()
+})
+
+test('HU29 admin query reuses the consultation but has no teacher controls and exports only with explicit permission', async () => {
+  const ui = setup(async () => ({
+    ...page,
+    permissions: { can_create: true, can_export: true },
+  }))
+  const { ExamIncidentConsultation } = ui.h.load(
+    'features/incidents/pages/ExamIncidentConsultation.tsx',
+  )
+  ui.setSearch('from=teacher&exam_id=999&search=00123')
+  ui.h.render(() => ExamIncidentConsultation({ examId: 4, mode: 'admin' }))
+  await settle()
+  const tree = ui.h.render()
+  assert.equal(tree.type, 'section')
+  assert.equal(
+    nodes(
+      tree,
+      (n) => n.type === 'link' && textContent(n) === 'Registrar incidencia',
+    ).length,
+    0,
+  )
+  assert.equal(
+    nodes(tree, (n) => n.type?.name === 'ExamIncidentNavigation').length,
+    0,
+  )
+  assert.equal(nodes(tree, (n) => n.type === 'export-actions').length, 1)
+  const table = nodes(tree, (n) => n.type?.name === 'IncidentRecordsTable')[0]
+  assert.equal(
+    table.props.detailPath(incident),
+    '/admin/incidents/4/9?from=admin&exam_id=4&search=00123',
+  )
+  const filters = nodes(
+    tree,
+    (n) => n.type?.name === 'IncidentConsultationFilters',
+  )[0]
+  filters.props.onApply({
+    search: '',
+    type: '',
+    status: '',
+    date_from: '',
+    date_to: '',
+  })
+  assert.equal(ui.search(), 'from=admin&exam_id=4')
   ui.h.unmount()
 })

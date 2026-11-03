@@ -4,7 +4,7 @@ import { IncidentDetails } from '../components/IncidentDetails'
 import { useIncidentDetail } from '../hooks/useIncidentDetail'
 import { isPositiveId } from '../utils/incidentValidation'
 import styles from './Incidents.module.css'
-import { incidentConsultationSearch } from '../utils/incidentConsultationNavigation'
+import { incidentConsultationListPath } from '../utils/incidentConsultationNavigation'
 
 function DetailContent({
   examId,
@@ -16,7 +16,7 @@ function DetailContent({
   const detail = useIncidentDetail(examId, incidentId)
   const [params] = useSearchParams()
   const { state } = useLocation()
-  const backTo = `/exams/${examId}/incidents${incidentConsultationSearch(params)}`
+  const backTo = incidentConsultationListPath(examId, params)
   return (
     <main className={styles.page}>
       <section className={styles.content}>

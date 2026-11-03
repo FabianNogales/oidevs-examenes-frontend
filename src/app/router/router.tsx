@@ -115,6 +115,20 @@ export const router = createBrowserRouter([
                     },
                   },
                   {
+                    path: 'incidents',
+                    lazy: async () => {
+                      const { AdminIncidentsPage } = await import('@/features/incidents/pages/AdminIncidentsPage')
+                      return { Component: AdminIncidentsPage }
+                    },
+                  },
+                  {
+                    path: 'incidents/:examId/:incidentId',
+                    lazy: async () => {
+                      const { IncidentDetailPage } = await import('@/features/incidents/pages/IncidentDetailPage')
+                      return { Component: IncidentDetailPage }
+                    },
+                  },
+                  {
                     path: 'careers',
                     lazy: async () => {
                       const { AdminReadPage } =

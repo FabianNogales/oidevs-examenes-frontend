@@ -7,7 +7,10 @@ import type {
 } from '../types/incidentConsultation.types'
 import { readIncidentQuery } from '../utils/incidentConsultationNavigation'
 
-export function useIncidentConsultation(examId: number) {
+export function useIncidentConsultation(
+  examId: number,
+  mode: 'teacher' | 'admin' = 'teacher',
+) {
   const [params, setParams] = useSearchParams()
   const query = readIncidentQuery(params)
   const serialized = params.toString()
@@ -43,7 +46,10 @@ export function useIncidentConsultation(examId: number) {
 
   function apply(filters: IncidentConsultationFilters, page = 1) {
     const next = new URLSearchParams()
-    if (params.get('from') === 'teacher') next.set('from', 'teacher')
+    if (mode === 'admin') {
+      next.set('from', 'admin')
+      next.set('exam_id', String(examId))
+    } else if (params.get('from') === 'teacher') next.set('from', 'teacher')
     for (const [field, value] of Object.entries(filters))
       if (value.trim()) next.set(field, value.trim())
     if (page !== 1) next.set('page', String(page))

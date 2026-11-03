@@ -119,6 +119,7 @@ export const navigationByRole: Record<
     },
     { label: 'Carreras', to: '/admin/careers' },
     { label: 'Auditoría', to: '/admin/audit-logs' },
+    { label: 'Incidencias', to: '/admin/incidents' },
     {
       label: 'Información',
     },

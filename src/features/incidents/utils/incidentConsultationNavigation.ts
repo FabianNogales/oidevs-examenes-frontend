@@ -1,5 +1,6 @@
 import type { IncidentType } from '../types/incident.types'
 import type { IncidentConsultationQuery } from '../types/incidentConsultation.types'
+import { isPositiveId } from './incidentValidation'
 
 export function readIncidentQuery(
   params: URLSearchParams,
@@ -18,6 +19,11 @@ export function readIncidentQuery(
 export function incidentConsultationSearch(params: URLSearchParams): string {
   const kept = new URLSearchParams()
   if (params.get('from') === 'teacher') kept.set('from', 'teacher')
+  if (params.get('from') === 'admin') {
+    kept.set('from', 'admin')
+    if (isPositiveId(Number(params.get('exam_id'))))
+      kept.set('exam_id', String(Number(params.get('exam_id'))))
+  }
   for (const field of [
     'search',
     'type',
@@ -31,4 +37,16 @@ export function incidentConsultationSearch(params: URLSearchParams): string {
   }
   const text = kept.toString()
   return text ? '?' + text : ''
+}
+
+export function incidentConsultationListPath(
+  examId: number,
+  params: URLSearchParams,
+): string {
+  if (params.get('from') === 'admin') {
+    const scoped = new URLSearchParams(params)
+    scoped.set('exam_id', String(examId))
+    return '/admin/incidents' + incidentConsultationSearch(scoped)
+  }
+  return `/exams/${examId}/incidents${incidentConsultationSearch(params)}`
 }
