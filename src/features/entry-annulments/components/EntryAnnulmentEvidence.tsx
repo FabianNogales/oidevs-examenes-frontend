@@ -8,10 +8,18 @@ export function EntryAnnulmentEvidence({
 }) {
   if (record.entry.status !== 'ANNULLED') return null
   const annulment = record.entry.annulment
+  const complete =
+    annulment &&
+    typeof annulment.reason === 'string' &&
+    annulment.reason.trim() &&
+    typeof annulment.annulled_by?.name === 'string' &&
+    annulment.annulled_by.name.trim() &&
+    typeof annulment.annulled_at === 'string' &&
+    !Number.isNaN(Date.parse(annulment.annulled_at))
   return (
     <details className={styles.evidence}>
       <summary>Detalle de anulación</summary>
-      {annulment ? (
+      {complete ? (
         <dl>
           <div>
             <dt>Motivo</dt>

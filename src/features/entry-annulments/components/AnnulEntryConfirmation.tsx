@@ -4,6 +4,7 @@ import { entryStudentName } from '@/features/exams/utils/entryControlDisplay'
 import type { AnnulmentHistoryRecord } from '../types/entryAnnulment.types'
 import { canAnnulEntry } from '../utils/entryAnnulmentValidation'
 import { useEntryAnnulment } from '../hooks/useEntryAnnulment'
+import { PendingAnnulmentGuard } from './PendingAnnulmentGuard'
 import styles from './AnnulEntryConfirmation.module.css'
 
 type Props = {
@@ -42,15 +43,6 @@ export function AnnulEntryConfirmation({
     if (Object.keys(request.fieldErrors).length)
       form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
   }, [request.fieldErrors])
-  useEffect(() => {
-    if (!request.busy) return
-    const preventUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault()
-      event.returnValue = ''
-    }
-    window.addEventListener('beforeunload', preventUnload)
-    return () => window.removeEventListener('beforeunload', preventUnload)
-  }, [request.busy])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -78,6 +70,7 @@ export function AnnulEntryConfirmation({
       noValidate
       aria-busy={request.busy}
     >
+      <PendingAnnulmentGuard busy={request.busy} />
       <h3>Anular ingreso #{record.entry.id}</h3>
       <p>
         El ingreso original se conservará en el historial y dejará de contar

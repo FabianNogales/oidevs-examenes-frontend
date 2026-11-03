@@ -224,4 +224,15 @@ test('HU28 annulled evidence retains the server reason, author and time without 
     0,
   )
   assert.equal(EntryAnnulmentEvidence({ record }), null)
+  for (const annulment of [
+    null,
+    {},
+    { reason: 'Motivo', annulled_by: null },
+    { ...annulled.entry.annulment, annulled_at: 'invalid' },
+  ]) {
+    const incomplete = EntryAnnulmentEvidence({
+      record: { ...annulled, entry: { ...annulled.entry, annulment } },
+    })
+    assert.match(textContent(incomplete), /no proporcionó el detalle/)
+  }
 })
