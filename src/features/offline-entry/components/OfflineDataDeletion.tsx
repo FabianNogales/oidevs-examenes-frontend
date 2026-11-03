@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import { deleteOfflineExam } from '../storage/offlineStore'
 import { offlineError } from '../api/offlineApi'
 import type { LocalEntry } from '../types/offline.types'
-import styles from './OfflineEntry.module.css'
+import shared from './styles/OfflineShared.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export function OfflineDataDeletion({
@@ -26,9 +27,11 @@ export function OfflineDataDeletion({
   const unresolved = entries.filter(
     (entry) => !['ACCEPTED', 'DUPLICATE'].includes(entry.status),
   ).length
+
   return (
     <>
       <button
+        type="button"
         className={buttons.secondaryButton}
         disabled={disabled}
         onClick={() => {
@@ -37,8 +40,10 @@ export function OfflineDataDeletion({
           setError(null)
         }}
       >
-        Eliminar datos locales de este examen
+        <Trash2 size={15} strokeWidth={1.75} aria-hidden="true" />
+        <span>Eliminar datos locales de este examen</span>
       </button>
+
       {open ? (
         <CollaborationModal
           title="Eliminar datos de este dispositivo"
@@ -51,14 +56,14 @@ export function OfflineDataDeletion({
             conserva.
           </p>
           {unresolved > 0 ? (
-            <div className={styles.notice} data-warning="true">
+            <div className={shared.notice} data-warning="true">
               <strong>{unresolved} eventos requieren atención.</strong>
               <p>
                 Eliminar pendientes puede perder ingresos que nunca llegaron al
                 servidor. También se perderá el seguimiento local de conflictos
                 y rechazos.
               </p>
-              <label className={styles.checkbox}>
+              <label className={shared.checkbox}>
                 <input
                   type="checkbox"
                   checked={acknowledged}
@@ -70,11 +75,11 @@ export function OfflineDataDeletion({
             </div>
           ) : null}
           {error ? (
-            <p className={styles.error} role="alert">
+            <p className={shared.error} role="alert">
               {error}
             </p>
           ) : null}
-          <div className={styles.actions}>
+          <div className={shared.actions}>
             <button
               className={buttons.secondaryButton}
               disabled={busy}

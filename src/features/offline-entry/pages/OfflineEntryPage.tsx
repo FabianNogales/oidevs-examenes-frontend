@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
+import { Download, ExternalLink, FileText, RefreshCw, ScanLine,} from 'lucide-react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
@@ -13,7 +14,8 @@ import { useOfflinePreparation } from '../hooks/useOfflinePreparation'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { useConnectivity, useLocalClock } from '../hooks/useConnectivity'
 import type { OfflineIdentity } from '../services/offlineIdentity'
-import styles from '../components/OfflineEntry.module.css'
+import shared from '../components/styles/OfflineShared.module.css'
+import workspace from '../components/styles/OfflineWorkspace.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 function OfflineWorkspace({
@@ -35,25 +37,46 @@ function OfflineWorkspace({
   const sync = useOfflineSync(identity.ownerId, examId, data.reload)
   const [params, setParams] = useSearchParams()
   const [checking, setChecking] = useState(false)
-  const tab = ['control', 'sync'].includes(params.get('view') ?? '')
-    ? params.get('view')
+  const currentView = params.get('view') ?? ''
+  const tab = ['control', 'sync'].includes(currentView)
+    ? currentView
     : 'prepare'
   const canRequest =
     online && user?.id === identity.ownerId && !user.must_change_password
   const pending = data.entries.filter(
     (entry) => entry.status === 'PENDING',
   ).length
+  const navigationTabs = [
+    {
+      value: 'prepare',
+      step: '01',
+      label: 'Preparación',
+      Icon: Download,
+    },
+    {
+      value: 'control',
+      step: '02',
+      label: 'Control local',
+      Icon: ScanLine,
+    },
+    {
+      value: 'sync',
+      step: '03',
+      label: `Sincronización${pending ? ` (${pending})` : ''}`,
+      Icon: RefreshCw,
+    },
+  ] as const
   return (
-    <main className={styles.page}>
+    <main className={shared.page}>
       <Breadcrumbs
         items={[
           { label: 'Mis listas locales', to: '/offline' },
           { label: 'Control sin conexión' },
         ]}
       />
-      <header className={styles.header}>
+      <header className={shared.header}>
         <div>
-          <p className={styles.eyebrow}>EIDA · Lista exclusiva</p>
+          <p className={shared.eyebrow}>EIDA · Lista exclusiva</p>
           <h1>
             {tab === 'prepare'
               ? 'Preparación del control sin conexión'
@@ -61,19 +84,26 @@ function OfflineWorkspace({
                 ? 'Control de ingreso sin conexión'
                 : 'Sincronización de ingresos'}
           </h1>
-          <p>
-            {data.stored?.packet.exam.name ?? `Examen ${examId}`} ·{' '}
-            {identity.displayName}
+          <p className={shared.headerSubtitle}>
+            <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
+            <span>
+              {data.stored?.packet.exam.name ?? `Examen ${examId}`} ·{' '}
+              {identity.displayName}
+            </span>
           </p>
         </div>
         {canRequest ? (
-          <Link className={styles.link} to={`/exams/${examId}/entry-control`}>
-            Abrir control online
+          <Link
+            className={workspace.onlineControlLink}
+            to={`/exams/${examId}/entry-control`}
+          >
+            <span>Abrir control online</span>
+            <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
           </Link>
         ) : null}
       </header>
       {!canRequest && online ? (
-        <div className={styles.notice}>
+        <div className={shared.notice}>
           <p>
             Los datos locales están disponibles. Verifica la sesión con Laravel
             para descargar o sincronizar.
@@ -91,35 +121,45 @@ function OfflineWorkspace({
         </div>
       ) : null}
       <nav
-        className={styles.tabs}
+        className={workspace.tabs}
         aria-label="Herramientas del control sin conexión"
       >
-        {[
-          ['prepare', 'Preparación'],
-          ['control', 'Control local'],
-          ['sync', `Sincronización${pending ? ` (${pending})` : ''}`],
-        ].map(([value, label]) => (
-          <Link
-            key={value}
-            to={`?view=${value}`}
-            aria-current={tab === value ? 'page' : undefined}
-            onClick={(event) => {
-              if (sync.busy || preparation.busy) event.preventDefault()
-              else {
-                event.preventDefault()
-                setParams({ view: value }, { replace: true })
-              }
-            }}
-          >
-            {label}
-          </Link>
-        ))}
+        {navigationTabs.map(({ value, step, label, Icon }) => {
+          const isCurrent = tab === value
+          return (
+            <Link
+              key={value}
+              to={`?view=${value}`}
+              className={workspace.tabItem}
+              aria-current={isCurrent ? 'page' : undefined}
+              onClick={(event) => {
+                if (sync.busy || preparation.busy) {
+                  event.preventDefault()
+                } else {
+                  event.preventDefault()
+                  setParams({ view: value }, { replace: true })
+                }
+              }}
+            >
+              <span className={workspace.tabLeft}>
+                <span className={workspace.tabNumber}>{step}</span>
+                <span className={workspace.tabLabel}>{label}</span>
+              </span>
+              <Icon
+                size={18}
+                strokeWidth={1.75}
+                className={workspace.tabIcon}
+                aria-hidden="true"
+              />
+            </Link>
+          )
+        })}
       </nav>
       {data.loading ? (
         <p role="status">Abriendo almacenamiento de esta cuenta…</p>
       ) : null}
       {data.error ? (
-        <div className={styles.error} role="alert">
+        <div className={shared.error} role="alert">
           <p>{data.error}</p>
           <button className={buttons.secondaryButton} onClick={data.reload}>
             Reintentar almacenamiento
@@ -151,13 +191,13 @@ function OfflineWorkspace({
         />
       ) : null}
       {tab === 'control' && !data.stored && !data.loading ? (
-        <section className={`${styles.panel} ${styles.empty}`}>
+        <section className={`${shared.panel} ${shared.empty}`}>
           <h2>Primero descarga tu lista</h2>
           <p>
             No hay una lista disponible para trabajar sin conexión. Conéctate y
             descarga tu lista antes del examen.
           </p>
-          <Link to="?view=prepare" className={styles.link}>
+          <Link to="?view=prepare" className={shared.link}>
             Ir a preparación
           </Link>
         </section>
@@ -180,7 +220,7 @@ export function OfflineEntryPage() {
     <OfflineAccessGate>
       {(identity) =>
         id === null ? (
-          <main className={styles.page}>
+          <main className={shared.page}>
             <p role="alert">El identificador del examen no es válido.</p>
           </main>
         ) : (

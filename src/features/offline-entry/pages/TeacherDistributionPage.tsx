@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { ArrowRight, GitBranch, RefreshCw, UserCheck, Users,} from 'lucide-react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import { ExamInformation } from '@/features/exams/components/ExamInformation'
@@ -11,7 +12,8 @@ import { useConnectivity } from '../hooks/useConnectivity'
 import { OfflineAssignmentCards } from '../components/OfflineAssignmentCards'
 import { OfflineConnectionStatus } from '../components/OfflineConnectionStatus'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
-import styles from '../components/OfflineEntry.module.css'
+import shared from '../components/styles/OfflineShared.module.css'
+import distStyles from '../components/styles/OfflineDistribution.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 function DistributionContent({ examId }: { examId: number }) {
@@ -42,7 +44,7 @@ function DistributionContent({ examId }: { examId: number }) {
     !lists.loading &&
     !lists.error
   return (
-    <main className={styles.page}>
+    <main className={shared.page}>
       <Breadcrumbs
         items={[
           { label: 'Mis exámenes', to: '/teacher/exams' },
@@ -50,9 +52,9 @@ function DistributionContent({ examId }: { examId: number }) {
           { label: 'Distribución de listas' },
         ]}
       />
-      <header className={styles.header}>
+      <header className={shared.header}>
         <div>
-          <p className={styles.eyebrow}>HU35 · Organización del ingreso</p>
+          <p className={shared.eyebrow}>HU35 · Organización del ingreso</p>
           <h1>Distribución de estudiantes</h1>
           <p>Listas exclusivas y consecutivas por apellidos.</p>
         </div>
@@ -60,7 +62,7 @@ function DistributionContent({ examId }: { examId: number }) {
       </header>
       {exam.isLoading ? <ExamsSkeleton /> : null}
       {exam.errorMessage ? (
-        <div className={styles.error} role="alert">
+        <div className={shared.error} role="alert">
           <p>{exam.errorMessage}</p>
           <button className={buttons.secondaryButton} onClick={exam.reload}>
             Reintentar examen
@@ -70,31 +72,48 @@ function DistributionContent({ examId }: { examId: number }) {
       {exam.exam ? <ExamInformation exam={exam.exam} /> : null}
       {exam.detail ? (
         <>
-          <div className={styles.metrics}>
-            <div className={styles.metric}>
-              <strong>{total ?? '—'}</strong>
+          <div className={distStyles.metricsRow}>
+            <div className={distStyles.metricCard}>
+              <div className={distStyles.metricCardTop}>
+                <strong>{total ?? '—'}</strong>
+                <span className={distStyles.metricCardIcon} aria-hidden="true">
+                  <Users size={18} strokeWidth={1.75} />
+                </span>
+              </div>
               <span>
                 Estudiantes inscritos{total === null ? ' · por consultar' : ''}
               </span>
             </div>
-            <div className={styles.metric}>
-              <strong>
-                {lists.distribution
-                  ? lists.distribution.lists.filter(
-                      (list) => list.responsible_id !== user?.id,
-                    ).length
-                  : (lists.counts.collaborators ?? '—')}
-              </strong>
+
+            <div className={distStyles.metricCard}>
+              <div className={distStyles.metricCardTop}>
+                <strong>
+                  {lists.distribution
+                    ? lists.distribution.lists.filter(
+                        (list) => list.responsible_id !== user?.id,
+                      ).length
+                    : (lists.counts.collaborators ?? '—')}
+                </strong>
+                <span className={distStyles.metricCardIcon} aria-hidden="true">
+                  <UserCheck size={18} strokeWidth={1.75} />
+                </span>
+              </div>
               <span>
                 {lists.distribution
                   ? 'Colaboradores con lista'
                   : 'Colaboradores registrados'}
               </span>
             </div>
-            <div className={styles.metric}>
-              <strong>
-                {lists.distribution ? `v${lists.distribution.version}` : '—'}
-              </strong>
+
+            <div className={distStyles.metricCard}>
+              <div className={distStyles.metricCardTop}>
+                <strong>
+                  {lists.distribution ? `v${lists.distribution.version}` : '—'}
+                </strong>
+                <span className={distStyles.metricCardIcon} aria-hidden="true">
+                  <GitBranch size={18} strokeWidth={1.75} />
+                </span>
+              </div>
               <span>
                 {lists.distribution
                   ? 'Distribución preparada'
@@ -103,25 +122,26 @@ function DistributionContent({ examId }: { examId: number }) {
             </div>
           </div>
           {noCollaborators ? (
-            <p className={styles.notice}>
+            <p className={shared.notice}>
               No hay colaboradores en esta distribución. El servidor asigna la
               lista al docente responsable.
             </p>
           ) : null}
           {lists.error ? (
-            <p className={styles.error} role="alert">
+            <p className={shared.error} role="alert">
               {lists.error}
             </p>
           ) : null}
-          <section className={styles.panel}>
-            <div className={styles.toolbar}>
+
+          <section className={shared.panel}>
+            <div className={shared.toolbar}>
               <div>
                 <h2>
                   {lists.distribution
                     ? 'Distribución preparada'
                     : 'Preparar listas del examen'}
                 </h2>
-                <p>
+                <p className={shared.panelSubtitle}>
                   {lists.distribution
                     ? 'La versión 1 está congelada. Puedes consultar sus estudiantes y responsables.'
                     : 'El servidor calculará las listas equilibradas según las inscripciones y autorizaciones vigentes.'}
@@ -132,7 +152,8 @@ function DistributionContent({ examId }: { examId: number }) {
                 disabled={lists.loading || lists.preparing || !online}
                 onClick={lists.reload}
               >
-                Actualizar consulta
+                <RefreshCw size={15} strokeWidth={1.75} aria-hidden="true" />
+                <span>Actualizar consulta</span>
               </button>
             </div>
             {lists.loading ? (
@@ -148,12 +169,15 @@ function DistributionContent({ examId }: { examId: number }) {
               </button>
             ) : null}
             {lists.distribution ? (
-              <Link className={styles.link} to={`/exams/${examId}/offline`}>
-                Preparar mi dispositivo para el control sin conexión
+              <Link className={shared.link} to={`/exams/${examId}/offline`}>
+                <span>
+                  Preparar mi dispositivo para el control sin conexión
+                </span>
+                <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />
               </Link>
             ) : null}
             {!lists.distribution && total === 0 ? (
-              <p className={styles.muted}>
+              <p className={shared.muted}>
                 El examen no tiene inscripciones activas. Las listas que se
                 preparen estarán vacías y quedarán congeladas.
               </p>
@@ -179,7 +203,7 @@ function DistributionContent({ examId }: { examId: number }) {
             La primera distribución queda congelada en versión 1. Esta operación
             no permite reasignar ni regenerar estudiantes después.
           </p>
-          <div className={styles.actions}>
+          <div className={shared.actions}>
             <button
               className={buttons.secondaryButton}
               disabled={lists.preparing}
@@ -213,7 +237,7 @@ export function TeacherDistributionPage() {
   const { examId } = useParams()
   const id = parseExamId(examId)
   return id === null ? (
-    <main className={styles.page}>
+    <main className={shared.page}>
       <p role="alert">El examen no es válido.</p>
     </main>
   ) : (
