@@ -24,9 +24,30 @@ function setup(handler) {
 }
 const result = {
   exam: { id: 4, name: 'Parcial', subject_name: 'Redes' },
-  permissions: { can_create: true },
+  permissions: { can_create: true, can_export: false },
   data: [],
   meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
+  summary: {
+    total: 0,
+    by_type: {
+      IDENTIFICATION: 0,
+      SUSPECTED_IMPERSONATION: 0,
+      INELIGIBILITY: 0,
+      WRONG_EXAM: 0,
+      ENVIRONMENT: 0,
+    },
+  },
+  filters: { statuses: [{ value: 'REPORTED', label: 'Reportada' }] },
+}
+
+function expandTable(node) {
+  if (Array.isArray(node)) return node.map(expandTable)
+  if (!node || typeof node !== 'object' || !node.props) return node
+  if (node.type?.name === 'IncidentRecordsTable') return node.type(node.props)
+  return {
+    ...node,
+    props: { ...node.props, children: expandTable(node.props.children) },
+  }
 }
 
 test('HU27 navigation exposes only implemented sections and keeps exam summary filters', () => {
@@ -58,7 +79,7 @@ test('HU27 listing renders actual empty results but not an authorization error a
       'features/incidents/pages/ExamIncidentsPage.tsx',
     )
     const element = ExamIncidentsPage()
-    let tree = h.render(() => element.type(element.props))
+    let tree = h.render(() => expandTable(element.type(element.props)))
     assert.equal(
       nodes(tree, (n) => n.type === 'data-table')[0].props.loading,
       true,

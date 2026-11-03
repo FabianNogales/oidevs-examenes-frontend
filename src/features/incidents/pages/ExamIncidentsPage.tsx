@@ -1,129 +1,50 @@
 import { Link, useParams, useSearchParams } from 'react-router'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
-import { DataTable } from '@/shared/components/DataTable/DataTable'
-import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
-import { ExamIncidentNavigation } from '../components/ExamIncidentNavigation'
+import { IncidentRecordsTable } from '../components/IncidentRecordsTable'
 import { useIncidents } from '../hooks/useIncidents'
-import type { Incident } from '../types/incident.types'
-import { INCIDENT_TYPE_LABELS, isPositiveId } from '../utils/incidentValidation'
+import { isPositiveId } from '../utils/incidentValidation'
+import { ExamIncidentConsultation } from './ExamIncidentConsultation'
 import styles from './Incidents.module.css'
 
-// Incidents have their own states; do not map them to the shared ACTIVE/INACTIVE catalog status.
-type IncidentRow = Omit<Incident, 'status'>
-const columns: TableColumnDef<IncidentRow>[] = [
-  {
-    id: 'type',
-    header: 'Incidencia / tipo',
-    cell: (item) => (
-      <>
-        <strong>
-          #{item.id} · {INCIDENT_TYPE_LABELS[item.type]}
-        </strong>
-        <span className={styles.secondary}>{item.description}</span>
-      </>
-    ),
-  },
-  {
-    id: 'student',
-    header: 'Estudiante',
-    cell: (item) =>
-      item.student ? (
-        <>
-          {item.student.first_names} {item.student.last_names}
-          <span className={styles.secondary}>SIS {item.student.sis_code}</span>
-        </>
-      ) : (
-        'Sin estudiante identificado'
-      ),
-  },
-  {
-    id: 'origin',
-    header: 'Origen',
-    cell: (item) => (item.origin === 'MANUAL' ? 'Manual' : 'Automático'),
-  },
-  {
-    id: 'date',
-    header: 'Fecha y hora',
-    cell: (item) =>
-      new Intl.DateTimeFormat('es-BO', {
-        dateStyle: 'short',
-        timeStyle: 'medium',
-        timeZone: 'America/La_Paz',
-      }).format(new Date(item.created_at)),
-  },
-  {
-    id: 'author',
-    header: 'Registrado por',
-    cell: (item) => item.reported_by.name,
-  },
-]
-
+// Keep the existing HU27 collaborator consultation independent of HU29 metadata.
 function IncidentsContent({ examId }: { examId: number }) {
-  const [params] = useSearchParams()
-  const teacherOrigin = params.get('from') === 'teacher'
   const list = useIncidents(examId)
   const response = list.response
-  const meta = response?.meta
   return (
     <main className={styles.page}>
       <section className={styles.content}>
         <Breadcrumbs
           items={[
-            {
-              label: teacherOrigin ? 'Mis exámenes' : 'Colaborador',
-              to: teacherOrigin ? '/teacher/exams' : '/collaborator',
-            },
+            { label: 'Colaborador', to: '/collaborator' },
             { label: 'Incidencias' },
           ]}
         />
         <header className={styles.heading}>
           <h1>Incidencias del examen</h1>
-          {response ? (
+          {response && (
             <p>
               {response.exam.name} · {response.exam.subject_name}
             </p>
-          ) : null}
+          )}
         </header>
-        {teacherOrigin && response ? (
-          <ExamIncidentNavigation examId={examId} />
-        ) : null}
         <div className={styles.access}>
-          {response?.permissions.can_create ? (
-            <Link
-              to={`/exams/${examId}/incidents/create${teacherOrigin ? '?from=teacher' : ''}`}
-            >
+          {response?.permissions.can_create && (
+            <Link to={'/exams/' + examId + '/incidents/create'}>
               Registrar incidencia
             </Link>
-          ) : null}
-          <Link
-            to={`/exams/${examId}/entry-control${teacherOrigin ? '?from=teacher' : ''}`}
-          >
+          )}
+          <Link to={'/exams/' + examId + '/entry-control'}>
             Control de ingreso
           </Link>
         </div>
-        <DataTable<IncidentRow>
-          columns={columns}
+        <IncidentRecordsTable
           data={response?.data ?? []}
+          meta={response?.meta}
           loading={list.loading}
           error={list.error}
-          onRetry={list.retry}
-          entityLabel="incidencias"
-          emptyTitle="No hay incidencias registradas"
-          emptyDescription="Aquí se mostrarán los reportes manuales y eventos automáticos conservados por el servidor."
-          pagination={
-            meta
-              ? {
-                  currentPage: meta.current_page,
-                  lastPage: meta.last_page,
-                  total: meta.total,
-                }
-              : null
-          }
-          onPageChange={list.setPage}
-          viewActionLabel="Ver detalle"
-          getProfilePath={(item) =>
-            `/exams/${examId}/incidents/${item.id}${teacherOrigin ? '?from=teacher' : ''}`
-          }
+          retry={list.retry}
+          setPage={list.setPage}
+          detailPath={(item) => '/exams/' + examId + '/incidents/' + item.id}
         />
         <p className={styles.note}>
           Una incidencia documenta lo ocurrido; no confirma una infracción ni
@@ -136,6 +57,7 @@ function IncidentsContent({ examId }: { examId: number }) {
 
 export function ExamIncidentsPage() {
   const { examId } = useParams()
+  const [params] = useSearchParams()
   const id = Number(examId)
   if (!isPositiveId(id))
     return (
@@ -144,5 +66,10 @@ export function ExamIncidentsPage() {
         <p role="alert">El identificador del examen no es válido.</p>
       </main>
     )
-  return <IncidentsContent key={id} examId={id} />
+  // Origin changes presentation only; every request is authorized by the server.
+  return params.get('from') === 'teacher' ? (
+    <ExamIncidentConsultation key={id} examId={id} />
+  ) : (
+    <IncidentsContent key={id} examId={id} />
+  )
 }

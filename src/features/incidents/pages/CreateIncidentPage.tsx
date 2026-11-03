@@ -4,12 +4,13 @@ import { IncidentForm } from '../components/IncidentForm'
 import { useIncidents } from '../hooks/useIncidents'
 import { isPositiveId } from '../utils/incidentValidation'
 import styles from './Incidents.module.css'
+import { incidentConsultationSearch } from '../utils/incidentConsultationNavigation'
 
 function CreateContent({ examId }: { examId: number }) {
   const [params] = useSearchParams()
   const list = useIncidents(examId)
   const context = list.response
-  const backTo = `/exams/${examId}/incidents${params.get('from') === 'teacher' ? '?from=teacher' : ''}`
+  const backTo = `/exams/${examId}/incidents${incidentConsultationSearch(params)}`
   return (
     <main className={styles.page}>
       <section className={styles.content}>
