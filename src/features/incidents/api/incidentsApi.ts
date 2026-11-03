@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { IncidentConsultationFilters } from '../types/incidentConsultation.types'
 import { httpClient } from '@/shared/api/httpClient'
 import type {
   CreateIncidentPayload,
@@ -32,12 +33,25 @@ export async function getIncidents(
   examId: number,
   page = 1,
   signal?: AbortSignal,
+  filters?: Partial<IncidentConsultationFilters>,
 ): Promise<IncidentsPage> {
   const url = endpoint(examId)
   if (!isPositiveId(page)) throw new IncidentApiError('La página no es válida.')
   try {
     const response = await httpClient.get<IncidentsPage>(url, {
-      params: { page, per_page: 10 },
+      params: {
+        page,
+        per_page: 10,
+        ...(filters
+          ? {
+              search: filters.search,
+              type: filters.type,
+              status: filters.status,
+              date_from: filters.date_from,
+              date_to: filters.date_to,
+            }
+          : {}),
+      },
       signal,
     })
     const result = response.data
