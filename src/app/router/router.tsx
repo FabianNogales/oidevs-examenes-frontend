@@ -266,6 +266,30 @@ export const router = createBrowserRouter([
                 element: <TeacherExamEditPage />,
               },
               {
+                path: 'teacher/exams/:examId/expulsions',
+                lazy: async () => {
+                  const { ExamExpulsionsPage } =
+                    await import('@/features/expulsions/pages/ExamExpulsionsPage')
+                  return { Component: ExamExpulsionsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions/create',
+                lazy: async () => {
+                  const { CreateExpulsionPage } =
+                    await import('@/features/expulsions/pages/CreateExpulsionPage')
+                  return { Component: CreateExpulsionPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions/:expulsionId',
+                lazy: async () => {
+                  const { ExpulsionDetailPage } =
+                    await import('@/features/expulsions/pages/ExpulsionDetailPage')
+                  return { Component: ExpulsionDetailPage }
+                },
+              },
+              {
                 path: 'teacher/exams/:examId/infractions',
                 lazy: async () => {
                   const { ExamInfractionsPage } = await import('@/features/infractions/pages/ExamInfractionsPage')
