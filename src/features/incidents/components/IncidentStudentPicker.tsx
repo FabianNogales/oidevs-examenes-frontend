@@ -13,11 +13,13 @@ export function IncidentStudentPicker({
   onChange,
   disabled,
   examId,
+  emptyMessage = 'No se encontraron estudiantes. Prueba con otro dato o registra sin identificar.',
 }: {
   value: IncidentStudent | null
   onChange: (student: IncidentStudent | null) => void
   disabled: boolean
   examId: number
+  emptyMessage?: string
 }) {
   const id = useId()
   const [query, setQuery] = useState('')
@@ -151,10 +153,7 @@ export function IncidentStudentPicker({
               ))}
             </ul>
           ) : (
-            <p role="status">
-              No se encontraron estudiantes. Prueba con otro dato o registra sin
-              identificar.
-            </p>
+            <p role="status">{emptyMessage}</p>
           )}
         </>
       )}

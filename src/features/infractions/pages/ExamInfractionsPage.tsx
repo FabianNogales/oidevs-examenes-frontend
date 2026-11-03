@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { formatIncidentDate } from '@/features/incidents/utils/incidentDisplay'
@@ -59,6 +59,13 @@ function List({ examId }: { examId: number }) {
       exam={response?.exam}
       title="Infracciones del examen"
     >
+      {response?.permissions.can_create && (
+        <div className={styles.access}>
+          <Link to={`/teacher/exams/${examId}/infractions/create`}>
+            Registrar infracción
+          </Link>
+        </div>
+      )}
       <p className={styles.note}>
         Una infracción reportada no está confirmada. Los cambios de estado
         requieren una decisión autorizada y conservan su historial.
