@@ -66,9 +66,10 @@ test('HU27 navigation exposes only implemented sections and keeps exam summary f
       '/teacher/exams/4/infractions',
       '/teacher/exams/4/expulsions',
       '/teacher/exams/4/attendance',
+      '/teacher/exams/4/reports',
     ],
   )
-  assert.doesNotMatch(textContent(tree), /Reportes/)
+  assert.match(textContent(tree), /Reportes/)
   h.unmount()
 })
 

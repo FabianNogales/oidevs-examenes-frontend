@@ -115,6 +115,13 @@ export const router = createBrowserRouter([
                     },
                   },
                   {
+                    path: 'exam-reports',
+                    lazy: async () => {
+                      const { AdminExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                      return { Component: AdminExamReportsPage }
+                    },
+                  },
+                  {
                     path: 'incidents',
                     lazy: async () => {
                       const { AdminIncidentsPage } = await import('@/features/incidents/pages/AdminIncidentsPage')
@@ -264,6 +271,20 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/exams/:examId/edit',
                 element: <TeacherExamEditPage />,
+              },
+              {
+                path: 'teacher/exam-reports',
+                lazy: async () => {
+                  const { TeacherExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                  return { Component: TeacherExamReportsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/reports',
+                lazy: async () => {
+                  const { TeacherExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                  return { Component: TeacherExamReportsPage }
+                },
               },
               {
                 path: 'teacher/exams/:examId/attendance',

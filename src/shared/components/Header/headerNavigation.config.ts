@@ -39,6 +39,7 @@ export const navigationByRole: Record<
         { label: 'Exámenes anteriores', to: '/teacher/exams?view=past' },
         { label: 'Exámenes cancelados', to: '/teacher/exams?view=cancelled' },
         { label: 'Todos los exámenes', to: '/teacher/exams?view=all' },
+        { label: 'Reportes de exámenes', to: '/teacher/exam-reports' },
       ],
     },
     {
@@ -119,7 +120,13 @@ export const navigationByRole: Record<
     },
     { label: 'Carreras', to: '/admin/careers' },
     { label: 'Auditoría', to: '/admin/audit-logs' },
-    { label: 'Incidencias', to: '/admin/incidents' },
+    {
+      label: 'Reportes',
+      children: [
+        { label: 'Incidencias e ingresos irregulares', to: '/admin/incidents' },
+        { label: 'Reportes de exámenes', to: '/admin/exam-reports' },
+      ],
+    },
     {
       label: 'Información',
     },
