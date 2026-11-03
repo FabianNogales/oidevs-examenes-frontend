@@ -80,6 +80,10 @@ function List({ examId }: { examId: number }) {
         error={list.error}
         onRetry={list.retry}
         entityLabel="infracciones"
+        viewActionLabel="Ver detalle"
+        getProfilePath={(item) =>
+          `/teacher/exams/${examId}/infractions/${item.id}${page > 1 ? `?page=${page}` : ''}`
+        }
         emptyTitle="No hay infracciones registradas"
         emptyDescription="Aquí aparecerán los registros autorizados de este examen."
         pagination={

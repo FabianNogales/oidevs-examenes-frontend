@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, Navigate } from 'react-router'
 import type { FormEvent } from 'react'
 import { IncidentStudentPicker } from '@/features/incidents/components/IncidentStudentPicker'
 import { createInfraction } from '../api/infractionsApi'
@@ -41,17 +41,13 @@ export function InfractionForm({ examId }: { examId: number }) {
       observations,
     })
   }
-  // The detail route is connected in the next part; the receipt remains usable now.
   if (request.saved)
     return (
-      <section className={styles.panel} role="status">
-        <h2>Infracción #{request.saved.id} registrada</h2>
-        <p>
-          Se guardó como reportada. No se confirmó una falta ni se aplicó una
-          sanción automáticamente.
-        </p>
-        <Link to={back}>Volver a infracciones</Link>
-      </section>
+      <Navigate
+        to={`${back}/${request.saved.id}`}
+        replace
+        state={{ createdInfractionId: request.saved.id }}
+      />
     )
   return (
     <form
