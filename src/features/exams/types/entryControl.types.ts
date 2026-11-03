@@ -98,6 +98,8 @@ export type EntryControlQuery = {
 
 export type EntryControlStudentsResponse = {
   exam: EntryControlExam
+  // Optional HU28 extension; absent permission never enables management.
+  permissions?: { can_annul_entries: boolean }
   summary: EntryControlSummary
   filter_counts: EntryControlFilterCounts
   data: EntryControlStudent[]

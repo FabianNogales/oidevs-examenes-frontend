@@ -6,6 +6,7 @@ import { EntryControlStudentModal } from '../components/EntryControlStudentModal
 import { EntryControlStudentsList } from '../components/EntryControlStudentsList'
 import { EntryControlExamHeader } from '../components/EntryControlExamHeader'
 import { EntryQrPanel } from '../components/EntryQrPanel'
+import { EntryHistoryModal } from '../components/EntryHistoryModal'
 import { EntryStudentsSummary } from '../components/EntryStudentsSummary'
 import { useEntryControlStudents } from '../hooks/useEntryControlStudents'
 import type { EntryControlFilter } from '../types/entryControl.types'
@@ -46,6 +47,7 @@ function EntryControlContent({
   const [qrActivated, setQrActivated] = useState(false)
   const [qrProcessing, setQrProcessing] = useState(false)
   const [incidentMode, setIncidentMode] = useState<IncidentControlMode | null>(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const tabsId = useId()
   const methodTabsId = useId()
   const exam = list.response?.exam
@@ -118,6 +120,7 @@ function EntryControlContent({
         </header>
         {exam ? <EntryControlExamHeader exam={exam} /> : null}
         {exam ? <div className={incidentStyles.access}>
+          {list.response?.permissions?.can_annul_entries === true ? <button type="button" disabled={qrProcessing} onClick={() => setHistoryOpen(true)}>Gestionar ingresos</button> : null}
           <button type="button" disabled={qrProcessing} onClick={() => setIncidentMode({ context: { student: null } })}>Registrar incidencia</button>
           <Link to={`/exams/${examId}/incidents${fromTeacher ? '?from=teacher' : ''}`}>Incidencias del examen</Link>
         </div> : null}
@@ -287,7 +290,7 @@ function EntryControlContent({
                       activeTab === 'attendance' &&
                       attendanceMethod === 'qr' &&
                       exam?.entry_available === true &&
-                      studentId === null && incidentMode === null
+                      studentId === null && incidentMode === null && !historyOpen
                     }
                     roomId={list.roomId}
                     onProcessed={(response) => handleResult(response, 'QR')}
@@ -347,6 +350,7 @@ function EntryControlContent({
           </CollaborationModal>
         ) : null}
         {incidentMode ? <IncidentControlDialog examId={examId} mode={incidentMode} onClose={() => setIncidentMode(null)} /> : null}
+        {historyOpen ? <EntryHistoryModal examId={examId} onClose={() => setHistoryOpen(false)} onEntriesChanged={list.reload} /> : null}
       </section>
     </main>
   )

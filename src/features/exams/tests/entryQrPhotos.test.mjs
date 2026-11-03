@@ -11,7 +11,7 @@ const current = '/photos/current-23.jpg'
 function expand(node) {
   if (Array.isArray(node)) return node.map(expand)
   if (!node || typeof node !== 'object' || !node.props) return node
-  if (['EntryQrStudentIdentity', 'EntryStudentPhotos', 'IdentityPhoto', 'AuthenticatedImage'].includes(node.type?.name)) return expand(node.type(node.props))
+  if (['EntryHistoryRecords', 'EntryQrStudentIdentity', 'EntryStudentPhotos', 'IdentityPhoto', 'AuthenticatedImage'].includes(node.type?.name)) return expand(node.type(node.props))
   return { ...node, props: { ...node.props, children: expand(node.props.children) } }
 }
 
@@ -184,6 +184,7 @@ test('HU14 Verification detail supplies both distinct photos and retains identif
 
 test('HU14 history uses the backend student photos in desktop and mobile records', async () => {
   const h = photoHarness({
+    '@/features/entry-annulments/components/AnnulEntryConfirmation': { AnnulEntryConfirmation: 'annulment-confirmation' },
     '@/features/collaborations/components/CollaborationModal': { CollaborationModal: 'modal' },
     '../api/entryControlApi': { getEntryControlErrorMessage: () => 'Error' },
     '../api/entryQrApi': { getEntryHistory: async () => ({ data: [{

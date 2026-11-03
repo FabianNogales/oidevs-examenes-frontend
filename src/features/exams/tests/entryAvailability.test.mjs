@@ -39,6 +39,7 @@ function pageHarness(initialExam) {
     setPage() {},
   }
   const components = {
+    EntryHistoryModal: 'history-modal',
     EntryControlStudentModal: 'student-modal', EntryControlStudentsList: 'students-list',
     EntryQrPanel: 'qr-reader',
     EntryStudentsSummary: 'summary', ExamCard: 'exam-card',

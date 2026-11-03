@@ -145,6 +145,7 @@ test('HU27 reports pause the mounted scanner and restore the same tab, list and 
     },
   }
   for (const name of [
+    'EntryHistoryModal',
     'EntryQrPanel',
     'EntryControlStudentsList',
     'EntryControlStudentModal',

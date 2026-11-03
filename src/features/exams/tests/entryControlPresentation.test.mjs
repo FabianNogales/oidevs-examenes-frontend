@@ -26,7 +26,7 @@ function pageHarness() {
       },
     },
   }
-  for (const name of ['EntryControlStudentsList', 'EntryControlStudentModal', 'EntryQrPanel',
+  for (const name of ['EntryHistoryModal', 'EntryControlStudentsList', 'EntryControlStudentModal', 'EntryQrPanel',
     'EntryStudentsSummary', 'EntryControlExamHeader']) overrides[`../components/${name}`] = { [name]: name }
   overrides['@/shared/hooks/useAuthenticatedImage'] = { useAuthenticatedImage: () => ({ src: null, loading: false, failed: false }) }
   const h = sourceHarness(overrides), { EntryControlPage } = h.load('features/exams/pages/EntryControlPage.tsx')
