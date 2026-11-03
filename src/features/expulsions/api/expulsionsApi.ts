@@ -52,8 +52,14 @@ function failure(cause: unknown): never {
     422: 'Revisa los datos de la expulsión.',
     501: 'La gestión de expulsiones aún no está disponible en el servidor.',
   }
+  const unavailable =
+    status === 409 &&
+    axios.isAxiosError(cause) &&
+    cause.response?.data?.code === 'EXPULSION_EXAM_NOT_IN_PROGRESS'
   throw new InfractionApiError(
-    (status && messages[status]) ||
+    (unavailable
+      ? 'El examen no está disponible para registrar expulsiones en este momento. Revisa su estado y horario.'
+      : status && messages[status]) ||
       'No se pudo confirmar la operación. Consulta el listado antes de repetirla.',
     status,
     fields,

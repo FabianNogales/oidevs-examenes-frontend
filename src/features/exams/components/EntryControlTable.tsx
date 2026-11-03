@@ -36,6 +36,7 @@ export function EntryControlTable({
     studentId: student.student_id,
     number: (meta ? (meta.current_page - 1) * meta.per_page : 0) + index + 1,
     name: entryStudentName(student),
+    expelled: student.is_expelled === true,
     sisCode: student.sis_code,
     eligibility: eligibilityDisplay(student.eligibility_status),
     entry: entryDisplay(student.entry_status),
@@ -71,7 +72,17 @@ export function EntryControlTable({
             {rows.map((row) => (
               <tr key={row.studentId}>
                 <td>{row.number}</td>
-                <td>{row.name}</td>
+                <td>
+                  {row.name}
+                  {row.expelled ? (
+                    <div>
+                      <EntryConditionBadge
+                        label="Expulsado de este examen"
+                        tone="negative"
+                      />
+                    </div>
+                  ) : null}
+                </td>
                 <td className={styles.identifier}>{row.sisCode}</td>
                 {!manual ? (
                   <td>

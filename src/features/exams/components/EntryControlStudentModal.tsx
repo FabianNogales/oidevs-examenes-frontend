@@ -216,6 +216,9 @@ export function EntryControlStudentModal({
                 <EntryStudentPhotos student={student} />
                 <div className={styles.studentDetails}>
                   <h3>{entryStudentName(student)}</h3>
+                  {student.is_expelled === true ? (
+                    <EntryConditionBadge label="Expulsado de este examen" tone="negative" />
+                  ) : null}
                   <dl className={styles.identifiers}>
                     <div>
                       <dt>SIS:</dt>

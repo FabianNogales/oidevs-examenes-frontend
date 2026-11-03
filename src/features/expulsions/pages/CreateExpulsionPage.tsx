@@ -25,8 +25,9 @@ function Create({ examId }: { examId: number }) {
         <ExpulsionForm examId={examId} />
       ) : (
         <p role="alert">
-          Solo el docente responsable autorizado puede registrar expulsiones. La
-          colaboración temporal no otorga este permiso.
+          Este examen no permite registrar expulsiones en este momento. Solo el
+          docente responsable autorizado puede hacerlo durante el horario del
+          examen. La colaboración temporal no otorga este permiso.
         </p>
       )}
     </ExpulsionLayout>
