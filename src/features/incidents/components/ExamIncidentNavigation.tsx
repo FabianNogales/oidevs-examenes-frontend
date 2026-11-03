@@ -16,6 +16,9 @@ export function ExamIncidentNavigation({
       <NavLink to={`/exams/${examId}/incidents?from=teacher`}>
         Incidencias
       </NavLink>
+      <NavLink to={`/teacher/exams/${examId}/infractions`}>
+        Infracciones
+      </NavLink>
     </nav>
   )
 }

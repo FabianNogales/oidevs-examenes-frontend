@@ -266,6 +266,13 @@ export const router = createBrowserRouter([
                 element: <TeacherExamEditPage />,
               },
               {
+                path: 'teacher/exams/:examId/infractions',
+                lazy: async () => {
+                  const { ExamInfractionsPage } = await import('@/features/infractions/pages/ExamInfractionsPage')
+                  return { Component: ExamInfractionsPage }
+                },
+              },
+              {
                 path: 'teacher/exams/:examId/collaborators',
                 element: <ExamCollaboratorsPage />,
               },
