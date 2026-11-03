@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import { NavLink, useLocation } from 'react-router'
+import { ChevronDownIcon } from '@/assets/icons/ChevronDownIcon'
 
 import type {
   HeaderNavigationItem,
@@ -42,7 +43,11 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
   }
 
   const dynamicItems = items.map((item) => {
-    if (item.label === 'Estudiantes' && hasPendingImport) {
+    const importIndex =
+      item.children?.findIndex(
+        (child) => child.label === 'Importar estudiantes',
+      ) ?? -1
+    if (importIndex >= 0 && hasPendingImport) {
       const alreadyHasItem = item.children?.some(
         (c) => c.label === 'Ultima importacion',
       )
@@ -50,8 +55,9 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
         return {
           ...item,
           children: [
-            ...(item.children || []),
+            ...item.children!.slice(0, importIndex + 1),
             { label: 'Ultima importacion', to: '/admin/students/import' },
+            ...item.children!.slice(importIndex + 1),
           ],
         }
       }
@@ -86,7 +92,13 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
         const activeChild = item.children
           ?.filter(isDropdownItemActive)
           .sort((a, b) => (b.to?.length ?? 0) - (a.to?.length ?? 0))[0]
-        const isParentActive = Boolean(activeChild)
+        const isParentActive =
+          Boolean(activeChild) ||
+          Boolean(
+            item.activePrefixes?.some((to) =>
+            isHeaderDestinationActive({ label: item.label, to }, location),
+            ),
+          )
         const dropdownId = `${navigationId}-${index}`
 
         return (
@@ -112,18 +124,11 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
                   aria-controls={dropdownId}
                 >
                   {item.label}
-                  <svg
+                  <ChevronDownIcon
                     className={`${styles.dropdownIcon} ${
                       openDropdown === item.label ? styles.dropdownIconOpen : ''
                     }`}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    aria-hidden="true"
-                  >
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
+                  />
                 </button>
 
                 {openDropdown === item.label && (
@@ -146,7 +151,7 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
                           state={linkState}
                           aria-current={activeChild === child ? 'page' : false}
                           className={() =>
-                            `${styles.navigationDropdownItem} ${
+                            `${styles.navigationDropdownItem} ${child.startsSection ? styles.navigationDropdownSection : ''} ${
                               activeChild === child
                                 ? styles.navigationDropdownItemActive
                                 : ''

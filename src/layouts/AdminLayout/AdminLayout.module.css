@@ -8,6 +8,17 @@
   width: 100%;
 }
 
+.navigation {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-3) var(--content-gutter);
+}
+
+.navigation a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .statePage {
   display: flex;
   min-height: 420px;
