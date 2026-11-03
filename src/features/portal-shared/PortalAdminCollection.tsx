@@ -14,6 +14,9 @@ export type PortalRow<T> = { id: number; item: T }
 
 export function PortalAdminCollection<T extends { id: number }>({
   title,
+  description,
+  className,
+  searchLayout,
   load,
   columns,
   version,
@@ -24,6 +27,9 @@ export function PortalAdminCollection<T extends { id: number }>({
   children,
 }: {
   title: string
+  description?: string
+  className?: string
+  searchLayout?: 'standard' | 'wide'
   load: (query: PortalQuery, signal: AbortSignal) => Promise<PortalPage<T>>
   columns: readonly TableColumnDef<PortalRow<T>>[]
   version: number
@@ -58,10 +64,17 @@ export function PortalAdminCollection<T extends { id: number }>({
   )
   const list = usePortalResource(request)
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page}${className ? ` ${className}` : ''}`}>
       <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: title }]} />
       <header className={styles.toolbar}>
-        <h1>{title}</h1>
+        {description ? (
+          <div className={styles.collectionHeading}>
+            <h1>{title}</h1>
+            <p className={styles.collectionDescription}>{description}</p>
+          </div>
+        ) : (
+          <h1>{title}</h1>
+        )}
         {onCreate ? (
           <button
             type="button"
@@ -74,31 +87,34 @@ export function PortalAdminCollection<T extends { id: number }>({
         ) : null}
       </header>
       {children}
-      <DataTable<PortalRow<T>>
-        searchPlaceholder="Buscar contenido"
-        columns={columns}
-        data={(list.data?.data ?? []).map((item) => ({ id: item.id, item }))}
-        loading={list.loading}
-        error={list.error?.message}
-        pagination={list.data ? portalPagination(list.data) : null}
-        viewActionLabel="Gestionar"
-        entityLabel="registros"
-        onViewProfile={(row) => onSelect(row.id)}
-        onSearch={(search) =>
-          setQuery({
-            page: 1,
-            search: search.slice(0, 200),
-            version,
-            resetPageKey,
-          })
-        }
-        onPageChange={(page) =>
-          setQuery((current) => ({ ...current, page, version, resetPageKey }))
-        }
-        onRetry={list.reload}
-        emptyTitle="No hay registros disponibles"
-        emptyDescription="No se encontraron contenidos para esta consulta."
-      />
+      <div className={styles.collectionList}>
+        <DataTable<PortalRow<T>>
+          searchPlaceholder="Buscar contenido"
+          searchLayout={searchLayout}
+          columns={columns}
+          data={(list.data?.data ?? []).map((item) => ({ id: item.id, item }))}
+          loading={list.loading}
+          error={list.error?.message}
+          pagination={list.data ? portalPagination(list.data) : null}
+          viewActionLabel="Gestionar"
+          entityLabel="registros"
+          onViewProfile={(row) => onSelect(row.id)}
+          onSearch={(search) =>
+            setQuery({
+              page: 1,
+              search: search.slice(0, 200),
+              version,
+              resetPageKey,
+            })
+          }
+          onPageChange={(page) =>
+            setQuery((current) => ({ ...current, page, version, resetPageKey }))
+          }
+          onRetry={list.reload}
+          emptyTitle="No hay registros disponibles"
+          emptyDescription="No se encontraron contenidos para esta consulta."
+        />
+      </div>
     </div>
   )
 }

@@ -91,13 +91,139 @@
   margin-block: 12px;
 }
 
+.publishedVersion {
+  padding: 10px 12px;
+  margin-block: 8px 12px;
+  background: var(--color-surface-soft);
+}
+
+.publishedVersion h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.publishedVersion article h3 {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+
+.publishedVersion p {
+  margin-block: 4px;
+}
+
+.informationMetadata,
+.informationChanges {
+  margin-block: 6px;
+  font-size: 0.875rem;
+}
+
+.informationChanges {
+  color: var(--color-text-secondary);
+}
+
 .editorFields {
   display: grid;
   gap: 14px;
   min-width: 0;
-  padding: 0;
+  padding: 0 0 12px;
   margin-block: 16px;
   border: 0;
+}
+
+.editorFields legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.editorActions {
+  position: sticky;
+  z-index: 1;
+  bottom: -24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 -24px -24px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.editorActions .saveDraft {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.editorActions .publishAction {
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.editorActions .unpublishAction {
+  color: var(--color-error);
+}
+
+.collectionHeading {
+  min-width: 0;
+}
+
+.collectionHeading h1 {
+  margin: 0;
+}
+
+.collectionDescription {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.collectionList {
+  min-width: 0;
+}
+
+.informationAdminPage {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-block: 16px;
+}
+
+.informationAdminPage .toolbar {
+  align-items: center;
+  margin-block: 8px 12px;
+}
+
+.informationAdminPage .collectionHeading {
+  flex: 1 1 280px;
+}
+
+.informationAdminPage .collectionHeading h1 {
+  font-size: 1.65rem;
+}
+
+.informationAdminPage .collectionDescription {
+  max-width: 720px;
+}
+
+.informationFilters {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(220px, 260px);
+  justify-content: start;
+  align-items: end;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+
+.informationSectionNote {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.informationAdminPage .collectionList {
+  margin-top: 16px;
 }
 
 .field input[type='checkbox'] {
@@ -109,5 +235,36 @@
   .cards,
   .linkRow {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editorActions {
+    bottom: -16px;
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .informationAdminPage .toolbar {
+    align-items: flex-start;
+  }
+
+  .informationAdminPage .collectionHeading h1 {
+    font-size: 1.5rem;
+  }
+
+  .informationFilters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .informationFilters > label {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .editorActions > button {
+    flex: 1 1 100%;
   }
 }

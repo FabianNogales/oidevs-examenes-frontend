@@ -117,13 +117,110 @@ for (const [criterion, resource, action, old_values, new_values] of resources) {
       )
     for (const value of [...leaves(old_values), ...leaves(new_values)])
       assert.ok(text.includes(value), value)
-    assert.match(text, /Anterior/)
-    assert.match(text, /Nuevo/)
-    if (resource.startsWith('information/'))
-      assert.match(text, /Borrador.*Versión publicada/s)
+    if (resource.startsWith('information/')) {
+      assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 1)
+      assert.match(text, /Detalle técnico/)
+      assert.equal(
+        textContent(nodes(ui.tree, (node) => node.type === 'h3')[0]),
+        resource.endsWith('/faqs') ? 'FAQ actualizada' : 'Sección actualizada',
+      )
+    } else {
+      assert.match(text, /Anterior/)
+      assert.match(text, /Nuevo/)
+    }
     ui.h.unmount()
   })
 }
+
+test('HU42/HU43 muestra resumen humano antes del JSON técnico y conserva la entrada completa', async () => {
+  const audit = entry({
+    entity_type: 'PortalInformationSection',
+    action: 'SECTION_UPDATED',
+    actor_id: 20,
+    actor_name: null,
+    old_values: {
+      revision: 1,
+      draft: {
+        title: 'Objetivos y beneficios',
+        description: 'Texto anterior',
+        sort_order: 3,
+      },
+    },
+    new_values: {
+      revision: 2,
+      draft: {
+        title: 'Objetivos y beneficios',
+        description: 'Texto actualizado',
+        sort_order: 2,
+      },
+    },
+  })
+  const ui = panel([audit], 'information/sections')
+  await ui.ready()
+  const text = textContent(ui.tree)
+  assert.match(text, /Sección actualizada.*Objetivos y beneficios.*Revisión 2/s)
+  assert.match(text, /Descripción: Texto anterior → Texto actualizado/)
+  assert.match(text, /Orden: 3 → 2/)
+  assert.match(text, /Responsable: Usuario #20/)
+  const summaryIndex = text.indexOf('Sección actualizada')
+  const detailIndex = text.indexOf('Detalle técnico')
+  const jsonIndex = text.indexOf('"entity_type"')
+  assert.ok(
+    summaryIndex >= 0 && summaryIndex < detailIndex && detailIndex < jsonIndex,
+  )
+  assert.doesNotMatch(
+    text.slice(0, detailIndex),
+    /SECTION_UPDATED|old_values|new_values/,
+  )
+  assert.ok(text.slice(detailIndex).includes('"action": "SECTION_UPDATED"'))
+  assert.ok(
+    text
+      .slice(detailIndex)
+      .includes('"entity_type": "PortalInformationSection"'),
+  )
+  ui.h.unmount()
+})
+
+test('HU43 humaniza FAQ y publicación; presenta el cambio de estado sin inventar nombre', async () => {
+  const ui = panel(
+    [
+      entry({
+        action: 'FAQ_UPDATED',
+        actor_id: null,
+        actor_name: null,
+        old_values: {
+          draft: { question: '¿Qué es EIDA?', answer: 'Respuesta anterior' },
+        },
+        new_values: {
+          revision: 3,
+          draft: { question: '¿Qué es EIDA?', answer: 'Respuesta nueva' },
+        },
+      }),
+      entry({
+        id: 36,
+        action: 'FAQ_PUBLISHED',
+        actor_id: null,
+        actor_name: null,
+        old_values: { is_published: false, revision: 2 },
+        new_values: { is_published: true, revision: 3 },
+      }),
+    ],
+    'information/faqs',
+  )
+  await ui.ready()
+  const text = textContent(ui.tree)
+  assert.match(
+    text,
+    /FAQ actualizada.*¿Qué es EIDA?.*Respuesta: Respuesta anterior → Respuesta nueva/s,
+  )
+  assert.match(
+    text,
+    /FAQ publicada.*Revisión 3.*Estado: Despublicado → Publicado/s,
+  )
+  assert.doesNotMatch(text, /Responsable:/)
+  assert.match(text, /"action": "FAQ_PUBLISHED"/)
+  ui.h.unmount()
+})
 
 test('HU39 CA13: modificación y cancelación conservadas se muestran en el orden entregado', async () => {
   const ui = panel([

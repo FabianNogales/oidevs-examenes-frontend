@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useRevisionEditor } from '@/features/portal-shared/useRevisionEditor'
 import { EditorFeedback, PortalField } from '@/features/portal-shared/PortalUi'
 import {
@@ -44,6 +44,7 @@ export function InformationEditor({
   const [form, setForm] = useState(() => formOf(initial))
   const [pending, setPending] = useState<'publish' | 'unpublish' | null>(null)
   const item = editor.snapshot
+  const formId = useId()
   useEffect(() => {
     onBusy(editor.busy)
   }, [editor.busy, onBusy])
@@ -97,16 +98,19 @@ export function InformationEditor({
     <div className={styles.page}>
       {item ? (
         <>
-          <p>
+          <p className={styles.informationMetadata}>
             Visibilidad: {item.is_published ? 'Publicado' : 'Despublicado'} ·
             Revisión: {item.revision}
           </p>
-          <p role="status">
+          <p className={styles.informationChanges} role="status">
             {item.has_unpublished_changes
               ? 'Hay cambios guardados pendientes de publicar.'
-              : 'El borrador guardado coincide con la última versión publicada.'}
+              : 'Sin cambios pendientes.'}
           </p>
-          <section className={styles.preview} aria-label="Versión publicada">
+          <section
+            className={`${styles.preview} ${styles.publishedVersion}`}
+            aria-label="Versión publicada"
+          >
             <h3>
               {item.is_published
                 ? 'Versión publicada'
@@ -123,6 +127,7 @@ export function InformationEditor({
         <p>La FAQ se creará como borrador, sin publicar.</p>
       )}
       <form
+        id={formId}
         onSubmit={(event) => {
           event.preventDefault()
           void save()
@@ -258,34 +263,7 @@ export function InformationEditor({
             </section>
           ) : null}
         </fieldset>
-        <button
-          type="submit"
-          className={styles.primary}
-          disabled={editor.locked || pending !== null}
-        >
-          {item ? 'Guardar borrador' : 'Crear FAQ'}
-        </button>
       </form>
-      {item ? (
-        <div className={styles.actions}>
-          <button
-            type="button"
-            disabled={editor.locked || pending !== null}
-            onClick={() => setPending('publish')}
-          >
-            {item.is_published ? 'Publicar cambios' : 'Publicar'}
-          </button>
-          {item.is_published ? (
-            <button
-              type="button"
-              disabled={editor.locked || pending !== null}
-              onClick={() => setPending('unpublish')}
-            >
-              Despublicar
-            </button>
-          ) : null}
-        </div>
-      ) : null}
       {pending ? (
         <section className={styles.notice}>
           <p>
@@ -309,6 +287,38 @@ export function InformationEditor({
           </button>
         </section>
       ) : null}
+      <div className={styles.editorActions}>
+        <button
+          type="submit"
+          form={formId}
+          className={`${styles.primary} ${styles.saveDraft}`}
+          disabled={editor.locked || pending !== null}
+        >
+          {item ? 'Guardar borrador' : 'Crear FAQ'}
+        </button>
+        {item ? (
+          <>
+            <button
+              type="button"
+              className={styles.publishAction}
+              disabled={editor.locked || pending !== null}
+              onClick={() => setPending('publish')}
+            >
+              {item.is_published ? 'Publicar cambios' : 'Publicar'}
+            </button>
+            {item.is_published ? (
+              <button
+                type="button"
+                className={styles.unpublishAction}
+                disabled={editor.locked || pending !== null}
+                onClick={() => setPending('unpublish')}
+              >
+                Despublicar
+              </button>
+            ) : null}
+          </>
+        ) : null}
+      </div>
       <EditorFeedback {...editor} onRefresh={() => void refresh()} />
     </div>
   )

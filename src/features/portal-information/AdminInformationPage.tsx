@@ -105,6 +105,9 @@ export function AdminInformationPage() {
       <PortalAdminCollection
         key={`${kind}-${published}`}
         title="Gestión de información y FAQ"
+        description="Administra las secciones institucionales y las preguntas frecuentes del portal."
+        className={styles.informationAdminPage}
+        searchLayout="wide"
         columns={columns}
         version={version}
         load={load}
@@ -113,7 +116,7 @@ export function AdminInformationPage() {
           kind === 'faqs' ? () => setSelected({ kind, id: null }) : undefined
         }
       >
-        <div className={styles.filters}>
+        <div className={`${styles.filters} ${styles.informationFilters}`}>
           <label className={styles.field}>
             Tipo de contenido
             <select
@@ -139,7 +142,7 @@ export function AdminInformationPage() {
           </label>
         </div>
         {kind === 'sections' ? (
-          <p>
+          <p className={styles.informationSectionNote}>
             Consulta las secciones existentes. Guardar un borrador no publica
             sus cambios.
           </p>

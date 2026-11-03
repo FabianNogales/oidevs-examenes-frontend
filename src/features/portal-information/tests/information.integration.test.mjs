@@ -112,7 +112,18 @@ test('HU43 administration consults existing sections and does not offer section 
     ui.tree,
     (node) => node.props?.title === 'Gestión de información y FAQ',
   )[0]
+  assert.equal(
+    collection.props.description,
+    'Administra las secciones institucionales y las preguntas frecuentes del portal.',
+  )
+  assert.ok(collection.props.className)
+  assert.equal(collection.props.searchLayout, 'wide')
   assert.equal(collection.props.onCreate, undefined)
+  const filters = nodes(collection.props.children, (node) =>
+    String(node.props?.className).includes('informationFilters'),
+  )[0]
+  assert.ok(filters)
+  assert.equal(nodes(filters, (node) => node.type === 'select').length, 2)
   const result = await collection.props.load(
     { page: 1, per_page: 15 },
     new AbortController().signal,
@@ -145,6 +156,27 @@ test('HU43 saving a section changes only draft; public snapshot and pending chan
     /Hay cambios guardados pendientes de publicar/,
   )
   assert.equal(ui.saved.length, 1)
+  ui.h.unmount()
+})
+
+test('HU43 editor distingue versión publicada y borrador y mantiene las acciones agrupadas', () => {
+  const ui = editor()
+  assert.match(textContent(ui.tree), /Versión publicada/)
+  assert.match(textContent(ui.tree), /Sin cambios pendientes\./)
+  const save = ui.button('Guardar borrador')
+  const form = nodes(ui.tree, (node) => node.type === 'form')[0]
+  assert.equal(save.props.type, 'submit')
+  assert.equal(save.props.form, form.props.id)
+  const actions = nodes(ui.tree, (node) =>
+    String(node.props?.className).includes('editorActions'),
+  )[0]
+  assert.ok(actions)
+  assert.match(
+    textContent(actions),
+    /Guardar borrador.*Publicar cambios.*Despublicar/s,
+  )
+  assert.equal(ui.button('Guardar borrador').props.disabled, false)
+  assert.equal(ui.button('Publicar cambios').props.disabled, false)
   ui.h.unmount()
 })
 
@@ -203,7 +235,7 @@ test('HU43 save never publishes and only explicit publish updates the public ver
     '/admin/portal/information/sections/144/publish',
     { revision: 8 },
   ])
-  assert.match(textContent(ui.tree), /coincide con la última versión publicada/)
+  assert.match(textContent(ui.tree), /Sin cambios pendientes\./)
   ui.h.unmount()
 })
 

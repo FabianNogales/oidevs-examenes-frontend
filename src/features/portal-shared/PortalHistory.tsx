@@ -44,13 +44,198 @@ const fieldLabels: Record<string, string> = {
   requires_auth: 'Requiere autenticación',
 }
 
+const informationActions: Record<string, string> = {
+  FAQ_CREATED: 'FAQ creada',
+  FAQ_UPDATED: 'FAQ actualizada',
+  FAQ_PUBLISHED: 'FAQ publicada',
+  FAQ_UNPUBLISHED: 'FAQ despublicada',
+  SECTION_CREATED: 'Sección creada',
+  SECTION_UPDATED: 'Sección actualizada',
+  SECTION_PUBLISHED: 'Sección publicada',
+  SECTION_UNPUBLISHED: 'Sección despublicada',
+  PORTAL_INFORMATION_DRAFT_UPDATED: 'Borrador actualizado',
+  PORTAL_INFORMATION_SECTION_CREATED: 'Sección creada',
+  PORTAL_INFORMATION_SECTION_UPDATED: 'Sección actualizada',
+  PORTAL_INFORMATION_SECTION_PUBLISHED: 'Sección publicada',
+  PORTAL_INFORMATION_SECTION_UNPUBLISHED: 'Sección despublicada',
+  PORTAL_INFORMATION_FAQ_CREATED: 'FAQ creada',
+  PORTAL_INFORMATION_FAQ_UPDATED: 'FAQ actualizada',
+  PORTAL_INFORMATION_FAQ_PUBLISHED: 'FAQ publicada',
+  PORTAL_INFORMATION_FAQ_UNPUBLISHED: 'FAQ despublicada',
+}
+
 function label(field: string) {
   return fieldLabels[field] ?? field.replaceAll('_', ' ')
+}
+
+function informationAction(action: string, resource: PortalHistoryResource) {
+  const known = informationActions[action]
+  if (known && action !== 'PORTAL_INFORMATION_DRAFT_UPDATED') return known
+  if (action === 'PORTAL_INFORMATION_DRAFT_UPDATED')
+    return resource.endsWith('/faqs')
+      ? 'FAQ actualizada'
+      : 'Sección actualizada'
+  const readable = action
+    .replace(/^PORTAL_INFORMATION_/, '')
+    .replace(/^(SECTION|FAQ)_/, '')
+    .toLowerCase()
+    .replaceAll('_', ' ')
+  const fallback = readable
+    ? `${readable[0].toUpperCase()}${readable.slice(1)}`
+    : 'actualizada'
+  const noun = resource.endsWith('/faqs') ? 'FAQ' : 'Sección'
+  const actionLabel: Record<string, string> = {
+    created: 'creada',
+    updated: 'actualizada',
+    published: 'publicada',
+    unpublished: 'despublicada',
+    deleted: 'eliminada',
+  }
+  return `${noun} ${actionLabel[readable] ?? fallback}`
 }
 
 function presentable(value: HistoryValue): boolean {
   if (value === null || typeof value !== 'object') return true
   return Object.values(value).some(presentable)
+}
+
+function snapshotContent(
+  values: Record<string, HistoryValue> | null,
+): Record<string, HistoryValue> {
+  const draft = values?.draft
+  return draft && typeof draft === 'object' && !Array.isArray(draft)
+    ? draft
+    : (values ?? {})
+}
+
+function contentValue(
+  values: Record<string, HistoryValue> | null,
+  keys: string[],
+): HistoryValue | undefined {
+  const content = snapshotContent(values)
+  for (const key of keys) {
+    if (Object.hasOwn(content, key)) return content[key]
+  }
+  return undefined
+}
+
+function flattenContent(
+  value: HistoryValue,
+  prefix = '',
+): Map<string, HistoryValue> {
+  const fields = new Map<string, HistoryValue>()
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    for (const [key, nested] of Object.entries(value)) {
+      if (key === 'revision' || key === 'is_published' || key === 'status')
+        continue
+      const path = prefix ? `${prefix}.${key}` : key
+      if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+        for (const [nestedKey, nestedValue] of flattenContent(nested, path)) {
+          fields.set(nestedKey, nestedValue)
+        }
+      } else {
+        fields.set(path, nested)
+      }
+    }
+  }
+  return fields
+}
+
+function simpleValue(value: HistoryValue | undefined) {
+  if (value === undefined) return null
+  if (value === null) return 'Sin valor'
+  if (typeof value === 'boolean') return value ? 'Sí' : 'No'
+  if (typeof value !== 'object') return value === '' ? 'Vacío' : String(value)
+  return 'Actualizado'
+}
+
+function changedInformationFields(entry: PortalHistoryEntry) {
+  const previous = flattenContent(snapshotContent(entry.old_values))
+  const next = flattenContent(snapshotContent(entry.new_values))
+  return [...new Set([...previous.keys(), ...next.keys()])]
+    .filter(
+      (field) =>
+        JSON.stringify(previous.get(field)) !== JSON.stringify(next.get(field)),
+    )
+    .map((field) => ({
+      field,
+      previous: previous.get(field),
+      next: next.get(field),
+    }))
+}
+
+function stateValue(values: Record<string, HistoryValue> | null) {
+  const value = values?.is_published ?? values?.status
+  if (typeof value === 'boolean') return value ? 'Publicado' : 'Despublicado'
+  if (typeof value === 'string') {
+    const normalized = value.toUpperCase()
+    if (normalized === 'PUBLISHED') return 'Publicado'
+    if (normalized === 'UNPUBLISHED') return 'Despublicado'
+    if (normalized === 'DRAFT') return 'Borrador'
+  }
+  return null
+}
+
+function informationRevision(entry: PortalHistoryEntry) {
+  const value = entry.new_values?.revision ?? entry.old_values?.revision
+  return typeof value === 'number' ? value : null
+}
+
+function informationEntry(
+  entry: PortalHistoryEntry,
+  resource: PortalHistoryResource,
+) {
+  const title =
+    contentValue(entry.new_values, ['title', 'question']) ??
+    contentValue(entry.old_values, ['title', 'question'])
+  const previousState = stateValue(entry.old_values)
+  const nextState = stateValue(entry.new_values)
+  const changes = changedInformationFields(entry)
+  const revision = informationRevision(entry)
+  return (
+    <>
+      <h3>{informationAction(entry.action, resource)}</h3>
+      {typeof title === 'string' && title ? (
+        <p className={styles.informationTitle}>{title}</p>
+      ) : null}
+      {revision !== null ? <p>Revisión {revision}</p> : null}
+      {entry.created_at ? (
+        <p>
+          Fecha:{' '}
+          <time dateTime={entry.created_at}>
+            {Number.isNaN(Date.parse(entry.created_at))
+              ? entry.created_at
+              : publicationDate(entry.created_at)}
+          </time>
+        </p>
+      ) : null}
+      {previousState !== null && nextState !== null ? (
+        <p>
+          Estado: {previousState} → {nextState}
+        </p>
+      ) : null}
+      {changes.length ? (
+        <div className={styles.informationChanges}>
+          <h4>Cambios</h4>
+          <ul>
+            {changes.map(({ field, previous, next }) => (
+              <li key={field}>
+                {field.split('.').map(label).join(' · ')}:{' '}
+                {simpleValue(previous)} → {simpleValue(next)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {entry.actor_name !== null || entry.actor_id !== null ? (
+        <p>Responsable: {entry.actor_name ?? `Usuario #${entry.actor_id}`}</p>
+      ) : null}
+      <details className={styles.technicalDetails}>
+        <summary>Detalle técnico</summary>
+        <pre>{JSON.stringify(entry, null, 2)}</pre>
+      </details>
+    </>
+  )
 }
 
 // Historical URLs and markup remain escaped text, never active links or HTML.
@@ -143,23 +328,30 @@ export function PortalHistoryPanel({
             <ol className={styles.entries}>
               {history.data.map((entry) => (
                 <li key={entry.id} className={styles.entry}>
-                  <h3>Acción: {entry.action}</h3>
-                  {entry.actor_name !== null || entry.actor_id !== null ? (
-                    <p>
-                      Responsable: {entry.actor_name ?? `ID ${entry.actor_id}`}
-                    </p>
-                  ) : null}
-                  {entry.created_at ? (
-                    <p>
-                      Fecha:{' '}
-                      <time dateTime={entry.created_at}>
-                        {Number.isNaN(Date.parse(entry.created_at))
-                          ? entry.created_at
-                          : publicationDate(entry.created_at)}
-                      </time>
-                    </p>
-                  ) : null}
-                  {changes(entry)}
+                  {resource.startsWith('information/') ? (
+                    informationEntry(entry, resource)
+                  ) : (
+                    <>
+                      <h3>Acción: {entry.action}</h3>
+                      {entry.actor_name !== null || entry.actor_id !== null ? (
+                        <p>
+                          Responsable:
+                          {` ${entry.actor_name ?? `ID ${entry.actor_id}`}`}
+                        </p>
+                      ) : null}
+                      {entry.created_at ? (
+                        <p>
+                          Fecha:{' '}
+                          <time dateTime={entry.created_at}>
+                            {Number.isNaN(Date.parse(entry.created_at))
+                              ? entry.created_at
+                              : publicationDate(entry.created_at)}
+                          </time>
+                        </p>
+                      ) : null}
+                      {changes(entry)}
+                    </>
+                  )}
                 </li>
               ))}
             </ol>
