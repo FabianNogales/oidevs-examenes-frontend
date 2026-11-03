@@ -90,6 +90,9 @@ export function InfractionStatusForm({
           value={status}
           disabled={disabled}
           aria-invalid={!!request.fieldErrors.status}
+          aria-describedby={
+            request.fieldErrors.status ? `${id}-status-error` : undefined
+          }
           onChange={(event) =>
             setStatus(event.target.value as InfractionStatus | '')
           }
@@ -102,7 +105,9 @@ export function InfractionStatusForm({
           ))}
         </select>
         {request.fieldErrors.status && (
-          <p className={formStyles.error}>{request.fieldErrors.status}</p>
+          <p id={`${id}-status-error`} className={formStyles.error}>
+            {request.fieldErrors.status}
+          </p>
         )}
       </div>
       <div className={formStyles.field}>
@@ -113,10 +118,15 @@ export function InfractionStatusForm({
           value={reason}
           disabled={disabled}
           aria-invalid={!!request.fieldErrors.reason}
+          aria-describedby={
+            request.fieldErrors.reason ? `${id}-reason-error` : undefined
+          }
           onChange={(event) => setReason(event.target.value)}
         />
         {request.fieldErrors.reason && (
-          <p className={formStyles.error}>{request.fieldErrors.reason}</p>
+          <p id={`${id}-reason-error`} className={formStyles.error}>
+            {request.fieldErrors.reason}
+          </p>
         )}
       </div>
       <label className={styles.confirm}>
@@ -125,6 +135,9 @@ export function InfractionStatusForm({
           checked={confirmed}
           disabled={disabled}
           aria-invalid={!!request.fieldErrors.confirmed}
+          aria-describedby={
+            request.fieldErrors.confirmed ? `${id}-confirmed-error` : undefined
+          }
           onChange={(event) => setConfirmed(event.target.checked)}
         />
         <span>
@@ -132,7 +145,9 @@ export function InfractionStatusForm({
         </span>
       </label>
       {request.fieldErrors.confirmed && (
-        <p className={formStyles.error}>{request.fieldErrors.confirmed}</p>
+        <p id={`${id}-confirmed-error`} className={formStyles.error}>
+          {request.fieldErrors.confirmed}
+        </p>
       )}
       {request.error && (
         <p role="alert" className={formStyles.error}>

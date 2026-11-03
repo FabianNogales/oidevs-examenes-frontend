@@ -93,6 +93,9 @@ export function InfractionForm({ examId }: { examId: number }) {
           required
           disabled={request.busy || request.needsRefresh}
           aria-invalid={!!request.fieldErrors.type}
+          aria-describedby={
+            request.fieldErrors.type ? `${id}-type-error` : undefined
+          }
           onChange={(event) =>
             setType(event.target.value as InfractionType | '')
           }
@@ -105,7 +108,9 @@ export function InfractionForm({ examId }: { examId: number }) {
           ))}
         </select>
         {request.fieldErrors.type && (
-          <p className={styles.error}>{request.fieldErrors.type}</p>
+          <p id={`${id}-type-error`} className={styles.error}>
+            {request.fieldErrors.type}
+          </p>
         )}
       </div>
       <div className={styles.field}>
@@ -117,10 +122,17 @@ export function InfractionForm({ examId }: { examId: number }) {
           value={description}
           disabled={request.busy || request.needsRefresh}
           aria-invalid={!!request.fieldErrors.description}
+          aria-describedby={
+            request.fieldErrors.description
+              ? `${id}-description-error`
+              : undefined
+          }
           onChange={(event) => setDescription(event.target.value)}
         />
         {request.fieldErrors.description && (
-          <p className={styles.error}>{request.fieldErrors.description}</p>
+          <p id={`${id}-description-error`} className={styles.error}>
+            {request.fieldErrors.description}
+          </p>
         )}
       </div>
       <div className={styles.field}>
@@ -131,10 +143,17 @@ export function InfractionForm({ examId }: { examId: number }) {
           value={observations}
           disabled={request.busy || request.needsRefresh}
           aria-invalid={!!request.fieldErrors.observations}
+          aria-describedby={
+            request.fieldErrors.observations
+              ? `${id}-observations-error`
+              : undefined
+          }
           onChange={(event) => setObservations(event.target.value)}
         />
         {request.fieldErrors.observations && (
-          <p className={styles.error}>{request.fieldErrors.observations}</p>
+          <p id={`${id}-observations-error`} className={styles.error}>
+            {request.fieldErrors.observations}
+          </p>
         )}
       </div>
       {request.error && (
