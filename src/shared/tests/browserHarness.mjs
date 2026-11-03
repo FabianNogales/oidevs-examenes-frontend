@@ -40,7 +40,7 @@ export async function browserFixture({ name, moduleSource, handleRequest }) {
                 res.end(JSON.stringify(data))
               }
               try {
-                await handleRequest(req, url, json)
+                await handleRequest(req, url, json, res)
               } catch (error) {
                 json(500, { message: String(error) })
               }
