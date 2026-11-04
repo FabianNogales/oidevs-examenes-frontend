@@ -48,7 +48,7 @@ function IncidentsContent({ examId }: { examId: number }) {
         />
         <p className={styles.note}>
           Una incidencia documenta lo ocurrido; no confirma una infracción ni
-          aplica una sanción. Horarios de Bolivia (UTC−4).
+          aplica una sanción.
         </p>
       </section>
     </main>

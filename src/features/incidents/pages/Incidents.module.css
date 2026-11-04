@@ -86,3 +86,42 @@
     font-size: var(--font-size-2xl);
   }
 }
+
+.access .primaryAction {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.resultsHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block: var(--space-6) var(--space-4);
+}
+.resultsHeading h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+.resultsHeading .access {
+  margin: 0;
+}
+.access :is(a, button):focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+@media (max-width: 640px) {
+  .access {
+    justify-content: flex-start;
+  }
+  .access a {
+    justify-content: center;
+    flex: 1 1 auto;
+  }
+  .resultsHeading > section {
+    width: 100%;
+  }
+  .resultsHeading .access button {
+    flex: 1;
+  }
+}

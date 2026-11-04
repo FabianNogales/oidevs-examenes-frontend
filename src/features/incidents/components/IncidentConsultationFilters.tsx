@@ -41,6 +41,12 @@ export function IncidentConsultationFilters({
       noValidate
       aria-label="Filtros de incidencias"
     >
+      <header className={styles.filterHeading}>
+        <h2>Filtrar incidencias</h2>
+        <p>
+          Busca un registro o combina los filtros para acotar los resultados.
+        </p>
+      </header>
       <div className={styles.search}>
         <label htmlFor={`${id}-search`}>Buscar incidencia o estudiante</label>
         <input
@@ -125,10 +131,7 @@ export function IncidentConsultationFilters({
           Limpiar filtros
         </button>
       </div>
-      <p className={styles.help}>
-        Las fechas corresponden a Bolivia (UTC−4). Los filtros se aplican al
-        pulsar Buscar.
-      </p>
+      <p className={styles.help}>Los filtros se aplican al pulsar Buscar.</p>
     </form>
   )
 }

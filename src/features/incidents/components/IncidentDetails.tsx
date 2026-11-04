@@ -59,8 +59,6 @@ export function IncidentDetails({ incident }: { incident: Incident }) {
                 {formatIncidentDate(incident.created_at)}
               </time>
             </dd>
-            <dt>Zona horaria</dt>
-            <dd>Bolivia (UTC−4)</dd>
             <dt>
               {incident.origin === 'MANUAL'
                 ? 'Reportado por'

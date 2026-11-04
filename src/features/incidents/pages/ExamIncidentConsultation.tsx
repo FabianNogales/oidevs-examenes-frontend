@@ -62,7 +62,10 @@ export function ExamIncidentConsultation({
         {renderExamPicker?.(response?.exam)}
         <div className={styles.access}>
           {mode === 'teacher' && response?.permissions.can_create && (
-            <Link to={`/exams/${examId}/incidents/create${search}`}>
+            <Link
+              className={styles.primaryAction}
+              to={`/exams/${examId}/incidents/create${search}`}
+            >
               Registrar incidencia
             </Link>
           )}
@@ -72,19 +75,22 @@ export function ExamIncidentConsultation({
             </Link>
           )}
         </div>
-        {response?.permissions.can_export === true && (
-          <IncidentExportActions
-            key={search}
-            examId={examId}
-            query={list.query}
-          />
-        )}
         <IncidentConsultationFilters
           key={JSON.stringify(filters)}
           initial={filters}
           statuses={response?.filters.statuses ?? []}
           onApply={list.apply}
         />
+        <div className={styles.resultsHeading}>
+          <h2>Incidencias registradas</h2>
+          {response?.permissions.can_export === true && (
+            <IncidentExportActions
+              key={search}
+              examId={examId}
+              query={list.query}
+            />
+          )}
+        </div>
         {response && <IncidentConsultationSummary summary={response.summary} />}
         <IncidentRecordsTable
           data={response?.data ?? []}
@@ -103,8 +109,7 @@ export function ExamIncidentConsultation({
         />
         <p className={styles.note}>
           Una incidencia documenta lo ocurrido; no confirma una infracción ni
-          aplica una sanción. Los contadores proceden del servidor. Horarios de
-          Bolivia (UTC−4).
+          aplica una sanción.
         </p>
       </section>
     </Container>
