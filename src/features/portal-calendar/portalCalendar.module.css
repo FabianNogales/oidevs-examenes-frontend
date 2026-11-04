@@ -106,19 +106,66 @@
   font-size: 0.85rem;
 }
 
-.day[aria-current='date'] {
-  text-decoration: underline;
+.grid .dayWithEvents {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+}
+
+.dayWithEvents .dayNumber {
   font-weight: 700;
 }
 
+.day[aria-current='date'] {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
 .grid .day[aria-pressed='true'] {
+  border-color: var(--color-primary);
   background: var(--color-primary);
   color: var(--color-on-primary);
+}
+
+.grid .day[aria-pressed='true'][aria-current='date'] {
+  box-shadow: inset 0 0 0 2px var(--color-on-primary);
+}
+
+.grid .day:focus-visible {
+  outline: 3px solid var(--color-focus, var(--color-primary));
+  outline-offset: 2px;
 }
 
 .dot {
   height: 9px;
   line-height: 9px;
+}
+
+.dayWithEvents .dot {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.calendarLegend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.legendMarker {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  color: var(--color-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .agenda {

@@ -130,7 +130,7 @@ export const navigationByRole: Record<
         { label: 'Importar materias', to: '/admin/subjects/import' },
         { label: 'Carreras', to: '/admin/careers', startsSection: true },
         {
-          label: 'Políticas de habilitación',
+          label: 'Criterios de habilitación',
           to: '/admin/eligibility-policies',
         },
       ],

@@ -258,7 +258,10 @@ test('year navigation preserves category, resets the selected day and requests t
   ui.render()
   await ui.ready()
   const date = `${month}-01`
-  ui.click(`${date}: ${dates.eventsOnDay([event], date).length} eventos`)
+  const count = dates.eventsOnDay([event], date).length
+  ui.click(
+    `${date.split('-').reverse().join('/')}: ${count} ${count === 1 ? 'actividad' : 'actividades'}`,
+  )
   assert.ok(find(ui.tree, 'button', 'Ver todo el mes'))
   ui.click('Año siguiente')
   await ui.ready()

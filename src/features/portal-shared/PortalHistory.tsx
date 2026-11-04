@@ -42,6 +42,10 @@ const fieldLabels: Record<string, string> = {
   destination_type: 'Tipo de destino',
   destination: 'Destino',
   requires_auth: 'Requiere autenticación',
+  icon: 'Icono',
+  display_order: 'Orden de presentación',
+  needs_review: 'Requiere revisión',
+  validation_issues: 'Observaciones',
 }
 
 const informationActions: Record<string, string> = {
@@ -179,6 +183,80 @@ function stateValue(values: Record<string, HistoryValue> | null) {
 function informationRevision(entry: PortalHistoryEntry) {
   const value = entry.new_values?.revision ?? entry.old_values?.revision
   return typeof value === 'number' ? value : null
+}
+
+function serviceAction(action: string) {
+  const normalized = action.toUpperCase()
+  if (normalized.includes('CREAT')) return 'Servicio creado'
+  if (normalized.includes('ACTIVAT')) return 'Servicio activado'
+  if (normalized.includes('DEACTIVAT') || normalized.includes('INACTIVAT'))
+    return 'Servicio desactivado'
+  if (normalized.includes('STATUS') || normalized.includes('STATE'))
+    return 'Estado del servicio actualizado'
+  if (normalized.includes('UPDAT') || normalized.includes('EDIT'))
+    return 'Servicio actualizado'
+  return 'Cambio en el servicio'
+}
+
+function serviceEntry(entry: PortalHistoryEntry) {
+  const name =
+    contentValue(entry.new_values, ['name']) ??
+    contentValue(entry.old_values, ['name'])
+  const oldStatus = entry.old_values?.status
+  const newStatus = entry.new_values?.status
+  const changes = changedInformationFields(entry)
+  const revision = informationRevision(entry)
+  return (
+    <>
+      <h3>{serviceAction(entry.action)}</h3>
+      {typeof name === 'string' && name ? (
+        <p className={styles.informationTitle}>{name}</p>
+      ) : null}
+      {revision !== null ? <p>Revisión {revision}</p> : null}
+      {entry.created_at ? (
+        <p>
+          Fecha:{' '}
+          <time dateTime={entry.created_at}>
+            {Number.isNaN(Date.parse(entry.created_at))
+              ? entry.created_at
+              : publicationDate(entry.created_at)}
+          </time>
+        </p>
+      ) : null}
+      {typeof oldStatus === 'string' && typeof newStatus === 'string' ? (
+        <p>
+          Estado: {oldStatus === 'ACTIVE' ? 'Activo' : 'Inactivo'} →{' '}
+          {newStatus === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+        </p>
+      ) : null}
+      {changes.length ? (
+        <div className={styles.informationChanges}>
+          <h4>Cambios</h4>
+          <ul>
+            {changes.map(({ field, previous, next }) => (
+              <li key={field}>
+                {field
+                  .split('.')
+                  .map((part) =>
+                    part === 'url' ? 'URL institucional' : label(part),
+                  )
+                  .join(' · ')}
+                :{' '}
+                {simpleValue(previous)} → {simpleValue(next)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {entry.actor_name !== null || entry.actor_id !== null ? (
+        <p>Responsable: {entry.actor_name ?? `Usuario #${entry.actor_id}`}</p>
+      ) : null}
+      <details className={styles.technicalDetails}>
+        <summary>Detalle técnico</summary>
+        <pre>{JSON.stringify(entry, null, 2)}</pre>
+      </details>
+    </>
+  )
 }
 
 function informationEntry(
@@ -330,6 +408,8 @@ export function PortalHistoryPanel({
                 <li key={entry.id} className={styles.entry}>
                   {resource.startsWith('information/') ? (
                     informationEntry(entry, resource)
+                  ) : resource === 'services' ? (
+                    serviceEntry(entry)
                   ) : (
                     <>
                       <h3>Acción: {entry.action}</h3>
@@ -404,7 +484,11 @@ export function PortalHistory({
         aria-controls={panelId}
         onClick={() => setOpen((current) => !current)}
       >
-        {open ? 'Ocultar historial' : 'Ver historial'}
+        {open
+          ? 'Ocultar historial'
+          : resource === 'services'
+            ? 'Historial'
+            : 'Ver historial'}
       </button>
       <div id={panelId}>
         {open ? (

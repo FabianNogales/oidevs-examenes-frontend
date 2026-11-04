@@ -113,55 +113,39 @@ test('HU40 accepts the public resource without status and a defensive explicit P
   }
 })
 
-test('HU40 search is sent as literal text to backend, resets page and clearing restores the list', async () => {
-  const term = 'contenido %_ exclusivo'
+test('HU40 public list omits search controls and keeps the backend publication order', async () => {
   const ui = setupList((_url, { params }) => ({
-    data: params.search
-      ? page([older])
-      : page([latest, older], params.page, 2, 13),
+    data: page(params.page === 1 ? [latest] : [older], params.page, 2, 13),
   }))
   await ui.ready()
-  await ui.click('Siguiente')
-  assert.equal(ui.calls.at(-1).args[1].params.page, 2)
-  nodes(ui.tree, (n) => n.type === 'input')[0].props.onChange({
-    target: { value: `  ${term}  ` },
-  })
-  ui.render()
-  await ui.submit()
-  assert.deepEqual(ui.calls.at(-1).args[1].params, {
-    page: 1,
-    per_page: 12,
-    search: term,
-  })
-  assert.match(textContent(ui.tree), /Publicación anterior de prueba/)
-  assert.doesNotMatch(textContent(ui.tree), /Publicación reciente de prueba/)
-  assert.ok(textContent(ui.tree).includes(term))
-  await ui.click('Limpiar búsqueda')
   assert.deepEqual(ui.calls.at(-1).args[1].params, {
     page: 1,
     per_page: 12,
     search: '',
   })
-  assert.equal(nodes(ui.tree, (n) => n.type === 'input')[0].props.value, '')
-  assert.equal(articles(ui.tree).length, 2)
+  assert.equal(nodes(ui.tree, (n) => n.type === 'form').length, 0)
+  assert.equal(nodes(ui.tree, (n) => n.type === 'input').length, 0)
+  assert.doesNotMatch(textContent(ui.tree), /Buscar noticias|Buscar/)
+  assert.ok(textContent(ui.tree).includes(latest.title))
+  assert.ok(textContent(ui.tree).includes('Más recientes primero'))
+  await ui.click('Siguiente')
+  assert.equal(ui.calls.at(-1).args[1].params.page, 2)
+  assert.equal(ui.calls.at(-1).args[1].params.search, '')
+  assert.equal(articles(ui.tree).length, 1)
+  assert.ok(textContent(ui.tree).includes(older.title))
   ui.h.unmount()
 })
 
-test('HU40 pagination keeps search and the backend order across pages', async () => {
+test('HU40 pagination preserves the server order without a search filter', async () => {
   const ui = setupList((_url, { params }) => ({
     data: page(params.page === 1 ? [latest] : [older], params.page, 2, 13),
   }))
   await ui.ready()
-  nodes(ui.tree, (n) => n.type === 'input')[0].props.onChange({
-    target: { value: 'prueba' },
-  })
-  ui.render()
-  await ui.submit()
   await ui.click('Siguiente')
   assert.deepEqual(ui.calls.at(-1).args[1].params, {
     page: 2,
     per_page: 12,
-    search: 'prueba',
+    search: '',
   })
   assert.equal(articles(ui.tree).length, 1)
   assert.ok(textContent(ui.tree).includes(older.title))
@@ -169,27 +153,6 @@ test('HU40 pagination keeps search and the backend order across pages', async ()
   await ui.click('Anterior')
   assert.equal(ui.calls.at(-1).args[1].params.page, 1)
   assert.ok(textContent(ui.tree).includes(latest.title))
-  ui.h.unmount()
-})
-
-test('HU40 a late search response cannot replace the active search results', async () => {
-  const pending = []
-  const ui = setupList(
-    (_url, options) =>
-      new Promise((resolve) => pending.push({ options, resolve })),
-  )
-  nodes(ui.tree, (n) => n.type === 'input')[0].props.onChange({
-    target: { value: 'actual' },
-  })
-  ui.render()
-  await ui.submit()
-  assert.equal(pending[0].options.signal.aborted, true)
-  pending[1].resolve({ data: page([latest]) })
-  await ui.ready()
-  pending[0].resolve({ data: page([older]) })
-  await ui.ready()
-  assert.ok(textContent(ui.tree).includes(latest.title))
-  assert.ok(!textContent(ui.tree).includes(older.title))
   ui.h.unmount()
 })
 

@@ -9,27 +9,29 @@ import {
 import { PortalFeedback, PortalModal } from '@/features/portal-shared/PortalUi'
 import { usePortalResource } from '@/features/portal-shared/usePortalResource'
 import type { PortalQuery } from '@/features/portal-shared/portalApi'
-import {
-  getAdminService,
-  listAdminServices,
-  serviceCategories,
-  serviceOptions,
-} from './servicesApi'
+import { getAdminService, listAdminServices } from './servicesApi'
 import { ServiceEditor } from './ServiceEditor'
-import type {
-  AdminService,
-  ServiceCategory,
-  ServiceOptions,
-  ServiceStatus,
-} from './types'
+import type { AdminService, ServiceStatus } from './types'
 import styles from '@/features/portal-shared/portalShared.module.css'
 
 const columns: readonly TableColumnDef<PortalRow<AdminService>>[] = [
-  { id: 'name', header: 'Servicio', cell: ({ item }) => item.name },
   {
-    id: 'category',
-    header: 'Categoría',
-    cell: ({ item }) => item.category.name,
+    id: 'name',
+    header: 'Servicio',
+    cell: ({ item }) => (
+      <>
+        <strong>{item.name}</strong>
+        <p>{item.description}</p>
+        {item.needs_review ? (
+          <strong role="status">Requiere revisión</strong>
+        ) : null}
+      </>
+    ),
+  },
+  {
+    id: 'url',
+    header: 'URL institucional',
+    cell: ({ item }) => item.url,
   },
   {
     id: 'state',
@@ -37,21 +39,18 @@ const columns: readonly TableColumnDef<PortalRow<AdminService>>[] = [
     cell: ({ item }) => (item.status === 'ACTIVE' ? 'Activo' : 'Inactivo'),
   },
   {
-    id: 'destination',
-    header: 'Destino',
-    cell: ({ item }) => item.destination,
+    id: 'order',
+    header: 'Orden',
+    cell: ({ item }) => item.display_order,
   },
 ]
+
 function ServiceDialog({
   id,
-  categories,
-  options,
   onClose,
   onSaved,
 }: {
   id: number | null
-  categories: ServiceCategory[]
-  options: ServiceOptions
   onClose: () => void
   onSaved: () => void
 }) {
@@ -63,14 +62,16 @@ function ServiceDialog({
   )
   const result = usePortalResource(load)
   return (
-    <PortalModal title="Gestionar servicio" onClose={onClose} busy={busy}>
+    <PortalModal
+      title={id === null ? 'Crear servicio' : 'Gestionar servicio'}
+      onClose={onClose}
+      busy={busy}
+    >
       {id !== null ? <PortalHistory resource="services" id={id} /> : null}
       <PortalFeedback {...result} retry={result.reload} />
       {!result.loading && !result.error ? (
         <ServiceEditor
           initial={result.data}
-          categories={categories}
-          options={options}
           onBusy={setBusy}
           onSaved={onSaved}
         />
@@ -82,24 +83,11 @@ function ServiceDialog({
 export function AdminServicesPage() {
   const { notify } = useAuth()
   const [version, setVersion] = useState(0)
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState<ServiceStatus | ''>('')
   const [selected, setSelected] = useState<{ id: number | null } | null>(null)
-  const loadCategories = useCallback(
-    (signal: AbortSignal) => serviceCategories(true, signal),
-    [],
-  )
-  const categories = usePortalResource(loadCategories)
-  const loadOptions = useCallback(
-    (signal: AbortSignal) => serviceOptions(signal),
-    [],
-  )
-  const options = usePortalResource(loadOptions)
   const load = useCallback(
     (query: PortalQuery, signal: AbortSignal) =>
-      listAdminServices(
-        { ...query, ...(status ? { status: status as ServiceStatus } : {}) },
-        signal,
-      ),
+      listAdminServices({ ...query, status }, signal),
     [status],
   )
   return (
@@ -107,41 +95,31 @@ export function AdminServicesPage() {
       <PortalAdminCollection
         key={status}
         title="Gestión de servicios"
+        searchPlaceholder="Buscar servicio"
         columns={columns}
         load={load}
         version={version}
-        createDisabled={
-          !categories.data?.length || !options.data?.icon_keys.length
-        }
         onSelect={(id) => setSelected({ id })}
         onCreate={() => setSelected({ id: null })}
       >
-        <PortalFeedback {...categories} retry={categories.reload} />
-        <PortalFeedback {...options} retry={options.reload} />
-        {categories.data?.length === 0 ? (
-          <p role="status">No hay categorías de servicios disponibles.</p>
-        ) : null}
-        {options.data?.internal_destinations.length === 0 ? (
-          <p>No hay destinos internos disponibles en service-options.</p>
-        ) : null}
         <label className={styles.field}>
           Estado
           <select
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            onChange={(event) =>
+              setStatus(event.target.value as ServiceStatus | '')
+            }
           >
             <option value="">Todos</option>
-            <option value="ACTIVE">Activo</option>
-            <option value="INACTIVE">Inactivo</option>
+            <option value="ACTIVE">Activos</option>
+            <option value="INACTIVE">Inactivos</option>
           </select>
         </label>
       </PortalAdminCollection>
-      {selected && options.data ? (
+      {selected ? (
         <ServiceDialog
           key={selected.id ?? 'new'}
           id={selected.id}
-          categories={categories.data ?? []}
-          options={options.data}
           onClose={() => setSelected(null)}
           onSaved={() => {
             setVersion((current) => current + 1)

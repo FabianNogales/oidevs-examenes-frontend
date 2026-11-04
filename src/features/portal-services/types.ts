@@ -1,32 +1,32 @@
 export type ServiceStatus = 'ACTIVE' | 'INACTIVE'
-export type DestinationType = 'INTERNAL' | 'EXTERNAL'
-export type ServiceCategory = { id: number; name: string }
-export type ServiceOptions = {
-  icon_keys: string[]
-  destination_types: DestinationType[]
-  internal_destinations: {
-    path: string
-    label: string
-    requires_auth: boolean
-  }[]
-}
+export type ServiceIconName =
+  | 'academic'
+  | 'calendar'
+  | 'book'
+  | 'info'
+  | 'link'
+  | 'users'
+
 export type PortalService = {
   id: number
   name: string
   description: string
-  icon_key: string
-  category: ServiceCategory
-  destination_type: DestinationType
-  destination: string
-  requires_auth: boolean
-  sort_order: number
+  icon?: ServiceIconName | null
+  url: string
+  display_order: number
 }
+
 export type AdminService = PortalService & {
   status: ServiceStatus
   revision: number
-  created_by: number
-  updated_by: number
+  created_by?: number | null
+  updated_by?: number | null
+  created_at?: string | null
+  updated_at?: string | null
+  needs_review?: boolean
+  validation_issues?: string[] | Record<string, string | string[]> | null
 }
-export type ServiceInput = Omit<PortalService, 'id' | 'category'> & {
-  category_id: number
+
+export type ServiceInput = Omit<PortalService, 'id' | 'icon'> & {
+  icon: ServiceIconName
 }

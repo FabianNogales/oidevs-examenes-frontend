@@ -58,7 +58,7 @@ function editor(handlers = {}, initial = section, kind = 'sections') {
   }
 }
 
-test('HU42 renders public sections and FAQ solely from server snapshots; absent content is not synthesized', async () => {
+test('HU42 renders public sections and FAQ without an index or synthesized content', async () => {
   const ui = component(
     client({
       get: () => ({
@@ -78,6 +78,29 @@ test('HU42 renders public sections and FAQ solely from server snapshots; absent 
   assert.ok(textContent(ui.tree).includes(old.description))
   assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 1)
   assert.ok(textContent(ui.tree).includes(faq.draft.question))
+  assert.equal(
+    nodes(ui.tree, (node) => node.type === 'nav').length,
+    0,
+    'the public information page must not render a side index',
+  )
+  assert.deepEqual(
+    nodes(ui.tree, (node) => node.type === 'a').map((node) => node.props.href),
+    [],
+    'section anchors are unnecessary without index navigation',
+  )
+  assert.deepEqual(
+    nodes(ui.tree, (node) => node.type === 'h2').map((node) =>
+      textContent(node),
+    ),
+    ['Sección aprobada', 'Preguntas frecuentes'],
+  )
+  assert.equal(nodes(ui.tree, (node) => node.type === 'summary').length, 1)
+  assert.deepEqual(
+    nodes(ui.tree, (node) => node.type === 'details').map((node) =>
+      textContent(node),
+    ),
+    [faq.draft.question + faq.draft.answer],
+  )
   assert.ok(!textContent(ui.tree).includes('Orientaciones para docentes'))
   ui.h.unmount()
 })
@@ -93,7 +116,7 @@ test('HU42 unpublished sections and empty FAQ produce only compact empty states'
     textContent(ui.tree),
     /No hay información institucional publicada/,
   )
-  assert.match(textContent(ui.tree), /No hay preguntas frecuentes publicadas/)
+  assert.doesNotMatch(textContent(ui.tree), /Preguntas frecuentes/)
   assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 0)
   ui.h.unmount()
 })

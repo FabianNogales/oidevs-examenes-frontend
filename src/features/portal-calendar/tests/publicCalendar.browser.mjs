@@ -195,7 +195,10 @@ try {
       await evaluate('document.documentElement.scrollWidth<=innerWidth+1'),
       `${width}: page overflow`,
     )
-    await click(`button[aria-label="${date}: 1 eventos"]`)
+    const accessibleDate = date.split('-').reverse().join('/')
+    await click(
+      `button[aria-label="${accessibleDate}: 1 actividad"]`,
+    )
     await wait(`document.body.innerText.includes('Eventos del')`)
     assert.ok(
       await evaluate(

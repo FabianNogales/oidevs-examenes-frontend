@@ -6,32 +6,12 @@ import type {
 import type {
   AdminService,
   PortalService,
-  ServiceCategory,
   ServiceInput,
-  ServiceOptions,
   ServiceStatus,
 } from './types'
 
-export async function serviceCategories(
-  admin = false,
-  signal?: AbortSignal,
-): Promise<ServiceCategory[]> {
-  const { data } = await httpClient.get(
-    `${admin ? '/admin' : ''}/portal/service-categories`,
-    { signal },
-  )
-  return data.data
-}
-export async function serviceOptions(
-  signal?: AbortSignal,
-): Promise<ServiceOptions> {
-  const { data } = await httpClient.get('/admin/portal/service-options', {
-    signal,
-  })
-  return data.data
-}
 export async function listServices(
-  query: PortalQuery & { category_id?: number },
+  query: Omit<PortalQuery, 'search'>,
   signal?: AbortSignal,
 ): Promise<PortalPage<PortalService>> {
   const { data } = await httpClient.get('/portal/services', {
@@ -40,6 +20,7 @@ export async function listServices(
   })
   return data
 }
+
 export async function getService(
   id: number,
   signal?: AbortSignal,
@@ -47,16 +28,18 @@ export async function getService(
   const { data } = await httpClient.get(`/portal/services/${id}`, { signal })
   return data.data
 }
+
 export async function listAdminServices(
-  query: PortalQuery & { category_id?: number; status?: ServiceStatus },
+  query: PortalQuery & { status: string },
   signal?: AbortSignal,
 ): Promise<PortalPage<AdminService>> {
   const { data } = await httpClient.get('/admin/portal/services', {
-    params: query,
+    params: { ...query, search: query.search ?? '', status: query.status ?? '' },
     signal,
   })
   return data
 }
+
 export async function getAdminService(
   id: number,
   signal?: AbortSignal,
@@ -66,12 +49,14 @@ export async function getAdminService(
   })
   return data.data
 }
+
 export async function createService(
   input: ServiceInput,
 ): Promise<AdminService> {
   const { data } = await httpClient.post('/admin/portal/services', input)
   return data.data
 }
+
 export async function editService(
   id: number,
   input: Partial<ServiceInput>,
@@ -83,6 +68,7 @@ export async function editService(
   })
   return data.data
 }
+
 export async function setServiceStatus(
   id: number,
   status: ServiceStatus,

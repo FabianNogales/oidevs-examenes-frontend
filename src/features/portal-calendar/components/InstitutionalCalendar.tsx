@@ -134,18 +134,21 @@ export function InstitutionalCalendar({
         {monthDays(month).map((date) => {
           const count = eventsOnDay(events, date).length
           const outside = date.slice(0, 7) !== month
+          const selected = day === date
+          const current = date === boliviaDate()
+          const activityLabel = `${count} ${count === 1 ? 'actividad' : 'actividades'}`
           return (
             <button
               key={date}
               type="button"
               disabled={outside || result.loading || !!result.error}
-              className={styles.day}
-              aria-pressed={day === date}
-              aria-current={date === boliviaDate() ? 'date' : undefined}
-              aria-label={`${date}: ${count} eventos`}
-              onClick={() => setDay(day === date ? null : date)}
+              className={`${styles.day} ${count ? styles.dayWithEvents : ''}`}
+              aria-pressed={selected}
+              aria-current={current ? 'date' : undefined}
+              aria-label={`${date.split('-').reverse().join('/')}: ${activityLabel}`}
+              onClick={() => setDay(selected ? null : date)}
             >
-              {Number(date.slice(-2))}
+              <span className={styles.dayNumber}>{Number(date.slice(-2))}</span>
               <span className={styles.dot} aria-hidden="true">
                 {count ? '•' : '\u00a0'}
               </span>
@@ -153,6 +156,12 @@ export function InstitutionalCalendar({
           )
         })}
       </div>
+      <p className={styles.calendarLegend}>
+        <span className={styles.legendMarker} aria-hidden="true">
+          •
+        </span>{' '}
+        Con actividades
+      </p>
       {day ? (
         <div className={styles.toolbar}>
           <p>Eventos del {day.split('-').reverse().join('/')}</p>

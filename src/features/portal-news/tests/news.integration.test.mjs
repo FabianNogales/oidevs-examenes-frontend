@@ -42,7 +42,7 @@ function editor(handlers = {}, initial = admin) {
   }
 }
 
-test('HU40 public list consumes only backend news, search and pagination', async () => {
+test('HU40 public list consumes backend news and pagination without search controls', async () => {
   const ui = component(
     client({ get: () => ({ data: page([news], 1, 2, 16) }) }),
     'features/portal-news/NewsPage.tsx',
@@ -52,6 +52,10 @@ test('HU40 public list consumes only backend news, search and pagination', async
   assert.equal(ui.calls[0].args[0], '/portal/news')
   assert.equal(ui.calls[0].args[1].params.status, undefined)
   assert.match(textContent(ui.tree), /Noticia del servidor/)
+  assert.match(textContent(ui.tree), /Más recientes primero/)
+  assert.equal(nodes(ui.tree, (node) => node.type === 'form').length, 0)
+  assert.equal(nodes(ui.tree, (node) => node.type === 'input').length, 0)
+  assert.doesNotMatch(textContent(ui.tree), /Buscar noticias|Buscar/)
   assert.ok(
     nodes(
       ui.tree,
@@ -63,12 +67,7 @@ test('HU40 public list consumes only backend news, search and pagination', async
   ui.render()
   await ui.ready()
   assert.equal(ui.calls.at(-1).args[1].params.page, 2)
-  const search = nodes(ui.tree, (node) => node.type === 'input')[0]
-  search.props.onChange({ target: { value: 'Comunicado' } })
-  ui.render()
-  await ui.submit()
-  assert.equal(ui.calls.at(-1).args[1].params.search, 'Comunicado')
-  assert.equal(ui.calls.at(-1).args[1].params.page, 1)
+  assert.equal(ui.calls.at(-1).args[1].params.search, '')
   ui.h.unmount()
 })
 

@@ -84,7 +84,10 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     } catch (cause) {
       if (
         !signal.aborted &&
-        !(cause instanceof EligibilityApiError && [409, 422].includes(cause.status ?? 0))
+        !(
+          cause instanceof EligibilityApiError &&
+          [409, 422].includes(cause.status ?? 0)
+        )
       ) {
         notify(
           'error',
@@ -111,7 +114,9 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     } catch (cause) {
       if (!signal.aborted) {
         notify(
-          cause instanceof EligibilityApiError && cause.outcomeUnknown ? 'info' : 'error',
+          cause instanceof EligibilityApiError && cause.outcomeUnknown
+            ? 'info'
+            : 'error',
           cause instanceof Error
             ? cause.message
             : 'No se pudo procesar el archivo.',
@@ -131,7 +136,10 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     <main className={pageStyles.page}>
       <section className={pageStyles.content}>
         <Breadcrumbs
-          items={[{ label: 'Mis exámenes', to: examsPath }, { label: 'Habilitaciones' }]}
+          items={[
+            { label: 'Mis exámenes', to: examsPath },
+            { label: 'Habilitaciones' },
+          ]}
         />
         <header className={pageStyles.pageHeader}>
           <div className={styles.automationAccess}>
@@ -185,6 +193,20 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
             La información general del examen no está disponible para tu cuenta.
           </p>
         )}
+        {list.manualReviewConditions?.trim() ? (
+          <aside
+            className={styles.manualReviewNote}
+            aria-labelledby="manual-review-conditions-title"
+          >
+            <h2 id="manual-review-conditions-title">
+              Condiciones de revisión manual
+            </h2>
+            <p>{list.manualReviewConditions}</p>
+            <p>
+              Esta condición debe ser verificada manualmente por el docente.
+            </p>
+          </aside>
+        ) : null}
         <section
           className={sharedStyles.section}
           aria-labelledby="exam-eligibilities-title"

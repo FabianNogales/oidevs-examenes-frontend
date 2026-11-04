@@ -7,6 +7,19 @@ type CsvDropzoneProps = {
   validationMessage: string | null
   onFileSelected: (file: File) => void
   onRemoveFile: () => void
+  className?: string
+  fileStateClassName?: string
+  errorId?: string
+  labels?: {
+    dropzoneLabel?: string
+    title?: string
+    inputLabel?: string
+    selectButtonLabel?: string
+    changeButtonLabel?: string
+    removeButtonLabel?: string
+    formatLabel?: string
+    fileTypeLabel?: string
+  }
 }
 
 export function CsvDropzone({
@@ -14,10 +27,15 @@ export function CsvDropzone({
   validationMessage,
   onFileSelected,
   onRemoveFile,
+  className,
+  fileStateClassName,
+  errorId,
+  labels,
 }: CsvDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const descriptionId = 'student-csv-dropzone-description'
+  const isCustomDropzone = labels !== undefined
 
   function openFilePicker() {
     inputRef.current?.click()
@@ -43,14 +61,15 @@ export function CsvDropzone({
 
   return (
     <div
-      className={styles.dropzone}
+      className={`${styles.dropzone} ${className ?? ''}`}
       data-dragging={isDragging}
       data-has-file={selectedFile !== null}
-      role="button"
-      tabIndex={0}
-      aria-describedby={descriptionId}
-      onClick={openFilePicker}
-      onKeyDown={handleKeyDown}
+      role={isCustomDropzone ? 'region' : 'button'}
+      tabIndex={isCustomDropzone ? undefined : 0}
+      aria-label={labels?.dropzoneLabel}
+      aria-describedby={isCustomDropzone ? undefined : descriptionId}
+      onClick={isCustomDropzone ? undefined : openFilePicker}
+      onKeyDown={isCustomDropzone ? undefined : handleKeyDown}
       onDragEnter={(event) => {
         event.preventDefault()
         setIsDragging(true)
@@ -70,7 +89,11 @@ export function CsvDropzone({
         className={styles.fileInput}
         type="file"
         accept=".csv,text/csv"
-        aria-label="Seleccionar archivo CSV de estudiantes"
+        aria-describedby={isCustomDropzone ? errorId : descriptionId}
+        aria-invalid={isCustomDropzone && errorId ? true : undefined}
+        aria-label={
+          labels?.inputLabel ?? 'Seleccionar archivo CSV de estudiantes'
+        }
         onChange={(event) => {
           const file = event.target.files?.[0]
 
@@ -83,12 +106,27 @@ export function CsvDropzone({
       />
 
       {selectedFile ? (
-        <div className={styles.fileState}>
+        <div className={`${styles.fileState} ${fileStateClassName ?? ''}`}>
           <FileCheckIcon />
           <div>
             <strong>{selectedFile.name}</strong>
-            <span>{formatFileSize(selectedFile.size)}</span>
+            <span>
+              {formatFileSize(selectedFile.size)}
+              {labels?.fileTypeLabel ? ` · ${labels.fileTypeLabel}` : ''}
+            </span>
           </div>
+          {labels?.changeButtonLabel ? (
+            <button
+              type="button"
+              className={styles.selectFileButton}
+              onClick={(event) => {
+                event.stopPropagation()
+                openFilePicker()
+              }}
+            >
+              {labels.changeButtonLabel}
+            </button>
+          ) : null}
           <button
             type="button"
             className={styles.removeFileButton}
@@ -97,14 +135,14 @@ export function CsvDropzone({
               onRemoveFile()
             }}
           >
-            Quitar archivo
+            {labels?.removeButtonLabel ?? 'Quitar archivo'}
           </button>
         </div>
       ) : (
         <div className={styles.emptyDropzoneState}>
           <UploadFileIcon />
           <p id={descriptionId} className={styles.dropzoneTitle}>
-            Arrastra tu archivo CSV aquí
+            {labels?.title ?? 'Arrastra tu archivo CSV aquí'}
           </p>
           <span>o selecciónalo desde tu equipo</span>
           <button
@@ -115,17 +153,13 @@ export function CsvDropzone({
               openFilePicker()
             }}
           >
-            Seleccionar archivo
+            {labels?.selectButtonLabel ?? 'Seleccionar archivo'}
           </button>
-          <small>Formato admitido: .csv</small>
+          <small>{labels?.formatLabel ?? 'Formato admitido: .csv'}</small>
         </div>
       )}
 
-      {validationMessage ? (
-        <p role="status">
-          {validationMessage}
-        </p>
-      ) : null}
+      {validationMessage ? <p role="status">{validationMessage}</p> : null}
     </div>
   )
 }

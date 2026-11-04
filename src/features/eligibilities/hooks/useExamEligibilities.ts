@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { getExamEligibilities } from '../api/eligibilitiesApi'
+import { getExamEligibilitiesSnapshot } from '../api/eligibilitiesApi'
 import type { ExamEligibility } from '../types/eligibility.types'
 
 type ListState = {
   examId: number
   items: ExamEligibility[]
+  manualReviewConditions: string | null
   loading: boolean
   error: string | null
 }
@@ -15,6 +16,7 @@ export function useExamEligibilities(examId: number) {
   const [state, setState] = useState<ListState>({
     examId,
     items: [],
+    manualReviewConditions: null,
     loading: true,
     error: null,
   })
@@ -26,11 +28,27 @@ export function useExamEligibilities(examId: number) {
     request.current?.abort()
     const controller = new AbortController()
     request.current = controller
-    setState({ examId, items: [], loading: true, error: null })
+    setState({
+      examId,
+      items: [],
+      manualReviewConditions: null,
+      loading: true,
+      error: null,
+    })
     try {
-      const items = await getExamEligibilities(examId, controller.signal)
+      const snapshot = await getExamEligibilitiesSnapshot(
+        examId,
+        controller.signal,
+      )
       if (!controller.signal.aborted && mounted.current) {
-        setState({ examId, items, loading: false, error: null })
+        setState({
+          examId,
+          items: snapshot.data,
+          manualReviewConditions:
+            snapshot.exam?.manual_review_conditions ?? null,
+          loading: false,
+          error: null,
+        })
       }
     } catch (cause) {
       if (!controller.signal.aborted && mounted.current) {
@@ -38,7 +56,13 @@ export function useExamEligibilities(examId: number) {
           cause instanceof Error
             ? cause.message
             : 'No se pudieron cargar las habilitaciones.'
-        setState({ examId, items: [], loading: false, error: message })
+        setState({
+          examId,
+          items: [],
+          manualReviewConditions: null,
+          loading: false,
+          error: message,
+        })
         notify('error', message)
       }
     } finally {
@@ -59,6 +83,7 @@ export function useExamEligibilities(examId: number) {
   const current = state.examId === examId
   return {
     items: current ? state.items : [],
+    manualReviewConditions: current ? state.manualReviewConditions : null,
     loading: !current || state.loading,
     error: current ? state.error : null,
     reload,
