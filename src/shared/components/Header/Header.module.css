@@ -908,16 +908,24 @@ button.navigationLink.active:hover {
   overflow-y: auto;
 }
 
+.header[data-admin='true'] .navigationItem:nth-child(2) .navigationDropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: center;
+}
+
+.header[data-admin='true'] .navigationItem:nth-child(2) .navigationDropdownSection {
+  margin-top: 0;
+}
+
 @media (min-width: 768px) {
   .header[data-admin='true'] .navigationList {
     width: fit-content;
     max-width: 100%;
     margin-inline: auto;
-  }
-
-  .header[data-admin='true'] .navigationItem:nth-child(2) .navigationDropdownMenu {
-    left: 0;
-    transform: none;
   }
 
   .header[data-admin='true'] .navigationLink {

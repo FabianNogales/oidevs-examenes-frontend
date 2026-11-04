@@ -20,10 +20,19 @@ export type ExamEligibility = {
 
 // Older GET responses may omit the new nullable fields.
 export type EligibilitiesResponse = {
+  exam?: {
+    id: number
+    manual_review_conditions: string | null
+  }
   data: (Omit<ExamEligibility, 'reason_code' | 'observations'> & {
     reason_code?: string | null
     observations?: string | null
   })[]
+}
+
+export type ExamEligibilitiesSnapshot = {
+  exam: { id: number; manual_review_conditions: string | null } | null
+  data: ExamEligibility[]
 }
 
 export type EligibilityReason = { code: string; label: string }
@@ -32,7 +41,12 @@ export type EligibilityReasonsResponse = { data: EligibilityReason[] }
 
 export type UpdateEligibilityPayload =
   | { status: 'ELIGIBLE'; revision: number }
-  | { status: 'INELIGIBLE'; reason: string; observations: string; revision: number }
+  | {
+      status: 'INELIGIBLE'
+      reason: string
+      observations: string
+      revision: number
+    }
 
 export type BulkEligibilityRowError = {
   row: number

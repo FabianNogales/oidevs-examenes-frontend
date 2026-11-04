@@ -17,6 +17,7 @@ export function PortalAdminCollection<T extends { id: number }>({
   description,
   className,
   searchLayout,
+  searchPlaceholder = 'Buscar contenido',
   load,
   columns,
   version,
@@ -30,6 +31,7 @@ export function PortalAdminCollection<T extends { id: number }>({
   description?: string
   className?: string
   searchLayout?: 'standard' | 'wide'
+  searchPlaceholder?: string
   load: (query: PortalQuery, signal: AbortSignal) => Promise<PortalPage<T>>
   columns: readonly TableColumnDef<PortalRow<T>>[]
   version: number
@@ -89,7 +91,7 @@ export function PortalAdminCollection<T extends { id: number }>({
       {children}
       <div className={styles.collectionList}>
         <DataTable<PortalRow<T>>
-          searchPlaceholder="Buscar contenido"
+          searchPlaceholder={searchPlaceholder}
           searchLayout={searchLayout}
           columns={columns}
           data={(list.data?.data ?? []).map((item) => ({ id: item.id, item }))}

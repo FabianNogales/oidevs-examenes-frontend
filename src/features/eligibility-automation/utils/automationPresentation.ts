@@ -45,9 +45,14 @@ export function evaluationTypeLabel(value: string): string {
 }
 
 export function combinationLabel(value: string): string {
-  return value === 'ALL'
-    ? 'Deben cumplirse todos los criterios seleccionados'
-    : value
+  return (
+    (
+      {
+        ALL: 'Deben cumplirse todos los criterios seleccionados',
+        ANY: 'Debe cumplirse al menos uno de los criterios seleccionados',
+      } as Record<string, string>
+    )[value] ?? value
+  )
 }
 
 export function conditionLabel(operator?: string, threshold?: number): string {
@@ -67,70 +72,93 @@ export function conditionLabel(operator?: string, threshold?: number): string {
   return `${text} ${threshold ?? '—'}`
 }
 
-export function policyStatusLabel(value: string): string {
-  return (
-    ({ DRAFT: 'Borrador', ACTIVE: 'Activa' } as Record<string, string>)[
-      value
-    ] ?? value
-  )
-}
-
-export function activationLabel(value: string | null): string {
-  if (value === null) return 'No activada'
-  if (Number.isNaN(Date.parse(value))) return value
-  return new Intl.DateTimeFormat('es-BO', {
-    timeZone: 'America/La_Paz',
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
-}
-
 export function academicLoadError(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback
   if (/^The search field must be a string\./.test(error.message)) {
     return 'La búsqueda debe ser texto. Borra el campo e inténtalo nuevamente.'
   }
-  return /^(The |SQLSTATE|Request failed|Network Error|Failed to fetch)/i.test(error.message)
+  return /^(The |SQLSTATE|Request failed|Network Error|Failed to fetch)/i.test(
+    error.message,
+  )
     ? fallback
     : error.message
 }
 
 export function academicDiagnostic(error: unknown): string {
-  const info = error as { status?: number | null; code?: string | null; fieldErrors?: Record<string, string> } | null
+  const info = error as {
+    status?: number | null
+    code?: string | null
+    fieldErrors?: Record<string, string>
+  } | null
   // Only structural information: no query, response body, student data or credentials.
-  return JSON.stringify({ status: info?.status ?? null, code: info?.code ?? null, fields: Object.keys(info?.fieldErrors ?? {}) })
+  return JSON.stringify({
+    status: info?.status ?? null,
+    code: info?.code ?? null,
+    fields: Object.keys(info?.fieldErrors ?? {}),
+  })
 }
 
 export function evaluationDateLabel(value: string): string {
-  if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)) return `${value} (zona horaria no indicada)`
+  if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value))
+    return `${value} (zona horaria no indicada)`
   if (Number.isNaN(Date.parse(value))) return value
   return new Intl.DateTimeFormat('es-BO', {
-    timeZone: 'America/La_Paz', dateStyle: 'medium', timeStyle: 'medium',
+    timeZone: 'America/La_Paz',
+    dateStyle: 'medium',
+    timeStyle: 'medium',
   }).format(new Date(value))
 }
 
-export function missingFieldLabel(field: string, assessmentLabels: Record<string, string> = {}): string {
-  const match = /^assessments\.(FIRST_PARTIAL|SECOND_PARTIAL)(?:\.(was_taken|score))?$/.exec(field)
+export function missingFieldLabel(
+  field: string,
+  assessmentLabels: Record<string, string> = {},
+): string {
+  const match =
+    /^assessments\.(FIRST_PARTIAL|SECOND_PARTIAL)(?:\.(was_taken|score))?$/.exec(
+      field,
+    )
   if (match) {
     const label = assessmentLabel(match[1], assessmentLabels[match[1]])
     return `Datos del ${label.charAt(0).toLowerCase()}${label.slice(1)}${match[2] ? `: ${match[2] === 'score' ? 'nota' : 'si rindió la evaluación'}` : ''}`
   }
-  return ({ attended_classes: 'Clases asistidas', total_classes: 'Total de clases' } as Record<string, string>)[field] ?? field
+  return (
+    (
+      {
+        attended_classes: 'Clases asistidas',
+        total_classes: 'Total de clases',
+      } as Record<string, string>
+    )[field] ?? field
+  )
 }
 
-export function criterionErrorCode(field: string, criteria: { code: string }[]): string | null {
+export function criterionErrorCode(
+  field: string,
+  criteria: { code: string }[],
+): string | null {
   const indexed = /^criteria\.(\d+)(?:\.|$)/.exec(field)
   if (indexed) return criteria[Number(indexed[1])]?.code ?? null
-  return criteria.find(({ code }) => field === code || field.startsWith(`${code}.`) || field === `criteria.${code}` || field.startsWith(`criteria.${code}.`))?.code ?? null
+  return (
+    criteria.find(
+      ({ code }) =>
+        field === code ||
+        field.startsWith(`${code}.`) ||
+        field === `criteria.${code}` ||
+        field.startsWith(`criteria.${code}.`),
+    )?.code ?? null
+  )
 }
 
 export function academicActionLabel(action: string): string {
-  return ({
-    ACADEMIC_IMPORT_PREVIEWED: 'Vista previa de importación',
-    ACADEMIC_IMPORT_CONFIRMED: 'Importación confirmada',
-    ACADEMIC_RECORD_IMPORTED: 'Registro académico importado',
-    ACADEMIC_RECORD_CORRECTED: 'Corrección de datos académicos',
-  } as Record<string, string>)[action] ?? 'Actividad académica'
+  return (
+    (
+      {
+        ACADEMIC_IMPORT_PREVIEWED: 'Vista previa de importación',
+        ACADEMIC_IMPORT_CONFIRMED: 'Importación confirmada',
+        ACADEMIC_RECORD_IMPORTED: 'Registro académico importado',
+        ACADEMIC_RECORD_CORRECTED: 'Corrección de datos académicos',
+      } as Record<string, string>
+    )[action] ?? 'Actividad académica'
+  )
 }
 
 export type AcademicHistoryChange = {
@@ -139,7 +167,14 @@ export type AcademicHistoryChange = {
   newValue: string
 }
 
-const HISTORY_TECHNICAL_FIELDS = new Set(['id', 'student_id', 'assessment_key', 'created_at', 'updated_at', 'revision'])
+const HISTORY_TECHNICAL_FIELDS = new Set([
+  'id',
+  'student_id',
+  'assessment_key',
+  'created_at',
+  'updated_at',
+  'revision',
+])
 
 function flattenHistoryValues(
   value: Record<string, unknown> | null,
@@ -149,7 +184,11 @@ function flattenHistoryValues(
   for (const [key, nested] of Object.entries(value ?? {})) {
     if (HISTORY_TECHNICAL_FIELDS.has(key)) continue
     const path = prefix ? `${prefix}.${key}` : key
-    if (nested !== null && typeof nested === 'object' && !Array.isArray(nested)) {
+    if (
+      nested !== null &&
+      typeof nested === 'object' &&
+      !Array.isArray(nested)
+    ) {
       flattenHistoryValues(nested as Record<string, unknown>, path, result)
     } else {
       result[path] = nested
@@ -160,18 +199,21 @@ function flattenHistoryValues(
 
 function historyValueLabel(value: unknown, key: string): string {
   if (value === null || value === undefined || value === '') return 'Sin dato'
-  if (typeof value === 'boolean' && key === 'was_taken') return value ? 'Rindió' : 'No rindió'
+  if (typeof value === 'boolean' && key === 'was_taken')
+    return value ? 'Rindió' : 'No rindió'
   if (Array.isArray(value)) return value.join(', ')
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
 }
 
-function historyFieldLabel(path: string, fallbackAssessmentKey?: string): string {
+function historyFieldLabel(
+  path: string,
+  fallbackAssessmentKey?: string,
+): string {
   const parts = path.split('.')
   const field = parts.at(-1) ?? path
-  const assessmentKey = parts[0] === 'assessments'
-    ? parts[1]
-    : fallbackAssessmentKey
+  const assessmentKey =
+    parts[0] === 'assessments' ? parts[1] : fallbackAssessmentKey
   const assessment = assessmentKey ? assessmentLabel(assessmentKey) : ''
   const labels: Record<string, string> = {
     was_taken: 'Estado de evaluación',
@@ -180,7 +222,11 @@ function historyFieldLabel(path: string, fallbackAssessmentKey?: string): string
     attended_classes: 'Clases asistidas',
     total_classes: 'Total de clases',
   }
-  const label = labels[field] ?? field.replaceAll('_', ' ').replace(/^./, (letter) => letter.toLocaleUpperCase())
+  const label =
+    labels[field] ??
+    field
+      .replaceAll('_', ' ')
+      .replace(/^./, (letter) => letter.toLocaleUpperCase())
   return assessment ? `${assessment} · ${label}` : label
 }
 
@@ -193,15 +239,22 @@ export function academicHistoryChanges(
   const paths = new Set([...Object.keys(oldFields), ...Object.keys(newFields)])
   const changes: AcademicHistoryChange[] = []
 
-  const attendanceChanged = paths.has('attended_classes') || paths.has('total_classes')
-  if (attendanceChanged && (
-    oldFields.attended_classes !== newFields.attended_classes
-    || oldFields.total_classes !== newFields.total_classes
-  )) {
-    const attendance = (fields: Record<string, unknown>, fallback: Record<string, unknown>) => {
+  const attendanceChanged =
+    paths.has('attended_classes') || paths.has('total_classes')
+  if (
+    attendanceChanged &&
+    (oldFields.attended_classes !== newFields.attended_classes ||
+      oldFields.total_classes !== newFields.total_classes)
+  ) {
+    const attendance = (
+      fields: Record<string, unknown>,
+      fallback: Record<string, unknown>,
+    ) => {
       const value = (key: string) => {
         const source = Object.hasOwn(fields, key) ? fields : fallback
-        return Object.hasOwn(source, key) ? historyValueLabel(source[key], key) : '—'
+        return Object.hasOwn(source, key)
+          ? historyValueLabel(source[key], key)
+          : '—'
       }
       return `${value('attended_classes')} / ${value('total_classes')}`
     }
@@ -217,11 +270,24 @@ export function academicHistoryChanges(
   for (const path of paths) {
     const oldValue = oldFields[path]
     const newValue = newFields[path]
-    if (JSON.stringify(oldValue) === JSON.stringify(newValue) || path === 'reason') continue
+    if (
+      JSON.stringify(oldValue) === JSON.stringify(newValue) ||
+      path === 'reason'
+    )
+      continue
     const parts = path.split('.')
     const field = parts.at(-1) ?? path
-    const assessmentKey = [newValues?.assessment_key, oldValues?.assessment_key]
-      .find((value): value is string => typeof value === 'string')
+    const isAssessmentChange =
+      (parts[0] === 'assessments' &&
+        (field === 'score' || field === 'was_taken')) ||
+      ((field === 'score' || field === 'was_taken') &&
+        typeof (newValues?.assessment_key ?? oldValues?.assessment_key) ===
+          'string')
+    if (!isAssessmentChange) continue
+    const assessmentKey = [
+      newValues?.assessment_key,
+      oldValues?.assessment_key,
+    ].find((value): value is string => typeof value === 'string')
     changes.push({
       label: historyFieldLabel(path, assessmentKey),
       oldValue: historyValueLabel(oldValue, field),

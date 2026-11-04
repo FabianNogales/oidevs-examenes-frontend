@@ -4,27 +4,16 @@
   overflow-wrap: anywhere;
 }
 
-.search {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
+.sortOrder {
+  margin: 0;
 }
 
-.search > label {
-  flex: 1 1 240px;
-}
-
-.searchTerm {
-  overflow-wrap: anywhere;
+.list > .cards {
+  margin-top: 8px;
 }
 
 @media (max-width: 480px) {
   .page h1 {
     font-size: clamp(1.75rem, 8vw, 2rem);
-  }
-
-  .search > button {
-    flex: 1 1 120px;
   }
 }

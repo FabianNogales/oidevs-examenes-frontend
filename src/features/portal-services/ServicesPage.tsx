@@ -6,91 +6,58 @@ import {
   PortalPager,
 } from '@/features/portal-shared/PortalUi'
 import { usePortalResource } from '@/features/portal-shared/usePortalResource'
-import { getService, listServices, serviceCategories } from './servicesApi'
+import { getService, listServices } from './servicesApi'
 import { ServiceCard } from './ServiceCard'
 import styles from '@/features/portal-shared/portalShared.module.css'
 
+const publicLoadError =
+  'No fue posible cargar los servicios institucionales. Intenta nuevamente.'
+
 export function ServicesPage() {
-  const [query, setQuery] = useState({ page: 1, search: '', category: '' })
-  const [search, setSearch] = useState('')
-  const loadCategories = useCallback(
-    (signal: AbortSignal) => serviceCategories(false, signal),
-    [],
-  )
-  const categories = usePortalResource(loadCategories)
+  const [page, setPage] = useState(1)
   const load = useCallback(
     (signal: AbortSignal) =>
       listServices(
         {
-          page: query.page,
-          search: query.search,
+          page,
           per_page: 12,
-          ...(query.category ? { category_id: Number(query.category) } : {}),
         },
         signal,
       ),
-    [query],
+    [page],
   )
   const result = usePortalResource(load)
   return (
-    <PortalPageLayout title="Servicios institucionales">
-      <form
-        className={styles.toolbar}
-        onSubmit={(event) => {
-          event.preventDefault()
-          setQuery({ ...query, page: 1, search: search.trim() })
-        }}
-      >
-        <label className={styles.field}>
-          Buscar servicios
-          <input
-            type="search"
-            maxLength={200}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-        <button type="submit">Buscar</button>
-      </form>
-      <PortalFeedback {...categories} retry={categories.reload} />
-      {categories.data?.length ? (
-        <label className={styles.field}>
-          Categoría
-          <select
-            value={query.category}
-            onChange={(event) =>
-              setQuery({ ...query, page: 1, category: event.target.value })
-            }
-          >
-            <option value="">Todas las categorías</option>
-            {categories.data.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : categories.data ? (
-        <p className={styles.muted}>
-          No hay categorías de servicios disponibles.
-        </p>
-      ) : null}
-      <PortalFeedback {...result} retry={result.reload} />
-      {result.data?.data.length === 0 ? (
-        <p role="status">No hay servicios disponibles para esta consulta.</p>
-      ) : null}
-      <div className={styles.cards}>
-        {result.data?.data.map((service) => (
-          <ServiceCard key={service.id} service={service} />
-        ))}
-      </div>
-      {result.data ? (
-        <PortalPager
-          meta={result.data.meta}
-          onPage={(page) => setQuery({ ...query, page })}
+    <div className={styles.servicesPage}>
+      <PortalPageLayout title="Servicios institucionales">
+        <PortalFeedback
+          loading={result.loading}
+          error={
+            result.error ? { ...result.error, message: publicLoadError } : null
+          }
+          retry={result.reload}
         />
-      ) : null}
-    </PortalPageLayout>
+        {result.data?.data.length === 0 ? (
+          <p className={styles.servicesEmpty} role="status">
+            No hay servicios disponibles actualmente.
+          </p>
+        ) : null}
+        {result.data?.data.length ? (
+          <p className={styles.servicesIntro}>
+            Accede a los servicios y plataformas oficiales de la Universidad
+            Mayor de San Simón.
+          </p>
+        ) : null}
+        <div className={styles.serviceCards}>
+          {result.data?.data.map((service) => (
+            <ServiceCard key={service.id} service={service} horizontal />
+          ))}
+        </div>
+        {result.data && result.data.meta.last_page > 1 ? (
+          <PortalPager meta={result.data.meta} onPage={setPage} />
+        ) : null}
+      </PortalPageLayout>
+    </div>
   )
 }
 
@@ -104,7 +71,13 @@ export function ServiceDetailPage() {
   return (
     <PortalPageLayout title="Detalle de servicio">
       <Link to="/services">Volver a servicios</Link>
-      <PortalFeedback {...result} retry={result.reload} />
+      <PortalFeedback
+        loading={result.loading}
+        error={
+          result.error ? { ...result.error, message: publicLoadError } : null
+        }
+        retry={result.reload}
+      />
       {result.data ? <ServiceCard service={result.data} detail /> : null}
     </PortalPageLayout>
   )

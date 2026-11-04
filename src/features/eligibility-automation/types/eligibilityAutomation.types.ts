@@ -2,21 +2,40 @@ export type AssessmentKey = string
 
 export type ParameterSchema = {
   type: 'number' | 'string' | 'array'
+  required?: boolean
   options?: string[]
-  min?: number
-  max?: number
-  exclusive_min?: number
+  minimum?: number
+  maximum?: number
+  minimum_exclusive?: number
   min_items?: number
+}
+
+export type CriterionParameter = ParameterSchema & { key: string }
+
+export type CatalogCriterion = {
+  code: string
+  name: string
+  description: string | null
+  status: 'ACTIVE' | 'INACTIVE'
+  revision: number
+  parameters: CriterionParameter[]
+  mandatory_for_exam_types: string[]
+  fixed_parameters: Record<string, unknown> | null
 }
 
 export type AutomationCriterion = {
   code: string
+  name?: string
+  description?: string | null
+  status?: 'ACTIVE' | 'INACTIVE'
+  revision?: number
   label?: string
-  required?: boolean
-  locked?: boolean
+  required: boolean
+  locked: boolean
   parameters: Record<string, ParameterSchema>
   operator?: string
   threshold?: number
+  fixed_parameters?: Record<string, unknown> | null
 }
 
 export type AutomationConfiguration = {
@@ -24,15 +43,21 @@ export type AutomationConfiguration = {
   evaluation_type: string
   configured_evaluation_type: string | null
   revision: number
+  catalog_revision: string
   combination: string
-  policy: { id: number; version: number; origin?: string }
   selected_criteria: SelectedCriterion[]
   mandatory_criteria: SelectedCriterion[]
+  inactive_criteria: SelectedCriterion[]
   criteria: SelectedCriterion[]
+  manual_review_conditions: string | null
 }
 
 export type SelectedCriterion = {
   code: string
+  name?: string
+  description?: string | null
+  status?: 'ACTIVE' | 'INACTIVE'
+  criterion_revision?: number
   parameters: Record<string, unknown>
   required: boolean
   locked: boolean
@@ -45,7 +70,9 @@ export type AutomationOptions = Omit<AutomationConfiguration, 'criteria'> & {
 
 export type ConfigurationPayload = {
   revision: number
+  catalog_revision: string
   criteria: { code: string; parameters: Record<string, unknown> }[]
+  manual_review_conditions: string | null
 }
 
 export type ImportSchema = {
@@ -73,7 +100,11 @@ export type CsvImportPreview = {
     attended_classes: number | null
     total_classes: number | null
   }[]
-  errors: { row: number; sis: string | null; messages: Record<string, string[]> }[]
+  errors: {
+    row: number
+    sis: string | null
+    messages: Record<string, string[]>
+  }[]
 }
 
 export type CsvImportResult = {
@@ -115,6 +146,7 @@ export type ApiPage<T> = { data: T[]; meta: PageMeta }
 export type AcademicHistoryEntry = {
   id: number
   user_id: number
+  user_name?: string | null
   action: string
   entity_type: string
   entity_id: number
@@ -125,6 +157,8 @@ export type AcademicHistoryEntry = {
 
 export type CriterionResult = {
   code: string
+  name?: string
+  criterion_revision?: number
   status: 'PASSED' | 'FAILED' | 'PENDING'
   actual_value: unknown
   required_value: unknown
@@ -143,8 +177,12 @@ export type EvaluationResult = {
   reason: string
   missing_fields: string[]
   eligibility_revision: number | null
-  policy: { id: number; version: number }
   criteria_results: CriterionResult[]
+}
+
+export type EvaluationResults = {
+  data: EvaluationResult[]
+  meta: PageMeta
 }
 
 export type EvaluationView = {
@@ -155,11 +193,16 @@ export type EvaluationView = {
   confirmed_at: string | null
   created_at: string
   configuration: AutomationConfiguration
-  policy_definition: Record<string, unknown>
+  catalog: CatalogCriterion[] | null
+  policy_definition?: Record<string, unknown> | null
   confirmation: EvaluationConfirmation | null
-  results: EvaluationResult[]
-  meta: PageMeta
-  summary: { total: number; eligible: number; ineligible: number; pending: number }
+  results: EvaluationResults
+  summary: {
+    total: number
+    eligible: number
+    ineligible: number
+    pending: number
+  }
 }
 
 export type EvaluationConfirmation = {
@@ -168,36 +211,28 @@ export type EvaluationConfirmation = {
   unchanged: number
   manual_preserved: number
   pending: number
+  total?: number
+  eligible?: number
+  ineligible?: number
 }
 
 export type EvaluationHistoryEntry = {
   id: number
   preview_id: string
   exam_id: number
-  eligibility_policy_id: number
+  eligibility_policy_id?: number
   created_by: number
+  created_by_name?: string | null
   created_at: string
   confirmed_at: string | null
   confirmation: EvaluationConfirmation | null
 }
 
-export type EligibilityPolicy = {
+export type CriterionAuditEntry = {
   id: number
-  family: string
-  version: number
-  name: string
-  status: 'DRAFT' | 'ACTIVE'
-  revision: number
-  definition: {
-    origin: string
-    combination: string
-    allowed_criteria: string[]
-    second_instance: { evaluation_type: string; operator: string; threshold: number }
-  }
-  activated_at: string | null
-}
-
-export type EligibilityPolicyPayload = {
-  name: string
-  definition?: EligibilityPolicy['definition']
+  action: string
+  user_id: number | null
+  old_values: Record<string, unknown> | null
+  new_values: Record<string, unknown> | null
+  created_at: string
 }

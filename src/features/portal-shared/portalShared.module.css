@@ -7,6 +7,186 @@
   margin-block: 20px;
 }
 
+.servicesIntro {
+  margin: 0 0 16px;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.servicesPage {
+  min-height: 100vh;
+  background: #eff6fc;
+}
+
+.serviceCards {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  margin-block: 0 20px;
+}
+
+.serviceCard {
+  display: flex;
+  min-width: 0;
+  min-height: 260px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  overflow-wrap: anywhere;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.serviceCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+}
+
+.serviceCardHorizontal {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 0;
+  padding: 18px 22px;
+}
+
+.serviceCardHorizontal:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(
+    in srgb,
+    var(--color-primary) 45%,
+    var(--color-border)
+  );
+}
+
+.serviceContent {
+  min-width: 0;
+}
+
+.serviceIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 10%,
+    var(--color-surface)
+  );
+  color: var(--color-primary);
+}
+
+.serviceCardHorizontal .serviceIcon {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  border-radius: 14px;
+}
+
+.serviceTitle {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  line-height: 1.4;
+}
+
+.serviceCardHorizontal .serviceTitle {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.serviceDescription {
+  display: -webkit-box;
+  min-height: 4.5em;
+  overflow: hidden;
+  margin: 0 0 20px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.serviceCardHorizontal .serviceDescription {
+  min-height: 0;
+  margin: 4px 0;
+  -webkit-line-clamp: 2;
+}
+
+.serviceDomain {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.serviceAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: auto;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.serviceCardHorizontal .serviceAction {
+  min-height: 44px;
+  justify-content: center;
+  padding: 0 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  margin: 0;
+  background: var(--color-primary);
+  color: var(--color-surface);
+  white-space: nowrap;
+}
+
+.serviceAction:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.serviceCardHorizontal .serviceAction:hover {
+  background: color-mix(in srgb, var(--color-primary) 88%, #000);
+  text-decoration: none;
+}
+
+.serviceAction:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: 3px solid var(--color-focus, var(--color-primary));
+  outline-offset: 4px;
+}
+
+.servicesEmpty {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  padding: 24px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  margin: 16px 0;
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
 .card,
 .section,
 .faq {
@@ -137,6 +317,19 @@
   font-weight: 700;
 }
 
+.serviceEditor > p {
+  margin-block: 8px;
+}
+
+.serviceFields {
+  gap: 12px;
+  margin-block: 12px;
+}
+
+.serviceFields legend {
+  margin-bottom: 4px;
+}
+
 .editorActions {
   position: sticky;
   z-index: 1;
@@ -163,6 +356,63 @@
 
 .editorActions .unpublishAction {
   color: var(--color-error);
+}
+
+.serviceActions {
+  justify-content: space-between;
+}
+
+.serviceStatusAction {
+  display: flex;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.serviceStatusAction .publishAction {
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.serviceActions .unpublishAction {
+  border-color: var(--color-error);
+  background: var(--color-surface-soft);
+  font-weight: 600;
+}
+
+.serviceConfirmation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.serviceConfirmationCopy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.serviceConfirmationCopy h3,
+.serviceConfirmationCopy p {
+  margin: 0;
+}
+
+.serviceConfirmationCopy h3 {
+  font-size: 0.95rem;
+}
+
+.serviceConfirmationCopy p {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.serviceConfirmationButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .collectionHeading {
@@ -245,6 +495,30 @@
 }
 
 @media (max-width: 600px) {
+  .serviceCardHorizontal {
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .serviceCardHorizontal .serviceIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .serviceCardHorizontal .serviceAction {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .serviceCard:not(.serviceCardHorizontal) {
+    min-height: 240px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
   .informationAdminPage .toolbar {
     align-items: flex-start;
   }
@@ -266,5 +540,23 @@
 @media (max-width: 359px) {
   .editorActions > button {
     flex: 1 1 100%;
+  }
+
+  .serviceStatusAction {
+    flex: 1 1 100%;
+  }
+
+  .serviceStatusAction > button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .serviceConfirmation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .serviceConfirmationButtons {
+    justify-content: flex-start;
   }
 }

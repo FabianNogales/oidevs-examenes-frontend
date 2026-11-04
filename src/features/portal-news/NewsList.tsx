@@ -9,12 +9,11 @@ import styles from '@/features/portal-shared/portalShared.module.css'
 import newsStyles from './news.module.css'
 
 export function NewsList({ compact = false }: { compact?: boolean }) {
-  const [query, setQuery] = useState({ page: 1, search: '' })
-  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const load = useCallback(
     (signal: AbortSignal) =>
-      listNews({ ...query, per_page: compact ? 6 : 12 }, signal),
-    [query, compact],
+      listNews({ page, search: '', per_page: compact ? 6 : 12 }, signal),
+    [page, compact],
   )
   const result = usePortalResource(load)
   return (
@@ -30,45 +29,10 @@ export function NewsList({ compact = false }: { compact?: boolean }) {
             Ver todas
           </Link>
         </header>
-      ) : (
-        <form
-          className={newsStyles.search}
-          role="search"
-          aria-label="Buscar noticias institucionales"
-          onSubmit={(event) => {
-            event.preventDefault()
-            setQuery({ page: 1, search: search.trim() })
-          }}
-        >
-          <label className={styles.field}>
-            Buscar noticias
-            <input
-              type="search"
-              value={search}
-              maxLength={200}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
-          <button type="submit">Buscar</button>
-          {search || query.search ? (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch('')
-                setQuery({ page: 1, search: '' })
-              }}
-            >
-              Limpiar búsqueda
-            </button>
-          ) : null}
-        </form>
-      )}
-      <p className={styles.muted}>Más recientes primero</p>
-      {!compact && query.search ? (
-        <p className={newsStyles.searchTerm}>
-          Resultados para: <strong>{query.search}</strong>
-        </p>
       ) : null}
+      <p className={`${styles.muted} ${newsStyles.sortOrder}`}>
+        Más recientes primero
+      </p>
       <PortalFeedback {...result} retry={result.reload} />
       {result.data?.data.length === 0 ? (
         <p role="status">No hay noticias publicadas para esta consulta.</p>
@@ -88,10 +52,7 @@ export function NewsList({ compact = false }: { compact?: boolean }) {
         ))}
       </div>
       {!compact && result.data && result.data.meta.total > 0 ? (
-        <PortalPager
-          meta={result.data.meta}
-          onPage={(page) => setQuery({ ...query, page })}
-        />
+        <PortalPager meta={result.data.meta} onPage={setPage} />
       ) : null}
     </section>
   )

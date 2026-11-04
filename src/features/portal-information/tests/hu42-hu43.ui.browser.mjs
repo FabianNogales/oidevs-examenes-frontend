@@ -67,16 +67,18 @@ import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
 import{CalendarModal}from'/src/features/portal-calendar/components/CalendarModal.tsx';
 import{AdminInformationPage}from'/src/features/portal-information/AdminInformationPage.tsx';
+import{InformationPage}from'/src/features/portal-information/InformationPage.tsx';
 import{InformationEditor}from'/src/features/portal-information/InformationEditor.tsx';
 import{PortalHistoryPanel}from'/src/features/portal-shared/PortalHistory.tsx';
 const e=React.createElement,root=createRoot(document.getElementById('root'));
-const record=${JSON.stringify(record)},history=${JSON.stringify(history)},faq={id:88,key:null,revision:3,is_published:false,has_unpublished_changes:true,draft:{question:'¿Qué es EIDA?',answer:'Respuesta de prueba',sort_order:0},published:null,published_at:null,created_by:20,updated_by:20};
+const record=${JSON.stringify(record)},history=${JSON.stringify(history)},faq={id:88,key:null,revision:3,is_published:false,has_unpublished_changes:true,draft:{question:'¿Qué es EIDA?',answer:'Respuesta de prueba',sort_order:0},published:null,published_at:null,created_by:20,updated_by:20},publicInformation={sections:[{id:1,key:'about',title:'Acerca de EIDA',description:'EIDA es un proyecto académico orientado a apoyar la identificación y el ingreso a exámenes masivos.',links:[],sort_order:1},{id:2,key:'objectives',title:'Objetivos y beneficios',description:'Centraliza información y apoya el trabajo de docentes, estudiantes y colaboradores autorizados.',links:[],sort_order:2},{id:3,key:'teacher-guidance',title:'Orientaciones para docentes',description:'Revisa estudiantes, habilitaciones y datos académicos antes de confirmar.',links:[],sort_order:3}],faqs:[{id:1,question:'¿Qué es EIDA?',answer:'Una plataforma académica de apoyo.',sort_order:1},{id:2,question:'¿Presentar mi QR garantiza el ingreso?',answer:'No. El ingreso depende de las verificaciones vigentes.',sort_order:2}]};
 window.hu42={calls:[],client:{
-async get(url){if(url.endsWith('/history'))return {data:history};if(url==='/admin/portal/information/sections')return{data:{data:[record],meta:{current_page:1,last_page:1,per_page:15,total:1}}};if(url==='/admin/portal/information/faqs')return{data:{data:[faq],meta:{current_page:1,last_page:1,per_page:15,total:1}}};throw Error('GET inesperado: '+url)},
+async get(url){if(url==='/portal/information')return{data:{data:publicInformation}};if(url.endsWith('/history'))return {data:history};if(url==='/admin/portal/information/sections')return{data:{data:[record],meta:{current_page:1,last_page:1,per_page:15,total:1}}};if(url==='/admin/portal/information/faqs')return{data:{data:[faq],meta:{current_page:1,last_page:1,per_page:15,total:1}}};throw Error('GET inesperado: '+url)},
 async patch(url,payload){hu42.calls.push({method:'patch',url,payload});return {data:{data:{...record,draft:payload,revision:payload.revision+1,has_unpublished_changes:true}}}},
 async post(url,payload){hu42.calls.push({method:'post',url,payload});return {data:{data:{...record,revision:record.revision+1,is_published:url.endsWith('/publish')}}}}
 }};
 window.hu42.renderAdmin=()=>root.render(e(MemoryRouter,null,e(AdminInformationPage)));
+window.hu42.renderPublic=()=>root.render(e(MemoryRouter,null,e(InformationPage)));
 root.render(e('main',null,
 e(CalendarModal,{title:'Editar información',onClose(){},children:e(InformationEditor,{kind:'sections',initial:record,onSaved(){},onBusy(){}})}),
 e(PortalHistoryPanel,{resource:'information/sections',id:144})));
@@ -366,6 +368,73 @@ try {
     })
   }
   result.checks.push('information admin header, filters and list search layout')
+  await evaluate('hu42.renderPublic()')
+  await wait(`document.querySelector('main section h2')`)
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    await send('Emulation.setDeviceMetricsOverride', {
+      width,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: false,
+    })
+    await pause(100)
+    const layout = await evaluate(
+      `(()=>{const index=document.querySelector('nav[aria-label="Índice de información institucional"]'),main=document.querySelector('main'),mainRect=main.getBoundingClientRect(),sections=[...document.querySelectorAll('main section')],content=sections[0]?.parentElement,rects=sections.map(section=>{const rect=section.getBoundingClientRect();return{x:rect.x,width:rect.width,y:rect.y}}),intro=document.querySelector('main > p');return{documentWidth:document.documentElement.scrollWidth,hasIndex:Boolean(index),hashLinks:[...document.querySelectorAll('main a[href^="#"]')].length,headings:sections.map(section=>section.querySelector('h2')?.textContent),rects,contentWidth:content?.getBoundingClientRect().width,contentCenter:content?.getBoundingClientRect().left+content?.getBoundingClientRect().width/2,introCenter:intro?.getBoundingClientRect().left+intro?.getBoundingClientRect().width/2,mainCenter:mainRect.left+mainRect.width/2}})()`,
+    )
+    assert.ok(layout.documentWidth <= width + 1)
+    assert.equal(layout.hasIndex, false)
+    assert.equal(layout.hashLinks, 0)
+    assert.deepEqual(layout.headings, [
+      'Acerca de EIDA',
+      'Objetivos y beneficios',
+      'Orientaciones para docentes',
+      'Preguntas frecuentes',
+    ])
+    assert.equal(layout.rects.length, 4)
+    assert.ok(layout.contentWidth <= 960 + 1)
+    assert.ok(
+      Math.abs(layout.contentCenter - layout.mainCenter) < 1,
+      `${width}px content is not centered: ${JSON.stringify(layout)}`,
+    )
+    assert.ok(
+      Math.abs(layout.introCenter - layout.mainCenter) < 1,
+      `${width}px intro is not centered: ${JSON.stringify(layout)}`,
+    )
+    for (let index = 1; index < layout.rects.length; index += 1) {
+      assert.ok(layout.rects[index].y > layout.rects[index - 1].y)
+      assert.ok(Math.abs(layout.rects[index].x - layout.rects[0].x) < 1)
+      assert.ok(Math.abs(layout.rects[index].width - layout.rects[0].width) < 1)
+    }
+    if (width === 390 || width === 1440) {
+      const screenshot = await send('Page.captureScreenshot', {
+        format: 'png',
+        captureBeyondViewport: false,
+      })
+      await writeFile(
+        join(output, `information-public-${width}.png`),
+        Buffer.from(screenshot.data, 'base64'),
+      )
+    }
+  }
+  await evaluate(`document.querySelector('details summary').focus()`)
+  await send('Input.dispatchKeyEvent', {
+    type: 'keyDown',
+    key: 'Enter',
+    code: 'Enter',
+    windowsVirtualKeyCode: 13,
+    text: '\r',
+    unmodifiedText: '\r',
+  })
+  await send('Input.dispatchKeyEvent', {
+    type: 'keyUp',
+    key: 'Enter',
+    code: 'Enter',
+    windowsVirtualKeyCode: 13,
+  })
+  await wait(`document.querySelector('details').open`)
+  result.checks.push(
+    'public information without side index, ordered sections, FAQ and centered responsive layout',
+  )
   assert.deepEqual(result.errors, [])
   console.log(
     'PASS responsive 320/390/768/1024/1440, historial y guardado con transporte simulado; sin escrituras backend.',

@@ -223,12 +223,6 @@ try {
     )
     await pause(50)
   }
-  const input = async (text) => {
-    await evaluate(
-      `(()=>{const el=document.querySelector('input[type=search]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,${JSON.stringify(text)});el.dispatchEvent(new Event('input',{bubbles:true}))})()`,
-    )
-    await pause(50)
-  }
   const shot = async (name) => {
     const r = await send('Page.captureScreenshot', {
       format: 'png',
@@ -258,7 +252,7 @@ try {
     url: `http://127.0.0.1:${vite.httpServer.address().port}/__hu40`,
   })
   await wait(`${section}?.querySelectorAll('article').length===6`)
-  for (const width of [320, 390, 768, 1440]) {
+  for (const width of [320, 390, 768, 1024, 1440]) {
     await send('Emulation.setDeviceMetricsOverride', {
       width,
       height: 1000,
@@ -297,20 +291,12 @@ try {
     await wait(
       `${section}?.querySelectorAll('article').length===1 && ${section}.innerText.includes('Publicación de prueba 13')`,
     )
-    await input('  contenido %_ exclusivo  ')
-    await button('Buscar')
-    await wait(
-      `${section}.innerText.includes('Publicación de prueba 06') && ${section}.querySelectorAll('article').length===1`,
+    assert.equal(
+      await evaluate(`!document.querySelector('input[type=search]') && ![...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='Buscar')`),
+      true,
     )
-    assert.deepEqual(
-      await evaluate(
-        `newsQa.calls.filter(c=>c.url==='/portal/news').at(-1).params`,
-      ),
-      { page: 1, search: 'contenido %_ exclusivo', per_page: 12 },
-    )
-    await noOverflow(`${width}px search`)
-    await shot(`simulated-search-${width}`)
-    await button('Limpiar búsqueda')
+    await noOverflow(`${width}px without search`)
+    await button('Anterior')
     await wait(`${section}.querySelectorAll('article').length===12`)
     await click('article a[href="/news/200"]')
     await wait(`document.querySelector('main article img')?.naturalWidth>0`)
@@ -345,8 +331,7 @@ try {
         'Ver todas',
         'date order',
         'pagination',
-        'literal server search',
-        'clear search',
+        'search controls omitted',
         'detail',
         'image URL/proportion',
         'no image',
@@ -355,7 +340,7 @@ try {
       ],
     })
     console.log(
-      `PASS simulated ${width}px: Home/list/search/pagination/detail/images, no overflow`,
+      `PASS simulated ${width}px: Home/list/pagination/detail/images, no overflow`,
     )
   }
   for (const mode of ['empty', 'error', 'nonpublic', 'broken-image']) {
@@ -443,7 +428,7 @@ try {
   await wait(
     `location.pathname==='/news' && ${section}?.getAttribute('aria-busy')==='false'`,
   )
-  for (const width of [320, 390, 768, 1440]) {
+  for (const width of [320, 390, 768, 1024, 1440]) {
     await send('Emulation.setDeviceMetricsOverride', {
       width,
       height: 1000,
@@ -458,29 +443,23 @@ try {
         ),
       )
     await shot(`real-list-${width}`)
-    await input('HU40_QA_sin_resultados')
-    await button('Buscar')
-    await wait(
-      `${section}?.getAttribute('aria-busy')==='false' && document.body.innerText.includes('Resultados para:')`,
+    assert.equal(
+      await evaluate(`!document.querySelector('input[type=search]') && ![...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='Buscar')`),
+      true,
     )
-    await noOverflow(`live ${width}px search`)
-    await button('Limpiar búsqueda')
-    await wait(
-      `${section}?.getAttribute('aria-busy')==='false' && !document.body.innerText.includes('Resultados para:')`,
-    )
+    await noOverflow(`live ${width}px without search`)
     results.live.push({
       width,
       passed: [
         'Home navigation and Ver todas',
         'list',
-        'search',
-        'clear search',
+        'search controls omitted',
         'empty state',
         'no horizontal overflow',
       ],
     })
     console.log(
-      `PASS real ${width}px: Home navigation, list/search/empty state, no overflow`,
+      `PASS real ${width}px: Home navigation, list/empty state, no overflow`,
     )
   }
   await send('Page.navigate', { url: 'http://127.0.0.1:5173/news/2147483647' })
