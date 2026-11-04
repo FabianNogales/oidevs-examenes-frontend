@@ -1,7 +1,9 @@
 import { useId, useState } from 'react'
+import { Camera, Flashlight } from 'lucide-react'
 import { useEntryQrCamera } from '@/features/exams/hooks/useEntryQrCamera'
 import { provisionalQr } from '../utils/offlineRules'
-import styles from './OfflineEntry.module.css'
+import shared from './styles/OfflineShared.module.css'
+import captureStyles from './styles/OfflineCapturePanel.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export function OfflineQrScanner({
@@ -32,14 +34,16 @@ export function OfflineQrScanner({
       return true
     },
   })
+
   return (
-    <section className={styles.panel} aria-label="Captura QR provisional">
+    <section className={shared.panel} aria-label="Captura QR provisional">
       <h2>Escanear QR</h2>
-      <p>
+      <p className={shared.panelSubtitle}>
         La lectura es provisional. El QR no permite identificar al estudiante
         sin conexión: busca y confirma su identidad en tu lista.
       </p>
-      <div className={styles.viewport}>
+
+      <div className={captureStyles.viewport}>
         <video
           ref={camera.videoRef}
           autoPlay
@@ -48,24 +52,27 @@ export function OfflineQrScanner({
           aria-label="Visor de cámara para captura QR provisional"
         />
         {camera.state === 'active' ? (
-          <div className={styles.guide} aria-hidden="true" />
+          <div className={captureStyles.guide} aria-hidden="true" />
         ) : (
-          <div className={styles.cameraMessage} role="status">
+          <div className={captureStyles.cameraMessage} role="status">
             {camera.message}
           </div>
         )}
       </div>
+
       {error ? (
-        <p className={styles.error} role="alert">
+        <p className={shared.error} role="alert">
           {error}
         </p>
       ) : null}
+
       {['denied', 'missing', 'error', 'unsupported'].includes(camera.state) ? (
-        <p className={styles.error} role="alert">
+        <p className={shared.error} role="alert">
           {camera.message}
         </p>
       ) : null}
-      <div className={styles.actions}>
+
+      <div className={shared.actions}>
         {opened && camera.state === 'active' ? (
           <button
             className={buttons.secondaryButton}
@@ -86,21 +93,31 @@ export function OfflineQrScanner({
               camera.resume()
             }}
           >
-            {camera.state === 'paused' ? 'Activar cámara' : 'Reintentar cámara'}
+            <Camera size={16} strokeWidth={1.75} aria-hidden="true" />
+            <span>
+              {camera.state === 'paused'
+                ? 'Activar cámara'
+                : 'Reintentar cámara'}
+            </span>
           </button>
         )}
+
         {camera.torchSupported && camera.state === 'active' ? (
           <button
             className={buttons.secondaryButton}
             disabled={camera.torchBusy}
             onClick={() => void camera.toggleTorch()}
           >
-            {camera.torchOn ? 'Apagar linterna' : 'Encender linterna'}
+            <Flashlight size={16} strokeWidth={1.75} aria-hidden="true" />
+            <span>
+              {camera.torchOn ? 'Apagar linterna' : 'Encender linterna'}
+            </span>
           </button>
         ) : null}
       </div>
+
       {camera.devices.length > 1 ? (
-        <label className={styles.search} htmlFor={cameraId}>
+        <label className={captureStyles.searchField} htmlFor={cameraId}>
           Cámara
           <select
             id={cameraId}
@@ -115,6 +132,7 @@ export function OfflineQrScanner({
           </select>
         </label>
       ) : null}
+
       {camera.controlError ? <p role="alert">{camera.controlError}</p> : null}
     </section>
   )
