@@ -134,12 +134,24 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
           items={[{ label: 'Mis exámenes', to: examsPath }, { label: 'Habilitaciones' }]}
         />
         <header className={pageStyles.pageHeader}>
-          <h1>Habilitaciones del examen</h1>
-          <p>
-            Consulta y gestiona el estado de habilitación de los estudiantes
-            para este examen.
-          </p>
-          <Link to={examPath}>Volver al examen</Link>
+          <div className={styles.automationAccess}>
+            <div>
+              <h1>Habilitaciones del examen</h1>
+              <p>
+                Consulta y gestiona el estado de habilitación de los estudiantes
+                para este examen.
+              </p>
+            </div>
+            <Link
+              className={styles.automationButton}
+              to={`/teacher/exams/${examId}/eligibilities/automatic${originSearch}`}
+            >
+              Habilitación automática
+            </Link>
+          </div>
+          <Link className={styles.backLink} to={examPath}>
+            Volver al examen
+          </Link>
         </header>
         {examLoading ? (
           <p role="status">Cargando información del examen…</p>

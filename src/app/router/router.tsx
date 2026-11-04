@@ -54,6 +54,48 @@ export const router = createBrowserRouter([
             element: <HomePage />,
           },
           {
+            path: 'calendar',
+            lazy: async () => {
+              const { CalendarPage } = await import('@/features/portal-calendar/pages/CalendarPage')
+              return { Component: CalendarPage }
+            },
+          },
+          {
+            path: 'news',
+            lazy: async () => {
+              const { NewsPage } = await import('@/features/portal-news/NewsPage')
+              return { Component: NewsPage }
+            },
+          },
+          {
+            path: 'news/:newsId',
+            lazy: async () => {
+              const { NewsDetailPage } = await import('@/features/portal-news/NewsPage')
+              return { Component: NewsDetailPage }
+            },
+          },
+          {
+            path: 'information',
+            lazy: async () => {
+              const { InformationPage } = await import('@/features/portal-information/InformationPage')
+              return { Component: InformationPage }
+            },
+          },
+          {
+            path: 'services',
+            lazy: async () => {
+              const { ServicesPage } = await import('@/features/portal-services/ServicesPage')
+              return { Component: ServicesPage }
+            },
+          },
+          {
+            path: 'services/:serviceId',
+            lazy: async () => {
+              const { ServiceDetailPage } = await import('@/features/portal-services/ServicesPage')
+              return { Component: ServiceDetailPage }
+            },
+          },
+          {
             element: <ProtectedRoute />,
             children: [
               {
@@ -105,6 +147,42 @@ export const router = createBrowserRouter([
                   {
                     path: 'users/manage',
                     element: <AdminManageUsersPage />,
+                  },
+                  {
+                    path: 'portal/events',
+                    lazy: async () => {
+                      const { AdminCalendarPage } = await import('@/features/portal-calendar/pages/AdminCalendarPage')
+                      return { Component: AdminCalendarPage }
+                    },
+                  },
+                  {
+                    path: 'portal/news',
+                    lazy: async () => {
+                      const { AdminNewsPage } = await import('@/features/portal-news/AdminNewsPage')
+                      return { Component: AdminNewsPage }
+                    },
+                  },
+                  {
+                    path: 'portal/information',
+                    lazy: async () => {
+                      const { AdminInformationPage } = await import('@/features/portal-information/AdminInformationPage')
+                      return { Component: AdminInformationPage }
+                    },
+                  },
+                  {
+                    path: 'portal/services',
+                    lazy: async () => {
+                      const { AdminServicesPage } = await import('@/features/portal-services/AdminServicesPage')
+                      return { Component: AdminServicesPage }
+                    },
+                  },
+                  {
+                    path: 'eligibility-policies',
+                    lazy: async () => {
+                      const { AdminEligibilityPoliciesPage } =
+                        await import('@/features/eligibility-automation/pages/AdminEligibilityPoliciesPage')
+                      return { Component: AdminEligibilityPoliciesPage }
+                    },
                   },
                   {
                     path: 'users/roles',
@@ -355,6 +433,14 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/exams/:examId/eligibilities',
                 element: <ExamEligibilitiesPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/eligibilities/automatic',
+                lazy: async () => {
+                  const { EligibilityAutomationPage } =
+                    await import('@/features/eligibility-automation/pages/EligibilityAutomationPage')
+                  return { Component: EligibilityAutomationPage }
+                },
               },
               {
                 path: 'teacher/students/:courseOfferingId',

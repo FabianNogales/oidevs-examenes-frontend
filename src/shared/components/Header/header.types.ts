@@ -7,6 +7,8 @@ export interface HeaderNavigationItem {
   to?: string
   end?: boolean
   defaultSearchParams?: Readonly<Record<string, string>>
+  activePrefixes?: readonly string[]
+  startsSection?: boolean
   children?: HeaderNavigationItem[]
 }
 

@@ -896,6 +896,42 @@ button.navigationLink.active:hover {
   color: #0c2d6c;
 }
 
+.navigationDropdownSection {
+  margin-top: 4px;
+  border-top-color: var(--color-border-strong);
+}
+
+.header[data-admin='true'] .navigationDropdownMenu {
+  min-width: 240px;
+  max-width: calc(100vw - 32px);
+  max-height: min(70dvh, 480px);
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .header[data-admin='true'] .navigationList {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .header[data-admin='true'] .navigationItem:nth-child(2) .navigationDropdownMenu {
+    left: 0;
+    transform: none;
+  }
+
+  .header[data-admin='true'] .navigationLink {
+    padding-inline: clamp(12px, 1.5vw, 22px);
+  }
+}
+
+@media (max-width: 767px) {
+  .header[data-admin='true'] .navigation[data-open='true'] {
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+  }
+}
+
 .navigationDropdownItemActive {
   background: var(--color-soft-red, #F7E9ED);
   border-color: var(--color-accent, #8B1E3F);

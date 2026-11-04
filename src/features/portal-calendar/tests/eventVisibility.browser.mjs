@@ -1,0 +1,308 @@
+// Optional real-browser QA with mocked transport; run from the frontend root.
+// Requires locally installed Chrome. It never connects to or modifies backend.
+import assert from 'node:assert/strict'
+import { spawn } from 'node:child_process'
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { createServer } from 'vite'
+
+const profile = await mkdtemp(join(tmpdir(), 'eida-event-visibility-'))
+const demo = `
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {MemoryRouter} from 'react-router';
+import '/src/assets/styles/global.css';
+import '@fontsource/poppins/400.css';
+import {AdminCalendarPage} from '/src/features/portal-calendar/pages/AdminCalendarPage.tsx';
+const e=React.createElement, root=createRoot(document.getElementById('root'));
+const category={id:73,name:'Institucional'};
+const initial={id:47,title:'Jornada institucional',description:'Actividad de prueba de visibilidad.',
+  starts_at:'2026-11-05T09:00:00-04:00',ends_at:'2026-11-05T11:00:00-04:00',
+  all_day:false,location:'Auditorio',category,status:'PUBLISHED',visibility:'PRIVATE',
+  revision:7,created_by:10,updated_by:10,published_at:'2026-11-01T10:00:00-04:00'};
+let record={...initial},key=0;
+const qa=window.visibilityQa={calls:[],reset(values={}){
+  record={...initial,...values};qa.calls=[];
+  root.render(e(MemoryRouter,{key:++key},e('main',{style:{maxWidth:1200,margin:'16px auto'}},e(AdminCalendarPage))));
+},client:{
+  async get(url,options={}){
+    qa.calls.push({method:'get',url,params:options.params});
+    if(url.endsWith('event-categories'))return {data:{data:[category]}};
+    if(url.endsWith('/history'))return {data:{data:[{id:35,action:'PORTAL_EVENT_UPDATED',actor_id:10,actor_name:'Administradora',created_at:'2026-11-01T15:00:00Z',old_values:{visibility:'PRIVATE'},new_values:{visibility:'PUBLIC'}}],links:{prev:null,next:null},meta:{current_page:1,last_page:1,per_page:15,total:1}}};
+    if(url.endsWith('/47'))return {data:{data:{...record}}};
+    return {data:{data:!options.params?.visibility||options.params.visibility===record.visibility?[{...record}]:[],meta:{current_page:1,last_page:1,per_page:15,total:1}}};
+  },
+  async patch(url,input){
+    qa.calls.push({method:'patch',url,input});record={...record,...input,revision:record.revision+1};return {data:{data:{...record}}};
+  }
+}};
+qa.reset();
+`
+
+let vite, chrome, ws
+const pause = (ms) => new Promise((done) => setTimeout(done, ms))
+try {
+  process.env.EIDA_DEV_HTTPS_KEY = ''
+  process.env.EIDA_DEV_HTTPS_CERT = ''
+  vite = await createServer({
+    root: process.cwd(),
+    logLevel: 'error',
+    server: { host: '127.0.0.1', port: 0, strictPort: true },
+    plugins: [
+      {
+        name: 'event-visibility-qa',
+        enforce: 'pre',
+        resolveId(id) {
+          if (id === '/__event-visibility.js') return '\0event-visibility-qa'
+        },
+        load(id) {
+          if (id === '\0event-visibility-qa') return demo
+          const normalized = id.replaceAll('\\', '/')
+          if (normalized.endsWith('/src/shared/api/httpClient.ts'))
+            return `export const httpClient={get:(...args)=>window.visibilityQa.client.get(...args),patch:(...args)=>window.visibilityQa.client.patch(...args)};`
+          if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts'))
+            return 'export const useAuth=()=>({notify(){}});'
+        },
+        configureServer(server) {
+          server.middlewares.use(async (req, res, next) => {
+            if (req.url?.split('?')[0] !== '/__event-visibility') return next()
+            res.setHeader('Content-Type', 'text/html')
+            res.end(
+              await server.transformIndexHtml(
+                '/__event-visibility',
+                '<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><div id="root"></div><script type="module" src="/__event-visibility.js"></script></html>',
+              ),
+            )
+          })
+        },
+      },
+    ],
+  })
+  await vite.listen()
+  const origin = `http://127.0.0.1:${vite.httpServer.address().port}`
+  assert.equal((await fetch(origin + '/__event-visibility')).status, 200)
+  console.log('QA: servidor local listo; iniciando Chrome sin ventana')
+  chrome = spawn(
+    process.env.EIDA_QA_CHROME ??
+      'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    [
+      '--headless=new',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--remote-debugging-port=0',
+      `--user-data-dir=${profile}`,
+      'about:blank',
+    ],
+    { windowsHide: true, stdio: 'ignore' },
+  )
+  let launchError
+  chrome.on('error', (error) => {
+    launchError = error
+  })
+  let port
+  for (let index = 0; index < 80; index++) {
+    if (launchError) throw launchError
+    try {
+      port = Number(
+        (await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split(
+          '\n',
+        )[0],
+      )
+      break
+    } catch {
+      await pause(250)
+    }
+  }
+  assert.ok(port, 'Chrome debugging port')
+  const targets = await (
+    await fetch(`http://127.0.0.1:${port}/json/list`)
+  ).json()
+  ws = new WebSocket(
+    targets.find((target) => target.type === 'page').webSocketDebuggerUrl,
+  )
+  await new Promise((done, reject) => {
+    ws.addEventListener('open', done, { once: true })
+    ws.addEventListener('error', reject, { once: true })
+  })
+  let id = 0
+  const pending = new Map(),
+    errors = []
+  ws.addEventListener('message', ({ data }) => {
+    const message = JSON.parse(data)
+    if (message.id) {
+      const request = pending.get(message.id)
+      pending.delete(message.id)
+      if (message.error) request.reject(new Error(message.error.message))
+      else request.resolve(message.result)
+    }
+    if (message.method === 'Runtime.exceptionThrown')
+      errors.push(message.params.exceptionDetails.text)
+    if (
+      message.method === 'Runtime.consoleAPICalled' &&
+      message.params.type === 'error'
+    )
+      errors.push(
+        message.params.args
+          .map((argument) => argument.value ?? argument.description)
+          .join(' '),
+      )
+  })
+  const send = (method, params = {}) =>
+    new Promise((resolve, reject) => {
+      const next = ++id
+      pending.set(next, { resolve, reject })
+      ws.send(JSON.stringify({ id: next, method, params }))
+    })
+  const evaluate = async (expression) => {
+    const result = await send('Runtime.evaluate', {
+      expression,
+      returnByValue: true,
+      awaitPromise: true,
+    })
+    if (result.exceptionDetails)
+      throw new Error(
+        result.exceptionDetails.exception?.description ??
+          result.exceptionDetails.text,
+      )
+    return result.result.value
+  }
+  const wait = async (expression) => {
+    for (let index = 0; index < 100; index++) {
+      if (await evaluate(`Boolean(${expression})`)) return
+      await pause(100)
+    }
+    throw new Error(
+      `Timeout ${expression}: ${await evaluate('document.body.innerText')}; ${errors.join('; ')}`,
+    )
+  }
+  const click = async (label) => {
+    assert.ok(
+      await evaluate(
+        `(()=>{const button=[...document.querySelectorAll('button')].find(el=>el.textContent.trim()===${JSON.stringify(label)});if(!button||button.disabled)return false;button.click();return true})()`,
+      ),
+      label,
+    )
+    await pause(50)
+  }
+  const select = async (selector, value) => {
+    await evaluate(
+      `(()=>{const select=document.querySelector(${JSON.stringify(selector)});select.value=${JSON.stringify(value)};select.dispatchEvent(new Event('change',{bubbles:true}))})()`,
+    )
+    await pause(50)
+  }
+  const screenshot = async (name) => {
+    const result = await send('Page.captureScreenshot', {
+      format: 'png',
+      captureBeyondViewport: true,
+    })
+    await writeFile(
+      join(profile, name + '.png'),
+      Buffer.from(result.data, 'base64'),
+    )
+  }
+  await send('Page.enable')
+  await send('Runtime.enable')
+  await send('Page.navigate', { url: origin + '/__event-visibility' })
+  await wait('document.querySelector("td[data-label=Visibilidad]")')
+  console.log('QA: pantalla administrativa cargada')
+  const visibilityConfirmation = `document.querySelector(${JSON.stringify('[aria-label="Confirmar cambio de visibilidad"]')})`
+  for (const width of [1440, 768, 390]) {
+    await send('Emulation.setDeviceMetricsOverride', {
+      width,
+      height: 1000,
+      deviceScaleFactor: 1,
+      mobile: false,
+    })
+    await evaluate('window.visibilityQa.reset()')
+    await wait(
+      'document.querySelector("td[data-label=Visibilidad]")?.textContent==="Privado"',
+    )
+    assert.ok(
+      await evaluate('document.documentElement.scrollWidth<=innerWidth+1'),
+      `${width}: page overflow`,
+    )
+    await screenshot(`${width}-list`)
+    await click('Gestionar evento')
+    await wait('document.querySelector("dialog[open] select[name=visibility]")')
+    assert.equal(
+      await evaluate(
+        'document.querySelector("dialog select[name=visibility]").value',
+      ),
+      'PRIVATE',
+    )
+    assert.ok(
+      await evaluate(
+        'document.querySelector("dialog").innerText.includes("Visibilidad: Privado")',
+      ),
+    )
+    await select('dialog select[name=visibility]', 'PUBLIC')
+    await click('Guardar cambios')
+    await wait(visibilityConfirmation)
+    assert.ok(
+      await evaluate(
+        'document.querySelector("dialog").innerText.includes("Público aparecerá inmediatamente")',
+      ),
+    )
+    assert.equal(
+      await evaluate(
+        'window.visibilityQa.calls.filter(call=>call.method==="patch").length',
+      ),
+      0,
+    )
+    await evaluate(`${visibilityConfirmation}.scrollIntoView({block:"center"})`)
+    assert.ok(
+      await evaluate(
+        '(()=>{const d=document.querySelector("dialog"),r=d.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&d.scrollWidth<=d.clientWidth+1})()',
+      ),
+      `${width}: dialog overflow`,
+    )
+    await screenshot(`${width}-private-to-public`)
+    await click('Volver')
+    assert.equal(
+      await evaluate(
+        'window.visibilityQa.calls.filter(call=>call.method==="patch").length',
+      ),
+      0,
+    )
+    await click('Guardar cambios')
+    await click('Confirmar cambio de visibilidad')
+    await wait('!document.querySelector("dialog")')
+    assert.equal(
+      await evaluate(
+        'window.visibilityQa.calls.find(call=>call.method==="patch").input.visibility',
+      ),
+      'PUBLIC',
+    )
+    await click('Gestionar evento')
+    await wait('document.querySelector("dialog[open] select[name=visibility]")')
+    await select('dialog select[name=visibility]', 'PRIVATE')
+    await click('Guardar cambios')
+    await wait(visibilityConfirmation)
+    assert.ok(
+      await evaluate(
+        'document.querySelector("dialog").innerText.includes("Privado dejará de aparecer inmediatamente")',
+      ),
+    )
+    await evaluate(`${visibilityConfirmation}.scrollIntoView({block:"center"})`)
+    await screenshot(`${width}-public-to-private`)
+    await click('Confirmar cambio de visibilidad')
+    await wait('!document.querySelector("dialog")')
+    assert.equal(
+      await evaluate(
+        'window.visibilityQa.calls.filter(call=>call.method==="patch").at(-1).input.visibility',
+      ),
+      'PRIVATE',
+    )
+    console.log(
+      `PASS ${width}px: listado, selector, detalle, ambas advertencias y confirmación; sin desborde horizontal`,
+    )
+  }
+  assert.deepEqual(errors, [])
+  console.log(`Capturas: ${profile}`)
+} finally {
+  ws?.close()
+  chrome?.kill()
+  await vite?.close()
+}

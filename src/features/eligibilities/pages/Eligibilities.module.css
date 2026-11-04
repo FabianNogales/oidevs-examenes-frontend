@@ -1,3 +1,49 @@
+.automationAccess {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.automationAccess > div {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.automationButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--button-height);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  text-decoration: none;
+}
+
+.automationButton:hover {
+  background: var(--color-primary-hover);
+  color: var(--color-on-primary);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 480px) {
+  .automationButton {
+    width: 100%;
+  }
+}
+
 .counters {
   display: flex;
   flex-wrap: wrap;

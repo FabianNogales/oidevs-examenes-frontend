@@ -1322,7 +1322,7 @@
 
     width: min(calc(100% - 96px), 1640px);
 
-    height: clamp(260px, 32vh, 310px);
+    height: auto;
 
     margin:
       10px

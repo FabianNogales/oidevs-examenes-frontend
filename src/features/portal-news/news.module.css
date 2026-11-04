@@ -1,0 +1,30 @@
+.page,
+.list {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+
+.search > label {
+  flex: 1 1 240px;
+}
+
+.searchTerm {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .page h1 {
+    font-size: clamp(1.75rem, 8vw, 2rem);
+  }
+
+  .search > button {
+    flex: 1 1 120px;
+  }
+}

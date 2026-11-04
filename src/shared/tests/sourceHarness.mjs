@@ -32,7 +32,7 @@ export function sourceHarness(overrides = {}) {
     setProperty: (_key, value) => { style.overflow = value }, removeProperty: () => { style.overflow = '' } }
   const document = { ...eventTarget('document:'), visibilityState: 'visible', activeElement: null, body: { style } }
   const window = eventTarget('window:')
-  const setTimer = (callback, delay) => { const id = ++nextTimer; timers.set(id, { at: now + delay, callback }); return id }
+  const setTimer = (callback, delay = 0) => { const id = ++nextTimer; timers.set(id, { at: now + delay, callback }); return id }
   const clearTimer = (id) => timers.delete(id)
   window.setTimeout = setTimer
   window.clearTimeout = clearTimer

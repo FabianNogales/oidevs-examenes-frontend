@@ -1,0 +1,25 @@
+.editor {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-block: 12px;
+}
+
+.metadata dt {
+  font-weight: 600;
+}
+
+.metadata dd {
+  margin: 4px 0 0;
+}
+
+@media (max-width: 480px) {
+  .metadata {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
