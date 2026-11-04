@@ -1,48 +1,110 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
-import { ArrowRight, GitBranch, RefreshCw, UserCheck, Users,} from 'lucide-react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import { ExamInformation } from '@/features/exams/components/ExamInformation'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
+import { parseExamId } from '@/features/exams/api/examDetailsApi'
 import { useOfflineAssignments } from '../hooks/useOfflineAssignments'
 import { useConnectivity } from '../hooks/useConnectivity'
+import { AssignedListStudentsView } from '../components/AssignedListStudentsView'
+import { DistributionActionBanner } from '../components/DistributionActionBanner'
+import { DistributionSummaryMetrics } from '../components/DistributionSummaryMetrics'
 import { OfflineAssignmentCards } from '../components/OfflineAssignmentCards'
 import { OfflineConnectionStatus } from '../components/OfflineConnectionStatus'
-import { parseExamId } from '@/features/exams/api/examDetailsApi'
 import shared from '../components/styles/OfflineShared.module.css'
 import distStyles from '../components/styles/OfflineDistribution.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 function DistributionContent({ examId }: { examId: number }) {
+  const navigate = useNavigate()
   const { user, notify } = useAuth()
   const exam = useExamDetail(examId)
   const online = useConnectivity()
   const lists = useOfflineAssignments(examId, exam.detail !== null)
   const [confirmation, setConfirmation] = useState(false)
-  const total =
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const selectedListIdParam = Number(searchParams.get('listId'))
+  const selectedListIndex = lists.distribution
+    ? lists.distribution.lists.findIndex(
+        (item) => item.list_id === selectedListIdParam,
+      )
+    : -1
+  const selectedList =
+    selectedListIndex >= 0 && lists.distribution
+      ? lists.distribution.lists[selectedListIndex]
+      : null
+
+  const totalStudents =
     lists.distribution?.lists.reduce(
       (sum, list) => sum + list.student_count,
       0,
     ) ?? lists.counts.students
+
+  const collaboratorsCount = lists.distribution
+    ? lists.distribution.lists.filter(
+        (list) => list.responsible_id !== user?.id,
+      ).length
+    : lists.counts.collaborators
+
   const noCollaborators = lists.distribution
     ? lists.distribution.lists.length === 1 &&
       lists.distribution.lists[0].responsible_id === user?.id
     : lists.counts.collaborators === 0
+
   const ended = exam.detail
     ? Date.now() >=
       Date.parse(`${exam.detail.exam_date}T${exam.detail.start_time}-04:00`) +
         exam.detail.duration_minutes * 60000
     : true
-  const canPrepare =
+
+  const canPrepare = Boolean(
     online &&
-    exam.detail &&
-    ['SCHEDULED', 'ACTIVE', 'IN_PROGRESS'].includes(exam.detail.status) &&
-    !ended &&
-    !lists.loading &&
-    !lists.error
+      exam.detail &&
+      ['SCHEDULED', 'ACTIVE', 'IN_PROGRESS'].includes(exam.detail.status) &&
+      !ended &&
+      !lists.loading &&
+      !lists.error,
+  )
+
+  // Vista de página completa cuando se selecciona "Consultar estudiantes"
+  if (selectedList && lists.distribution) {
+    const subjectName =
+      exam.exam?.subject_name ??
+      exam.detail?.subject_name ??
+      'Materia asignada'
+    const examTitle = exam.exam?.name ?? exam.detail?.name ?? `Examen ${examId}`
+
+    return (
+      <main className={shared.page}>
+        <Breadcrumbs
+          items={[
+            { label: 'Mis exámenes', to: '/teacher/exams' },
+            { label: 'Examen', to: `/teacher/exams/${examId}` },
+            {
+              label: 'Distribución de listas',
+              to: `/teacher/exams/${examId}/distribution`,
+            },
+            { label: `Lista ${selectedListIndex + 1}` },
+          ]}
+        />
+
+        <AssignedListStudentsView
+          list={selectedList}
+          listPosition={selectedListIndex + 1}
+          version={lists.distribution.version}
+          subjectName={subjectName}
+          examName={examTitle}
+          onBack={() => setSearchParams({}, { replace: false })}
+        />
+      </main>
+    )
+  }
+
   return (
     <main className={shared.page}>
       <Breadcrumbs
@@ -52,15 +114,30 @@ function DistributionContent({ examId }: { examId: number }) {
           { label: 'Distribución de listas' },
         ]}
       />
+
+      {/* Botón superior para volver al detalle del examen */}
+      <div className={distStyles.backNavigationRow}>
+        <button
+          type="button"
+          className={distStyles.backButton}
+          onClick={() => void navigate(`/teacher/exams`)}
+        >
+          <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" />
+          <span>Volver a mis exámenes</span>
+        </button>
+
+        <OfflineConnectionStatus online={online} />
+      </div>
+
       <header className={shared.header}>
         <div>
-          <p className={shared.eyebrow}>HU35 · Organización del ingreso</p>
           <h1>Distribución de estudiantes</h1>
           <p>Listas exclusivas y consecutivas por apellidos.</p>
         </div>
-        <OfflineConnectionStatus online={online} />
       </header>
+
       {exam.isLoading ? <ExamsSkeleton /> : null}
+
       {exam.errorMessage ? (
         <div className={shared.error} role="alert">
           <p>{exam.errorMessage}</p>
@@ -69,125 +146,54 @@ function DistributionContent({ examId }: { examId: number }) {
           </button>
         </div>
       ) : null}
+
       {exam.exam ? <ExamInformation exam={exam.exam} /> : null}
+
       {exam.detail ? (
         <>
-          <div className={distStyles.metricsRow}>
-            <div className={distStyles.metricCard}>
-              <div className={distStyles.metricCardTop}>
-                <strong>{total ?? '—'}</strong>
-                <span className={distStyles.metricCardIcon} aria-hidden="true">
-                  <Users size={18} strokeWidth={1.75} />
-                </span>
-              </div>
-              <span>
-                Estudiantes inscritos{total === null ? ' · por consultar' : ''}
-              </span>
-            </div>
+          <DistributionSummaryMetrics
+            totalStudents={totalStudents}
+            collaboratorsCount={collaboratorsCount}
+            hasPreparedDistribution={lists.distribution !== null}
+            distributionVersion={lists.distribution?.version ?? null}
+          />
 
-            <div className={distStyles.metricCard}>
-              <div className={distStyles.metricCardTop}>
-                <strong>
-                  {lists.distribution
-                    ? lists.distribution.lists.filter(
-                        (list) => list.responsible_id !== user?.id,
-                      ).length
-                    : (lists.counts.collaborators ?? '—')}
-                </strong>
-                <span className={distStyles.metricCardIcon} aria-hidden="true">
-                  <UserCheck size={18} strokeWidth={1.75} />
-                </span>
-              </div>
-              <span>
-                {lists.distribution
-                  ? 'Colaboradores con lista'
-                  : 'Colaboradores registrados'}
-              </span>
-            </div>
-
-            <div className={distStyles.metricCard}>
-              <div className={distStyles.metricCardTop}>
-                <strong>
-                  {lists.distribution ? `v${lists.distribution.version}` : '—'}
-                </strong>
-                <span className={distStyles.metricCardIcon} aria-hidden="true">
-                  <GitBranch size={18} strokeWidth={1.75} />
-                </span>
-              </div>
-              <span>
-                {lists.distribution
-                  ? 'Distribución preparada'
-                  : 'Sin distribución confirmada'}
-              </span>
-            </div>
-          </div>
           {noCollaborators ? (
             <p className={shared.notice}>
               No hay colaboradores en esta distribución. El servidor asigna la
               lista al docente responsable.
             </p>
           ) : null}
+
           {lists.error ? (
             <p className={shared.error} role="alert">
               {lists.error}
             </p>
           ) : null}
 
-          <section className={shared.panel}>
-            <div className={shared.toolbar}>
-              <div>
-                <h2>
-                  {lists.distribution
-                    ? 'Distribución preparada'
-                    : 'Preparar listas del examen'}
-                </h2>
-                <p className={shared.panelSubtitle}>
-                  {lists.distribution
-                    ? 'La versión 1 está congelada. Puedes consultar sus estudiantes y responsables.'
-                    : 'El servidor calculará las listas equilibradas según las inscripciones y autorizaciones vigentes.'}
-                </p>
-              </div>
-              <button
-                className={buttons.secondaryButton}
-                disabled={lists.loading || lists.preparing || !online}
-                onClick={lists.reload}
-              >
-                <RefreshCw size={15} strokeWidth={1.75} aria-hidden="true" />
-                <span>Actualizar consulta</span>
-              </button>
-            </div>
-            {lists.loading ? (
-              <p role="status">Consultando distribución…</p>
-            ) : null}
-            {!lists.loading && !lists.distribution ? (
-              <button
-                className={buttons.primaryButton}
-                disabled={!canPrepare || lists.preparing}
-                onClick={() => setConfirmation(true)}
-              >
-                Preparar listas
-              </button>
-            ) : null}
-            {lists.distribution ? (
-              <Link className={shared.link} to={`/exams/${examId}/offline`}>
-                <span>
-                  Preparar mi dispositivo para el control sin conexión
-                </span>
-                <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />
-              </Link>
-            ) : null}
-            {!lists.distribution && total === 0 ? (
-              <p className={shared.muted}>
-                El examen no tiene inscripciones activas. Las listas que se
-                preparen estarán vacías y quedarán congeladas.
-              </p>
-            ) : null}
-          </section>
+          <DistributionActionBanner
+            examId={examId}
+            isPrepared={lists.distribution !== null}
+            isLoading={lists.loading}
+            isPreparing={lists.preparing}
+            isOnline={online}
+            canPrepare={canPrepare}
+            totalStudents={totalStudents}
+            onReload={lists.reload}
+            onRequestPrepare={() => setConfirmation(true)}
+          />
+
           {lists.distribution ? (
-            <OfflineAssignmentCards distribution={lists.distribution} />
+            <OfflineAssignmentCards
+              distribution={lists.distribution}
+              onSelectList={(listId) =>
+                setSearchParams({ listId: String(listId) })
+              }
+            />
           ) : null}
         </>
       ) : null}
+
       {confirmation ? (
         <CollaborationModal
           title="Preparar listas exclusivas"
@@ -233,6 +239,7 @@ function DistributionContent({ examId }: { examId: number }) {
     </main>
   )
 }
+
 export function TeacherDistributionPage() {
   const { examId } = useParams()
   const id = parseExamId(examId)
