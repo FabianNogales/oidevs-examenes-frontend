@@ -30,7 +30,18 @@ export type CollaborationUser = {
   id: number
   display_name: string
   email: string
-  identity_number: string
+  identity_number: string | null
+  roles: string[]
+}
+
+export type CollaborationUsersResponse = {
+  data: CollaborationUser[]
+  meta: {
+    current_page: number
+    per_page: number
+    total: number
+    last_page: number
+  }
 }
 
 export type ExamCollaborator = {

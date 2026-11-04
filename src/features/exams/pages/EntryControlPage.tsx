@@ -1,25 +1,30 @@
 import { useId, useState } from 'react'
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useParams, useSearchParams } from 'react-router'
+import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import { EntryControlStudentModal } from '../components/EntryControlStudentModal'
 import { EntryControlStudentsList } from '../components/EntryControlStudentsList'
-import { EntryControlledRoom } from '../components/EntryControlledRoom'
-import { EntryHistoryModal } from '../components/EntryHistoryModal'
+import { EntryControlExamHeader } from '../components/EntryControlExamHeader'
 import { EntryQrPanel } from '../components/EntryQrPanel'
-import { EntryRecentScans } from '../components/EntryRecentScans'
+import { EntryHistoryModal } from '../components/EntryHistoryModal'
 import { EntryStudentsSummary } from '../components/EntryStudentsSummary'
-import { ExamCard } from '../components/ExamCard'
 import { useEntryControlStudents } from '../hooks/useEntryControlStudents'
-import { useEntryRecentRecords } from '../hooks/useEntryRecentRecords'
+import type { EntryControlFilter } from '../types/entryControl.types'
 import type {
   EntryMethod,
   EntryProcessingResponse,
   EntryStudentIdentity,
 } from '../types/entryRegistration.types'
+import { EntryQrStudentIdentity } from '../components/EntryQrStudentIdentity'
+import { entryStudentName } from '../utils/entryControlDisplay'
 import { entryUnavailableReasonMessage } from '../utils/entryAvailabilityDisplay'
 import pageStyles from './TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from './EntryControlPage.module.css'
-import qrStyles from '../components/EntryQr.module.css'
+import incidentStyles from '@/features/incidents/pages/Incidents.module.css'
+import { IncidentControlDialog } from '@/features/incidents/components/IncidentControlDialog'
+import type { IncidentControlMode } from '@/features/incidents/components/IncidentControlDialog'
+import { incidentStudent } from '@/features/incidents/utils/incidentEntryContext'
 
 function EntryControlContent({
   examId,
@@ -28,18 +33,20 @@ function EntryControlContent({
   examId: number
   fromTeacher: boolean
 }) {
-  const list = useEntryControlStudents(examId)
-  const recent = useEntryRecentRecords()
-  const [studentId, setStudentId] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<'verification' | 'attendance'>(
     'verification',
   )
+  const list = useEntryControlStudents(examId, activeTab === 'attendance')
+  const [studentId, setStudentId] = useState<number | null>(null)
+  const [manualSuccessName, setManualSuccessName] = useState<string | null>(null)
+  const [manualSuccessStudent, setManualSuccessStudent] = useState<EntryStudentIdentity | null>(null)
   const [attendanceMethod, setAttendanceMethod] = useState<'manual' | 'qr'>(
     'manual',
   )
   // Retain the camera hook after first use so pending starts remain serialized.
   const [qrActivated, setQrActivated] = useState(false)
   const [qrProcessing, setQrProcessing] = useState(false)
+  const [incidentMode, setIncidentMode] = useState<IncidentControlMode | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
   const tabsId = useId()
   const methodTabsId = useId()
@@ -55,44 +62,60 @@ function EntryControlContent({
 
   function selectTab(tab: 'verification' | 'attendance') {
     if (tab === activeTab) return
+    list.setPage(1)
     setStudentId(null)
-    setHistoryOpen(false)
     setAttendanceMethod('manual')
     setActiveTab(tab)
+  }
+
+  function selectAttendanceMethod(method: 'manual' | 'qr') {
+    setAttendanceMethod(method)
+  }
+
+  function selectFilter(filter: EntryControlFilter) {
+    list.setFilter(filter)
   }
 
   function handleResult(
     response: EntryProcessingResponse,
     method: EntryMethod,
-    student?: EntryStudentIdentity,
+    studentName?: string,
   ) {
-    recent.addResult(response, method, student)
+    const manualSuccess =
+      method === 'MANUAL' && response.result === 'AUTHORIZED'
     if (
       response.result === 'AUTHORIZED' ||
       response.result === 'ALREADY_REGISTERED' ||
       method === 'MANUAL'
     )
       list.reload()
+    if (manualSuccess) {
+      setStudentId(null)
+      const responseStudent = response.data?.student
+      setManualSuccessStudent(responseStudent ?? null)
+      setManualSuccessName(
+        studentName ??
+          (responseStudent ? entryStudentName(responseStudent) : null),
+      )
+    }
   }
-
-  const controlledRoom = <EntryControlledRoom room={exam?.room} />
 
   return (
     <main className={`${pageStyles.page} ${styles.page}`}>
       <section className={`${pageStyles.content} ${styles.content}`}>
-        <nav
-          className={sharedStyles.breadcrumb}
-          aria-label="Ruta de navegación"
-        >
-          <Link to={backPath}>{backLabel}</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Control de ingreso</span>
-        </nav>
-        <header className={pageStyles.pageHeader}>
+        <Breadcrumbs
+          items={[
+            { label: backLabel, to: backPath },
+            { label: 'Control de ingreso' },
+          ]}
+        />
+        <header className={`${pageStyles.pageHeader} ${styles.pageHeading}`}>
           <h1>Control de ingreso</h1>
-          <p>Verificación de estudiantes y registro de asistencia al examen.</p>
           <p>
-            <Link className={sharedStyles.secondaryButton} to={`/exams/${examId}/offline`}>
+            <Link
+              className={sharedStyles.secondaryButton}
+              to={`/exams/${examId}/offline`}
+            >
               Control sin conexión
             </Link>
           </p>
@@ -103,17 +126,18 @@ function EntryControlContent({
             </p>
           ) : null}
         </header>
-        {exam ? (
-          <ExamCard
-            subjectName={exam.subject_name}
-            examName={exam.name}
-            examDate={exam.exam_date}
-            examTime={exam.start_time}
-            durationMinutes={exam.duration_minutes}
-            roomName={exam.room?.name}
-            roomCode={exam.room?.code}
-            evaluationType={exam.evaluation_type}
-            status={exam.status}
+        {exam ? <EntryControlExamHeader exam={exam} /> : null}
+        {exam ? <div className={incidentStyles.access}>
+          {list.response?.permissions?.can_annul_entries === true ? <button type="button" disabled={qrProcessing} onClick={() => setHistoryOpen(true)}>Gestionar ingresos</button> : null}
+          <button type="button" disabled={qrProcessing} onClick={() => setIncidentMode({ context: { student: null } })}>Registrar incidencia</button>
+          <Link to={`/exams/${examId}/incidents${fromTeacher ? '?from=teacher' : ''}`}>Incidencias del examen</Link>
+        </div> : null}
+        {list.response?.summary ? (
+          <EntryStudentsSummary
+            summary={list.response.summary}
+            incidents={
+              !list.query.trim() ? list.filterCounts?.incidents : undefined
+            }
           />
         ) : null}
         <div
@@ -171,7 +195,7 @@ function EntryControlContent({
             <EntryControlStudentsList
               list={list}
               onView={setStudentId}
-              controlledRoom={controlledRoom}
+              onFilterChange={selectFilter}
             />
           ) : null}
         </div>
@@ -185,26 +209,11 @@ function EntryControlContent({
             className={styles.attendancePanel}
             aria-label="Registro de asistencia"
           >
-            <h2>Registro de asistencia</h2>
-            <div className={qrStyles.toolbar}>
-              {controlledRoom}
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                disabled={qrProcessing}
-                onClick={() => setHistoryOpen(true)}
-              >
-                Historial de ingresos
-              </button>
-            </div>
             {list.roomId == null ? (
               <p className={sharedStyles.note} role="status">
                 El examen debe tener un ambiente asignado para registrar un
                 ingreso.
               </p>
-            ) : null}
-            {list.response?.summary ? (
-              <EntryStudentsSummary summary={list.response.summary} compact />
             ) : null}
             {exam?.entry_available === false ? (
               <div
@@ -239,7 +248,7 @@ function EntryControlContent({
                         ? 'qr'
                         : 'manual'
                 if (next === 'qr' && list.roomId == null) return
-                setAttendanceMethod(next)
+                selectAttendanceMethod(next)
                 document.getElementById(`${methodTabsId}-${next}-tab`)?.focus()
               }}
             >
@@ -255,9 +264,9 @@ function EntryControlContent({
                   disabled={
                     qrProcessing || (method === 'qr' && list.roomId == null)
                   }
-                  onClick={() => setAttendanceMethod(method)}
+                  onClick={() => selectAttendanceMethod(method)}
                 >
-                  {method === 'manual' ? 'Registro manual' : 'Escanear QR'}
+                  {method === 'manual' ? 'Manual' : 'Escanear QR'}
                 </button>
               ))}
             </div>
@@ -271,7 +280,6 @@ function EntryControlContent({
                 <EntryControlStudentsList
                   list={list}
                   manual
-                  showSummary={false}
                   onView={setStudentId}
                 />
               ) : null}
@@ -290,12 +298,13 @@ function EntryControlContent({
                       activeTab === 'attendance' &&
                       attendanceMethod === 'qr' &&
                       exam?.entry_available === true &&
-                      !historyOpen &&
-                      studentId === null
+                      studentId === null && incidentMode === null && !historyOpen
                     }
                     roomId={list.roomId}
                     onProcessed={(response) => handleResult(response, 'QR')}
                     onProcessingChange={setQrProcessing}
+                    onReportIncident={context => setIncidentMode({ context })}
+                    onViewIncident={incidentId => setIncidentMode({ incidentId })}
                   />
                 ) : null}
               </div>
@@ -312,10 +321,9 @@ function EntryControlContent({
                 </div>
               ) : null}
             </div>
-            <EntryRecentScans scans={recent.records} />
           </section>
         </div>
-        {studentId !== null ? (
+        {studentId !== null && incidentMode === null ? (
           <EntryControlStudentModal
             key={`${examId}-${studentId}-${list.roomId}-${activeTab}`}
             examId={examId}
@@ -324,17 +332,33 @@ function EntryControlContent({
             examContext={exam}
             allowManualEntry={activeTab === 'attendance'}
             onManualResult={(response, student) =>
-              handleResult(response, 'MANUAL', student)
+              handleResult(response, 'MANUAL', entryStudentName(student))
             }
             onClose={() => setStudentId(null)}
+            onReportIncident={student => setIncidentMode({ context: { student: incidentStudent(student) } })}
           />
         ) : null}
-        {historyOpen && activeTab === 'attendance' ? (
-          <EntryHistoryModal
-            examId={examId}
-            onClose={() => setHistoryOpen(false)}
-          />
+        {manualSuccessName && incidentMode === null ? (
+          <CollaborationModal
+            title="Ingreso registrado"
+            onClose={() => setManualSuccessName(null)}
+          >
+            <p>{manualSuccessName} fue registrada para el examen.</p>
+            {manualSuccessStudent ? <EntryQrStudentIdentity student={manualSuccessStudent} /> : null}
+            <div className={sharedStyles.actions}>
+              <button type="button" className={sharedStyles.secondaryButton} onClick={() => setIncidentMode({ context: { student: incidentStudent(manualSuccessStudent) } })}>Reportar una situación</button>
+              <button
+                type="button"
+                className={sharedStyles.secondaryButton}
+                onClick={() => setManualSuccessName(null)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </CollaborationModal>
         ) : null}
+        {incidentMode ? <IncidentControlDialog examId={examId} mode={incidentMode} onClose={() => setIncidentMode(null)} /> : null}
+        {historyOpen ? <EntryHistoryModal examId={examId} onClose={() => setHistoryOpen(false)} onEntriesChanged={list.reload} /> : null}
       </section>
     </main>
   )

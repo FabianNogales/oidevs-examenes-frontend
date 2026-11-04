@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { StudentExamCard } from '@/features/students/components/StudentExamCard'
 import { StudentQrCard } from '@/features/students/components/StudentQrCard'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
 import { useStudentExams } from '@/features/students/hooks/useStudentExams'
 import { useStudentQr } from '@/features/students/hooks/useStudentQr'
 import type { StudentQrStatus } from '@/features/students/types/studentQr'
+import entryControlStyles from '@/features/exams/pages/EntryControlPage.module.css'
 import styles from './StudentQrPage.module.css'
 
 const statusOrder: Record<StudentQrStatus, number> = {
@@ -18,6 +19,10 @@ const statusOrder: Record<StudentQrStatus, number> = {
 export function StudentQrPage() {
   const exams = useStudentExams()
   const qr = useStudentQr(exams.data)
+  const [activeGroup, setActiveGroup] = useState<'current' | 'history'>(
+    'current',
+  )
+  const tabsId = useId()
   const orderedExams = useMemo(
     () =>
       [...exams.data].sort((first, second) => {
@@ -36,6 +41,21 @@ export function StudentQrPage() {
       }),
     [exams.data],
   )
+  const currentExams = orderedExams.filter(
+    (exam) => exam.qr_status !== 'FINISHED',
+  )
+  const historyExams = orderedExams.filter(
+    (exam) => exam.qr_status === 'FINISHED',
+  )
+  const activeExams = activeGroup === 'current' ? currentExams : historyExams
+  const activeEmptyMessage =
+    activeGroup === 'current'
+      ? 'No tienes exámenes vigentes.'
+      : 'No tienes exámenes anteriores.'
+
+  function selectGroup(group: 'current' | 'history') {
+    setActiveGroup(group)
+  }
 
   function selectExam(examId: number) {
     const exam = exams.data.find((item) => item.exam_id === examId)
@@ -53,9 +73,6 @@ export function StudentQrPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <span className={styles.headerIcon}>
-          <StudentQrIcon name="qr" />
-        </span>
         <div>
           <h1>Mis exámenes</h1>
           <p>
@@ -80,8 +97,7 @@ export function StudentQrPage() {
       >
         <div className={styles.sectionHeading}>
           <h2 id="student-exams-heading">
-            <StudentQrIcon name="calendar" />
-            Exámenes que debes rendir
+            Tus exámenes
           </h2>
           <button
             type="button"
@@ -112,80 +128,139 @@ export function StudentQrPage() {
               Reintentar
             </button>
           </div>
-        ) : exams.data.length === 0 ? (
-          <p className={styles.state} role="status">
-            <span className={styles.stateIcon}>
-              <StudentQrIcon name="calendar" />
-            </span>
-            No tienes exámenes programados actualmente.
-          </p>
         ) : (
-          <ul className={styles.examList}>
-            {orderedExams.map((exam) => (
-              <li key={exam.exam_id}>
-                <StudentExamCard
-                  exam={exam}
-                  selected={qr.examId === exam.exam_id}
-                  onSelect={selectExam}
-                >
-                  {qr.examId === exam.exam_id && (
-                    <section
-                      id={`exam-${exam.exam_id}-qr`}
-                      className={styles.expandedQr}
-                      aria-labelledby={`exam-${exam.exam_id}-qr-heading`}
-                      aria-busy={qr.loading}
-                    >
-                      <div className={styles.expandedQrHeading}>
-                        <h3 id={`exam-${exam.exam_id}-qr-heading`}>
-                          <StudentQrIcon name="qr" />
-                          Código QR del examen
-                        </h3>
-                        <button
-                          type="button"
-                          className={styles.secondaryButton}
-                          onClick={qr.clear}
-                        >
-                          Cerrar QR
-                        </button>
-                      </div>
-                      {qr.loading ? (
-                        <p className={styles.state} role="status">
-                          <span className={styles.stateIcon}>
-                            <StudentQrIcon name="clock" />
-                          </span>
-                          Cargando QR de {exam.subject}: {exam.exam_title}…
-                        </p>
-                      ) : qr.error ? (
-                        <div className={styles.error} role="alert">
-                          <StudentQrIcon name="info" />
-                          <p>{qr.error.message}</p>
-                          <button
-                            type="button"
-                            className={styles.secondaryButton}
-                            onClick={
-                              qr.error.status === 403 || qr.error.status === 404
-                                ? refreshExams
-                                : qr.retry
-                            }
+          <>
+            <div
+              className={entryControlStyles.tabs}
+              role="tablist"
+              aria-label="Exámenes vigentes e historial"
+              onKeyDown={(event) => {
+                if (
+                  !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(
+                    event.key,
+                  )
+                )
+                  return
+                event.preventDefault()
+                const next =
+                  event.key === 'Home'
+                    ? 'current'
+                    : event.key === 'End'
+                      ? 'history'
+                      : activeGroup === 'current'
+                        ? 'history'
+                        : 'current'
+                selectGroup(next)
+                document.getElementById(`${tabsId}-${next}-tab`)?.focus()
+              }}
+            >
+              <button
+                type="button"
+                role="tab"
+                id={`${tabsId}-current-tab`}
+                aria-selected={activeGroup === 'current'}
+                aria-controls={`${tabsId}-panel`}
+                tabIndex={activeGroup === 'current' ? 0 : -1}
+                className={entryControlStyles.tab}
+                onClick={() => selectGroup('current')}
+              >
+                Vigentes <span>({currentExams.length})</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id={`${tabsId}-history-tab`}
+                aria-selected={activeGroup === 'history'}
+                aria-controls={`${tabsId}-panel`}
+                tabIndex={activeGroup === 'history' ? 0 : -1}
+                className={entryControlStyles.tab}
+                onClick={() => selectGroup('history')}
+              >
+                Historial <span>({historyExams.length})</span>
+              </button>
+            </div>
+            <section
+              id={`${tabsId}-panel`}
+              role="tabpanel"
+              aria-labelledby={`${tabsId}-${activeGroup}-tab`}
+              className={styles.examTabPanel}
+            >
+              {activeExams.length === 0 ? (
+                <p className={styles.groupEmpty} role="status">
+                  {activeEmptyMessage}
+                </p>
+              ) : (
+                <ul className={styles.examList}>
+                  {activeExams.map((exam) => (
+                    <li key={exam.exam_id}>
+                      <StudentExamCard
+                        exam={exam}
+                        selected={qr.examId === exam.exam_id}
+                        onSelect={selectExam}
+                      >
+                        {qr.examId === exam.exam_id && (
+                          <section
+                            id={`exam-${exam.exam_id}-qr`}
+                            className={styles.expandedQr}
+                            aria-labelledby={`exam-${exam.exam_id}-qr-heading`}
+                            aria-busy={qr.loading}
                           >
-                            {qr.error.status === 403 || qr.error.status === 404
-                              ? 'Actualizar exámenes'
-                              : 'Reintentar'}
-                          </button>
-                        </div>
-                      ) : qr.data ? (
-                        <StudentQrCard
-                          key={qr.data.exam_id}
-                          qr={qr.data}
-                          onRetry={qr.retry}
-                        />
-                      ) : null}
-                    </section>
-                  )}
-                </StudentExamCard>
-              </li>
-            ))}
-          </ul>
+                            <div className={styles.expandedQrHeading}>
+                              <h3 id={`exam-${exam.exam_id}-qr-heading`}>
+                                Código QR del examen
+                              </h3>
+                              <button
+                                type="button"
+                                className={styles.secondaryButton}
+                                onClick={qr.clear}
+                              >
+                                Cerrar QR
+                              </button>
+                            </div>
+                            {qr.loading ? (
+                              <p className={styles.state} role="status">
+                                <span className={styles.stateIcon}>
+                                  <StudentQrIcon name="clock" />
+                                </span>
+                                Cargando QR de {exam.subject}:{' '}
+                                {exam.exam_title}…
+                              </p>
+                            ) : qr.error ? (
+                              <div className={styles.error} role="alert">
+                                <StudentQrIcon name="info" />
+                                <p>{qr.error.message}</p>
+                                <button
+                                  type="button"
+                                  className={styles.secondaryButton}
+                                  onClick={
+                                    qr.error.status === 403 ||
+                                    qr.error.status === 404
+                                      ? refreshExams
+                                      : qr.retry
+                                  }
+                                >
+                                  {qr.error.status === 403 ||
+                                  qr.error.status === 404
+                                    ? 'Actualizar exámenes'
+                                    : 'Reintentar'}
+                                </button>
+                              </div>
+                            ) : qr.data ? (
+                              <StudentQrCard
+                                key={qr.data.exam_id}
+                                qr={qr.data}
+                                onRetry={qr.retry}
+                              />
+                            ) : null}
+                          </section>
+                        )}
+                      </StudentExamCard>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
         )}
       </section>
     </div>

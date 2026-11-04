@@ -19,6 +19,7 @@ import {
   updateAdminStudentStatus,
 } from '@/features/admin/api/adminStudentsApi'
 import type { StudentDetail } from '@/features/admin/types/student.types'
+import { StudentHistoricalPhotoSection } from '../components/StudentHistoricalPhotoSection'
 
 function getInitials(firstNames?: string, lastNames?: string): string {
   const first = firstNames?.trim().charAt(0) ?? ''
@@ -196,6 +197,9 @@ export function AdminStudentDetailPage({
         onUpdateEntity: handleUpdateStudent,
         onNavigateTab: handleOptionChange,
       })}
+      {['perfil', 'editar'].includes(currentTabConfig.id) ? (
+        <StudentHistoricalPhotoSection key={student.id} student={student} onUpdated={setStudent} />
+      ) : null}
     </EntityProfileLayout>
   )
 }

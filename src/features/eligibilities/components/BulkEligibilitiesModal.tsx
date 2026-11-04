@@ -9,6 +9,7 @@ import styles from '../pages/Eligibilities.module.css'
 const MAX_FILE_BYTES = 5 * 1024 * 1024
 
 type Props = {
+  examLabel?: string
   onClose: () => void
   onProcess: (file: File, signal: AbortSignal) => Promise<BulkEligibilityResult>
   listLoading: boolean
@@ -23,7 +24,15 @@ function validateFile(file: File): string | null {
   return null
 }
 
-export function BulkEligibilitiesModal({ onClose, onProcess, listLoading, listError, onReload, onReview }: Props) {
+export function BulkEligibilitiesModal({
+  examLabel = 'este examen',
+  onClose,
+  onProcess,
+  listLoading,
+  listError,
+  onReload,
+  onReview,
+}: Props) {
   const fieldId = useId()
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
@@ -76,7 +85,7 @@ export function BulkEligibilitiesModal({ onClose, onProcess, listLoading, listEr
           }}
         >
           <p className={styles.modalSubtitle}>
-            Actualiza las habilitaciones de este examen desde un archivo CSV.
+            Actualiza las habilitaciones de {examLabel} desde un archivo CSV.
           </p>
           <div className={styles.csvFormat} id={`${fieldId}-format`}>
             <strong>Formato requerido</strong>
@@ -202,6 +211,11 @@ export function BulkEligibilitiesModal({ onClose, onProcess, listLoading, listEr
             </button>
           ) : null}
           <div className={styles.modalActions}>
+            {result ? (
+              <button type="button" className={sharedStyles.primaryButton} onClick={onReview}>
+                Volver al listado de habilitaciones
+              </button>
+            ) : null}
             <button
               type="button"
               className={sharedStyles.secondaryButton}

@@ -1,9 +1,12 @@
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
 export function ExamTools({ examId }: { examId: number }) {
+  const { search } = useLocation()
   return (
     <>
-      <Link to={`/teacher/exams/${examId}/eligibilities`}>Habilitaciones</Link>
+      <Link to={`/teacher/exams/${examId}/eligibilities${search}`}>
+        Habilitaciones
+      </Link>
       <Link to={`/teacher/exams/${examId}/collaborators`}>Colaboradores</Link>
       <Link to={`/teacher/exams/${examId}/offline/assignments`}>
         Distribución de listas

@@ -13,7 +13,13 @@ export interface Student {
 export interface StudentDetail extends Student {
   identity_number: string
   career_id?: string | number | null
+  historical_photo_url: string | null
+  historical_photo_revision: number
+  profile_photo_url: string | null
 }
+
+export type HistoricalPhotoField = 'photo' | 'revision' | 'reason'
+export type HistoricalPhotoFieldErrors = Partial<Record<HistoricalPhotoField, string[]>>
 
 export interface GetStudentsParams {
   page?: number

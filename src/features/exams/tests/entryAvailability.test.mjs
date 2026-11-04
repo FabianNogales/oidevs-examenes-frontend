@@ -31,17 +31,25 @@ test('global reasons remain explicit and an EXAM_UNAVAILABLE blocker does not im
 })
 
 function pageHarness(initialExam) {
-  const list = { response: { exam: initialExam, summary: {} }, roomId: 7 }
+  const list = {
+    response: { exam: initialExam, summary: {} },
+    roomId: 7,
+    query: '',
+    setFilter() {},
+    setPage() {},
+  }
   const components = {
+    EntryHistoryModal: 'history-modal',
     EntryControlStudentModal: 'student-modal', EntryControlStudentsList: 'students-list',
-    EntryControlledRoom: 'controlled-room', EntryHistoryModal: 'history-modal',
-    EntryQrPanel: 'qr-reader', EntryRecentScans: 'recent-scans',
+    EntryQrPanel: 'qr-reader',
     EntryStudentsSummary: 'summary', ExamCard: 'exam-card',
   }
   const h = sourceHarness({
+    '@/features/incidents/components/IncidentControlDialog': { IncidentControlDialog: 'incident-dialog' },
+    '@/shared/hooks/useAuthenticatedImage': { useAuthenticatedImage: () => ({ src: null, loading: false, failed: false }) },
     'react-router': { Link: 'link', useParams: () => ({ examId: '17' }), useSearchParams: () => [new URLSearchParams()] },
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
     '../hooks/useEntryControlStudents': { useEntryControlStudents: () => list },
-    '../hooks/useEntryRecentRecords': { useEntryRecentRecords: () => ({ records: [], addResult() {} }) },
     ...Object.fromEntries(Object.entries(components).map(([name, type]) => [`../components/${name}`, { [name]: type }])),
   })
   const { EntryControlPage } = h.load('features/exams/pages/EntryControlPage.tsx')
@@ -53,7 +61,7 @@ function pageHarness(initialExam) {
       return tree
     },
     click(label) {
-      const button = nodes(tree, (node) => node.type === 'button' && textContent(node) === label)[0]
+      const button = nodes(tree, (node) => node.type === 'button' && textContent(node).trim() === label)[0]
       assert.ok(button, label)
       assert.ok(!button.props.disabled, label + ' remains available')
       button.props.onClick()
@@ -78,9 +86,7 @@ for (const reason of ['EXAM_NOT_STARTED', 'EXAM_ENDED', 'EXAM_FINISHED', 'EXAM_C
     ui.h.jump(24 * 60 * 60 * 1000)
     tree = ui.render()
     assert.equal(nodes(tree, (node) => node.type === 'qr-reader').length, 0, 'Browser clock cannot open entry')
-    ui.click('Historial de ingresos')
-    tree = ui.render()
-    assert.equal(nodes(tree, (node) => node.type === 'history-modal').length, 1)
+    assert.equal(nodes(tree, (node) => node.type === 'button' && textContent(node).includes('Ver historial completo')).length, 0)
   })
 }
 

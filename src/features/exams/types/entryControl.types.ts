@@ -46,8 +46,12 @@ export type EntryControlStudent = {
   last_names: string
   sis_code: string
   identity_number: string | null
-  profile_photo_url: string | null
+  historical_photo_url?: string | null
+  historical_photo_revision?: number
+  profile_photo_url?: string | null
   student_status: string
+  is_expelled?: boolean
+  expulsion?: { id: number; expelled_at: string } | null
   enrollment_status: EntryEnrollmentStatus
   eligibility_status: EntryEligibilityStatus
   reason_code: string | null
@@ -69,6 +73,15 @@ export type EntryControlSummary = {
   not_applicable: number
 }
 
+export type EntryControlFilterCounts = {
+  all: number
+  registered: number
+  pending: number
+  incidents: number
+}
+
+export type EntryControlFilter = keyof EntryControlFilterCounts
+
 export type EntryControlMeta = {
   current_page: number
   per_page: number
@@ -81,11 +94,16 @@ export type EntryControlQuery = {
   page: number
   per_page: number
   room_id?: number
+  entry_status?: 'REGISTERED' | 'PENDING'
+  has_incident?: boolean
 }
 
 export type EntryControlStudentsResponse = {
   exam: EntryControlExam
+  // Optional HU28 extension; absent permission never enables management.
+  permissions?: { can_annul_entries: boolean }
   summary: EntryControlSummary
+  filter_counts: EntryControlFilterCounts
   data: EntryControlStudent[]
   meta: EntryControlMeta
 }

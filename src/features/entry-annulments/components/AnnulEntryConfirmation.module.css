@@ -1,0 +1,119 @@
+.form {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.evidence {
+  margin-top: var(--space-3);
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.evidence summary {
+  cursor: pointer;
+  color: var(--color-primary);
+}
+.evidence dl {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.evidence dd {
+  margin: 0;
+}
+.form :is(h3, p, dl, dd) {
+  margin: 0;
+}
+.form p {
+  overflow-wrap: anywhere;
+}
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-md);
+}
+.summary dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.summary dd {
+  overflow-wrap: anywhere;
+  font-weight: var(--font-weight-medium);
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+.field textarea {
+  width: 100%;
+  padding: var(--space-3);
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
+  resize: vertical;
+}
+.confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: var(--input-height);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+.confirm input[type='checkbox'] {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  margin: 3px 0 0;
+  accent-color: var(--color-primary);
+}
+.form .error {
+  color: var(--color-error);
+}
+.form [aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+.form :is(button, textarea, input):focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+.actions button {
+  min-height: var(--button-height);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--button-radius);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.actions button[type='submit'] {
+  color: var(--color-on-primary);
+  background: var(--color-error);
+  border-color: var(--color-error);
+}
+.actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+@media (max-width: 640px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+  .actions button {
+    flex: 1 1 100%;
+  }
+}

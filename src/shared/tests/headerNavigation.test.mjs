@@ -191,3 +191,25 @@ test('header: student and public navigation do not acquire admin destinations', 
     '/students/qr',
   )
 })
+
+test('header: HU33 report navigation preserves incident access and has a teacher catalog', () => {
+  for (const [path, label] of [
+    ['/admin/incidents', 'Incidencias e ingresos irregulares'],
+    ['/admin/exam-reports', 'Reportes de exámenes'],
+  ]) {
+    const s = setup(path)
+    const items = s.config.navigationByRole.admin
+    let tree = s.render(items)
+    find(tree, 'button', 'Reportes').props.onClick()
+    tree = s.render(items)
+    assert.deepEqual(selectedLinks(tree).map(textContent), [label])
+    s.h.unmount()
+  }
+  const s = setup('/teacher/exam-reports')
+  assert.ok(
+    s.config.navigationByRole.teacher
+      .find((item) => item.label === 'Mis exámenes')
+      .children.some((item) => item.to === '/teacher/exam-reports'),
+  )
+  s.h.unmount()
+})

@@ -6,40 +6,20 @@
   margin-top: var(--space-6);
 }
 
-.toolbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.toolbar button,
 .cameraControls button {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
   white-space: normal;
   overflow-wrap: anywhere;
-}
-
-.toolbar > div {
-  flex: 1;
-  max-width: 440px;
-  min-width: min(100%, 240px);
+  padding-inline: var(--space-2);
+  font-size: var(--font-size-sm);
 }
 
 .scannerGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-  grid-template-areas:
-    'camera result'
-    'controls result';
-  grid-template-rows: min-content auto;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  grid-template-areas: 'camera result';
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -49,7 +29,6 @@
 }
 
 .cameraPanel,
-.cameraTools,
 .resultPanel {
   width: 100%;
   max-width: 100%;
@@ -62,18 +41,6 @@
 
 .cameraPanel {
   grid-area: camera;
-  padding-bottom: 0;
-  border-bottom: 0;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.cameraTools {
-  grid-area: controls;
-  padding-top: 0;
-  border-top: 0;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
 }
 
 .resultArea {
@@ -117,8 +84,9 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: 360px;
-  aspect-ratio: 4 / 3;
+  min-height: 180px;
+  max-height: 300px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: var(--radius-md);
   background: #0f172a;
@@ -172,9 +140,11 @@
 
 .cameraControls {
   display: flex;
-  align-items: end;
+  align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  flex: 1 1 260px;
+  justify-content: flex-end;
   min-width: 0;
   max-width: 100%;
 }
@@ -185,7 +155,32 @@
   gap: var(--space-2);
   min-width: 0;
   max-width: 100%;
-  flex: 1 1 200px;
+  flex: 1 1 120px;
+}
+
+.cameraChoice label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.lastScanIdentity {
+  margin-top: var(--space-4);
+}
+.lastScanIdentity h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--brand-navy);
+  font-size: var(--font-size-lg);
+}
+.lastScanIdentity p {
+  margin: 0;
+}
+.lastScanResult {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
 }
 
 .cameraChoice select {
@@ -227,14 +222,14 @@
 .identity {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--space-3);
   margin-block: var(--space-4);
 }
 
 .identity > div:last-child {
   min-width: 0;
-  flex: 1 1 140px;
+  flex: 1 1 100px;
+  overflow-wrap: anywhere;
 }
 
 .identity h3,
@@ -252,6 +247,49 @@
   border-radius: var(--radius-md);
   color: var(--color-primary);
   background: var(--color-surface);
+}
+
+.identityPhotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 64px), 1fr));
+  gap: var(--space-2);
+  flex: 0 1 152px;
+  min-width: 0;
+  max-width: 152px;
+}
+
+.photo {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+.photo .avatar {
+  width: 100%;
+  max-width: 72px;
+  margin-inline: auto;
+}
+
+.photo .photoLabel {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.photoPlaceholder {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 3px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.avatar .photoPlaceholder svg {
+  width: 24px;
+  height: 24px;
 }
 
 .avatar img {
@@ -292,25 +330,6 @@
 .blockers {
   padding-left: var(--space-5);
   white-space: pre-wrap;
-}
-
-.recent {
-  margin-top: var(--space-6);
-  min-width: 0;
-  max-width: 100%;
-}
-
-.recentTableWrap {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.recentTable {
-  min-width: 900px;
-}
-
-.recentCards {
-  display: none;
 }
 
 .requestError {
@@ -405,21 +424,13 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'camera'
-      'result'
-      'controls';
-    grid-template-rows: auto auto auto;
+      'result';
     gap: var(--space-5);
   }
 
   .cameraPanel {
     padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-  }
-
-  .cameraTools {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
   }
 }
@@ -533,97 +544,6 @@
     min-height: 44px;
   }
 
-  .recent {
-    margin-top: var(--space-4);
-  }
-
-  .recentTableWrap {
-    display: none;
-  }
-
-  .recentCards {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-
-  .recentCardList {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .recentToggle {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    min-height: 44px;
-    margin-top: var(--space-3);
-    box-sizing: border-box;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .recentCard {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    padding: var(--space-4);
-    box-sizing: border-box;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-  }
-
-  .recentCard dl {
-    display: grid;
-    gap: var(--space-3);
-    margin: 0;
-  }
-
-  .recentCard dt {
-    margin-bottom: var(--space-1);
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-  }
-
-  .recentCard dd {
-    min-width: 0;
-    margin: 0;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .recentStudentName {
-    color: var(--brand-navy);
-    font-weight: var(--font-weight-semibold);
-  }
-
-  .recentCard .recentResultBadge {
-    display: inline-block;
-    max-width: 100%;
-    box-sizing: border-box;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: normal;
-  }
-
-  .toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .toolbar > div {
-    max-width: none;
-    min-width: 0;
-  }
-
   .cameraPanel,
   .resultPanel {
     width: 100%;
@@ -633,15 +553,6 @@
   .viewport {
     width: 100%;
     max-width: 100%;
-  }
-
-  .recentTable {
-    min-width: 0;
-    table-layout: fixed;
-  }
-
-  .viewport {
-    min-height: 300px;
   }
 
   .cameraControls button {

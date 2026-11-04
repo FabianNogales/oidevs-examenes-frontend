@@ -13,22 +13,7 @@
 .header {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-5);
   margin-bottom: var(--space-6);
-}
-.headerIcon {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: var(--space-16);
-  height: var(--space-16);
-  border-radius: var(--radius-pill);
-  color: var(--color-primary);
-  background: var(--color-surface-soft);
-}
-.headerIcon svg {
-  width: var(--space-8);
-  height: var(--space-8);
 }
 .header h1 {
   margin: 0;
@@ -79,14 +64,9 @@
 .sectionHeading h2 {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-}
-.sectionHeading h2 > svg {
-  flex-shrink: 0;
-  color: var(--color-primary);
 }
 .examsPanel {
   padding: var(--space-6);
@@ -109,6 +89,16 @@
 }
 .examList > li {
   min-width: 0;
+}
+.groupEmpty {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.groupEmpty {
+  margin: 0;
+}
+.examTabPanel {
+  margin-top: var(--space-5);
 }
 .examCard,
 .qrCard {
@@ -149,12 +139,8 @@
 .expandedQrHeading h3 {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
   margin: 0;
   color: var(--color-text);
-}
-.expandedQrHeading h3 svg {
-  color: var(--color-primary);
 }
 .examAction {
   width: 100%;
@@ -458,17 +444,6 @@
 @media (max-width: 639px) {
   .page {
     padding-block: var(--space-6) var(--space-8);
-  }
-  .header {
-    gap: var(--space-3);
-  }
-  .headerIcon {
-    width: var(--space-10);
-    height: var(--space-10);
-  }
-  .headerIcon svg {
-    width: var(--space-6);
-    height: var(--space-6);
   }
   .examCard {
     grid-template-columns: minmax(0, 1fr);

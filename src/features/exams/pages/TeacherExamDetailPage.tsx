@@ -1,4 +1,5 @@
 import { safeExamMessage } from '../utils/examMessages'
+import { ExamIncidentNavigation } from '@/features/incidents/components/ExamIncidentNavigation'
 import { hasExamEnded } from '../utils/examDisplayStatus'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useLocation, useParams } from 'react-router'
@@ -48,6 +49,7 @@ function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
         ) : null}
         {exam ? (
           <div className={detailStyles.sections}>
+            <ExamIncidentNavigation examId={exam.id} search={search} />
             {!detail ? (
               <p className={management.notice} role="status">
                 Solo está disponible el resumen del examen. El servidor aún no

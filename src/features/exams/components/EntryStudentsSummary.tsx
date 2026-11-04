@@ -3,28 +3,37 @@ import styles from '../pages/EntryControlPage.module.css'
 
 export function EntryStudentsSummary({
   summary,
-  compact = false,
+  incidents,
 }: {
   summary: EntryControlSummary
-  compact?: boolean
+  incidents?: number
 }) {
+  const total = summary.total_students
+  const percentage =
+    total > 0 ? Math.round((summary.registered / total) * 100) : 0
   return (
-    <dl
-      className={`${styles.summary} ${compact ? styles.compactSummary : ''}`}
+    <section
+      className={styles.examProgress}
       aria-label="Resumen de estudiantes del examen"
     >
-      <div>
-        <dt>{compact ? 'Total' : 'Total estudiantes'}</dt>
-        <dd>{summary.total_students}</dd>
+      <div className={styles.progressOverview}>
+        <p>
+          <strong>
+            {summary.registered} de {total} registrados
+          </strong>{' '}
+          · {percentage}%
+        </p>
+        <progress
+          className={styles.progressBar}
+          value={summary.registered}
+          max={total || 1}
+          aria-label="Progreso de registros"
+        />
       </div>
-      <div>
-        <dt>Registrados</dt>
-        <dd>{summary.registered}</dd>
-      </div>
-      <div>
-        <dt>Pendientes</dt>
-        <dd>{summary.pending}</dd>
-      </div>
-    </dl>
+      <p className={styles.progressDetails}>
+        {summary.pending} pendientes
+        {incidents !== undefined ? <> · {incidents} incidencias</> : null}
+      </p>
+    </section>
   )
 }
