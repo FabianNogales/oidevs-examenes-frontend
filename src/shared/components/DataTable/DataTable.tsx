@@ -12,6 +12,7 @@ export function DataTable<T extends BaseTableEntity>({
   pagination = null,
   entityLabel = 'registros',
   searchPlaceholder = 'Buscar por nombre, apellido, correo o código institucional',
+  searchLayout = 'standard',
   initialSearch = '',
   onSearch,
   onPageChange,
@@ -46,7 +47,8 @@ export function DataTable<T extends BaseTableEntity>({
   }
 
   const handleNextPage = () => {
-    if (!pagination || loading || pagination.currentPage >= pagination.lastPage) return
+    if (!pagination || loading || pagination.currentPage >= pagination.lastPage)
+      return
     onPageChange?.(pagination.currentPage + 1)
   }
 
@@ -63,7 +65,12 @@ export function DataTable<T extends BaseTableEntity>({
       {/* BARRA DE BÚSQUEDA UNIVERSAL */}
       {onSearch && (
         <>
-          <form className={styles.searchBar} onSubmit={handleSearchSubmit}>
+          <form
+            className={`${styles.searchBar} ${
+              searchLayout === 'wide' ? styles.searchBarWide : ''
+            }`}
+            onSubmit={handleSearchSubmit}
+          >
             <label className={styles.searchInputWrapper}>
               <span className={styles.visuallyHidden}>{searchPlaceholder}</span>
               <svg
@@ -179,7 +186,9 @@ export function DataTable<T extends BaseTableEntity>({
                   )
                 })}
                 {hasActions && (
-                  <th scope="col" className={styles.textRight}>Acciones</th>
+                  <th scope="col" className={styles.textRight}>
+                    Acciones
+                  </th>
                 )}
               </tr>
             </thead>
@@ -191,7 +200,9 @@ export function DataTable<T extends BaseTableEntity>({
                   item={item}
                   viewActionLabel={viewActionLabel}
                   columns={columns}
-                  profilePath={getProfilePath ? getProfilePath(item) : undefined}
+                  profilePath={
+                    getProfilePath ? getProfilePath(item) : undefined
+                  }
                   onViewProfile={onViewProfile}
                   onToggleStatus={onToggleStatus}
                 />
@@ -205,7 +216,8 @@ export function DataTable<T extends BaseTableEntity>({
       {!loading && !error && pagination && pagination.total > 0 && (
         <footer className={styles.paginationFooter}>
           <span className={styles.paginationSummary}>
-            Mostrando {fromRecord} a {toRecord} de {pagination.total} {entityLabel}
+            Mostrando {fromRecord} a {toRecord} de {pagination.total}{' '}
+            {entityLabel}
           </span>
 
           <div className={styles.paginationControls}>
@@ -225,7 +237,9 @@ export function DataTable<T extends BaseTableEntity>({
             <button
               type="button"
               className={styles.pageButton}
-              disabled={pagination.currentPage >= pagination.lastPage || loading}
+              disabled={
+                pagination.currentPage >= pagination.lastPage || loading
+              }
               onClick={handleNextPage}
             >
               Siguiente

@@ -507,3 +507,19 @@
     justify-content: space-between;
   }
 }
+
+@media (min-width: 601px) and (max-width: 768px) {
+  .searchBarWide {
+    flex-wrap: nowrap;
+    padding-inline: 24px;
+  }
+
+  .searchBarWide .searchInputWrapper {
+    flex-basis: 0;
+  }
+
+  .searchBarWide .searchButton,
+  .searchBarWide .clearButton {
+    flex: 0 0 auto;
+  }
+}
