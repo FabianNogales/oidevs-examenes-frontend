@@ -1,5 +1,11 @@
+import { AuthenticatedImage } from '@/shared/components/AuthenticatedImage/AuthenticatedImage'
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
+import {
+  useParams,
+  useNavigate,
+  useSearchParams,
+  useLocation,
+} from 'react-router'
 
 import { EntityProfileLayout } from '@/features/admin/profile/components/EntityProfileLayout'
 import layoutStyles from '@/features/admin/profile/components/EntityProfileLayout.module.css'
@@ -20,6 +26,7 @@ import {
 } from '@/features/admin/api/adminStudentsApi'
 import type { StudentDetail } from '@/features/admin/types/student.types'
 import { StudentHistoricalPhotoSection } from '../components/StudentHistoricalPhotoSection'
+import photoStyles from '../components/StudentHistoricalPhotoSection.module.css'
 
 function getInitials(firstNames?: string, lastNames?: string): string {
   const first = firstNames?.trim().charAt(0) ?? ''
@@ -133,10 +140,13 @@ export function AdminStudentDetailPage({
         first_names: values.first_names,
         last_names: values.last_names,
         email: values.email,
-        institutional_code: student.institutional_code, 
+        institutional_code: student.institutional_code,
       }
-      
-      const updatedDetail = await updateAdminStudent(student.id.toString(), textPayload)
+
+      const updatedDetail = await updateAdminStudent(
+        student.id.toString(),
+        textPayload,
+      )
       currentStudentData = updatedDetail
     }
 
@@ -174,8 +184,12 @@ export function AdminStudentDetailPage({
   }
 
   const unifiedEntity = mapStudentToUnifiedProfile(student)
-  const fullName = `${unifiedEntity.first_names} ${unifiedEntity.last_names}`.trim()
-  const initials = getInitials(unifiedEntity.first_names, unifiedEntity.last_names)
+  const fullName =
+    `${unifiedEntity.first_names} ${unifiedEntity.last_names}`.trim()
+  const initials = getInitials(
+    unifiedEntity.first_names,
+    unifiedEntity.last_names,
+  )
 
   const currentTabConfig =
     availableTabs.find((tab) => tab.id === activeTabId) ?? availableTabs[0]
@@ -198,7 +212,26 @@ export function AdminStudentDetailPage({
         onNavigateTab: handleOptionChange,
       })}
       {['perfil', 'editar'].includes(currentTabConfig.id) ? (
-        <StudentHistoricalPhotoSection key={student.id} student={student} onUpdated={setStudent} />
+        <>
+          <section
+            className={layoutStyles.sectionCard}
+            aria-label="Fotografía actual"
+          >
+            <h2>Fotografía actual</h2>
+            <div className={photoStyles.photo}>
+              <AuthenticatedImage
+                url={student.profile_photo_url}
+                alt={`Foto actual de ${fullName}`}
+                placeholder="Sin fotografía actual"
+              />
+            </div>
+          </section>
+          <StudentHistoricalPhotoSection
+            key={student.id}
+            student={student}
+            onUpdated={setStudent}
+          />
+        </>
       ) : null}
     </EntityProfileLayout>
   )

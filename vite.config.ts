@@ -33,6 +33,8 @@ export default defineConfig(({ command, mode }) => {
           // Preserve the browser's host/origin and forward its HTTP/HTTPS scheme.
           changeOrigin: false,
           xfwd: true,
+          // Laravel must include the stripped prefix in route() image URLs.
+          headers: { 'X-Forwarded-Prefix': '/backend' },
           rewrite: (path) => {
             const rewritten = path.replace(/^\/backend(?=\/|\?|$)/, '')
             return rewritten.startsWith('/') ? rewritten : `/${rewritten}`
