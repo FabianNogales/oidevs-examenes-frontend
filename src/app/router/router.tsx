@@ -24,6 +24,9 @@ import { ExamEligibilitiesPage } from '@/features/eligibilities/pages/ExamEligib
 import { ExamCollaboratorsPage } from '@/features/collaborations/pages/ExamCollaboratorsPage'
 import { CollaboratorPage } from '@/features/collaborations/pages/CollaboratorPage'
 import { EntryControlPage } from '@/features/exams/pages/EntryControlPage'
+import { OfflineEntryPage } from '@/features/offline-entry/pages/OfflineEntryPage'
+import { OfflineHomePage } from '@/features/offline-entry/pages/OfflineHomePage'
+import { TeacherDistributionPage } from '@/features/offline-entry/pages/TeacherDistributionPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
@@ -39,6 +42,9 @@ export const router = createBrowserRouter([
   {
     element: <AuthEventHandler />,
     children: [
+      // These routes have a narrowly scoped local continuity gate; online routes retain ProtectedRoute.
+      { path: '/offline', element: <OfflineHomePage /> },
+      { path: '/exams/:examId/offline', element: <OfflineEntryPage /> },
       {
         path: '/',
         element: <AppLayout />,
@@ -46,6 +52,48 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <HomePage />,
+          },
+          {
+            path: 'calendar',
+            lazy: async () => {
+              const { CalendarPage } = await import('@/features/portal-calendar/pages/CalendarPage')
+              return { Component: CalendarPage }
+            },
+          },
+          {
+            path: 'news',
+            lazy: async () => {
+              const { NewsPage } = await import('@/features/portal-news/NewsPage')
+              return { Component: NewsPage }
+            },
+          },
+          {
+            path: 'news/:newsId',
+            lazy: async () => {
+              const { NewsDetailPage } = await import('@/features/portal-news/NewsPage')
+              return { Component: NewsDetailPage }
+            },
+          },
+          {
+            path: 'information',
+            lazy: async () => {
+              const { InformationPage } = await import('@/features/portal-information/InformationPage')
+              return { Component: InformationPage }
+            },
+          },
+          {
+            path: 'services',
+            lazy: async () => {
+              const { ServicesPage } = await import('@/features/portal-services/ServicesPage')
+              return { Component: ServicesPage }
+            },
+          },
+          {
+            path: 'services/:serviceId',
+            lazy: async () => {
+              const { ServiceDetailPage } = await import('@/features/portal-services/ServicesPage')
+              return { Component: ServiceDetailPage }
+            },
           },
           {
             element: <ProtectedRoute />,
@@ -61,6 +109,27 @@ export const router = createBrowserRouter([
               {
                 path: 'exams/:examId/entry-control',
                 element: <EntryControlPage />,
+              },
+              {
+                path: 'exams/:examId/incidents',
+                lazy: async () => {
+                  const { ExamIncidentsPage } = await import('@/features/incidents/pages/ExamIncidentsPage')
+                  return { Component: ExamIncidentsPage }
+                },
+              },
+              {
+                path: 'exams/:examId/incidents/create',
+                lazy: async () => {
+                  const { CreateIncidentPage } = await import('@/features/incidents/pages/CreateIncidentPage')
+                  return { Component: CreateIncidentPage }
+                },
+              },
+              {
+                path: 'exams/:examId/incidents/:incidentId',
+                lazy: async () => {
+                  const { IncidentDetailPage } = await import('@/features/incidents/pages/IncidentDetailPage')
+                  return { Component: IncidentDetailPage }
+                },
               },
             ],
           },
@@ -80,6 +149,42 @@ export const router = createBrowserRouter([
                     element: <AdminManageUsersPage />,
                   },
                   {
+                    path: 'portal/events',
+                    lazy: async () => {
+                      const { AdminCalendarPage } = await import('@/features/portal-calendar/pages/AdminCalendarPage')
+                      return { Component: AdminCalendarPage }
+                    },
+                  },
+                  {
+                    path: 'portal/news',
+                    lazy: async () => {
+                      const { AdminNewsPage } = await import('@/features/portal-news/AdminNewsPage')
+                      return { Component: AdminNewsPage }
+                    },
+                  },
+                  {
+                    path: 'portal/information',
+                    lazy: async () => {
+                      const { AdminInformationPage } = await import('@/features/portal-information/AdminInformationPage')
+                      return { Component: AdminInformationPage }
+                    },
+                  },
+                  {
+                    path: 'portal/services',
+                    lazy: async () => {
+                      const { AdminServicesPage } = await import('@/features/portal-services/AdminServicesPage')
+                      return { Component: AdminServicesPage }
+                    },
+                  },
+                  {
+                    path: 'eligibility-policies',
+                    lazy: async () => {
+                      const { AdminEligibilityPoliciesPage } =
+                        await import('@/features/eligibility-automation/pages/AdminEligibilityPoliciesPage')
+                      return { Component: AdminEligibilityPoliciesPage }
+                    },
+                  },
+                  {
                     path: 'users/roles',
                     element: <AdminManageUsersPage />,
                   },
@@ -91,6 +196,27 @@ export const router = createBrowserRouter([
                       return {
                         Component: () => <AdminReadPage kind="audit-logs" />,
                       }
+                    },
+                  },
+                  {
+                    path: 'exam-reports',
+                    lazy: async () => {
+                      const { AdminExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                      return { Component: AdminExamReportsPage }
+                    },
+                  },
+                  {
+                    path: 'incidents',
+                    lazy: async () => {
+                      const { AdminIncidentsPage } = await import('@/features/incidents/pages/AdminIncidentsPage')
+                      return { Component: AdminIncidentsPage }
+                    },
+                  },
+                  {
+                    path: 'incidents/:examId/:incidentId',
+                    lazy: async () => {
+                      const { IncidentDetailPage } = await import('@/features/incidents/pages/IncidentDetailPage')
+                      return { Component: IncidentDetailPage }
                     },
                   },
                   {
@@ -231,12 +357,90 @@ export const router = createBrowserRouter([
                 element: <TeacherExamEditPage />,
               },
               {
+                path: 'teacher/exam-reports',
+                lazy: async () => {
+                  const { TeacherExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                  return { Component: TeacherExamReportsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/reports',
+                lazy: async () => {
+                  const { TeacherExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                  return { Component: TeacherExamReportsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/attendance',
+                lazy: async () => {
+                  const { AttendancePage } = await import('@/features/attendance/pages/AttendancePage')
+                  return { Component: AttendancePage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions',
+                lazy: async () => {
+                  const { ExamExpulsionsPage } =
+                    await import('@/features/expulsions/pages/ExamExpulsionsPage')
+                  return { Component: ExamExpulsionsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions/create',
+                lazy: async () => {
+                  const { CreateExpulsionPage } =
+                    await import('@/features/expulsions/pages/CreateExpulsionPage')
+                  return { Component: CreateExpulsionPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions/:expulsionId',
+                lazy: async () => {
+                  const { ExpulsionDetailPage } =
+                    await import('@/features/expulsions/pages/ExpulsionDetailPage')
+                  return { Component: ExpulsionDetailPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/infractions',
+                lazy: async () => {
+                  const { ExamInfractionsPage } = await import('@/features/infractions/pages/ExamInfractionsPage')
+                  return { Component: ExamInfractionsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/infractions/create',
+                lazy: async () => {
+                  const { CreateInfractionPage } = await import('@/features/infractions/pages/CreateInfractionPage')
+                  return { Component: CreateInfractionPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/infractions/:infractionId',
+                lazy: async () => {
+                  const { InfractionDetailPage } = await import('@/features/infractions/pages/InfractionDetailPage')
+                  return { Component: InfractionDetailPage }
+                },
+              },
+              {
                 path: 'teacher/exams/:examId/collaborators',
                 element: <ExamCollaboratorsPage />,
               },
               {
+                path: 'teacher/exams/:examId/offline/assignments',
+                element: <TeacherDistributionPage />,
+              },
+              {
                 path: 'teacher/exams/:examId/eligibilities',
                 element: <ExamEligibilitiesPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/eligibilities/automatic',
+                lazy: async () => {
+                  const { EligibilityAutomationPage } =
+                    await import('@/features/eligibility-automation/pages/EligibilityAutomationPage')
+                  return { Component: EligibilityAutomationPage }
+                },
               },
               {
                 path: 'teacher/students/:courseOfferingId',

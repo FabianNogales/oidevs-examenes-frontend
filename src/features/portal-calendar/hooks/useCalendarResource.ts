@@ -1,0 +1,39 @@
+import { useEffect, useState } from 'react'
+import { getCalendarError } from '../api/portalCalendarApi'
+
+export function useCalendarResource<T>(
+  load: (signal: AbortSignal) => Promise<T>,
+) {
+  const [version, setVersion] = useState(0)
+  const [state, setState] = useState<{
+    load: typeof load | null
+    version: number
+    data: T | null
+    error: ReturnType<typeof getCalendarError> | null
+  }>({ load: null, version: -1, data: null, error: null })
+  useEffect(() => {
+    const controller = new AbortController()
+    void load(controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted)
+          setState({ load, version, data, error: null })
+      })
+      .catch((cause: unknown) => {
+        if (!controller.signal.aborted)
+          setState({
+            load,
+            version,
+            data: null,
+            error: getCalendarError(cause),
+          })
+      })
+    return () => controller.abort()
+  }, [load, version])
+  const current = state.load === load && state.version === version
+  return {
+    data: current ? state.data : null,
+    error: current ? state.error : null,
+    loading: !current,
+    reload: () => setVersion((value) => value + 1),
+  }
+}

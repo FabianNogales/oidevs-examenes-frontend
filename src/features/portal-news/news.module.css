@@ -1,0 +1,19 @@
+.page,
+.list {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sortOrder {
+  margin: 0;
+}
+
+.list > .cards {
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .page h1 {
+    font-size: clamp(1.75rem, 8vw, 2rem);
+  }
+}

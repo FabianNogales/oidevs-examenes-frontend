@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { AuthenticatedImage } from '@/shared/components/AuthenticatedImage/AuthenticatedImage'
 import { UserIcon } from '@/features/auth/components/AuthIcons'
 import type { ExamCollaborator } from '../types/collaboration.types'
 import { formatAssignmentDate } from '../utils/collaborationFormat'
@@ -17,22 +17,20 @@ export function CollaboratorDetailModal({
   examName,
   onClose,
 }: Props) {
-  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null)
   const photoUrl = collaborator.profile_photo_url
 
   return (
     <CollaborationModal title="Detalle del colaborador" onClose={onClose}>
-      <section className={detailStyles.summary} aria-label="Datos del colaborador">
+      <section
+        className={detailStyles.summary}
+        aria-label="Datos del colaborador"
+      >
         <div className={detailStyles.avatar} aria-hidden="true">
-          {photoUrl && photoUrl.trim() && failedPhotoUrl !== photoUrl ? (
-            <img
-              src={photoUrl}
-              alt=""
-              onError={() => setFailedPhotoUrl(photoUrl)}
-            />
-          ) : (
-            <UserIcon />
-          )}
+          <AuthenticatedImage
+            url={photoUrl}
+            alt=""
+            placeholder={<UserIcon />}
+          />
         </div>
         <dl className={`${styles.details} ${detailStyles.primaryDetails}`}>
           <dt>Colaborador</dt>

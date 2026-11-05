@@ -18,6 +18,8 @@ type Props = {
   error: string | null
   onView: (studentId: number) => void
   disabled?: boolean
+  manual?: boolean
+  canRegister?: (student: EntryControlStudent) => boolean
 }
 
 export function EntryControlTable({
@@ -27,14 +29,18 @@ export function EntryControlTable({
   error,
   onView,
   disabled = false,
+  manual = false,
+  canRegister,
 }: Props) {
   const rows = items.map((student, index) => ({
     studentId: student.student_id,
     number: (meta ? (meta.current_page - 1) * meta.per_page : 0) + index + 1,
     name: entryStudentName(student),
+    expelled: student.is_expelled === true,
     sisCode: student.sis_code,
     eligibility: eligibilityDisplay(student.eligibility_status),
     entry: entryDisplay(student.entry_status),
+    actionDisabled: disabled || (manual && !canRegister?.(student)),
   }))
   const emptyMessage = loading
     ? 'Consultando estudiantes…'
@@ -57,20 +63,32 @@ export function EntryControlTable({
               <th scope="col">#</th>
               <th scope="col">Estudiante</th>
               <th scope="col">SIS</th>
-              <th scope="col">Habilitación</th>
+              {!manual ? <th scope="col">Habilitación</th> : null}
               <th scope="col">Ingreso</th>
-              <th scope="col">Acciones</th>
+              <th scope="col">Acción</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.studentId}>
                 <td>{row.number}</td>
-                <td>{row.name}</td>
-                <td className={styles.identifier}>{row.sisCode}</td>
                 <td>
-                  <EntryConditionBadge {...row.eligibility} />
+                  {row.name}
+                  {row.expelled ? (
+                    <div>
+                      <EntryConditionBadge
+                        label="Expulsado de este examen"
+                        tone="negative"
+                      />
+                    </div>
+                  ) : null}
                 </td>
+                <td className={styles.identifier}>{row.sisCode}</td>
+                {!manual ? (
+                  <td>
+                    <EntryConditionBadge {...row.eligibility} />
+                  </td>
+                ) : null}
                 <td>
                   <EntryConditionBadge {...row.entry} />
                 </td>
@@ -78,70 +96,28 @@ export function EntryControlTable({
                   <button
                     type="button"
                     className={sharedStyles.secondaryButton}
-                    disabled={disabled}
+                    disabled={row.actionDisabled}
                     onClick={() => onView(row.studentId)}
-                    aria-label={`Ver a ${row.name}`}
+                    aria-label={`${manual ? 'Registrar' : 'Ver'} a ${row.name}`}
                   >
-                    Ver
+                    {manual ? 'Registrar' : 'Ver'}
                   </button>
                 </td>
               </tr>
             ))}
             {items.length === 0 ? (
               <tr>
-                <td colSpan={6} className={sharedStyles.empty} role="status">
+                <td
+                  colSpan={manual ? 5 : 6}
+                  className={sharedStyles.empty}
+                  role="status"
+                >
                   {emptyMessage}
                 </td>
               </tr>
             ) : null}
           </tbody>
         </table>
-      </div>
-      <div className={styles.verificationCards} aria-busy={loading}>
-        {rows.length ? (
-          <ul
-            className={styles.verificationCardList}
-            role="list"
-            aria-label="Estudiantes para control de ingreso"
-          >
-            {rows.map((row) => (
-              <li key={row.studentId} className={styles.verificationCard}>
-                <span className={styles.verificationCardNumber}>
-                  #{row.number}
-                </span>
-                <h3>{row.name}</h3>
-                <p className={styles.verificationCardSis}>SIS: {row.sisCode}</p>
-                <dl className={styles.verificationCardStatuses}>
-                  <div>
-                    <dt>Habilitación</dt>
-                    <dd>
-                      <EntryConditionBadge {...row.eligibility} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Ingreso</dt>
-                    <dd>
-                      <EntryConditionBadge {...row.entry} />
-                    </dd>
-                  </div>
-                </dl>
-                <button
-                  type="button"
-                  className={`${sharedStyles.secondaryButton} ${styles.verificationCardButton}`}
-                  disabled={disabled}
-                  onClick={() => onView(row.studentId)}
-                  aria-label={`Ver información de ${row.name}`}
-                >
-                  Ver información
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className={sharedStyles.empty} role="status">
-            {emptyMessage}
-          </p>
-        )}
       </div>
     </>
   )

@@ -5,7 +5,7 @@ import {
 } from '@/features/auth/utils/apiErrors'
 import { httpClient } from '@/shared/api/httpClient'
 import type {
-  CollaborationUser,
+  CollaborationUsersResponse,
   ExamCollaborator,
   ExamCollaboratorsResponse,
   MyCollaboration,
@@ -14,6 +14,7 @@ import type {
 export function getCollaborationError(
   error: unknown,
   fallback: string,
+  field?: string,
 ): string {
   const status = getRequestStatus(error)
   if (status === 401)
@@ -22,11 +23,14 @@ export function getCollaborationError(
   // Show business errors, but keep server failures and internal diagnostics out of UI.
   const fieldErrors: Record<string, string> =
     status === 422 ? getApiFieldErrors(error) : {}
-  const messages = [
-    fieldErrors.user_id,
-    fieldErrors.exam_id,
-    getApiErrorMessage(error),
-  ]
+  const messages = field
+    ? [fieldErrors[field], getApiErrorMessage(error)]
+    : [
+        fieldErrors.user_id,
+        fieldErrors.exam_id,
+        fieldErrors.search,
+        getApiErrorMessage(error),
+      ]
   if (status !== null && [400, 403, 404, 409, 422].includes(status)) {
     for (const candidate of messages) {
       const message = candidate?.trim()
@@ -65,15 +69,24 @@ export async function getMyCollaborations(
 export async function searchCollaborationUsers(
   query: string,
   examId: number,
+  pagination: { page: number; per_page: number },
   signal?: AbortSignal,
-): Promise<CollaborationUser[]> {
-  const response = await httpClient.get<{ data: CollaborationUser[] }>('/users', {
-    params: { search: query.trim(), exam_id: examId },
+): Promise<CollaborationUsersResponse> {
+  const response = await httpClient.get<CollaborationUsersResponse>('/users', {
+    params: { search: query.trim(), exam_id: examId, ...pagination },
     signal,
   })
-  if (!Array.isArray(response.data.data))
+  const { data, meta } = response.data
+  if (!Array.isArray(data) || !meta ||
+    !Number.isSafeInteger(meta.current_page) || meta.current_page < 1 ||
+    !Number.isSafeInteger(meta.per_page) || meta.per_page < 1 ||
+    !Number.isSafeInteger(meta.total) || meta.total < 0 ||
+    !Number.isSafeInteger(meta.last_page) || meta.last_page < 1 ||
+    !data.every((user) => Array.isArray(user.roles) &&
+      user.roles.every((role) => typeof role === 'string'))) {
     throw new Error('La respuesta de usuarios no tiene el formato esperado.')
-  return response.data.data
+  }
+  return response.data
 }
 
 export async function getExamCollaborators(

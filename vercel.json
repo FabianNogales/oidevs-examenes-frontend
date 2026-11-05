@@ -3,11 +3,11 @@
   "rewrites": [
     {
       "source": "/backend/:path*",
-      "destination": "https://oidevs-examenes-backend.onrender.com/:path*"
+      "destination": "https://oidevs-examenes-backend.vercel.app/:path*"
     },
     {
       "source": "/api/:path*",
-      "destination": "https://oidevs-examenes-backend.onrender.com/api/:path*"
+      "destination": "https://oidevs-examenes-backend.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",

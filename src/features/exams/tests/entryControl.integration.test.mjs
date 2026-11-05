@@ -8,28 +8,29 @@ import {
 
 function setup() {
   const list = {
+    query: '',
+    setFilter: () => {},
+    setPage: () => {},
     response: { exam: { id: 1, room: { id: 7 }, entry_available: true } },
     roomId: 7,
     reload: () => {},
   }
   const overrides = {
+    '@/features/incidents/components/IncidentControlDialog': { IncidentControlDialog: 'incident-dialog' },
+    '@/shared/hooks/useAuthenticatedImage': { useAuthenticatedImage: () => ({ src: null, loading: false, failed: false }) },
     'react-router': {
       Link: 'Link',
       useParams: () => ({ examId: '1' }),
       useSearchParams: () => [new URLSearchParams()],
     },
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
     '../hooks/useEntryControlStudents': { useEntryControlStudents: () => list },
-    '../hooks/useEntryRecentRecords': {
-      useEntryRecentRecords: () => ({ records: [], addResult: () => {} }),
-    },
   }
   for (const name of [
     'EntryControlStudentModal',
-    'EntryControlStudentsList',
-    'EntryControlledRoom',
     'EntryHistoryModal',
+    'EntryControlStudentsList',
     'EntryQrPanel',
-    'EntryRecentScans',
     'EntryStudentsSummary',
     'ExamCard',
   ]) {
@@ -73,7 +74,7 @@ function setup() {
     click: (label) => {
       const button = nodes(
         tree,
-        (node) => node.type === 'button' && textContent(node) === label,
+        (node) => node.type === 'button' && textContent(node).trim() === label,
       )[0]
       assert.ok(button, `Missing button: ${label}`)
       assert.ok(!button.props.disabled, `Disabled button: ${label}`)
@@ -96,7 +97,7 @@ test('entry: switching methods and main tabs pauses the retained scanner instead
   const scannerType = h.scanner().type
   assert.equal(h.scanner().props.active, true)
   assert.equal(h.scanner().props.roomId, 7)
-  h.click('Registro manual')
+  h.click('Manual')
   assert.ok(
     h.scanner(),
     'Keep the hook instance and its pending camera startup queue',
@@ -128,16 +129,37 @@ test('entry: keyboard method navigation uses the same camera activation lifecycl
   assert.equal(h.scanner().props.active, true)
 })
 
-test('entry: history and student modals pause scanning and closing them resumes it', () => {
+test('HU28 history is gated by server permission and pauses the same QR camera until closed', () => {
   const h = setup()
+  let reloads = 0
+  h.list.reload = () => reloads++
+  let tree = h.render()
+  assert.equal(nodes(tree, n => n.type === 'button' && textContent(n) === 'Gestionar ingresos').length, 0)
+  h.list.response.permissions = { can_annul_entries: true }
+  h.render()
   h.click('Registro de asistencia')
   h.click('Escanear QR')
-  h.click('Historial de ingresos')
+  const scanner = h.scanner().type
+  h.click('Gestionar ingresos')
   assert.equal(h.scanner().props.active, false)
+  assert.equal(h.scanner().type, scanner)
+  h.modal('EntryHistoryModal').props.onEntriesChanged()
+  assert.equal(reloads, 1)
   h.modal('EntryHistoryModal').props.onClose()
   h.render()
   assert.equal(h.scanner().props.active, true)
-  h.click('Registro manual')
+})
+
+test('entry: the removed history access is absent and student modals pause scanning', () => {
+  const h = setup()
+  h.click('Registro de asistencia')
+  h.click('Escanear QR')
+  let tree = h.render()
+  assert.equal(nodes(tree, (node) => node.type === 'EntryHistoryModal').length, 0)
+  assert.equal(nodes(tree, (node) => node.type === 'button' && textContent(node).includes('Ver historial completo')).length, 0)
+  assert.equal(h.scanner().props.active, true)
+  h.click('Manual')
+  h.render()
   h.viewStudent()
   h.click('Escanear QR')
   assert.equal(h.scanner().props.active, false)

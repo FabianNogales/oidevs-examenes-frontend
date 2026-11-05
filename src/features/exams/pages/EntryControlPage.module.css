@@ -53,14 +53,6 @@
   opacity: 0.6;
 }
 
-.summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin: var(--space-6) 0;
-}
-
-.summary > div,
 .conditions > div {
   padding: var(--space-4);
   border: 1px solid var(--color-border);
@@ -68,7 +60,6 @@
   background: var(--color-surface-soft);
 }
 
-.summary dt,
 .examDetails dt,
 .identifiers dt,
 .conditions dt {
@@ -76,11 +67,93 @@
   font-size: var(--font-size-sm);
 }
 
-.summary dd {
-  margin: var(--space-2) 0 0;
+.pageHeading {
+  margin-bottom: var(--space-3);
+}
+.pageHeading h1 {
+  font-size: var(--font-size-xl);
+}
+.examHeader {
+  padding-block: var(--space-2);
+}
+.examHeaderMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.examHeaderMain h2 {
+  margin: 0;
+  min-width: 0;
   color: var(--brand-navy);
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
+}
+.examStatus {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--brand-navy);
+  font-size: var(--font-size-sm);
+}
+.examStatus[data-status='ACTIVE'],
+.examStatus[data-status='IN_PROGRESS'] {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+.examMetadata {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.7;
+}
+.examMetadata > span {
+  display: inline;
+}
+.examProgress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3) var(--space-6);
+  flex-wrap: wrap;
+  padding-block: var(--space-3);
+}
+.progressOverview {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.progressOverview p,
+.progressDetails {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+.progressOverview strong {
+  color: var(--brand-navy);
+}
+.progressDetails {
+  color: var(--color-text-secondary);
+}
+.progressBar {
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  margin-top: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--color-border);
+  accent-color: var(--color-primary);
+}
+.progressBar::-webkit-progress-bar {
+  background: var(--color-border);
+}
+.progressBar::-webkit-progress-value {
+  background: var(--color-primary);
+  border-radius: var(--radius-pill);
+}
+.progressBar::-moz-progress-bar {
+  background: var(--color-primary);
 }
 
 .filters {
@@ -88,6 +161,62 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+}
+
+.studentToolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.studentToolbar > .field {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.studentFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  max-width: 100%;
+}
+.studentFilters button {
+  min-width: 0;
+  min-height: 38px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.studentFilters button[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.studentFilters button:hover:not(:disabled) {
+  background: var(--color-surface);
+}
+
+.studentFilters button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+  .studentToolbar {
+    display: block;
+  }
+  .studentFilters {
+    margin-top: var(--space-3);
+  }
+  .studentFilters button {
+    min-height: 44px;
+  }
 }
 
 .field {
@@ -113,28 +242,15 @@
   color: var(--color-text);
 }
 
-.controlledRoomValue {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-soft);
-  overflow-wrap: anywhere;
-}
-
-.controlledRoomValue span {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
 .table {
   min-width: 700px;
 }
 
-.verificationCards {
-  display: none;
+.table th,
+.table button,
+.table .badge {
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .identifier {
@@ -206,7 +322,7 @@
 
 .studentSummary {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr);
+  grid-template-columns: 152px minmax(0, 1fr);
   align-items: start;
   gap: var(--space-6);
 }
@@ -333,8 +449,7 @@
   color: var(--color-text-secondary);
 }
 
-.conditions .badge,
-.entryStatusSummary .badge {
+.conditions .badge {
   max-width: 100%;
   box-sizing: border-box;
   white-space: normal;
@@ -342,48 +457,43 @@
   overflow-wrap: anywhere;
 }
 
-.entryStatusPanel {
+.registeredEntry {
   width: 100%;
   min-width: 0;
-  margin-top: var(--space-3);
-  padding: var(--space-3);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
   box-sizing: border-box;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
 }
 
-.entryStatusSummary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
+.registeredEntry h3 {
+  margin: 0 0 var(--space-3);
+  color: var(--brand-navy);
+  font-size: var(--font-size-lg);
+}
+
+.registeredEntryDetails {
+  display: grid;
+  gap: var(--space-3);
   margin: 0;
 }
 
-.entryStatusSummary dt {
-  color: var(--brand-navy);
-  font-size: var(--font-size-sm);
+.registeredEntryDetails > div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.registeredEntryDetails dt {
   font-weight: var(--font-weight-semibold);
 }
 
-.entryStatusSummary dd {
+.registeredEntryDetails dd {
   min-width: 0;
-  max-width: 100%;
   margin: 0;
-}
-
-.entryStatusDetails {
-  min-width: 0;
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
-}
-
-.entryStatusDetails .examDetails {
-  grid-template-columns: minmax(0, 1fr);
-  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .message {
@@ -392,21 +502,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow-wrap: anywhere;
-}
-
-.manualSuccessBanner {
-  display: grid;
-  gap: var(--space-1);
-  margin: var(--space-3) 0;
-  padding: var(--space-3);
-  border: 1px solid var(--color-success);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  overflow-wrap: anywhere;
-}
-
-.manualSuccessBanner p {
-  margin: 0;
 }
 
 .blockers {
@@ -460,8 +555,10 @@
 }
 
 .methodTabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: inline-flex;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
   gap: var(--space-1);
   padding: var(--space-1);
   border: 1px solid var(--color-border);
@@ -470,9 +567,12 @@
 }
 
 .methodTabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
   max-width: 100%;
-  min-height: 44px;
+  min-height: 40px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -550,34 +650,48 @@
 
 .detailModalLayer .modalScope > div {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   max-width: 100%;
   height: 100dvh;
   min-width: 0;
   padding: 16px;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .detailModalLayer .modalScope [role='dialog'] {
-  flex: 0 0 auto;
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
   width: 100%;
   max-width: 800px;
   min-width: 0;
   max-height: calc(100dvh - 32px);
   margin: auto;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow: hidden;
   overflow-anchor: none;
   scroll-behavior: auto;
 }
 
 .detailModalLayer .modalScope [role='dialog'] > div:first-child {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  flex: 0 0 auto;
   min-width: 0;
+  background: var(--color-surface);
+}
+
+.studentModalContent {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.studentModalFooter {
+  flex: 0 0 auto;
+  margin-top: var(--space-4);
   background: var(--color-surface);
 }
 
@@ -594,83 +708,7 @@
 
 @media (max-width: 768px) {
   .verificationTableWrap {
-    display: none;
-  }
-
-  .verificationCards {
     display: block;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-
-  .verificationCardList {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .verificationCard {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    padding: var(--space-4);
-    box-sizing: border-box;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-  }
-
-  .verificationCardNumber {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-  }
-
-  .verificationCard h3 {
-    margin: var(--space-2) 0;
-    color: var(--brand-navy);
-    font-size: var(--font-size-lg);
-    overflow-wrap: anywhere;
-  }
-
-  .verificationCardSis {
-    margin: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .verificationCardStatuses {
-    display: grid;
-    gap: var(--space-3);
-    margin: var(--space-4) 0;
-  }
-
-  .verificationCardStatuses dt {
-    margin-bottom: var(--space-1);
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-  }
-
-  .verificationCardStatuses dd {
-    margin: 0;
-  }
-
-  .verificationCard .badge {
-    max-width: 100%;
-    box-sizing: border-box;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: normal;
-  }
-
-  .verificationCardButton {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    white-space: normal;
   }
 
   .page {
@@ -702,33 +740,10 @@
     text-align: center;
   }
 
-  .summary,
   .filters,
   .studentSummary {
     grid-template-columns: 1fr;
     gap: var(--space-4);
-  }
-
-  .summary.compactSummary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-2);
-    margin-block: var(--space-4);
-  }
-
-  .compactSummary > div {
-    min-width: 0;
-    padding: var(--space-2) var(--space-1);
-    text-align: center;
-    overflow-wrap: anywhere;
-  }
-
-  .compactSummary dt {
-    font-size: var(--font-size-xs);
-  }
-
-  .compactSummary dd {
-    margin-top: var(--space-1);
-    font-size: var(--font-size-xl);
   }
 
   .methodTabs button {
@@ -746,13 +761,13 @@
   }
 
   .table {
-    min-width: 0;
-    table-layout: fixed;
+    min-width: 700px;
+    table-layout: auto;
   }
 
   .identifier {
-    white-space: normal;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    overflow-wrap: normal;
   }
 
   .badge {
@@ -762,6 +777,11 @@
 
   .conditions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .registeredEntryDetails > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
   }
 }
 

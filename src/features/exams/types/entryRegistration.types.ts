@@ -15,6 +15,8 @@ export type EntryStudentIdentity = Pick<
   | 'last_names'
   | 'sis_code'
   | 'identity_number'
+  | 'historical_photo_url'
+  | 'historical_photo_revision'
   | 'profile_photo_url'
 >
 
@@ -50,19 +52,11 @@ export type EntryProcessingResponse<
   message: string
   processed_at: string
   data: EntryRegistrationData | null
+  // Optional HU27 extension; omitted by older HU14 responses.
+  incident?: { id: number; exam_id: number } | null
 }
 
 export type EntryManualPayload = { room_id: number }
 export type EntryManualResponse =
   EntryProcessingResponse<EntryRegistrationResult>
 export type EntryMethod = 'QR' | 'MANUAL'
-
-// Session-only projection. Never retain a QR token or persist these records.
-export type RecentEntryRecord = {
-  id: number
-  student: EntryStudentIdentity | null
-  result: EntryProcessingResult
-  message: string
-  processed_at: string
-  verification_method: string | null
-}

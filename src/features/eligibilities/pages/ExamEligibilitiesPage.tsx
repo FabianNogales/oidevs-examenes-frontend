@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { Link, useLocation, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -30,6 +31,9 @@ import styles from './Eligibilities.module.css'
 const PAGE_SIZE = 10
 
 function ExamEligibilitiesContent({ examId }: { examId: number }) {
+  const { search: originSearch } = useLocation()
+  const examsPath = `/teacher/exams${originSearch}`
+  const examPath = `/teacher/exams/${examId}${originSearch}`
   const {
     exam,
     isLoading: examLoading,
@@ -68,6 +72,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
   const currentPage = Math.min(page, totalPages)
   const startIndex = (currentPage - 1) * PAGE_SIZE
   const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE)
+  const examLabel = exam?.name ?? `Examen #${examId}`
 
   async function save(
     studentId: number,
@@ -79,7 +84,10 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     } catch (cause) {
       if (
         !signal.aborted &&
-        !(cause instanceof EligibilityApiError && [409, 422].includes(cause.status ?? 0))
+        !(
+          cause instanceof EligibilityApiError &&
+          [409, 422].includes(cause.status ?? 0)
+        )
       ) {
         notify(
           'error',
@@ -106,7 +114,9 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
     } catch (cause) {
       if (!signal.aborted) {
         notify(
-          cause instanceof EligibilityApiError && cause.outcomeUnknown ? 'info' : 'error',
+          cause instanceof EligibilityApiError && cause.outcomeUnknown
+            ? 'info'
+            : 'error',
           cause instanceof Error
             ? cause.message
             : 'No se pudo procesar el archivo.',
@@ -125,20 +135,31 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
   return (
     <main className={pageStyles.page}>
       <section className={pageStyles.content}>
-        <nav
-          className={sharedStyles.breadcrumb}
-          aria-label="Ruta de navegación"
-        >
-          <Link to="/teacher/exams">Mis exámenes</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Habilitaciones</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Mis exámenes', to: examsPath },
+            { label: 'Habilitaciones' },
+          ]}
+        />
         <header className={pageStyles.pageHeader}>
-          <h1>Habilitaciones del examen</h1>
-          <p>
-            Consulta y gestiona el estado de habilitación de los estudiantes
-            para este examen.
-          </p>
+          <div className={styles.automationAccess}>
+            <div>
+              <h1>Habilitaciones del examen</h1>
+              <p>
+                Consulta y gestiona el estado de habilitación de los estudiantes
+                para este examen.
+              </p>
+            </div>
+            <Link
+              className={styles.automationButton}
+              to={`/teacher/exams/${examId}/eligibilities/automatic${originSearch}`}
+            >
+              Habilitación automática
+            </Link>
+          </div>
+          <Link className={styles.backLink} to={examPath}>
+            Volver al examen
+          </Link>
         </header>
         {examLoading ? (
           <p role="status">Cargando información del examen…</p>
@@ -172,6 +193,20 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
             La información general del examen no está disponible para tu cuenta.
           </p>
         )}
+        {list.manualReviewConditions?.trim() ? (
+          <aside
+            className={styles.manualReviewNote}
+            aria-labelledby="manual-review-conditions-title"
+          >
+            <h2 id="manual-review-conditions-title">
+              Condiciones de revisión manual
+            </h2>
+            <p>{list.manualReviewConditions}</p>
+            <p>
+              Esta condición debe ser verificada manualmente por el docente.
+            </p>
+          </aside>
+        ) : null}
         <section
           className={sharedStyles.section}
           aria-labelledby="exam-eligibilities-title"
@@ -288,6 +323,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
           <ManageEligibilityModal
             key={selected.id}
             examId={examId}
+            examLabel={examLabel}
             eligibility={selected}
             onClose={() => setSelected(null)}
             onSave={save}
@@ -295,6 +331,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
         ) : null}
         {bulkOpen ? (
           <BulkEligibilitiesModal
+            examLabel={examLabel}
             onClose={() => setBulkOpen(false)}
             onProcess={processFile}
             listLoading={list.loading}
@@ -313,6 +350,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
 
 export function ExamEligibilitiesPage() {
   const { examId } = useParams()
+  const { search } = useLocation()
   const id = Number(examId)
   if (!Number.isSafeInteger(id) || id <= 0) {
     return (
@@ -320,7 +358,7 @@ export function ExamEligibilitiesPage() {
         <section className={pageStyles.content}>
           <h1>Habilitaciones del examen</h1>
           <p>El identificador del examen no es válido.</p>
-          <Link to="/teacher/exams">Volver a Mis exámenes</Link>
+          <Link to={`/teacher/exams${search}`}>Volver a Mis exámenes</Link>
         </section>
       </main>
     )

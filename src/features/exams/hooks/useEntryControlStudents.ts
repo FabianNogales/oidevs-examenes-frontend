@@ -3,33 +3,48 @@ import {
   getEntryControlErrorMessage,
   getEntryControlStudents,
 } from '../api/entryControlApi'
-import type { EntryControlStudentsResponse } from '../types/entryControl.types'
+import type {
+  EntryControlFilter,
+  EntryControlStudentsResponse,
+} from '../types/entryControl.types'
 
 type ListState = {
   key: string
   response: EntryControlStudentsResponse | null
+  responseKey: string | null
   loading: boolean
   error: string | null
 }
 
-export function useEntryControlStudents(examId: number) {
+export function useEntryControlStudents(
+  examId: number,
+  pendingOnly = false,
+) {
   const [filters, setFilters] = useState({
     search: '',
     page: 1,
+    filter: 'all' as EntryControlFilter,
   })
   const [version, setVersion] = useState(0)
   const [state, setState] = useState<ListState>({
     key: '',
     response: null,
+    responseKey: null,
     loading: true,
     error: null,
   })
   const previousSearch = useRef('')
   // The first GET obtains the exam; later requests use its current assigned room.
   // Derive the ID from the response so a refreshed exam cannot retain an old selection.
-  const roomId = state.response?.exam.room?.id
+  const roomId = state.response?.exam.id === examId
+    ? state.response.exam.room?.id
+    : undefined
   const search = filters.search.trim()
-  const key = JSON.stringify([examId, search, filters.page, roomId, version])
+  const filter = pendingOnly ? 'pending' : filters.filter
+  const view = pendingOnly ? 'manual' : 'verification'
+  const key = JSON.stringify([
+    examId, view, filter, search, filters.page, roomId, version,
+  ])
 
   useEffect(() => {
     let controller: AbortController | null = null
@@ -70,11 +85,30 @@ export function useEntryControlStudents(examId: number) {
       try {
         const response = await getEntryControlStudents(
           examId,
-          { search, page: filters.page, per_page: 10, room_id: roomId },
+          {
+            search,
+            page: filters.page,
+            per_page: 10,
+            room_id: roomId,
+            entry_status:
+              filter === 'registered'
+                ? 'REGISTERED'
+                : filter === 'pending' ? 'PENDING' : undefined,
+            has_incident: filter === 'incidents' ? true : undefined,
+          },
           request.signal,
         )
         if (!disposed && !request.signal.aborted) {
-          setState({ key, response, loading: false, error: null })
+          if (response.meta.current_page !== filters.page) {
+            setFilters((current) => ({ ...current, page: response.meta.current_page }))
+          }
+          setState({
+            key,
+            response,
+            responseKey: key,
+            loading: false,
+            error: null,
+          })
           scheduleBoundary(response)
         }
       } catch (cause: unknown) {
@@ -112,25 +146,30 @@ export function useEntryControlStudents(examId: number) {
       window.removeEventListener('focus', resume)
       document.removeEventListener('visibilitychange', resume)
     }
-  }, [examId, search, filters.page, roomId, key])
+  }, [examId, search, filters.page, filter, roomId, key])
 
   const current = state.key === key
+  // Starting a request changes state.key, but never the identity of stored rows.
+  // In particular, Verification/Pending cannot stand in for a Manual response.
+  const responseMatchesQuery =
+    state.responseKey === key &&
+    (!pendingOnly || (current && !state.loading))
   const loading = !current || state.loading
   return {
     response: state.response,
-    items:
-      !loading && current && !state.error ? (state.response?.data ?? []) : [],
-    meta:
-      !loading && current && !state.error
-        ? (state.response?.meta ?? null)
-        : null,
+    items: responseMatchesQuery ? (state.response?.data ?? []) : [],
+    meta: responseMatchesQuery ? (state.response?.meta ?? null) : null,
     loading,
     error: current ? state.error : null,
     query: filters.search,
+    filter,
+    filterCounts: state.response?.filter_counts ?? null,
     roomId,
     setQuery: (value: string) =>
       setFilters((current) => ({ ...current, search: value, page: 1 })),
     setPage: (page: number) => setFilters((current) => ({ ...current, page })),
+    setFilter: (filter: EntryControlFilter) =>
+      setFilters((current) => ({ ...current, filter, page: 1 })),
     reload: () => setVersion((current) => current + 1),
   }
 }

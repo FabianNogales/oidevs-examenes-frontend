@@ -6,11 +6,14 @@ export const publicNavigation: readonly HeaderNavigationItem[] = [
     to: '/',
     end: true,
   },
+  { label: 'Noticias', to: '/news' },
   {
     label: 'Información',
+    to: '/information',
   },
   {
     label: 'Servicios',
+    to: '/services',
   },
 ]
 
@@ -24,6 +27,7 @@ export const navigationByRole: Record<
       to: '/',
       end: true,
     },
+    { label: 'Noticias', to: '/news' },
     {
       label: 'Mis materias',
       to: '/teacher/subjects',
@@ -39,13 +43,16 @@ export const navigationByRole: Record<
         { label: 'Exámenes anteriores', to: '/teacher/exams?view=past' },
         { label: 'Exámenes cancelados', to: '/teacher/exams?view=cancelled' },
         { label: 'Todos los exámenes', to: '/teacher/exams?view=all' },
+        { label: 'Reportes de exámenes', to: '/teacher/exam-reports' },
       ],
     },
     {
       label: 'Información',
+      to: '/information',
     },
     {
       label: 'Servicios',
+      to: '/services',
     },
   ],
 
@@ -55,6 +62,7 @@ export const navigationByRole: Record<
       to: '/',
       end: true,
     },
+    { label: 'Noticias', to: '/news' },
     {
       label: 'Mis datos',
       to: '/students/profile',
@@ -65,9 +73,11 @@ export const navigationByRole: Record<
     },
     {
       label: 'Información',
+      to: '/information',
     },
     {
       label: 'Servicios',
+      to: '/services',
     },
   ],
 
@@ -78,52 +88,64 @@ export const navigationByRole: Record<
       end: true,
     },
     {
-      label: 'Usuarios',
+      label: 'Contenidos',
       children: [
-        { label: 'Gestionar usuarios', to: '/admin/users/manage' },
-        { label: 'Roles y permisos', to: '/admin/users/roles' },
-        { label: 'Historial de cambios', to: '/admin/users/history' },
+        { label: 'Noticias', to: '/admin/portal/news' },
+        { label: 'Gestionar calendario', to: '/admin/portal/events' },
+        { label: 'Gestionar información', to: '/admin/portal/information' },
+        { label: 'Gestionar servicios', to: '/admin/portal/services' },
+        { label: 'Ver noticias públicas', to: '/news', startsSection: true },
       ],
     },
     {
-      label: 'Docentes',
+      label: 'Usuarios',
+      activePrefixes: ['/admin/users', '/admin/teachers', '/admin/students'],
       children: [
-        { label: 'Gestionar docentes', to: '/admin/teachers' },
+        { label: 'Usuarios', to: '/admin/users/manage' },
+        { label: 'Roles y permisos', to: '/admin/users/roles' },
+        { label: 'Historial de cambios', to: '/admin/users/history' },
+        { label: 'Docentes', to: '/admin/teachers', startsSection: true },
         { label: 'Asignación de materias', to: '/admin/teachers/assignments' },
         {
           label: 'Importar asignaciones',
           to: '/admin/teachers/assignments/import',
         },
-      ],
-    },
-    {
-      label: 'Estudiantes',
-      children: [
-        { label: 'Gestionar estudiantes', to: '/admin/students/manage' },
+        {
+          label: 'Estudiantes',
+          to: '/admin/students/manage',
+          startsSection: true,
+        },
         { label: 'Importar estudiantes', to: '/admin/students/import' },
       ],
     },
     {
-      label: 'Aulas',
+      label: 'Académico',
       children: [
-        { label: 'Gestionar aulas', to: '/admin/rooms' },
+        { label: 'Aulas', to: '/admin/rooms' },
         { label: 'Importar aulas', to: '/admin/rooms/import' },
-      ],
-    },
-    {
-      label: 'Materias',
-      children: [
-        { label: 'Gestionar materias', to: '/admin/subjects' },
+        { label: 'Materias', to: '/admin/subjects', startsSection: true },
         { label: 'Importar materias', to: '/admin/subjects/import' },
+        { label: 'Carreras', to: '/admin/careers', startsSection: true },
+        {
+          label: 'Criterios de habilitación',
+          to: '/admin/eligibility-policies',
+        },
+        {
+          label: 'Incidencias e ingresos irregulares',
+          to: '/admin/incidents',
+          startsSection: true,
+        },
+        { label: 'Reportes de exámenes', to: '/admin/exam-reports' },
       ],
     },
-    { label: 'Carreras', to: '/admin/careers' },
     { label: 'Auditoría', to: '/admin/audit-logs' },
     {
       label: 'Información',
+      to: '/information',
     },
     {
       label: 'Servicios',
+      to: '/services',
     },
   ],
 }
@@ -141,18 +163,49 @@ export function getHeaderNavigation(
 ): readonly HeaderNavigationItem[] {
   const seen = new Set<string>()
   const roles = role ? [...new Set([role, ...additionalRoles])] : []
-  const entries = role ? roles.flatMap((itemRole) =>
-    navigationByRole[itemRole].map((item) => ({ ...item,
-      label: roles.length > 1 && item.to === '/teacher/students' ? 'Estudiantes de mis materias'
-        : roles.length > 1 && item.to === '/students/qr' ? 'Mis exámenes como estudiante' : item.label,
-    }))).filter((item) => {
-      const key = item.to ?? item.label
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    }) : publicNavigation
-  const navigation = [...entries.filter((item) => !['Información', 'Servicios'].includes(item.label)),
-    ...entries.filter((item) => ['Información', 'Servicios'].includes(item.label))]
+  const entries = role
+    ? roles
+        .flatMap((itemRole) =>
+          navigationByRole[itemRole].map((item) => ({
+            ...item,
+            label:
+              roles.length > 1 && item.to === '/teacher/students'
+                ? 'Estudiantes de mis materias'
+                : roles.length > 1 && item.to === '/students/qr'
+                  ? 'Mis exámenes como estudiante'
+                  : item.label,
+          })),
+        )
+        .filter((item) => {
+          const key = item.to ?? item.label
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+    : publicNavigation
+  // Administrator links may already live inside the grouped navigation, e.g. /news.
+  const destinations = new Set<string>()
+  const adminEntries =
+    role === 'admin'
+      ? entries.filter((item) => {
+          if (item.to) {
+            if (destinations.has(item.to)) return false
+            destinations.add(item.to)
+          }
+          item.children?.forEach((child) => {
+            if (child.to) destinations.add(child.to)
+          })
+          return true
+        })
+      : entries
+  const navigation = [
+    ...adminEntries.filter(
+      (item) => !['Información', 'Servicios'].includes(item.label),
+    ),
+    ...adminEntries.filter((item) =>
+      ['Información', 'Servicios'].includes(item.label),
+    ),
+  ]
   if (!hasCollaborations) return navigation
   const insertionIndex = navigation.findIndex(
     (item) => item.label === 'Información',
