@@ -1,0 +1,6 @@
+/* "Limpiar filtros" matches the 44 px filter controls (same as News).
+   The attribute selector outranks the shared `.page button` minimum height. */
+button.clearFilters[type='button'] {
+  min-height: 44px;
+  white-space: nowrap;
+}

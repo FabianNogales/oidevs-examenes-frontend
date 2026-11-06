@@ -12,9 +12,9 @@ import type {
   EventInput,
   EventStatus,
 } from '../types'
+import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
 import { STATUS_LABELS, VISIBILITY_LABELS } from '../types'
 import { boliviaInput, inputToIso } from '../utils/calendarDates'
-import { EventDetails } from './EventDetails'
 import styles from '../portalCalendar.module.css'
 
 const STATUS_ACTIONS: Record<EventStatus, string> = {
@@ -41,11 +41,15 @@ export function EventForm({
   categories,
   onSaved,
   onBusy,
+  onDirty,
+  onCancel,
 }: {
   initial: AdminPortalEvent | null
   categories: EventCategory[]
   onSaved: (event: AdminPortalEvent) => void
   onBusy: (busy: boolean) => void
+  onDirty?: (dirty: boolean) => void
+  onCancel?: () => void
 }) {
   const id = useId()
   const [snapshot, setSnapshot] = useState(initial)
@@ -59,6 +63,11 @@ export function EventForm({
     null,
   )
   const [refreshed, setRefreshed] = useState(false)
+  // Inline confirmations: focus moves into them (the opener is disabled while
+  // pending) and returns to the opener when the confirmation is cancelled.
+  const confirmation = useRef<HTMLElement>(null)
+  const opener = useRef<HTMLElement | null>(null)
+  const restoreOpener = useRef(false)
   const submitting = useRef(false)
   const mounted = useRef(false)
   const refreshRequest = useRef<AbortController | null>(null)
@@ -69,6 +78,34 @@ export function EventForm({
       refreshRequest.current?.abort()
     }
   }, [])
+  const dirty = JSON.stringify(draft) !== JSON.stringify(draftOf(snapshot))
+  useEffect(() => {
+    onDirty?.(dirty)
+  }, [dirty, onDirty])
+  useEffect(() => {
+    if (pending !== null) {
+      confirmation.current
+        ?.querySelector<HTMLButtonElement>('button:not(:disabled)')
+        ?.focus()
+      return
+    }
+    if (!restoreOpener.current) return
+    restoreOpener.current = false
+    if (opener.current?.isConnected) opener.current.focus()
+  }, [pending])
+
+  function openConfirmation(next: EventStatus | 'visibility') {
+    opener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    setPending(next)
+  }
+
+  function cancelConfirmation() {
+    restoreOpener.current = true
+    setPending(null)
+  }
   const emptyCategories = !snapshot && categories.length === 0
   const locked = busy || conflict
   const fields = error?.fields ?? {}
@@ -92,7 +129,7 @@ export function EventForm({
       snapshot?.status === 'PUBLISHED' &&
       draft.visibility !== snapshot.visibility
     ) {
-      setPending('visibility')
+      openConfirmation('visibility')
       return
     }
     const categoryId = Number(draft.category_id)
@@ -107,6 +144,27 @@ export function EventForm({
         message: 'Selecciona una categoría disponible.',
       })
       return
+    }
+    if (!status) {
+      const start = Date.parse(inputToIso(draft.starts_at, draft.all_day))
+      const end = Date.parse(inputToIso(draft.ends_at, draft.all_day))
+      const invalid: Record<string, string> = {}
+      if (!draft.title.trim()) invalid.title = 'Escribe el título del evento.'
+      if (!draft.description.trim())
+        invalid.description = 'Escribe la descripción del evento.'
+      if (!Number.isFinite(start))
+        invalid.starts_at = 'Selecciona un inicio válido.'
+      if (!Number.isFinite(end)) invalid.ends_at = 'Selecciona un fin válido.'
+      else if (end <= start)
+        invalid.ends_at = 'El fin debe ser posterior al inicio.'
+      if (Object.keys(invalid).length) {
+        setError({
+          status: 422,
+          fields: invalid,
+          message: 'Revisa los campos indicados.',
+        })
+        return
+      }
     }
     setWorking(true)
     setError(null)
@@ -135,7 +193,10 @@ export function EventForm({
             )
           : await createEvent(input)
       }
-      if (mounted.current) onSaved(result)
+      if (mounted.current) {
+        onDirty?.(false)
+        onSaved(result)
+      }
     } catch (cause) {
       if (!mounted.current) return
       const failure = getCalendarError(cause)
@@ -181,17 +242,44 @@ export function EventForm({
   })
 
   return (
-    <div>
+    <div
+      onKeyDown={(event) => {
+        // Escape with a pending inline confirmation cancels only that
+        // confirmation; it must not reach the Drawer's close handling.
+        if (
+          event.key !== 'Escape' ||
+          pending === null ||
+          event.defaultPrevented ||
+          event.nativeEvent.isComposing
+        )
+          return
+        event.preventDefault()
+        event.stopPropagation()
+        if (!busy) cancelConfirmation()
+      }}
+    >
+      {!snapshot ? (
+        <p>
+          <AdminStatusBadge status="DRAFT">{STATUS_LABELS.DRAFT}</AdminStatusBadge>
+        </p>
+      ) : null}
       {snapshot ? (
         <>
-          <EventDetails event={snapshot} />
           <p>
-            Estado: <strong>{STATUS_LABELS[snapshot.status]}</strong> ·
-            Revisión: {snapshot.revision}
+            Estado:{' '}
+            <AdminStatusBadge status={snapshot.status}>
+              {STATUS_LABELS[snapshot.status]}
+            </AdminStatusBadge>{' '}
+            · Revisión: {snapshot.revision}
           </p>
           <p>
             Visibilidad:{' '}
-            <strong>{VISIBILITY_LABELS[snapshot.visibility]}</strong>
+            <span
+              className={styles.badge}
+              data-visibility={snapshot.visibility}
+            >
+              {VISIBILITY_LABELS[snapshot.visibility]}
+            </span>
           </p>
           {snapshot.status === 'PUBLISHED' &&
           snapshot.visibility === 'PUBLIC' ? (
@@ -218,9 +306,7 @@ export function EventForm({
         }}
       >
         <fieldset disabled={locked || emptyCategories || pending !== null}>
-          <legend>
-            {snapshot ? 'Editar evento' : 'Nuevo evento · Borrador'}
-          </legend>
+          <legend>Información general</legend>
           <label className={styles.field}>
             Título
             <input
@@ -247,6 +333,32 @@ export function EventForm({
           </label>
           {fieldError('description')}
           <label className={styles.field}>
+            Categoría
+            <select
+              name="category_id"
+              value={draft.category_id}
+              required
+              {...accessibility('category_id')}
+              onChange={(event) => update('category_id', event.target.value)}
+            >
+              <option value="">Selecciona una categoría</option>
+              {snapshot &&
+              !categories.some(
+                (category) => category.id === snapshot.category.id,
+              ) ? (
+                <option value={snapshot.category.id} disabled>
+                  {snapshot.category.name} (categoría actual)
+                </option>
+              ) : null}
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {fieldError('category_id')}
+          <label className={styles.field}>
             Visibilidad
             <select
               name="visibility"
@@ -264,6 +376,13 @@ export function EventForm({
             </select>
           </label>
           {fieldError('visibility')}
+          <p className={styles.help}>
+            {draft.visibility === 'PUBLIC'
+              ? 'Visible en el calendario público una vez publicado.'
+              : 'Visible solo para usuarios autorizados.'}
+          </p>
+          <h3 className={styles.sectionTitle}>Fecha y horario</h3>
+          <p className={styles.help}>Zona horaria: Bolivia (America/La_Paz).</p>
           <label className={styles.checkbox}>
             <input
               type="checkbox"
@@ -293,39 +412,64 @@ export function EventForm({
           </label>
           {fieldError('all_day')}
           <div className={styles.formRow}>
-            <label className={styles.field}>
-              Inicio (hora de Bolivia)
-              <input
-                name="starts_at"
-                type={draft.all_day ? 'date' : 'datetime-local'}
-                step={draft.all_day ? undefined : 1}
-                value={draft.starts_at}
-                required
-                {...accessibility('starts_at')}
-                onChange={(event) => update('starts_at', event.target.value)}
-              />
-              {fieldError('starts_at')}
-            </label>
-            <label className={styles.field}>
-              {draft.all_day
-                ? 'Fin exclusivo (día siguiente al último)'
-                : 'Fin (hora de Bolivia)'}
-              <input
-                name="ends_at"
-                type={draft.all_day ? 'date' : 'datetime-local'}
-                step={draft.all_day ? undefined : 1}
-                value={draft.ends_at}
-                required
-                {...accessibility('ends_at')}
-                onChange={(event) => update('ends_at', event.target.value)}
-              />
-              {fieldError('ends_at')}
-            </label>
+            {(['starts_at', 'ends_at'] as const).map((field) => (
+              <label className={styles.field} key={field}>
+                {field === 'starts_at'
+                  ? 'Fecha de inicio'
+                  : draft.all_day
+                    ? 'Fecha de fin (exclusiva)'
+                    : 'Fecha de fin'}
+                <input
+                  type="date"
+                  name={field}
+                  required
+                  value={draft[field].slice(0, 10)}
+                  {...accessibility(field)}
+                  onChange={(event) =>
+                    update(
+                      field,
+                      draft.all_day
+                        ? event.target.value
+                        : event.target.value +
+                            'T' +
+                            (draft[field].split('T')[1] || '09:00:00'),
+                    )
+                  }
+                />
+                {fieldError(field)}
+              </label>
+            ))}
+            {!draft.all_day &&
+              (['starts_at', 'ends_at'] as const).map((field) => (
+                <label className={styles.field} key={field + '-time'}>
+                  {field === 'starts_at' ? 'Hora de inicio' : 'Hora de fin'}
+                  <input
+                    type="time"
+                    name={field + '_time'}
+                    required
+                    step="1"
+                    value={draft[field].split('T')[1] || ''}
+                    {...accessibility(field)}
+                    onChange={(event) =>
+                      update(
+                        field,
+                        draft[field].slice(0, 10) + 'T' + event.target.value,
+                      )
+                    }
+                  />
+                </label>
+              ))}
           </div>
+          {draft.all_day ? (
+            <p className={styles.help}>
+              El fin exclusivo es el día siguiente al último día del evento.
+            </p>
+          ) : null}
           <label className={styles.field}>
             Ubicación
             <input
               name="location"
+              placeholder="Ej. Auditorio principal, edificio central"
               value={draft.location}
               maxLength={255}
               {...accessibility('location')}
@@ -333,32 +477,6 @@ export function EventForm({
             />
           </label>
           {fieldError('location')}
-          <label className={styles.field}>
-            Categoría
-            <select
-              name="category_id"
-              value={draft.category_id}
-              required
-              {...accessibility('category_id')}
-              onChange={(event) => update('category_id', event.target.value)}
-            >
-              <option value="">Selecciona una categoría</option>
-              {snapshot &&
-              !categories.some(
-                (category) => category.id === snapshot.category.id,
-              ) ? (
-                <option value={snapshot.category.id} disabled>
-                  {snapshot.category.name} (categoría actual)
-                </option>
-              ) : null}
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          {fieldError('category_id')}
         </fieldset>
         {error ? (
           <div role="alert" className={styles.error}>
@@ -397,7 +515,10 @@ export function EventForm({
             </button>
           </div>
         ) : null}
-        <div className={styles.actions}>
+        <div className={styles.formFooter}>
+          <button type="button" disabled={busy} onClick={onCancel}>
+            Cancelar
+          </button>
           <button
             type="submit"
             className={styles.primary}
@@ -407,10 +528,15 @@ export function EventForm({
               ? 'Procesando…'
               : snapshot
                 ? 'Guardar cambios'
-                : 'Crear borrador'}
+                : 'Guardar borrador'}
           </button>
         </div>
       </form>
+      {snapshot && dirty ? (
+        <p id={`${id}-status-blocked`} className={styles.help}>
+          Guarda o descarta los cambios antes de cambiar el estado
+        </p>
+      ) : null}
       {snapshot ? (
         <div className={styles.actions} aria-label="Cambiar estado del evento">
           {(['DRAFT', 'PUBLISHED', 'CANCELLED'] as const)
@@ -419,9 +545,12 @@ export function EventForm({
               <button
                 key={status}
                 type="button"
-                disabled={locked || pending !== null}
+                // A status change saves only the status and closes the Drawer:
+                // unsaved form changes would be lost silently.
+                disabled={locked || pending !== null || dirty}
+                aria-describedby={dirty ? `${id}-status-blocked` : undefined}
                 onClick={() => {
-                  setPending(status)
+                  openConfirmation(status)
                   setError(null)
                 }}
               >
@@ -434,6 +563,7 @@ export function EventForm({
       ) : null}
       {pending === 'visibility' ? (
         <section
+          ref={confirmation}
           className={styles.notice}
           aria-label="Confirmar cambio de visibilidad"
         >
@@ -447,7 +577,7 @@ export function EventForm({
             <button
               type="button"
               disabled={locked}
-              onClick={() => setPending(null)}
+              onClick={cancelConfirmation}
             >
               Volver
             </button>
@@ -463,6 +593,7 @@ export function EventForm({
         </section>
       ) : pending ? (
         <section
+          ref={confirmation}
           className={styles.notice}
           aria-label="Confirmar cambio de estado"
         >
@@ -486,7 +617,7 @@ export function EventForm({
             <button
               type="button"
               disabled={busy || conflict}
-              onClick={() => setPending(null)}
+              onClick={cancelConfirmation}
             >
               Volver
             </button>

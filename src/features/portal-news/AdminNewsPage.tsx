@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
+import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
 import { PortalHistory } from '@/features/portal-shared/PortalHistory'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
@@ -21,20 +23,56 @@ import {
 } from './types'
 import { NewsEditor } from './NewsEditor'
 import styles from '@/features/portal-shared/portalShared.module.css'
+import adminStyles from './adminNews.module.css'
 
 const columns: readonly TableColumnDef<PortalRow<AdminNewsSummary>>[] = [
-  { id: 'title', header: 'Título', cell: ({ item }) => item.title },
+  {
+    id: 'title',
+    header: 'Título',
+    width: '46%',
+    cell: ({ item }) => item.title,
+  },
   {
     id: 'state',
     header: 'Estado',
-    cell: ({ item }) => NEWS_STATUS_LABELS[item.status],
+    width: '18%',
+    cell: ({ item }) => (
+      <span>
+        <AdminStatusBadge status={item.status} />
+      </span>
+    ),
   },
   {
     id: 'date',
     header: 'Publicación',
+    width: '20%',
     cell: ({ item }) => publicationDate(item.published_at),
   },
 ]
+
+function UnsavedNewsDialog({
+  open,
+  onContinue,
+  onDiscard,
+}: {
+  open: boolean
+  onContinue: () => void
+  onDiscard: () => void
+}) {
+  return (
+    <ConfirmDialog
+      native
+      isOpen={open}
+      title="¿Descartar los cambios?"
+      message="La información que no hayas guardado se perderá."
+      cancelLabel="Seguir editando"
+      confirmLabel="Descartar cambios"
+      variant="danger"
+      onCancel={onContinue}
+      onConfirm={onDiscard}
+    />
+  )
+}
 
 function NewsDialog({
   id,
@@ -46,7 +84,19 @@ function NewsDialog({
   onSaved: (news: AdminNews) => void
 }) {
   const [busy, setBusy] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [confirmClose, setConfirmClose] = useState(false)
+  const [editorState, setEditorState] = useState({
+    label: id === null ? 'Crear borrador' : 'Guardar noticia',
+    disabled: true,
+  })
   const [historyVersion, setHistoryVersion] = useState(0)
+  const formId = useId()
+  const requestClose = () => {
+    if (busy) return
+    if (dirty) setConfirmClose(true)
+    else onClose()
+  }
   const load = useCallback(
     (signal: AbortSignal) =>
       id === null ? Promise.resolve(null) : getAdminNews(id, signal),
@@ -54,26 +104,61 @@ function NewsDialog({
   )
   const result = usePortalResource(load)
   return (
-    <PortalModal title="Gestionar noticia" busy={busy} onClose={onClose}>
-      {id !== null ? (
-        <PortalHistory
-          key={`${id}-${historyVersion}`}
-          resource="news"
-          id={id}
-        />
-      ) : null}
-      <PortalFeedback {...result} retry={result.reload} />
-      {!result.loading && !result.error ? (
-        <NewsEditor
-          initial={result.data}
-          onSaved={(news) => {
-            setHistoryVersion((current) => current + 1)
-            onSaved(news)
+    <>
+      <PortalModal
+        drawer
+        title={id === null ? 'Nueva noticia' : 'Gestionar noticia'}
+        busy={busy}
+        closeBlocked={confirmClose}
+        onClose={requestClose}
+        footer={
+          <>
+            <button type="button" disabled={busy} onClick={requestClose}>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              form={formId}
+              className={styles.primary}
+              disabled={busy || editorState.disabled}
+            >
+              {editorState.label}
+            </button>
+          </>
+        }
+      >
+        {id !== null ? (
+          <PortalHistory
+            key={`${id}-${historyVersion}`}
+            resource="news"
+            id={id}
+          />
+        ) : null}
+        <PortalFeedback {...result} retry={result.reload} />
+        {!result.loading && !result.error ? (
+          <NewsEditor
+            formId={formId}
+            initial={result.data}
+            onSaved={(news) => {
+              setHistoryVersion((current) => current + 1)
+              onSaved(news)
+            }}
+            onBusy={setBusy}
+            onDirty={setDirty}
+            onStateChange={setEditorState}
+          />
+        ) : null}
+        <UnsavedNewsDialog
+          open={confirmClose}
+          onContinue={() => {
+            setConfirmClose(false)
           }}
-          onBusy={setBusy}
+          onDiscard={() => {
+            onClose()
+          }}
         />
-      ) : null}
-    </PortalModal>
+      </PortalModal>
+    </>
   )
 }
 
@@ -95,28 +180,46 @@ export function AdminNewsPage() {
       <PortalAdminCollection
         resetPageKey={status}
         title="Gestión de noticias"
+        description="Crea, publica y archiva las noticias del portal institucional."
+        className={adminStyles.newsAdminPage}
+        searchPlaceholder="Buscar noticias"
         columns={columns}
         load={load}
         version={version}
         onSelect={(id) => setSelected({ id })}
         onCreate={() => setSelected({ id: null })}
-      >
-        <label className={styles.field}>
-          Estado
-          <select
-            name="news_status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            <option value="">Todos los estados</option>
-            {Object.entries(NEWS_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </PortalAdminCollection>
+        createLabel="Crear noticia"
+        viewActionLabel="Gestionar"
+        filterLayout="inline"
+        filters={
+          <>
+            <label className={`${styles.field} ${adminStyles.statusFilter}`}>
+              Estado
+              <select
+                name="news_status"
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+              >
+                <option value="">Todos los estados</option>
+                {Object.entries(NEWS_STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {status ? (
+              <button
+                type="button"
+                className={adminStyles.clearFilters}
+                onClick={() => setStatus('')}
+              >
+                Limpiar filtros
+              </button>
+            ) : null}
+          </>
+        }
+      />
       {selected ? (
         <NewsDialog
           key={selected.id ?? 'new'}

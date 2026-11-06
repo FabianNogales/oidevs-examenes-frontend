@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
+import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
 import { useRevisionEditor } from '@/features/portal-shared/useRevisionEditor'
 import { EditorFeedback, PortalField } from '@/features/portal-shared/PortalUi'
 import {
@@ -21,6 +23,12 @@ type ServiceDraft = {
   display_order: number
 }
 
+export type ServiceEditorState = {
+  label: string
+  disabled: boolean
+  pending: boolean
+}
+
 function formOf(item: AdminService | null): ServiceDraft {
   return {
     name: item?.name ?? '',
@@ -28,6 +36,24 @@ function formOf(item: AdminService | null): ServiceDraft {
     url: item?.url ?? '',
     display_order: item?.display_order ?? 0,
   }
+}
+
+function touchedOf(draft: ServiceDraft, item: AdminService | null) {
+  if (!item) {
+    return (
+      draft.name !== '' ||
+      draft.description !== '' ||
+      draft.url !== '' ||
+      draft.display_order !== 0
+    )
+  }
+  return (
+    draft.name !== item.name ||
+    draft.description !== item.description ||
+    draft.url !== item.url ||
+    draft.display_order !== item.display_order ||
+    !item.icon
+  )
 }
 
 function validationIssues(item: AdminService) {
@@ -49,13 +75,19 @@ function validationIssues(item: AdminService) {
 }
 
 export function ServiceEditor({
+  formId,
   initial,
   onSaved,
   onBusy,
+  onDirty,
+  onStateChange,
 }: {
+  formId: string
   initial: AdminService | null
   onSaved: () => void
   onBusy: (busy: boolean) => void
+  onDirty: (dirty: boolean) => void
+  onStateChange: (state: ServiceEditorState) => void
 }) {
   const editor = useRevisionEditor(initial)
   const [form, setForm] = useState(() => formOf(initial))
@@ -72,7 +104,24 @@ export function ServiceEditor({
     form.url !== item.url ||
     form.display_order !== item.display_order ||
     !item.icon
+  const dirty = touchedOf(form, item) || pending !== null
+  const label =
+    item?.status === 'ACTIVE'
+      ? 'Guardar cambios'
+      : item
+        ? 'Guardar servicio'
+        : 'Crear servicio inactivo'
   const fields = editor.error?.fields ?? {}
+  useEffect(() => {
+    onDirty(dirty)
+  }, [dirty, onDirty])
+  useEffect(() => {
+    onStateChange({
+      label,
+      disabled: editor.locked || !hasChanges || pending !== null,
+      pending: pending !== null,
+    })
+  }, [editor.locked, hasChanges, pending, label, onStateChange])
 
   async function save() {
     const input: ServiceInput = { ...form, icon: 'link' }
@@ -123,7 +172,8 @@ export function ServiceEditor({
     <div className={`${styles.page} ${styles.serviceEditor}`}>
       {item ? (
         <p>
-          Estado: {item.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+          <span>Estado: </span>
+          <AdminStatusBadge status={item.status} />
         </p>
       ) : (
         <p>
@@ -152,6 +202,7 @@ export function ServiceEditor({
         </p>
       ) : null}
       <form
+        id={formId}
         onSubmit={(event) => {
           event.preventDefault()
           void save()
@@ -223,79 +274,50 @@ export function ServiceEditor({
           </PortalField>
         </fieldset>
         <div className={`${styles.editorActions} ${styles.serviceActions}`}>
-          {pending ? (
-            <section className={styles.serviceConfirmation}>
-              <div className={styles.serviceConfirmationCopy}>
-                <h3>
-                  ¿{pending === 'ACTIVE' ? 'Activar' : 'Desactivar'} este
-                  servicio?
-                </h3>
-                <p>
-                  {pending === 'ACTIVE'
-                    ? 'El servicio quedará disponible en el catálogo público.'
-                    : 'El servicio dejará de mostrarse públicamente.'}
-                </p>
-              </div>
-              <div className={styles.serviceConfirmationButtons}>
-                <button
-                  type="button"
-                  disabled={editor.locked}
-                  onClick={() => setPending(null)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  className={
-                    pending === 'ACTIVE'
-                      ? `${styles.publishAction} ${styles.saveDraft}`
-                      : styles.unpublishAction
-                  }
-                  disabled={editor.locked}
-                  onClick={() => void changeStatus()}
-                >
-                  Confirmar{' '}
-                  {pending === 'ACTIVE' ? 'activación' : 'desactivación'}
-                </button>
-              </div>
-            </section>
-          ) : (
-            <>
+          {item ? (
+            <div className={styles.serviceStatusAction}>
               <button
-                type="submit"
-                className={`${styles.primary} ${styles.saveDraft}`}
-                disabled={editor.locked || !hasChanges}
+                type="button"
+                className={
+                  item.status === 'ACTIVE'
+                    ? styles.unpublishAction
+                    : styles.publishAction
+                }
+                disabled={editor.locked || pending !== null}
+                onClick={() =>
+                  setPending(item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE')
+                }
               >
-                {item?.status === 'ACTIVE'
-                  ? 'Guardar cambios'
-                  : item
-                    ? 'Guardar servicio'
-                    : 'Crear servicio inactivo'}
+                {item.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
               </button>
-              {item ? (
-                <div className={styles.serviceStatusAction}>
-                  <button
-                    type="button"
-                    className={
-                      item.status === 'ACTIVE'
-                        ? styles.unpublishAction
-                        : styles.publishAction
-                    }
-                    disabled={editor.locked || pending !== null}
-                    onClick={() =>
-                      setPending(
-                        item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-                      )
-                    }
-                  >
-                    {item.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
-                  </button>
-                </div>
-              ) : null}
-            </>
-          )}
+            </div>
+          ) : null}
         </div>
       </form>
+      <ConfirmDialog
+        native
+        isOpen={pending !== null}
+        title={
+          pending === 'ACTIVE'
+            ? '¿Activar este servicio?'
+            : '¿Desactivar este servicio?'
+        }
+        message={
+          pending === 'ACTIVE'
+            ? 'El servicio quedará disponible en el catálogo público.'
+            : 'El servicio dejará de mostrarse públicamente.'
+        }
+        cancelLabel="Cancelar"
+        confirmLabel={
+          pending === 'ACTIVE'
+            ? 'Confirmar activación'
+            : 'Confirmar desactivación'
+        }
+        variant={pending === 'ACTIVE' ? 'success' : 'danger'}
+        loading={editor.busy}
+        onConfirm={() => void changeStatus()}
+        onCancel={() => setPending(null)}
+      />
       <EditorFeedback {...editor} onRefresh={() => void refresh()} />
     </div>
   )

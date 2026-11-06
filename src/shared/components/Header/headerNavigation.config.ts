@@ -93,11 +93,11 @@ export const navigationByRole: Record<
     {
       label: 'Contenidos',
       children: [
-        { label: 'Noticias', to: '/admin/portal/news' },
+        { label: 'Noticias', to: '/news' },
+        { label: 'Gestionar noticias', to: '/admin/portal/news' },
         { label: 'Gestionar calendario', to: '/admin/portal/events' },
         { label: 'Gestionar información', to: '/admin/portal/information' },
         { label: 'Gestionar servicios', to: '/admin/portal/services' },
-        { label: 'Ver noticias públicas', to: '/news', startsSection: true },
       ],
     },
     {

@@ -1,5 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useId, useRef, useState } from 'react'
 import { PortalHistory } from '@/features/portal-shared/PortalHistory'
+import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import {
@@ -13,6 +15,7 @@ import { getInformationContent, listInformation } from './informationApi'
 import { InformationEditor } from './InformationEditor'
 import type { AdminInformation, InformationKind } from './types'
 import styles from '@/features/portal-shared/portalShared.module.css'
+import adminStyles from './adminInformation.module.css'
 
 const columns: readonly TableColumnDef<PortalRow<AdminInformation>>[] = [
   {
@@ -24,17 +27,48 @@ const columns: readonly TableColumnDef<PortalRow<AdminInformation>>[] = [
   {
     id: 'visible',
     header: 'Visibilidad',
-    cell: ({ item }) => (item.is_published ? 'Publicado' : 'Despublicado'),
+    cell: ({ item }) => (
+      <AdminStatusBadge
+        status={item.is_published ? 'PUBLISHED' : 'UNPUBLISHED'}
+      />
+    ),
   },
   {
     id: 'changes',
     header: 'Borrador guardado',
     cell: ({ item }) =>
-      item.has_unpublished_changes
-        ? 'Cambios pendientes'
-        : 'Sin cambios pendientes',
+      item.has_unpublished_changes ? (
+        <AdminStatusBadge status="PENDING_CHANGES" />
+      ) : (
+        'Sin cambios pendientes'
+      ),
   },
 ]
+
+function UnsavedInformationDialog({
+  open,
+  onContinue,
+  onDiscard,
+}: {
+  open: boolean
+  onContinue: () => void
+  onDiscard: () => void
+}) {
+  return (
+    <ConfirmDialog
+      native
+      isOpen={open}
+      title="¿Descartar los cambios?"
+      message="La información que no hayas guardado se perderá."
+      cancelLabel="Seguir editando"
+      confirmLabel="Descartar cambios"
+      variant="danger"
+      onCancel={onContinue}
+      onConfirm={onDiscard}
+    />
+  )
+}
+
 function InformationDialog({
   kind,
   id,
@@ -44,36 +78,84 @@ function InformationDialog({
   kind: InformationKind
   id: number | null
   onClose: () => void
-  onSaved: () => void
+  onSaved: (item: AdminInformation) => void
 }) {
   const [busy, setBusy] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [confirmClose, setConfirmClose] = useState(false)
+  const [editorState, setEditorState] = useState({
+    label: id === null ? 'Crear FAQ' : 'Guardar borrador',
+    disabled: true,
+  })
+  const [historyVersion, setHistoryVersion] = useState(0)
+  const initialId = useRef(id).current
+  const formId = useId()
+  const requestClose = () => {
+    if (busy) return
+    if (dirty) setConfirmClose(true)
+    else onClose()
+  }
   const load = useCallback(
     (signal: AbortSignal) =>
-      id === null
+      initialId === null
         ? Promise.resolve(null)
-        : getInformationContent(kind, id, signal),
-    [kind, id],
+        : getInformationContent(kind, initialId, signal),
+    [kind, initialId],
   )
   const result = usePortalResource(load)
   return (
-    <PortalModal
-      title={kind === 'sections' ? 'Gestionar sección' : 'Gestionar FAQ'}
-      onClose={onClose}
-      busy={busy}
-    >
-      {id !== null ? (
-        <PortalHistory resource={`information/${kind}`} id={id} />
-      ) : null}
-      <PortalFeedback {...result} retry={result.reload} />
-      {!result.loading && !result.error ? (
-        <InformationEditor
-          kind={kind}
-          initial={result.data}
-          onBusy={setBusy}
-          onSaved={onSaved}
+    <>
+      <PortalModal
+        drawer
+        title={kind === 'sections' ? 'Gestionar sección' : 'Gestionar FAQ'}
+        onClose={requestClose}
+        busy={busy}
+        closeBlocked={confirmClose}
+        footer={
+          <>
+            <button type="button" disabled={busy} onClick={requestClose}>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              form={formId}
+              className={styles.primary}
+              disabled={busy || editorState.disabled}
+            >
+              {editorState.label}
+            </button>
+          </>
+        }
+      >
+        {id !== null ? (
+          <PortalHistory
+            key={`${id}-${historyVersion}`}
+            resource={`information/${kind}`}
+            id={id}
+          />
+        ) : null}
+        <PortalFeedback {...result} retry={result.reload} />
+        {!result.loading && !result.error ? (
+          <InformationEditor
+            kind={kind}
+            initial={result.data}
+            onBusy={setBusy}
+            onSaved={(item) => {
+              setHistoryVersion((current) => current + 1)
+              onSaved(item)
+            }}
+            onDirty={setDirty}
+            onStateChange={setEditorState}
+            formId={formId}
+          />
+        ) : null}
+        <UnsavedInformationDialog
+          open={confirmClose}
+          onContinue={() => setConfirmClose(false)}
+          onDiscard={onClose}
         />
-      ) : null}
-    </PortalModal>
+      </PortalModal>
+    </>
   )
 }
 
@@ -81,10 +163,12 @@ export function AdminInformationPage() {
   const { notify } = useAuth()
   const [kind, setKind] = useState<InformationKind>('sections')
   const [published, setPublished] = useState('')
+  const visibilitySelect = useRef<HTMLSelectElement>(null)
   const [version, setVersion] = useState(0)
   const [selected, setSelected] = useState<{
     kind: InformationKind
     id: number | null
+    dialogKey: string
   } | null>(null)
   const load = useCallback(
     (query: PortalQuery, signal: AbortSignal) =>
@@ -103,44 +187,67 @@ export function AdminInformationPage() {
   return (
     <>
       <PortalAdminCollection
-        key={`${kind}-${published}`}
+        resetPageKey={`${kind}-${published}`}
         title="Gestión de información y FAQ"
         description="Administra las secciones institucionales y las preguntas frecuentes del portal."
         className={styles.informationAdminPage}
         searchLayout="wide"
+        searchPlaceholder="Buscar información"
+        createLabel="Crear pregunta frecuente"
+        filterLayout="below"
         columns={columns}
         version={version}
         load={load}
-        onSelect={(id) => setSelected({ kind, id })}
+        onSelect={(id) => setSelected({ kind, id, dialogKey: `${kind}-${id}` })}
         onCreate={
-          kind === 'faqs' ? () => setSelected({ kind, id: null }) : undefined
+          kind === 'faqs'
+            ? () => setSelected({ kind, id: null, dialogKey: `${kind}-new` })
+            : undefined
+        }
+        filters={
+          <>
+            <label className={styles.field}>
+              Tipo de contenido
+              <select
+                value={kind}
+                onChange={(event) =>
+                  setKind(event.target.value as InformationKind)
+                }
+              >
+                <option value="sections">Secciones institucionales</option>
+                <option value="faqs">Preguntas frecuentes</option>
+              </select>
+            </label>
+            <label className={styles.field}>
+              Visibilidad
+              <select
+                ref={visibilitySelect}
+                value={published}
+                onChange={(event) => setPublished(event.target.value)}
+              >
+                <option value="">Todas</option>
+                <option value="1">Publicado</option>
+                <option value="0">Despublicado</option>
+              </select>
+            </label>
+            {/* "Tipo de contenido" is the view selector, not a filter: only
+                Visibilidad is cleared, and the search keeps DataTable's "Limpiar". */}
+            {published !== '' ? (
+              <button
+                type="button"
+                className={adminStyles.clearFilters}
+                onClick={() => {
+                  setPublished('')
+                  // The button disappears: keep focus on the reset filter.
+                  visibilitySelect.current?.focus()
+                }}
+              >
+                Limpiar filtros
+              </button>
+            ) : null}
+          </>
         }
       >
-        <div className={`${styles.filters} ${styles.informationFilters}`}>
-          <label className={styles.field}>
-            Tipo de contenido
-            <select
-              value={kind}
-              onChange={(event) =>
-                setKind(event.target.value as InformationKind)
-              }
-            >
-              <option value="sections">Secciones institucionales</option>
-              <option value="faqs">Preguntas frecuentes</option>
-            </select>
-          </label>
-          <label className={styles.field}>
-            Visibilidad
-            <select
-              value={published}
-              onChange={(event) => setPublished(event.target.value)}
-            >
-              <option value="">Todas</option>
-              <option value="1">Publicado</option>
-              <option value="0">Despublicado</option>
-            </select>
-          </label>
-        </div>
         {kind === 'sections' ? (
           <p className={styles.informationSectionNote}>
             Consulta las secciones existentes. Guardar un borrador no publica
@@ -150,10 +257,14 @@ export function AdminInformationPage() {
       </PortalAdminCollection>
       {selected ? (
         <InformationDialog
-          key={`${selected.kind}-${selected.id ?? 'new'}`}
-          {...selected}
+          key={selected.dialogKey}
+          kind={selected.kind}
+          id={selected.id}
           onClose={() => setSelected(null)}
-          onSaved={() => {
+          onSaved={(item) => {
+            setSelected((current) =>
+              current ? { ...current, id: item.id } : current,
+            )
             setVersion((current) => current + 1)
             notify('success', 'El contenido fue guardado.')
           }}

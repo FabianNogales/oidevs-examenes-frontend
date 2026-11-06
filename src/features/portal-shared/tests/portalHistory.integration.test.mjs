@@ -124,6 +124,18 @@ for (const [criterion, resource, action, old_values, new_values] of resources) {
         textContent(nodes(ui.tree, (node) => node.type === 'h3')[0]),
         resource.endsWith('/faqs') ? 'FAQ actualizada' : 'Sección actualizada',
       )
+    } else if (resource === 'services') {
+      assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 1)
+      assert.match(text, /Detalle técnico/)
+      assert.equal(
+        textContent(nodes(ui.tree, (node) => node.type === 'h3')[0]),
+        'Servicio actualizado',
+      )
+      assert.equal(
+        textContent(nodes(ui.tree, (node) => node.type === 'h4')[0]),
+        'Cambios',
+      )
+      assert.match(text, /Nombre: Servicio inicial → Servicio corregido/)
     } else {
       assert.match(text, /Anterior/)
       assert.match(text, /Nuevo/)
@@ -554,11 +566,20 @@ for (const [resource, path, name] of adminPages) {
     await settle()
     render()
     if (resource === 'information/faqs') {
+      const filters = nodes(tree, (node) => node.props?.filters)[0].props
+        .filters
       nodes(
-        tree,
+        filters,
         (node) => node.type === 'select' && node.props.value === 'sections',
       )[0].props.onChange({ target: { value: 'faqs' } })
       render()
+      assert.equal(
+        nodes(
+          nodes(tree, (node) => node.props?.filters)[0].props.filters,
+          (node) => node.type === 'select' && node.props.value === 'faqs',
+        ).length,
+        1,
+      )
     }
     const collection = nodes(
       tree,
@@ -569,12 +590,14 @@ for (const [resource, path, name] of adminPages) {
     render()
     await settle()
     render()
-    assert.ok(button('Ver historial'))
+    const historyLabel =
+      resource === 'services' ? 'Historial' : 'Ver historial'
+    assert.ok(button(historyLabel))
     assert.equal(
       c.calls.filter((call) => call.args[0].endsWith('/history')).length,
       0,
     )
-    button('Ver historial').props.onClick()
+    button(historyLabel).props.onClick()
     render()
     await settle()
     render()

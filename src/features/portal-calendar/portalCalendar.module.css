@@ -1,13 +1,9 @@
-.page,
-.publicPage {
-  width: 100%;
-  min-width: 0;
-  padding: var(--space-5);
-  color: var(--color-text-primary);
-}
+@import '../../shared/styles/portalBase.module.css';
 
-.publicPage {
-  max-width: 960px;
+/* Administration page: same content width as News, Information and Services.
+   Only AdminCalendarPage uses .page in this module (the public page uses .publicPage). */
+.page {
+  max-width: var(--content-max-width);
   margin-inline: auto;
 }
 
@@ -21,30 +17,12 @@
   overflow-wrap: anywhere;
 }
 
-.toolbar,
-.actions,
-.dialogHeader,
-.filters {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.toolbar h2 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
 .calendar a,
 .eventTitle {
   color: var(--color-primary);
 }
 
-.calendar button,
-.page button,
-.dialog button {
+.calendar button {
   min-height: 36px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
@@ -55,17 +33,9 @@
   font: inherit;
 }
 
-.calendar button:disabled,
-.page button:disabled,
-.dialog button:disabled {
+.calendar button:disabled {
   opacity: 0.5;
   cursor: default;
-}
-
-.dialog .primary,
-.page .primary {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
 }
 
 .month {
@@ -108,7 +78,11 @@
 
 .grid .dayWithEvents {
   border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 12%,
+    var(--color-surface)
+  );
 }
 
 .dayWithEvents .dayNumber {
@@ -161,7 +135,11 @@
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 12%,
+    var(--color-surface)
+  );
   color: var(--color-primary);
   font-size: 1rem;
   font-weight: 700;
@@ -201,79 +179,6 @@
   min-height: 32px;
   font-weight: 600;
   text-align: left;
-  overflow-wrap: anywhere;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  font-size: 0.875rem;
-}
-
-.field input,
-.field textarea,
-.field select {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 10px;
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font: inherit;
-}
-
-.field textarea {
-  resize: vertical;
-}
-
-.filters {
-  justify-content: flex-start;
-  margin-block: 20px;
-}
-
-.filters > label {
-  flex: 1 1 180px;
-  max-width: 360px;
-}
-
-.muted {
-  color: var(--color-text-secondary);
-  font-size: 0.85rem;
-  margin-block: 12px;
-}
-
-.dialog {
-  width: min(720px, calc(100vw - 32px));
-  max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 32px);
-  box-sizing: border-box;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 24px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-}
-
-.dialog::backdrop {
-  background: rgb(0 0 0 / 45%);
-}
-
-.dialogHeader {
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-
-.dialogHeader h2 {
-  margin: 0;
-  font-size: 1.2rem;
   overflow-wrap: anywhere;
 }
 
@@ -321,42 +226,134 @@
   gap: 8px;
 }
 
-.error {
-  color: var(--color-error);
-  overflow-wrap: anywhere;
-}
-
-.notice {
-  margin-block: 16px;
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-soft);
-}
-
-.actions {
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-
 @media (max-width: 768px) {
-  .page,
-  .publicPage {
-    padding: 16px;
-  }
-
   .formRow {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 480px) {
-  .calendar,
-  .dialog {
+  .calendar {
     padding: 12px;
   }
+}
 
-  .actions > button {
-    flex: 1 1 140px;
+.filterPanel {
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.searchRow {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.searchRow > label {
+  flex: 1;
+}
+
+.filterPanel .filters {
+  margin-block: 12px 0;
+  align-items: end;
+}
+
+.filterPanel > button {
+  margin-top: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Visibility is not a status: Privado stays neutral (flat) and Público adds an
+   outline, so the difference does not rely on color alone. */
+.badge[data-visibility='PUBLIC'] {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.adminTable table th,
+.adminTable table td {
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+}
+
+.adminTable tbody tr:hover {
+  background: var(--color-surface-soft);
+}
+
+.adminTable col {
+  width: auto !important;
+}
+
+.drawer .formFooter {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  z-index: 1;
+}
+
+.help {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  margin: 0;
+}
+
+.sectionTitle {
+  margin: 8px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+.drawer .checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.drawer [aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+@media (max-width: 600px) {
+  .filterPanel .filters > label {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .adminTable table td {
+    padding: 10px 14px;
+  }
+
+  /* The shared action cell does not wrap; in the narrow mobile card the
+     "Gestionar" label may wrap so the button stays inside the card. */
+  .adminTable td[data-label='Acciones'] {
+    white-space: normal;
+  }
+
+  .adminTable td[data-label='Acciones'] button {
+    max-width: 100%;
+    height: auto;
+    white-space: normal;
+    text-align: center;
   }
 }
