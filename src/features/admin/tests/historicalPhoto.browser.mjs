@@ -1,14 +1,20 @@
 // Run from the frontend root. Uses Chrome and a temporary authenticated HTTP fixture.
 // Does not contact or mutate the development backend.
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { spawn } from 'node:child_process'
 import { createServer } from 'vite'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 
 const root = process.cwd(),
-  profile = await mkdtemp(join(tmpdir(), 'eida-hu14-integration-'))
+  browserProfile = await createBrowserProfile('hu14-integration'),
+  profile = browserProfile.dir,
+  evidence = join(root, '.validation.local', 'historicalPhoto')
+await mkdir(evidence, { recursive: true })
 const png = await readFile(join(root, 'src/assets/images/logo-home.png'))
 const file = join(profile, 'institutional.png'),
   largeFile = join(profile, 'too-large.png'),
@@ -282,7 +288,7 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
       captureBeyondViewport: true,
     })
     await writeFile(
-      join(profile, name + '.png'),
+      join(evidence, name + '.png'),
       Buffer.from(shot.data, 'base64'),
     )
   }
@@ -446,7 +452,7 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
       ' Object URLs revoked; no runtime errors',
   )
   await writeFile(
-    join(profile, 'result.json'),
+    join(evidence, 'result.json'),
     JSON.stringify(
       {
         source:
@@ -461,13 +467,14 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
       2,
     ),
   )
-  console.log('Evidence: ' + profile)
+  console.log('Evidence: ' + evidence)
 } catch (error) {
   console.error(error)
   process.exitCode = 1
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await Promise.race([vite?.close(), pause(2000)])
-  process.exit(process.exitCode ?? 0)
 }
+// Exit after `finally` has cleaned up: a lingering dev-server handle must not keep the run alive.
+process.exit(process.exitCode ?? 0)

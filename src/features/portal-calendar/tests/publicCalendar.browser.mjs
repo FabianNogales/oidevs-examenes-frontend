@@ -1,12 +1,14 @@
 // Browser QA with simulated HTTP transport. No backend data is read or changed.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 import { createServer } from 'vite'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-public-calendar-'))
 const demo = `
 import React from 'react';
 import {createRoot} from 'react-dom/client';
@@ -29,9 +31,14 @@ window.calendarQa={month,date,calls:[],client:{async get(url,options={}){
 }}};
 root.render(e(MemoryRouter,null,e('main',{style:{maxWidth:960,margin:'16px auto',padding:16}},e(InstitutionalCalendar))));
 `
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('public-calendar')
+  const profile = browserProfile.dir
+  const evidence = join(process.cwd(), '.validation.local', 'publicCalendar')
+  await mkdir(evidence, { recursive: true })
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -173,7 +180,7 @@ try {
       format: 'png',
       captureBeyondViewport: true,
     })
-    await writeFile(join(profile, name + '.png'), Buffer.from(r.data, 'base64'))
+    await writeFile(join(evidence, name + '.png'), Buffer.from(r.data, 'base64'))
   }
   await send('Page.enable')
   await send('Runtime.enable')
@@ -263,9 +270,9 @@ try {
     )
   }
   assert.deepEqual(errors, [])
-  console.log(`Capturas: ${profile}`)
+  console.log(`Capturas: ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }

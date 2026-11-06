@@ -2,12 +2,14 @@
 // Requires locally installed Chrome. It never connects to or modifies backend.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 import { createServer } from 'vite'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-event-visibility-'))
 const demo = `
 import React from 'react';
 import {createRoot} from 'react-dom/client';
@@ -63,9 +65,14 @@ qa.showShared=()=>root.render(e(MemoryRouter,{key:++key},e(SharedUiQa)));
 qa.reset();
 `
 
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('event-visibility')
+  const profile = browserProfile.dir
+  const evidence = join(process.cwd(), '.validation.local', 'eventVisibility')
+  await mkdir(evidence, { recursive: true })
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -221,7 +228,7 @@ try {
       captureBeyondViewport: true,
     })
     await writeFile(
-      join(profile, name + '.png'),
+      join(evidence, name + '.png'),
       Buffer.from(result.data, 'base64'),
     )
   }
@@ -459,9 +466,9 @@ try {
     )
   }
   assert.deepEqual(errors, [])
-  console.log(`Capturas: ${profile}`)
+  console.log(`Capturas: ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }

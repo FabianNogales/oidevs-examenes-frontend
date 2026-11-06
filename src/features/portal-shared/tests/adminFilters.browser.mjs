@@ -7,12 +7,14 @@
 // Services Estado filter sits inline with the search row; no overflow at 320/390.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createServer } from 'vite'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-admin-filters-'))
 const evidence = join(process.cwd(), '.validation.local', 'admin-filters')
 await mkdir(evidence, { recursive: true })
 const demo = `
@@ -47,9 +49,12 @@ const pages={information:AdminInformationPage,services:AdminServicesPage};
 qa.show=(name)=>{qa.calls=[];root.render(e(MemoryRouter,{key:name},e(pages[name])))};
 `
 
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('admin-filters')
+  const profile = browserProfile.dir
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -416,6 +421,6 @@ try {
   console.log(`QA filtros administrativos: PASS · evidencia en ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }
