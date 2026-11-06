@@ -12,8 +12,9 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 |---|---|---|---|---|
 | DS0 | Auditoría global | ✅ | Erick | Informe DS0 |
 | DS1.1–DS1.2 | Limpieza automática de perfiles Chrome (`browserProfile.mjs`, 14 scripts) | ✅ | Erick | commit `f3cf6f5` |
-| SK3 | Documentación compartida (`docs/design-system/`) | 🔄 (en revisión mediante PR) | Erick | rama `ds/sk3-docs-erick` |
-| DS1.3 | Separar `global.css` en `tokens.css`, `base.css` y `auth.css`, sin cambio visual | ⏳ | Pendiente | — |
+| SK3 | Documentación compartida (`docs/design-system/`) | ✅ | Erick | PR #4 (`50d45d9`), `dbb8cf9` |
+| DS1.3a | Separar `global.css` en `tokens.css`, `base.css`, `shell.css`, `auth.css`, `snackbar.css` y `responsive.css` (bloques contiguos, mismo orden); `global.css` queda solo con `@import` | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` del build idéntico byte a byte (CSS principal SHA-256 `bb0bf29b…`) |
+| DS1.3b | Contratos CSS de la separación en `cssContracts.test.mjs` (orden de `@import`, archivos existentes, tokens documentados con sus valores, sin `data-theme` en componentes) y documentación actualizada | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` sigue idéntico a la referencia de DS1.3a |
 | DS1.4 | Tokens semánticos propuestos (estado, controles, z-index) y contratos CSS | ⏳ | Pendiente | — |
 | DS2 | Primitivas en `ui/` y catálogo de QA | ⏳ | Pendiente | — |
 
@@ -46,7 +47,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 
 | Etapa | Criterio |
 |---|---|
-| DS1.3 | Estilos calculados idénticos en las pantallas representativas; batería Node, build y contratos CSS en verde |
+| DS1.3 | CSS compilado idéntico byte a byte; estilos calculados idénticos en las pantallas representativas; batería Node, build y contratos CSS en verde |
 | DS1.4 | Tokens nuevos definidos solo a partir de tokens existentes; documentados en [tokens.md](tokens.md); contrato CSS que comprueba que existen |
 | DS2 | Pruebas de accesibilidad de cada primitiva (nombre accesible, `aria-*`, foco y Escape); catálogo sin desbordamiento a 320, 390, 768 y 1440px; contraste AA medido |
 | DS3 / DS4 (por módulo) | Pruebas de la feature en verde; browser con transporte simulado a los cuatro anchos; cero colores y `font-size` en px literales en los archivos migrados (salvo excepciones justificadas en [rules.md](rules.md)); sin cambios funcionales; revisión del otro desarrollador |
@@ -57,7 +58,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 2. Tema oscuro: se conservan sus tokens y **no se activa**.
 3. Breakpoints canónicos: 480, 640, 768 y 1024px.
 4. Tokens semánticos propuestos en [tokens.md](tokens.md): aceptados como diseño pendiente, **no implementados** (se crean en DS1.4).
-5. Erick es responsable de DS0, DS1.1–DS1.2 y SK3.
+5. Erick es responsable de DS0, DS1.1–DS1.2, SK3 y DS1.3.
 
 ## Pendiente de coordinación
 

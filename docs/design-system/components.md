@@ -18,7 +18,7 @@ copiarlo. Verificado en `f3cf6f5`.
 | `Footer` | `shared/components/Footer/` | Pie de página |
 | `DataCardGrid` (+ `DataCardItem`) | `shared/components/DataCardGrid/` | Rejilla de tarjetas con campos y acciones según el rol |
 | `AuthenticatedImage` | `shared/components/AuthenticatedImage/` | Imagen que requiere sesión (usa `useAuthenticatedImage`) |
-| `Snackbar` | `shared/components/Snackbar.tsx` | Notificación temporal (clases `.snackbar*` de `global.css`) |
+| `Snackbar` | `shared/components/Snackbar.tsx` | Notificación temporal (clases `.snackbar*` de `assets/styles/snackbar.css`) |
 
 ### `src/features/portal-shared` (portal administrativo)
 
@@ -39,7 +39,9 @@ copiarlo. Verificado en `f3cf6f5`.
 | `trapDialogFocus` | `shared/utils/` | Retención de Tab dentro de un diálogo no nativo |
 | `portalBase.module.css` | `shared/styles/` | Base del portal: `.page`, `.dialog`, `.field`, `.toolbar`, `.actions`, `.notice`, `.error`, `.muted`, `.filters` |
 | `CsvImport*.module.css` | `shared/styles/` | Estilos de importación CSV |
-| `.primary-button`, `.secondary-button`, `.snackbar*`, `.auth-*` | `assets/styles/global.css` | Clases globales heredadas (botones y login). No crear clases globales nuevas |
+| `.primary-button`, `.secondary-button`, `.auth-*` | `assets/styles/auth.css` | Clases globales heredadas del login (`.secondary-button` hoy sin uso). No crear clases globales nuevas |
+| `.snackbar*` | `assets/styles/snackbar.css` | Clases globales del `Snackbar` compartido |
+| `.backend-status`, `.session-loading` | `assets/styles/shell.css` | Estado del backend y carga de sesión (`.app-shell` hoy sin uso) |
 
 ## ⚠️ Componentes locales que duplican patrones (no copiar; migrar en DS3–DS4)
 

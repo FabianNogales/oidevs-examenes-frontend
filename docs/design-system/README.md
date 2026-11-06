@@ -4,7 +4,7 @@ Fuente única de verdad del diseño del frontend de EIDA. La comparten los dos
 desarrolladores frontend y sus agentes (Claude Code, OpenCode). Si un documento
 local o una conversación contradice estos archivos, prevalecen estos archivos.
 
-> Estado: **en preparación**. Hoy existen tokens en `global.css` y varios
+> Estado: **en preparación**. Hoy existen tokens en `src/assets/styles/tokens.css` y varios
 > componentes compartidos; la capa `ui/` y los tokens semánticos nuevos son
 > **planificados** y todavía no existen en el código.
 
@@ -27,7 +27,7 @@ los contratos de la API.
 
 | Archivo | Contenido |
 |---|---|
-| [tokens.md](tokens.md) | Tokens reales de `global.css` y tokens semánticos propuestos (marcados como pendientes) |
+| [tokens.md](tokens.md) | Tokens reales (`tokens.css`) y tokens semánticos propuestos (marcados como pendientes) |
 | [components.md](components.md) | Componentes compartidos existentes y componentes planificados en `ui/` |
 | [rules.md](rules.md) | Reglas obligatorias de implementación |
 | [validation.md](validation.md) | Cómo validar cada cambio (Node, browser, anchos, evidencia) |
@@ -36,8 +36,21 @@ los contratos de la API.
 
 ## Arquitectura
 
-- **Tokens:** `src/assets/styles/global.css` (hoy). DS1 propone separarlo en
-  `tokens.css`, `base.css` y `auth.css` importados desde `global.css`, sin cambio visual.
+- **Estilos globales** (`src/assets/styles/`, separados en DS1.3 sin cambio visual):
+  `global.css` es el único punto de entrada (lo importa `src/main.tsx`) y solo contiene
+  `@import`, en este orden, que fija la cascada:
+
+  | Archivo | Contenido |
+  |---|---|
+  | `tokens.css` | Tokens: `:root`, tema claro y tema oscuro (no activado) |
+  | `base.css` | Reset y estilos base (`*`, `html`, `#root`, `:where(...)`, foco, selección, `svg`) |
+  | `shell.css` | `.app-shell`, `.backend-status`, `.session-loading` |
+  | `auth.css` | Login: `.auth-*`, `.login-form`, `.primary-button`, `.secondary-button` |
+  | `snackbar.css` | `.snackbar*` |
+  | `responsive.css` | `@keyframes spin` y las media queries globales (gutter, movimiento reducido, 900px y 620px) |
+
+  No cambiar el orden ni añadir reglas en `global.css`: los contratos de
+  `src/shared/tests/cssContracts.test.mjs` lo comprueban.
 - **Componentes compartidos existentes:** `src/shared/components/*` y
   `src/features/portal-shared/*` (ver [components.md](components.md)).
 - **Componentes planificados:** `src/shared/components/ui/*` (ubicación aprobada; la carpeta se creará en DS2).

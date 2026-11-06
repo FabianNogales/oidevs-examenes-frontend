@@ -130,3 +130,75 @@ test('Header publishes its actual height, observes changes and restores the prev
     assert.equal(values.get('--app-header-height') ?? '', previous)
   }
 })
+
+// DS1.3: global.css is only an ordered entry point; cascade order depends on this list.
+const globalStyles = 'src/assets/styles'
+const globalImports = ['tokens.css', 'base.css', 'shell.css', 'auth.css', 'snackbar.css', 'responsive.css']
+const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '')
+function tokenBlocks(css) {
+  const blocks = new Map()
+  for (const [, selector, body] of stripComments(css).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const declarations = new Map([...body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map(([, name, value]) => [name, value.trim()]))
+    blocks.set(selector.replace(/\s+/g, ' ').trim(), declarations)
+  }
+  return blocks
+}
+
+test('global.css only imports the six style layers in cascade order', () => {
+  const lines = read(`${globalStyles}/global.css`).split(/\r?\n/).filter((line) => line.trim())
+  assert.deepEqual(lines, globalImports.map((name) => `@import './${name}';`))
+  assert.match(read('src/main.tsx'), /import\s+['"]@\/assets\/styles\/global\.css['"]/)
+  for (const name of globalImports) {
+    const css = stripComments(read(`${globalStyles}/${name}`))
+    assert.ok(css.trim(), `${name} must not be empty`)
+    assert.doesNotMatch(css, /@import\b/, `${name} must not chain further imports`)
+  }
+})
+
+test('tokens.css keeps the documented tokens and their current values', () => {
+  const blocks = tokenBlocks(read(`${globalStyles}/tokens.css`))
+  assert.deepEqual([...blocks.keys()], [':root', ":root, [data-theme='light']", "[data-theme='dark']"])
+  const base = blocks.get(':root')
+  const light = blocks.get(":root, [data-theme='light']")
+  const dark = blocks.get("[data-theme='dark']")
+  const expectedBase = {
+    '--brand-navy': '#172554', '--brand-blue': '#2563eb', '--brand-cobalt': '#0049a8', '--brand-crimson': '#8b1e3f',
+    '--brand-pink': '#d67a8c', '--brand-pink-light': '#f7e9ed', '--brand-blue-light': '#eaf3ff',
+    '--brand-azure-mist': '#e9f9f6', '--brand-white-warm': '#fafafa',
+    '--font-size-xs': '0.75rem', '--font-size-sm': '0.875rem', '--font-size-md': '1rem', '--font-size-lg': '1.125rem',
+    '--font-size-xl': '1.25rem', '--font-size-2xl': '1.5rem', '--font-size-3xl': '2rem', '--font-size-4xl': '2.5rem',
+    '--font-weight-regular': '400', '--font-weight-medium': '500', '--font-weight-semibold': '600', '--font-weight-bold': '700',
+    '--line-height-tight': '1.25', '--line-height-normal': '1.5', '--line-height-relaxed': '1.6',
+    '--space-1': '4px', '--space-2': '8px', '--space-3': '12px', '--space-4': '16px', '--space-5': '20px',
+    '--space-6': '24px', '--space-8': '32px', '--space-10': '40px', '--space-12': '48px', '--space-16': '64px',
+    '--radius-sm': '6px', '--radius-md': '10px', '--radius-lg': '16px', '--radius-xl': '20px', '--radius-pill': '9999px',
+    '--button-height': '44px', '--input-height': '44px', '--button-radius': 'var(--radius-md)', '--input-radius': 'var(--radius-md)',
+    '--content-max-width': '1280px', '--content-gutter': 'var(--space-4)', '--header-height': '7rem', '--footer-height': '3rem',
+    '--transition-fast': '150ms ease', '--transition-normal': '250ms ease', '--focus-width': '3px', '--focus-offset': '4px',
+  }
+  for (const [name, value] of Object.entries(expectedBase)) assert.equal(base.get(name), value, `:root ${name}`)
+  for (const name of ['--font-family', '--font-family-base', '--app-header-height']) assert.ok(base.has(name), `:root ${name}`)
+  const expectedLight = {
+    '--color-primary': 'var(--brand-cobalt)', '--color-on-primary': '#ffffff', '--color-accent': '#d9153b',
+    '--color-background': 'var(--brand-blue-light)', '--color-surface': '#ffffff', '--color-text': 'var(--brand-navy)',
+    '--color-text-secondary': '#52627a', '--color-text-muted': '#5b6a80', '--color-border': '#dce5f2',
+    '--color-success': '#15803d', '--color-success-soft': '#dcfce7', '--color-warning': '#b45309', '--color-warning-soft': '#fef3c7',
+    '--color-error': '#b91c1c', '--color-error-soft': '#fee2e2', '--color-info': 'var(--color-primary-hover)', '--color-info-soft': '#dbeafe',
+    '--color-focus': 'var(--color-primary)',
+  }
+  for (const [name, value] of Object.entries(expectedLight)) assert.equal(light.get(name), value, `light ${name}`)
+  // Every semantic colour and shadow of the light theme stays redefined by the (inactive) dark theme.
+  const semantic = [...light.keys()].filter((name) => name.startsWith('--color-') || name.startsWith('--shadow-'))
+  assert.ok(semantic.length >= 49, `light theme semantic token set shrank (${semantic.length})`)
+  assert.deepEqual(semantic.filter((name) => !dark.has(name)), [])
+})
+
+test('no component activates a data-theme', () => {
+  const sources = readdirSync(resolve(root, 'src'), { recursive: true })
+    .map((file) => String(file).replaceAll('\\', '/'))
+    .filter((file) => /\.(tsx|jsx|ts|js)$/.test(file))
+  assert.ok(sources.length > 100)
+  for (const file of sources) {
+    assert.doesNotMatch(read(`src/${file}`), /data-theme|dataset\.theme/, `${file} must not set data-theme`)
+  }
+})
