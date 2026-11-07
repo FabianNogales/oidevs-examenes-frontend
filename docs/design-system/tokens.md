@@ -102,6 +102,7 @@ crear las primitivas de DS2 (p. ej. `Badge`) y al migrar cada módulo.
 
 - Los `--status-*` se declaran en el bloque del tema claro (`:root, [data-theme='light']`); los `--control-height*`, en `:root`.
 - **`--control-height-sm` (36px)** se reserva para controles compactos secundarios (p. ej. acciones de barra de herramientas en escritorio). **No sustituye** el tamaño táctil recomendado de 44px (`--control-height`): los controles principales y los de pantallas táctiles usan 44px.
+- Consumidor de `--control-height` y `--control-height-sm`: `Button` (DS2.2a), autorizado en el contrato de `cssContracts.test.mjs`.
 - El estado nunca se comunica solo con color ([rules.md](rules.md) §6): los badges llevan siempre texto.
 - Tema oscuro (no activado): un token con `var()` se resuelve en el elemento donde se declara. Como los `--status-*` están en `:root`, solo seguirían al tema oscuro si `data-theme` se aplica en `<html>`; aplicarlo en un descendiente heredaría los valores claros. A tener en cuenta en la etapa que active el tema oscuro.
 

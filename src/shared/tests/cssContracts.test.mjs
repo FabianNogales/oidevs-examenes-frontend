@@ -232,14 +232,21 @@ test('DS1.4b z-index tokens exist only in :root with their approved values', () 
   }
 })
 
-test('DS1.4 tokens have no consumers yet and the dark theme block is unchanged', () => {
+// Closed list of authorized DS1.4 token consumers (DS2.2a: the Button primitive uses the control heights).
+// Patterns are stored as source strings and compiled per use, so no RegExp state (lastIndex) is shared.
+const ds14Consumers = { 'src/shared/components/ui/Button/Button.module.css': String.raw`--control-height(-sm)?(?![\w-])` }
+
+test('DS1.4 tokens are consumed only by authorized files and the dark theme block is unchanged', () => {
   const tokensFile = `${globalStyles}/tokens.css`
   const sources = readdirSync(resolve(root, 'src'), { recursive: true })
     .map((file) => `src/${String(file).replaceAll('\\', '/')}`)
     .filter((file) => /\.(css|tsx|jsx|ts|js)$/.test(file) && file !== tokensFile)
   for (const file of sources) {
-    assert.doesNotMatch(read(file), /--(status|control-height|z-)[\w-]*/, `${file} must not consume DS1.4 tokens yet`)
+    const allowed = ds14Consumers[file]
+    const content = allowed ? read(file).replaceAll(new RegExp(allowed, 'g'), '') : read(file)
+    assert.doesNotMatch(content, /--(status|control-height|z-)[\w-]*/, `${file} must not consume DS1.4 tokens yet`)
   }
+  for (const [file, pattern] of Object.entries(ds14Consumers)) assert.match(read(file), new RegExp(pattern), `${file} is an authorized consumer`)
   const css = stripComments(read(tokensFile))
   const [, darkBody] = /\[data-theme='dark'\]\s*\{([^{}]*)\}/.exec(css)
   const declarations = [...darkBody.matchAll(/(--[\w-]+|color-scheme)\s*:\s*([^;]+);/g)].map(([, name, value]) => `${name}:${value.trim()}`)
