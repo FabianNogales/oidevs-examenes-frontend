@@ -1,13 +1,14 @@
 # Tokens
 
-Fuente: [`src/assets/styles/global.css`](../../src/assets/styles/global.css)
-(verificado en `f3cf6f5`). Esta página distingue:
+Fuente: [`src/assets/styles/tokens.css`](../../src/assets/styles/tokens.css), importado
+desde `global.css` (verificado en DS1.4a, sobre `52f80a5`). Esta página distingue:
 
-- ✅ **Existente:** definido hoy en `global.css`; se puede usar.
-- 🕒 **Propuesto (pendiente):** diseño aceptado, pero no implementado; no existe todavía en el código. Se creará en DS1.4. **No usar.**
+- ✅ **Existente:** definido hoy en `tokens.css`; se puede usar.
+- 🕒 **Aprobado, pendiente de implementar:** valores aceptados, pero todavía no existen en el código. **No usar.**
 
 Regla: consumir siempre los tokens semánticos `--color-*`, no la paleta `--brand-*`
-(el propio `global.css` lo indica: "Components should consume semantic tokens").
+(el propio `tokens.css` lo indica: "Components should consume semantic tokens").
+Los contratos de `src/shared/tests/cssContracts.test.mjs` comprueban los valores de esta página.
 
 ## ✅ Paleta de marca (`:root`)
 
@@ -84,20 +85,40 @@ no se redefinen, y combinaciones como `--brand-blue-light` + `--color-primary`
 activarlo**. Si en el futuro se decide activarlo, será una etapa propia que corrija
 antes esos usos de `--brand-*`.
 
-## 🕒 Tokens semánticos propuestos (pendientes de DS1, no existen)
+## ✅ Tokens semánticos de estado y controles (DS1.4a)
 
-Se definirán **a partir de tokens existentes**. Nombres y correspondencia aceptados
-como diseño pendiente; no están implementados:
+Definidos **a partir de tokens existentes**. Aún no tienen consumidores: se adoptarán al
+crear las primitivas de DS2 (p. ej. `Badge`) y al migrar cada módulo.
 
-| Token propuesto | Correspondencia propuesta |
-|---|---|
-| `--status-neutral-bg` / `-fg` | `--color-surface-soft` / `--color-text-secondary` |
-| `--status-info-bg` / `-fg` | `--color-info-soft` / `--color-primary` |
-| `--status-success-bg` / `-fg` | `--color-success-soft` / `--color-success` |
-| `--status-warning-bg` / `-fg` | `--color-warning-soft` / `--color-warning` |
-| `--status-danger-bg` / `-fg` | `--color-error-soft` / `--color-error` |
-| `--control-height` / `--control-height-sm` | `--button-height` (44px) / 36px (altura usada hoy por los botones secundarios del portal) |
-| `--z-dropdown`, `--z-sticky`, `--z-dialog`, `--z-toast` | Escala por definir (hoy hay valores sueltos: 1, 2, 20, 30, 50, 60, 200, 1000) |
+| Token | Valor | Contraste (claro · oscuro) |
+|---|---|---|
+| `--status-neutral-bg` / `-fg` | `var(--color-surface-soft)` / `var(--color-text-secondary)` | 5,54 · 7,50 |
+| `--status-info-bg` / `-fg` | `var(--color-info-soft)` / `var(--color-primary)` | 6,83 · 5,73 |
+| `--status-success-bg` / `-fg` | `var(--color-success-soft)` / `var(--color-success)` | 4,57 · 9,78 |
+| `--status-warning-bg` / `-fg` | `var(--color-warning-soft)` / `var(--color-warning)` | 4,51 (en el límite AA) · 9,64 |
+| `--status-danger-bg` / `-fg` | `var(--color-error-soft)` / `var(--color-error)` | 5,30 · 7,71 |
+| `--control-height` | `var(--button-height)` (44px) | — |
+| `--control-height-sm` | `36px` | — |
+
+- Los `--status-*` se declaran en el bloque del tema claro (`:root, [data-theme='light']`); los `--control-height*`, en `:root`.
+- **`--control-height-sm` (36px)** se reserva para controles compactos secundarios (p. ej. acciones de barra de herramientas en escritorio). **No sustituye** el tamaño táctil recomendado de 44px (`--control-height`): los controles principales y los de pantallas táctiles usan 44px.
+- El estado nunca se comunica solo con color ([rules.md](rules.md) §6): los badges llevan siempre texto.
+- Tema oscuro (no activado): un token con `var()` se resuelve en el elemento donde se declara. Como los `--status-*` están en `:root`, solo seguirían al tema oscuro si `data-theme` se aplica en `<html>`; aplicarlo en un descendiente heredaría los valores claros. A tener en cuenta en la etapa que active el tema oscuro.
+
+## 🕒 Escala de `z-index` (aprobada, pendiente de implementar en DS1.4b)
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--z-sticky` | `50` | Cabecera sticky (valor actual de `.header`) |
+| `--z-dropdown` | `60` | Menús desplegables (valor actual de los desplegables de la cabecera) |
+| `--z-dialog` | `1000` | Overlays de modal no nativos |
+| `--z-toast` | `1100` | Notificaciones temporales |
+
+No existen todavía en el código: **no usar** hasta DS1.4b. Hoy hay valores sueltos
+(1, 2, 20, 30, 50, 60, 100, 200, 1000) y conflictos conocidos (toast por debajo de los
+overlays, overlay de `AddStudentsModal` por debajo de la cabecera), que se corrigen al
+migrar cada consumidor (DS2–DS4), no al declarar la escala. Los `<dialog>` nativos usan la
+*top layer* del navegador, donde `z-index` no influye.
 
 ## Breakpoints
 

@@ -10,7 +10,7 @@ Las reglas de git (ramas, PR y autorizaciones) están en [README.md](README.md) 
 
 ## 2. Sin duplicados
 - No crear clases de botón, modales, tablas, paginaciones ni badges nuevos si ya existe un equivalente compartido.
-- No crear clases CSS globales nuevas: solo tokens y estilos base en `global.css`.
+- No crear clases CSS globales nuevas: solo tokens (`tokens.css`) y estilos base (`base.css`) en `src/assets/styles/`; `global.css` solo contiene los `@import`.
 - No reimplementar Escape, foco ni bloqueo de scroll: usar `PortalDialog` / `ConfirmDialog` y `useBodyScrollLock`.
 
 ## 3. Tokens

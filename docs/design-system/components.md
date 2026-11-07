@@ -2,7 +2,7 @@
 
 Antes de crear un componente o estilo, buscar aquí (o con `grep`) un equivalente.
 Si existe uno parecido, extenderlo mediante props en una PR revisada en lugar de
-copiarlo. Verificado en `f3cf6f5`.
+copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales actualizada en DS1.3 (`52f80a5`).
 
 ## ✅ Existentes y reutilizables
 

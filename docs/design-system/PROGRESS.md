@@ -15,7 +15,8 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | SK3 | Documentación compartida (`docs/design-system/`) | ✅ | Erick | PR #4 (`50d45d9`), `dbb8cf9` |
 | DS1.3a | Separar `global.css` en `tokens.css`, `base.css`, `shell.css`, `auth.css`, `snackbar.css` y `responsive.css` (bloques contiguos, mismo orden); `global.css` queda solo con `@import` | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` del build idéntico byte a byte (CSS principal SHA-256 `bb0bf29b…`) |
 | DS1.3b | Contratos CSS de la separación en `cssContracts.test.mjs` (orden de `@import`, archivos existentes, tokens documentados con sus valores, sin `data-theme` en componentes) y documentación actualizada | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` sigue idéntico a la referencia de DS1.3a |
-| DS1.4 | Tokens semánticos propuestos (estado, controles, z-index) y contratos CSS | ⏳ | Pendiente | — |
+| DS1.4a | Tokens semánticos de estado (`--status-*`, 10) y de controles (`--control-height`, `--control-height-sm`) en `tokens.css`, sin consumidores; contratos CSS | ✅ | Erick | rama `ds/trabajo-erick`; CSS compilado: solo las 12 declaraciones nuevas; 20 CSS de features idénticos |
+| DS1.4b | Escala `--z-*` (50/60/1000/1100, aprobada en diseño) | ⏳ | Pendiente | — |
 | DS2 | Primitivas en `ui/` y catálogo de QA | ⏳ | Pendiente | — |
 
 ## Matriz por módulo (DS3–DS4)
@@ -57,8 +58,17 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 1. Primitivas de UI en `src/shared/components/ui/`.
 2. Tema oscuro: se conservan sus tokens y **no se activa**.
 3. Breakpoints canónicos: 480, 640, 768 y 1024px.
-4. Tokens semánticos propuestos en [tokens.md](tokens.md): aceptados como diseño pendiente, **no implementados** (se crean en DS1.4).
-5. Erick es responsable de DS0, DS1.1–DS1.2, SK3 y DS1.3.
+4. Tokens semánticos de [tokens.md](tokens.md): `--status-*` y `--control-height*` implementados en DS1.4a. Escala `--z-*` aprobada (`--z-sticky` 50, `--z-dropdown` 60, `--z-dialog` 1000, `--z-toast` 1100), **pendiente de implementar** en DS1.4b.
+5. Erick es responsable de DS0, DS1.1–DS1.2, SK3, DS1.3 y DS1.4a.
+
+## Hallazgos visuales reservados para DS2
+
+Registrados en la verificación manual de DS1.4 (no se corrigen en DS1):
+
+- Tamaños de título distintos entre módulos (→ `PageHeader`).
+- Espaciados y anchos de contenido no uniformes (→ `PageContainer`).
+- Botones sin estilo común: 64 clases y alturas de 36 a 48px (→ `Button` con `--control-height*`).
+- Pantalla de criterios de habilitación (`eligibility-automation`) con distribución visual mejorable.
 
 ## Pendiente de coordinación
 

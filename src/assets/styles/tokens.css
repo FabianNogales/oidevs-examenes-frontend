@@ -50,6 +50,8 @@
   --button-radius: var(--radius-md);
   --input-height: 44px;
   --input-radius: var(--radius-md);
+  --control-height: var(--button-height);
+  --control-height-sm: 36px;
   --content-max-width: 1280px;
   --content-gutter: var(--space-4);
   --header-height: 7rem;
@@ -118,6 +120,17 @@
   --shadow-sm: 0 1px 3px rgb(23 37 84 / 6%);
   --shadow-md: 0 4px 12px rgb(23 37 84 / 8%);
   --shadow-lg: 0 8px 24px rgb(23 37 84 / 10%);
+
+  --status-neutral-bg: var(--color-surface-soft);
+  --status-neutral-fg: var(--color-text-secondary);
+  --status-info-bg: var(--color-info-soft);
+  --status-info-fg: var(--color-primary);
+  --status-success-bg: var(--color-success-soft);
+  --status-success-fg: var(--color-success);
+  --status-warning-bg: var(--color-warning-soft);
+  --status-warning-fg: var(--color-warning);
+  --status-danger-bg: var(--color-error-soft);
+  --status-danger-fg: var(--color-error);
 }
 
 [data-theme='dark'] {

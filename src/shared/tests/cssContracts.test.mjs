@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { createRequire } from 'node:module'
@@ -191,6 +192,45 @@ test('tokens.css keeps the documented tokens and their current values', () => {
   const semantic = [...light.keys()].filter((name) => name.startsWith('--color-') || name.startsWith('--shadow-'))
   assert.ok(semantic.length >= 49, `light theme semantic token set shrank (${semantic.length})`)
   assert.deepEqual(semantic.filter((name) => !dark.has(name)), [])
+})
+
+// DS1.4a: approved semantic tokens, declared without consumers and without touching the dark theme.
+const ds14aTokens = {
+  base: { '--control-height': 'var(--button-height)', '--control-height-sm': '36px' },
+  light: {
+    '--status-neutral-bg': 'var(--color-surface-soft)', '--status-neutral-fg': 'var(--color-text-secondary)',
+    '--status-info-bg': 'var(--color-info-soft)', '--status-info-fg': 'var(--color-primary)',
+    '--status-success-bg': 'var(--color-success-soft)', '--status-success-fg': 'var(--color-success)',
+    '--status-warning-bg': 'var(--color-warning-soft)', '--status-warning-fg': 'var(--color-warning)',
+    '--status-danger-bg': 'var(--color-error-soft)', '--status-danger-fg': 'var(--color-error)',
+  },
+}
+
+test('DS1.4a semantic tokens exist with their approved values', () => {
+  const blocks = tokenBlocks(read(`${globalStyles}/tokens.css`))
+  const base = blocks.get(':root')
+  const light = blocks.get(":root, [data-theme='light']")
+  for (const [name, value] of Object.entries(ds14aTokens.base)) assert.equal(base.get(name), value, `:root ${name}`)
+  for (const [name, value] of Object.entries(ds14aTokens.light)) assert.equal(light.get(name), value, `light ${name}`)
+  assert.deepEqual([...base.keys()].filter((name) => name.startsWith('--control-')), Object.keys(ds14aTokens.base))
+  assert.deepEqual([...light.keys()].filter((name) => name.startsWith('--status-')), Object.keys(ds14aTokens.light))
+  // The z-index scale is approved as pending design (DS1.4b) and must not be declared yet.
+  assert.doesNotMatch(read(`${globalStyles}/tokens.css`), /--z-[\w-]+\s*:/)
+})
+
+test('DS1.4a tokens have no consumers yet and the dark theme block is unchanged', () => {
+  const tokensFile = `${globalStyles}/tokens.css`
+  const sources = readdirSync(resolve(root, 'src'), { recursive: true })
+    .map((file) => `src/${String(file).replaceAll('\\', '/')}`)
+    .filter((file) => /\.(css|tsx|jsx|ts|js)$/.test(file) && file !== tokensFile)
+  for (const file of sources) {
+    assert.doesNotMatch(read(file), /--(status|control-height)[\w-]*/, `${file} must not consume DS1.4a tokens yet`)
+  }
+  const css = stripComments(read(tokensFile))
+  const [, darkBody] = /\[data-theme='dark'\]\s*\{([^{}]*)\}/.exec(css)
+  const declarations = [...darkBody.matchAll(/(--[\w-]+|color-scheme)\s*:\s*([^;]+);/g)].map(([, name, value]) => `${name}:${value.trim()}`)
+  assert.equal(declarations.length, 50)
+  assert.equal(createHash('sha256').update(declarations.join(';')).digest('hex'), '2fe73df5325679a1d4778c40e23f7400f0edeccfddacb729c67789329f1f87bc', 'dark theme block changed')
 })
 
 test('no component activates a data-theme', () => {
