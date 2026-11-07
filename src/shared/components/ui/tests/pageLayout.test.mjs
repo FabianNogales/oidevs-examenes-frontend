@@ -126,6 +126,7 @@ const authorizedConsumers = [
   'features/course-offerings/pages/ImportCourseOfferingsPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
   'features/portal-calendar/pages/AdminCalendarPage.tsx',
+  'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/AdminInformationPage.tsx',
   'features/portal-information/pages/InformationPage.tsx',
   'features/portal-news/pages/AdminNewsPage.tsx',
@@ -149,6 +150,7 @@ const authorizedConsumers = [
 const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']
 // Public pages render the page's only <main> landmark themselves (AppLayout has none).
 const ownsMain = [
+  'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/InformationPage.tsx',
   'features/portal-news/pages/NewsPage.tsx',
   'features/portal-services/pages/ServicesPage.tsx',
