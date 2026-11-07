@@ -42,7 +42,7 @@ function editor(handlers = {}, initial = admin) {
   const editorStates = []
   const ui = component(
     c,
-    'features/portal-services/ServiceEditor.tsx',
+    'features/portal-services/components/ServiceEditor.tsx',
     'ServiceEditor',
     {
       formId: 'service-form',
@@ -73,7 +73,7 @@ test('HU44 lists only active public services and preserves the backend order', a
       { get: () => ({ data: page([service, second], 1, 2, 14) }) },
       auth(),
     ),
-    'features/portal-services/ServicesPage.tsx',
+    'features/portal-services/pages/ServicesPage.tsx',
     'ServicesPage',
   )
   await ui.ready()
@@ -96,7 +96,7 @@ test('HU44 lists only active public services and preserves the backend order', a
 test('HU44 public access opens the exact external URL in a safe new tab', () => {
   const ui = component(
     client({}, auth()),
-    'features/portal-services/ServiceCard.tsx',
+    'features/portal-services/components/ServiceCard.tsx',
     'ServiceDestination',
     { service, horizontal: true },
   )
@@ -111,7 +111,7 @@ test('HU44 public access opens the exact external URL in a safe new tab', () => 
 test('HU44 horizontal service card renders its icon, details, domain and detail link', () => {
   const ui = component(
     client({}, auth()),
-    'features/portal-services/ServiceCard.tsx',
+    'features/portal-services/components/ServiceCard.tsx',
     'ServiceCard',
     { service, horizontal: true },
   )
@@ -133,7 +133,7 @@ test('HU44 horizontal service card renders its icon, details, domain and detail 
   )[0]
   assert.ok(detail)
   const source = readFileSync(
-    resolve(sourceRoot, 'features/portal-services/ServiceCard.tsx'),
+    resolve(sourceRoot, 'features/portal-services/components/ServiceCard.tsx'),
     'utf8',
   )
   assert.match(
@@ -147,7 +147,7 @@ test('HU44 horizontal service card renders its icon, details, domain and detail 
 test('HU44 single-page catalogue shows cards without pagination', async () => {
   const ui = component(
     client({ get: () => ({ data: page([service]) }) }, auth()),
-    'features/portal-services/ServicesPage.tsx',
+    'features/portal-services/pages/ServicesPage.tsx',
     'ServicesPage',
   )
   await ui.ready()
@@ -163,7 +163,7 @@ test('HU44 single-page catalogue shows cards without pagination', async () => {
 test('HU44 empty catalogue has one clean state and no pager', async () => {
   const ui = component(
     client({ get: () => ({ data: page([]) }) }, auth()),
-    'features/portal-services/ServicesPage.tsx',
+    'features/portal-services/pages/ServicesPage.tsx',
     'ServicesPage',
   )
   await ui.ready()
@@ -191,7 +191,7 @@ test('HU44 public request failures show a controlled message without server deta
       },
       auth(),
     ),
-    'features/portal-services/ServicesPage.tsx',
+    'features/portal-services/pages/ServicesPage.tsx',
     'ServicesPage',
   )
   await ui.ready()
@@ -215,7 +215,7 @@ test('HU44 public detail still uses its endpoint', async () => {
         },
       },
     ),
-    'features/portal-services/ServicesPage.tsx',
+    'features/portal-services/pages/ServicesPage.tsx',
     'ServiceDetailPage',
   )
   await ui.ready()
@@ -228,7 +228,7 @@ test('HU45 admin list sends empty search and status filters to the new endpoint'
   const c = client({
     get: (_url, { params }) => ({ data: page([admin], params.page) }),
   })
-  const api = c.h.load('features/portal-services/servicesApi.ts')
+  const api = c.h.load('features/portal-services/api/servicesApi.ts')
   await api.listAdminServices({ page: 1, per_page: 15, search: '', status: '' })
   assert.equal(c.calls[0].args[0], '/admin/portal/services')
   assert.deepEqual(c.calls[0].args[1].params, {
@@ -275,7 +275,7 @@ test('HU45 creates an inactive service with a hidden link icon and final contrac
 test('D3 admin services table renders the shared status badge for ACTIVE and INACTIVE', () => {
   const ui = component(
     client({}, auth()),
-    'features/portal-services/AdminServicesPage.tsx',
+    'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
   const collection = nodes(
@@ -300,7 +300,7 @@ test('D3 admin services table renders the shared status badge for ACTIVE and INA
 test('D4.5 admin services filter lives in the collection filter slot and review text is not a live region', () => {
   const ui = component(
     client({}, auth()),
-    'features/portal-services/AdminServicesPage.tsx',
+    'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
   const collection = () =>
@@ -346,7 +346,7 @@ test('D4.5 admin services filter lives in the collection filter slot and review 
 test('F2.1 admin services page uses the shared content width like News and Information', () => {
   const ui = component(
     client({}, auth()),
-    'features/portal-services/AdminServicesPage.tsx',
+    'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
   const collection = nodes(
@@ -361,12 +361,12 @@ test('F2.1 admin services page uses the shared content width like News and Infor
   assert.equal(typeof collection.props.onCreate, 'function')
   ui.h.unmount()
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-services/adminServices.module.css'),
+    resolve(sourceRoot, 'features/portal-services/pages/adminServices.module.css'),
     'utf8',
   )
   // DS2.1g: the shared content width (--content-max-width) now comes from PageContainer, and the
   // collection uses the shared PageHeader; the local class only cancels width/padding inherited from .page.
-  const source = readFileSync(resolve(sourceRoot, 'features/portal-services/AdminServicesPage.tsx'), 'utf8')
+  const source = readFileSync(resolve(sourceRoot, 'features/portal-services/pages/AdminServicesPage.tsx'), 'utf8')
   assert.match(source, /<PageContainer>\s*<PortalAdminCollection\s+headerVariant="page"/)
   const rule = css.match(/\.servicesAdminPage\.servicesAdminPage\s*\{([^}]*)\}/)?.[1]
   assert.ok(rule)
@@ -378,7 +378,7 @@ test('F2.1 admin services page uses the shared content width like News and Infor
 test('F2.3 inline Estado filter and "Limpiar filtros" reset only the status through resetPageKey', () => {
   const ui = component(
     client({}, auth()),
-    'features/portal-services/AdminServicesPage.tsx',
+    'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
   const collection = () =>
@@ -409,7 +409,7 @@ test('F2.3 inline Estado filter and "Limpiar filtros" reset only the status thro
   assert.equal(collection().key, null)
   ui.h.unmount()
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-services/adminServices.module.css'),
+    resolve(sourceRoot, 'features/portal-services/pages/adminServices.module.css'),
     'utf8',
   )
   assert.match(css, /\.servicesAdminPage \.statusFilter\s*\{[^}]*flex-direction:\s*row/)
@@ -420,7 +420,7 @@ test('F2.3 inline Estado filter and "Limpiar filtros" reset only the status thro
 test('D4.7 service name cell renders one container so the mobile card grid keeps it in a single column', () => {
   const ui = component(
     client({}, auth()),
-    'features/portal-services/AdminServicesPage.tsx',
+    'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
   const nameColumn = nodes(
@@ -684,12 +684,12 @@ test('HU45 service Escape confirmation uses the native top layer and preserves t
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
-    '@/features/portal-shared/usePortalResource': {
+    '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: () => ({ data: admin, loading: false, error: null }),
     },
   })
   const { AdminServicesPage } = h.load(
-    'features/portal-services/AdminServicesPage.tsx',
+    'features/portal-services/pages/AdminServicesPage.tsx',
   )
   let pageTree, drawerTree
   const render = () =>
@@ -744,7 +744,7 @@ test('HU45 service Escape confirmation uses the native top layer and preserves t
   render()
   const ui = component(
     client(),
-    'features/portal-services/ServiceEditor.tsx',
+    'features/portal-services/components/ServiceEditor.tsx',
     'ServiceEditor',
     editorNode().props,
   )
@@ -863,7 +863,7 @@ test('HU45 history is available with humanized fields and a secondary technical 
         },
       }),
     }),
-    'features/portal-shared/PortalHistory.tsx',
+    'features/portal-shared/components/PortalHistory.tsx',
     'PortalHistoryPanel',
     { resource: 'services', id: 42 },
   )
@@ -880,7 +880,7 @@ test('HU45 uses backend pagination values after list updates', async () => {
   const c = client({
     get: (_url, { params }) => ({ data: page([admin], params.page, 3, 31) }),
   })
-  const api = c.h.load('features/portal-services/servicesApi.ts')
+  const api = c.h.load('features/portal-services/api/servicesApi.ts')
   const props = {
     title: 'Gestión de servicios',
     columns: [],
@@ -891,7 +891,7 @@ test('HU45 uses backend pagination values after list updates', async () => {
   }
   const ui = component(
     c,
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
     'PortalAdminCollection',
     props,
   )
@@ -919,7 +919,7 @@ test('HU45 admin filters reset to page 1 while preserving the active search', as
   const c = client({
     get: (_url, { params }) => ({ data: page([admin], params.page, 3, 31) }),
   })
-  const api = c.h.load('features/portal-services/servicesApi.ts')
+  const api = c.h.load('features/portal-services/api/servicesApi.ts')
   const props = {
     title: 'Gestión de servicios',
     columns: [],
@@ -934,7 +934,7 @@ test('HU45 admin filters reset to page 1 while preserving the active search', as
   }
   const ui = component(
     c,
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
     'PortalAdminCollection',
     props,
   )
@@ -990,7 +990,7 @@ test('HU45 admin filters reset to page 1 while preserving the active search', as
   ui.h.unmount()
 
   const pageSource = readFileSync(
-    resolve(sourceRoot, 'features/portal-services/AdminServicesPage.tsx'),
+    resolve(sourceRoot, 'features/portal-services/pages/AdminServicesPage.tsx'),
     'utf8',
   )
   assert.match(pageSource, /resetPageKey=\{status\}/)
@@ -1013,7 +1013,7 @@ test('HU44 and HU45 contain no functional dependency on the retired service mode
 
 test('HU44 and HU45 routes continue using public and admin service endpoints', () => {
   const source = readFileSync(
-    resolve(sourceRoot, 'features/portal-services/servicesApi.ts'),
+    resolve(sourceRoot, 'features/portal-services/api/servicesApi.ts'),
     'utf8',
   )
   assert.match(source, /\/portal\/services/)
@@ -1024,7 +1024,7 @@ test('HU44 and HU45 routes continue using public and admin service endpoints', (
 
 test('HU44 public catalogue uses horizontal cards and keeps responsive keyboard access', () => {
   const styles = readFileSync(
-    resolve(sourceRoot, 'features/portal-shared/portalShared.module.css'),
+    resolve(sourceRoot, 'features/portal-shared/components/portalShared.module.css'),
     'utf8',
   )
   assert.match(

@@ -122,33 +122,33 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
 
 // Only screens explicitly migrated in DS2.1 may consume the layout primitives.
 const authorizedConsumers = [
-  'features/admin/pages/AdminReadPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
-  'features/portal-information/AdminInformationPage.tsx',
-  'features/portal-information/InformationPage.tsx',
-  'features/portal-news/AdminNewsPage.tsx',
-  'features/portal-news/NewsPage.tsx',
-  'features/portal-services/AdminServicesPage.tsx',
-  'features/portal-services/ServicesPage.tsx',
-  'features/portal-shared/PortalAdminCollection.tsx',
+  'features/portal-information/pages/AdminInformationPage.tsx',
+  'features/portal-information/pages/InformationPage.tsx',
+  'features/portal-news/pages/AdminNewsPage.tsx',
+  'features/portal-news/pages/NewsPage.tsx',
+  'features/portal-services/pages/AdminServicesPage.tsx',
+  'features/portal-services/pages/ServicesPage.tsx',
+  'features/portal-shared/components/PortalAdminCollection.tsx',
   'features/rooms/pages/AdminRoomsPage.tsx',
   'features/rooms/pages/ImportRoomsPage.tsx',
   'features/subjects/pages/AdminSubjectsPage.tsx',
   'features/subjects/pages/ImportSubjectsPage.tsx',
+  'features/users/pages/AdminReadPage.tsx',
 ]
 // Files that keep a legacy <h1> path for consumers not yet migrated.
-const legacyHeading = ['features/admin/pages/AdminReadPage.tsx', 'features/portal-shared/PortalAdminCollection.tsx']
+const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']
 // Public pages render the page's only <main> landmark themselves (AppLayout has none).
 const ownsMain = [
-  'features/portal-information/InformationPage.tsx',
-  'features/portal-news/NewsPage.tsx',
-  'features/portal-services/ServicesPage.tsx',
+  'features/portal-information/pages/InformationPage.tsx',
+  'features/portal-news/pages/NewsPage.tsx',
+  'features/portal-services/pages/ServicesPage.tsx',
 ]
 // Portal administration pages get their PageHeader through PortalAdminCollection headerVariant="page".
 const portalAdmin = [
-  'features/portal-information/AdminInformationPage.tsx',
-  'features/portal-news/AdminNewsPage.tsx',
-  'features/portal-services/AdminServicesPage.tsx',
+  'features/portal-information/pages/AdminInformationPage.tsx',
+  'features/portal-news/pages/AdminNewsPage.tsx',
+  'features/portal-services/pages/AdminServicesPage.tsx',
 ]
 
 test('PageHeader and PageContainer are consumed only by the authorized DS2.1 screens', () => {
@@ -173,7 +173,7 @@ test('PageHeader and PageContainer are consumed only by the authorized DS2.1 scr
 
 // Reference: SSR markup of PortalAdminCollection at e4f5bbd (before headerVariant existed), for the two
 // default (legacy) shapes. No screen uses the legacy header after DS2.1g, but it stays the default. Regenerate only if the legacy header is changed on purpose:
-// render `git show e4f5bbd:src/features/portal-shared/PortalAdminCollection.tsx` with these same props.
+// render `git show e4f5bbd:src/features/portal-shared/components/PortalAdminCollection.tsx` with these same props.
 const legacyCollectionMarkup = {
   withDescription: '253b602a77b1aec6c47b69aec17910daecf96953850b19142d1ab468c6eac6a9',
   withoutDescription: '7e1bf9ede548997d68a13df9f30067babf27ca83b6eceabae1aa1a0fcd2084bb',
@@ -191,7 +191,7 @@ const collectionProps = (description) => ({
 const sha256 = (text) => require('node:crypto').createHash('sha256').update(text).digest('hex')
 
 test('PortalAdminCollection legacy default header markup is unchanged since e4f5bbd', () => {
-  const { PortalAdminCollection } = load(resolve(srcRoot, 'features/portal-shared/PortalAdminCollection.tsx'))
+  const { PortalAdminCollection } = load(resolve(srcRoot, 'features/portal-shared/components/PortalAdminCollection.tsx'))
   for (const [key, description] of [['withDescription', true], ['withoutDescription', false]]) {
     const html = render(React.createElement(PortalAdminCollection, collectionProps(description)))
     assert.equal(sha256(html), legacyCollectionMarkup[key], `${key}: default markup changed`)
@@ -201,7 +201,7 @@ test('PortalAdminCollection legacy default header markup is unchanged since e4f5
 })
 
 test('PortalAdminCollection headerVariant="page" renders PageHeader with the same title, crumbs and action', () => {
-  const { PortalAdminCollection } = load(resolve(srcRoot, 'features/portal-shared/PortalAdminCollection.tsx'))
+  const { PortalAdminCollection } = load(resolve(srcRoot, 'features/portal-shared/components/PortalAdminCollection.tsx'))
   const html = render(React.createElement(PortalAdminCollection, { ...collectionProps(true), headerVariant: 'page' }))
   assert.equal(count(html, /<h1\b/g), 1)
   assert.match(html, /<h1 class="title">Gestión de servicios<\/h1>/)

@@ -1,0 +1,126 @@
+.panel,
+.section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-block: var(--space-5);
+  min-width: 0;
+}
+.panel p,
+.section p {
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.section h2 {
+  font-size: var(--font-size-xl);
+  margin-top: 0;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.cards > div {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.cards strong {
+  font-size: var(--font-size-3xl);
+  color: var(--color-primary);
+}
+.progress progress {
+  width: 100%;
+  height: 10px;
+  accent-color: var(--color-primary);
+}
+.offline {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+.toolbar,
+.tabs,
+.listButtons {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.tabs {
+  justify-content: flex-start;
+  margin-block: var(--space-5);
+}
+.toolbar button,
+.tabs button,
+.panel button,
+.filters button,
+.listButtons button {
+  font: inherit;
+  min-height: var(--button-height);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--button-radius);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.tabs [aria-pressed='true'],
+.filters button {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+.toolbar button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr) auto;
+  gap: var(--space-4);
+  align-items: end;
+  margin-bottom: var(--space-5);
+}
+.filters label {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.filters input,
+.filters select {
+  font: inherit;
+  width: 100%;
+  min-height: var(--input-height);
+  padding: var(--space-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.panel :focus-visible,
+.section :focus-visible,
+.tabs :focus-visible,
+.toolbar :focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+@media (max-width: 640px) {
+  .cards,
+  .filters {
+    grid-template-columns: 1fr;
+  }
+  .panel,
+  .section {
+    padding: var(--space-4);
+  }
+  .cards strong {
+    font-size: var(--font-size-2xl);
+  }
+  .toolbar button,
+  .filters button {
+    width: 100%;
+  }
+}

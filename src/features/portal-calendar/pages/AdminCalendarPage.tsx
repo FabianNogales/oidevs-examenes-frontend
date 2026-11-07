@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
+import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { getAdminEvents, getEventCategories } from '../api/portalCalendarApi'
 import { AdminEventDialog } from '../components/AdminEventDialog'
-import { STATUS_LABELS, VISIBILITY_LABELS } from '../types'
+import { STATUS_LABELS, VISIBILITY_LABELS } from '../types/calendar.types'
 import { useCalendarResource } from '../hooks/useCalendarResource'
-import type { AdminPortalEvent, EventStatus, EventVisibility } from '../types'
+import type { AdminPortalEvent, EventStatus, EventVisibility } from '../types/calendar.types'
 import { boliviaInput, eventDateLabel } from '../utils/calendarDates'
-import styles from '../portalCalendar.module.css'
+import styles from './portalCalendar.module.css'
 
 // DataTable reserves `status` for ACTIVE/INACTIVE. Keep the calendar state separately.
 type EventRow = Omit<AdminPortalEvent, 'status'> & { eventStatus: EventStatus }

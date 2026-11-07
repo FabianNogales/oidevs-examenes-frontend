@@ -1,24 +1,25 @@
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 
-import { env } from '@/app/config/env'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   addStudentToSubject,
   getSubjectStudents,
   getTeacherSubjects,
-  importStudentsCsv,
 } from '@/features/students/api/teacherStudentsApi'
-import { AddStudentsModal } from '@/features/students/components/AddStudentsModal'
+import { ManualStudentEnrollmentDialog } from '../components/ManualStudentEnrollmentDialog'
 import { StudentsSkeleton } from '@/features/students/components/StudentsSkeleton'
-import type { CsvImportSummary, StudentEnrollment } from '@/features/students/types/student.types'
+import { SubjectStudentsTable } from '../components/SubjectStudentsTable'
+import type { StudentEnrollment } from '@/features/students/types/student.types'
 import type { Subject } from '@/features/subjects/types/subject.types'
 
 import styles from './TeacherSubjectStudentsPage.module.css'
 
 export function TeacherSubjectStudentsPage() {
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const period = searchParams.get('period')
+  const subjectsPath = `/teacher/subjects${period ? `?period=${encodeURIComponent(period)}` : ''}`
   const { notify } = useAuth()
   const { courseOfferingId } = useParams()
   const [subject, setSubject] = useState<Subject | null>(null)
@@ -41,13 +42,16 @@ export function TeacherSubjectStudentsPage() {
 
     try {
       const subjects = await getTeacherSubjects()
-      const selectedSubject = subjects.find(
-        (item) => String(item.courseOfferingId) === String(courseOfferingId),
-      ) ?? null
+      const selectedSubject =
+        subjects.find(
+          (item) => String(item.courseOfferingId) === String(courseOfferingId),
+        ) ?? null
 
       if (!selectedSubject) {
         setSubject(null)
-        throw new Error('La materia seleccionada no está disponible para este docente.')
+        throw new Error(
+          'La materia seleccionada no está disponible para este docente.',
+        )
       }
 
       setSubject(selectedSubject)
@@ -82,7 +86,10 @@ export function TeacherSubjectStudentsPage() {
   }, [loadSubjectData])
 
   async function handleManualSubmit(sis: string) {
-    if (subject?.canManage === false) throw new Error('Esta oferta es de solo consulta. No se pueden agregar estudiantes.')
+    if (subject?.canManage === false)
+      throw new Error(
+        'Esta oferta es de solo consulta. No se pueden agregar estudiantes.',
+      )
     if (!courseOfferingId) {
       throw new Error('No se seleccionó una materia válida.')
     }
@@ -93,41 +100,6 @@ export function TeacherSubjectStudentsPage() {
     }
     notify('success', 'Estudiante agregado correctamente.')
     setIsModalOpen(false)
-  }
-
-  async function handleCsvSubmit(file: File): Promise<CsvImportSummary> {
-    if (subject?.canManage === false) throw new Error('Esta oferta es de solo consulta. No se pueden importar estudiantes.')
-    if (!courseOfferingId) {
-      throw new Error('No se seleccionó una materia válida.')
-    }
-
-    const summary = await importStudentsCsv(courseOfferingId, file)
-    let mergedStudents = [...students]
-
-    for (const imported of summary.importedStudents) {
-      if (!mergedStudents.some((student) => student.sis === imported.sis)) {
-        mergedStudents.push(imported)
-      }
-    }
-
-    if (!env.useStudentsMock) {
-      try {
-        mergedStudents = await getSubjectStudents(courseOfferingId)
-        setStudentsError(null)
-      } catch {
-        setStudentsError('La importación se procesó, pero no se pudo actualizar el listado de estudiantes.')
-      }
-    }
-
-    setStudents(mergedStudents)
-    notify(
-      summary.validCount > 0 ? 'success' : 'error',
-      summary.validCount > 0
-        ? `Se registraron ${summary.validCount} estudiantes.`
-        : 'La importación no agregó estudiantes.',
-    )
-
-    return summary
   }
 
   if (isLoading) {
@@ -141,16 +113,18 @@ export function TeacherSubjectStudentsPage() {
           <Breadcrumbs
             items={[
               { label: 'Inicio', to: '/' },
-              { label: 'Estudiantes', to: '/teacher/students' },
+              { label: 'Mis materias', to: subjectsPath },
               { label: 'Estudiantes de la materia' },
             ]}
           />
           <div className={styles.state} role="alert">
             <h1>No se pudo acceder a la materia</h1>
-            <p>{errorMessage ?? 'La materia no existe o no está disponible.'}</p>
-            <button type="button" onClick={() => navigate('/teacher/students')}>
-              Volver a estudiantes
-            </button>
+            <p>
+              {errorMessage ?? 'La materia no existe o no está disponible.'}
+            </p>
+            <Link className={styles.backLink} to={subjectsPath}>
+              ← Volver a mis materias
+            </Link>
           </div>
         </section>
       </main>
@@ -163,19 +137,12 @@ export function TeacherSubjectStudentsPage() {
         <Breadcrumbs
           items={[
             { label: 'Inicio', to: '/' },
-            { label: 'Estudiantes', to: '/teacher/students' },
-            { label: subject.name },
+            { label: 'Mis materias', to: subjectsPath },
+            { label: `Estudiantes de ${subject.name}` },
           ]}
         />
         <header className={styles.pageHeader}>
           <div className={styles.headingWrap}>
-            <button
-              type="button"
-              className={styles.backButton}
-              onClick={() => navigate('/teacher/students')}
-            >
-              ← Volver
-            </button>
             <div>
               <p className={styles.subjectLabel}>Materia</p>
               <h1>{subject.name}</h1>
@@ -194,66 +161,67 @@ export function TeacherSubjectStudentsPage() {
           </div>
         </header>
 
-        {subject.canManage === false && <p role="status">Oferta de solo consulta: se conserva el historial de estudiantes, pero no se permiten nuevas inscripciones.</p>}
+        {subject.canManage === false && (
+          <p role="status">
+            Oferta de solo consulta: se conserva el historial de estudiantes,
+            pero no se permiten nuevas inscripciones.
+          </p>
+        )}
         <div className={styles.toolbar}>
           <div>
             <h2>Estudiantes inscritos</h2>
           </div>
-          <button type="button" className={styles.primaryButton} disabled={subject?.canManage === false} onClick={() => setIsModalOpen(true)}>
-            Agregar estudiantes
-          </button>
+          <div className={styles.enrollmentActions}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              disabled={subject.canManage === false}
+              onClick={() => setIsModalOpen(true)}
+            >
+              + Agregar estudiante manualmente
+            </button>
+            {subject.canManage === false ? (
+              <button type="button" className={styles.primaryButton} disabled>
+                Importar estudiantes (CSV)
+              </button>
+            ) : (
+              <Link
+                className={styles.primaryButton}
+                to={`/teacher/students/${courseOfferingId}/import${period ? `?period=${encodeURIComponent(period)}` : ''}`}
+              >
+                Importar estudiantes (CSV)
+              </Link>
+            )}
+          </div>
         </div>
 
         {studentsError ? (
           <section className={styles.emptyState} role="status">
             <h3>Listado de estudiantes no disponible</h3>
             <p>{studentsError}</p>
-            <p>Las operaciones de inscripción manual y CSV siguen disponibles.</p>
+            <p>
+              Las operaciones de inscripción manual y CSV siguen disponibles.
+            </p>
           </section>
         ) : students.length === 0 ? (
           <section className={styles.emptyState}>
             <h3>No hay estudiantes inscritos en esta materia.</h3>
             <p>Agrega estudiantes por SIS o CSV para comenzar.</p>
-            <button type="button" className={styles.primaryButton} disabled={subject?.canManage === false} onClick={() => setIsModalOpen(true)}>
-              Agregar estudiantes
-            </button>
           </section>
         ) : (
-          <section className={styles.list} aria-label="Estudiantes inscritos">
-            <div className={styles.studentsHeader} role="rowgroup">
-              <span>SIS</span>
-              <span>NOMBRE</span>
-              <span>ESTADO</span>
-            </div>
-
-            {students.map((student) => (
-              <article key={student.id} className={styles.studentRow}>
-                <div className={styles.studentCell}>
-                  <strong>{student.sis}</strong>
-                </div>
-
-                <div className={styles.studentCell}>
-                  <strong>{student.fullName}</strong>
-                </div>
-
-                <div className={styles.studentCell}>
-                  <span className={styles.status}>{student.status}</span>
-                </div>
-              </article>
-            ))}
+          <section aria-label="Estudiantes inscritos">
+            <SubjectStudentsTable students={students} />
           </section>
         )}
       </section>
 
-      <AddStudentsModal
-        isOpen={isModalOpen}
-        subjectName={subject.name}
-        onClose={() => setIsModalOpen(false)}
-        onManualSubmit={handleManualSubmit}
-        onCsvSubmit={handleCsvSubmit}
-        onCsvPreview={(file) => importStudentsCsv(courseOfferingId!, file, true)}
-      />
-
+      {isModalOpen && (
+        <ManualStudentEnrollmentDialog
+          subjectName={subject.name}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleManualSubmit}
+        />
+      )}
     </main>
   )
 }

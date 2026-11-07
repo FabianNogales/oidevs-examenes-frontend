@@ -57,6 +57,16 @@ export function TeacherExamsPage() {
         </header>
 
         <form className={management.filters} onSubmit={submitSearch}>
+          <label>
+            Buscar examen o materia
+            <input
+              key={search}
+              defaultValue={search}
+              name="search"
+              placeholder="Nombre del examen, materia o código"
+              maxLength={255}
+            />
+          </label>
           <label htmlFor="exam-view">
             Mostrar
             <select
@@ -72,16 +82,7 @@ export function TeacherExamsPage() {
               <option value="all">Todos</option>
             </select>
           </label>
-          <label>
-            Buscar examen o materia
-            <input
-              key={search}
-              defaultValue={search}
-              name="search"
-              placeholder="Nombre del examen, materia o código"
-              maxLength={255}
-            />
-          </label>
+
           <button type="submit">Buscar</button>
         </form>
         {result?.legacy ? (

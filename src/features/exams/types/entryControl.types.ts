@@ -50,6 +50,8 @@ export type EntryControlStudent = {
   historical_photo_revision?: number
   profile_photo_url?: string | null
   student_status: string
+  is_expelled?: boolean
+  expulsion?: { id: number; expelled_at: string } | null
   enrollment_status: EntryEnrollmentStatus
   eligibility_status: EntryEligibilityStatus
   reason_code: string | null
@@ -98,6 +100,8 @@ export type EntryControlQuery = {
 
 export type EntryControlStudentsResponse = {
   exam: EntryControlExam
+  // Optional HU28 extension; absent permission never enables management.
+  permissions?: { can_annul_entries: boolean }
   summary: EntryControlSummary
   filter_counts: EntryControlFilterCounts
   data: EntryControlStudent[]

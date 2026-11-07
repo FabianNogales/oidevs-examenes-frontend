@@ -1,0 +1,231 @@
+.roomCard {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 3px 10px rgb(23 37 84 / 6%);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  overflow: hidden;
+}
+
+.roomCard::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--color-border-strong);
+  transition: background-color var(--transition-fast), width var(--transition-fast);
+}
+
+.roomCard:hover:not(:disabled):not(.roomCardSelected) {
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Disponible verificada con fecha: indicador lateral verde */
+.roomCardVerifiedAvailable {
+  border-color: #86efac;
+}
+
+.roomCardVerifiedAvailable::before {
+  background: var(--color-success);
+}
+
+/* Ocupada en esa fecha y hora */
+.roomCardBusy {
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+  opacity: 0.68;
+}
+
+.roomCardBusy::before {
+  background: var(--color-error);
+}
+
+.roomCardSelected {
+  border-color: var(--brand-crimson) !important;
+  background: var(--brand-pink-light) !important;
+  box-shadow: 0 0 0 3px rgb(139 30 63 / 18%) !important;
+}
+
+.roomCardSelected::before {
+  width: 7px;
+  background: var(--brand-crimson) !important;
+}
+
+/* Fila superior de la card con línea divisoria*/
+.roomCardHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 11px 16px 11px 22px;
+  background: var(--color-surface-muted);
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+.roomCardSelected .roomCardHeader {
+  background: color-mix(in srgb, var(--brand-pink-light) 75%, #ffffff);
+  border-bottom-color: var(--brand-pink);
+}
+
+.roomIdentityGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.roomIndexBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-navy);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xs);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.roomCardSelected .roomIndexBadge {
+  background: var(--brand-crimson);
+  color: var(--color-on-primary);
+}
+
+.roomNameText {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.roomCapacityTag {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border-strong);
+  padding: 2px 9px;
+  border-radius: var(--radius-sm);
+}
+
+/* Cuerpo inferior de la card */
+.roomCardBody {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 10px 16px 12px 22px;
+}
+
+.roomLocationText {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.roomSlotsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.slotMetaChip {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 9px;
+  border-radius: 5px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.slotMetaChipConflict {
+  background: var(--color-error-soft);
+  border-color: var(--color-error);
+  color: var(--color-error);
+  font-weight: var(--font-weight-bold);
+}
+
+.roomStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.roomStatusBadgeValid {
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
+.roomStatusBadgeSelected {
+  background: var(--brand-crimson);
+  border: 1px solid var(--brand-crimson);
+  color: var(--color-on-primary);
+}
+
+.roomStatusBadgeBusy {
+  background: var(--color-error-soft);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+}
+
+.roomStatusBadgeNeutral {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+.statusDotIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.recommendedBadge {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.sharedSlotChip {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  padding: 2px 9px;
+  border-radius: 5px;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}

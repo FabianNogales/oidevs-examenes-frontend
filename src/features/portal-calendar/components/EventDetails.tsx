@@ -1,6 +1,6 @@
-import type { PortalEvent } from '../types'
+import type { PortalEvent } from '../types/calendar.types'
 import { eventDateLabel } from '../utils/calendarDates'
-import styles from '../portalCalendar.module.css'
+import styles from '../pages/portalCalendar.module.css'
 
 export function EventDetails({ event }: { event: PortalEvent }) {
   return (

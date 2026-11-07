@@ -14,7 +14,11 @@
 }
 .section h2 {
   margin: 0 0 var(--space-2);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
+}
+.section .blockReason {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
 }
 .section p {
   margin: 0;

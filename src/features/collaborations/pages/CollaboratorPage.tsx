@@ -50,6 +50,7 @@ export function CollaboratorPage() {
                 >
                   Control de ingreso
                 </Link>
+                <Link to={`/exams/${collaboration.exam_id}/offline`}>Preparar control sin conexión</Link>
               </CollaborationExamCard>
             ))}
           </section>

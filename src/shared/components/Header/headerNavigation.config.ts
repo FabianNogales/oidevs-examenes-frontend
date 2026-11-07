@@ -33,10 +33,6 @@ export const navigationByRole: Record<
       to: '/teacher/subjects',
     },
     {
-      label: 'Estudiantes',
-      to: '/teacher/students',
-    },
-    {
       label: 'Mis exámenes',
       children: [
         {
@@ -47,6 +43,7 @@ export const navigationByRole: Record<
         { label: 'Exámenes anteriores', to: '/teacher/exams?view=past' },
         { label: 'Exámenes cancelados', to: '/teacher/exams?view=cancelled' },
         { label: 'Todos los exámenes', to: '/teacher/exams?view=all' },
+        { label: 'Reportes de exámenes', to: '/teacher/exam-reports' },
       ],
     },
     {
@@ -133,6 +130,12 @@ export const navigationByRole: Record<
           label: 'Criterios de habilitación',
           to: '/admin/eligibility-policies',
         },
+        {
+          label: 'Incidencias e ingresos irregulares',
+          to: '/admin/incidents',
+          startsSection: true,
+        },
+        { label: 'Reportes de exámenes', to: '/admin/exam-reports' },
       ],
     },
     { label: 'Auditoría', to: '/admin/audit-logs' },

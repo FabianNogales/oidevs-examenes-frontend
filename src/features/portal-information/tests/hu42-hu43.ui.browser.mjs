@@ -68,10 +68,10 @@ import{MemoryRouter}from'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
 import{CalendarModal}from'/src/features/portal-calendar/components/CalendarModal.tsx';
-import{AdminInformationPage}from'/src/features/portal-information/AdminInformationPage.tsx';
-import{InformationPage}from'/src/features/portal-information/InformationPage.tsx';
-import{InformationEditor}from'/src/features/portal-information/InformationEditor.tsx';
-import{PortalHistoryPanel}from'/src/features/portal-shared/PortalHistory.tsx';
+import{AdminInformationPage}from'/src/features/portal-information/pages/AdminInformationPage.tsx';
+import{InformationPage}from'/src/features/portal-information/pages/InformationPage.tsx';
+import{InformationEditor}from'/src/features/portal-information/components/InformationEditor.tsx';
+import{PortalHistoryPanel}from'/src/features/portal-shared/components/PortalHistory.tsx';
 const e=React.createElement,root=createRoot(document.getElementById('root'));
 const record=${JSON.stringify(record)},history=${JSON.stringify(history)},faq={id:88,key:null,revision:3,is_published:false,has_unpublished_changes:true,draft:{question:'¿Qué es EIDA?',answer:'Respuesta de prueba',sort_order:0},published:null,published_at:null,created_by:20,updated_by:20},publicInformation={sections:[{id:1,key:'about',title:'Acerca de EIDA',description:'EIDA es un proyecto académico orientado a apoyar la identificación y el ingreso a exámenes masivos.',links:[],sort_order:1},{id:2,key:'objectives',title:'Objetivos y beneficios',description:'Centraliza información y apoya el trabajo de docentes, estudiantes y colaboradores autorizados.',links:[],sort_order:2},{id:3,key:'teacher-guidance',title:'Orientaciones para docentes',description:'Revisa estudiantes, habilitaciones y datos académicos antes de confirmar.',links:[],sort_order:3}],faqs:[{id:1,question:'¿Qué es EIDA?',answer:'Una plataforma académica de apoyo.',sort_order:1},{id:2,question:'¿Presentar mi QR garantiza el ingreso?',answer:'No. El ingreso depende de las verificaciones vigentes.',sort_order:2}]};
 window.hu42={calls:[],client:{

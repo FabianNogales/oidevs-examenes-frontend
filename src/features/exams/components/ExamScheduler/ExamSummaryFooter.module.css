@@ -1,0 +1,128 @@
+.summaryFooterBar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1300px, calc(100vw - 32px));
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-5);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  z-index: 90;
+}
+
+.summaryChipsList {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.summaryChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.summaryChip strong {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.summaryChipValid {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.summaryChipValid strong {
+  color: var(--color-success);
+}
+
+.summaryChipPending {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+.footerActionsGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.secondaryActionBtn {
+  min-height: 42px;
+  height: 42px;
+  padding: 0 var(--space-5);
+  border-radius: var(--button-radius);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.secondaryActionBtn:hover:not(:disabled) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-hover);
+}
+
+.primaryActionBtn {
+  min-height: 42px;
+  height: 42px;
+  padding: 0 var(--space-6);
+  border-radius: var(--button-radius);
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.primaryActionBtn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.primaryActionBtn:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+.primaryActionBtn:disabled {
+  background: var(--color-disabled-background);
+  color: var(--color-disabled-text);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .footerActionsGroup {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

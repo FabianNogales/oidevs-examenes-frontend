@@ -578,7 +578,7 @@ test('E1.2 the status column uses the shared AdminStatusBadge for DRAFT, PUBLISH
   assert.equal(statusColumn.header, 'Estado')
   assert.equal(visibilityColumn.header, 'Visibilidad', 'visibility stays a separate column')
   const { AdminStatusBadge } = sourceHarness().load(
-    'features/portal-shared/AdminStatusBadge.tsx',
+    'features/portal-shared/components/AdminStatusBadge.tsx',
   )
   for (const [eventStatus, label] of [
     ['DRAFT', 'Borrador'],
@@ -754,7 +754,7 @@ test('F1.1 Drawer status uses AdminStatusBadge and visibility is a separate, out
   page.h.unmount()
 
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
     'utf8',
   )
   assert.doesNotMatch(css, /\.badge\[data-status/, 'unused local status rules removed')
@@ -779,7 +779,7 @@ test('F2.2 admin breadcrumb matches the page title and keeps the home link', asy
 
 test('F2.1 admin calendar page uses the shared content width; the public page is unaffected', () => {
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
     'utf8',
   )
   const rule = css.match(/(?:^|\n)\.page\s*\{([^}]*)\}/)?.[1]
@@ -825,7 +825,7 @@ test('E1.4 date cell has one container and the mobile action button may wrap ins
   ui.h.unmount()
 
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
     'utf8',
   )
   const mobile = css.slice(css.lastIndexOf('@media (max-width: 600px)'))
@@ -1270,7 +1270,7 @@ test('calendar UI/API contain no physical deletion or raw HTML injection', () =>
 test('responsive contract uses seven shrinkable calendar columns, bounded dialogs and single-column mobile forms', () => {
   const css =
     readFileSync(
-      resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+      resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
       'utf8',
     ) +
     readFileSync(

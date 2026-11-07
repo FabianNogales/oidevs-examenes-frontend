@@ -7,6 +7,7 @@ import type { EntryQrResponse } from '../types/entryQr.types'
 import { EntryQrResultPanel } from './EntryQrResultPanel'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import styles from './EntryQr.module.css'
+import type { IncidentEntryContext } from '@/features/incidents/utils/incidentEntryContext'
 
 type Props = {
   examId: number
@@ -14,6 +15,8 @@ type Props = {
   roomId: number | undefined
   onProcessed: (response: EntryQrResponse) => void
   onProcessingChange: (processing: boolean) => void
+  onReportIncident?: (context: IncidentEntryContext) => void
+  onViewIncident?: (incidentId: number) => void
 }
 
 function cameraDisplayLabels(devices: MediaDeviceInfo[]): string[] {
@@ -51,6 +54,8 @@ export function EntryQrPanel({
   roomId,
   onProcessed,
   onProcessingChange,
+  onReportIncident,
+  onViewIncident,
 }: Props) {
   const [response, setResponse] = useState<EntryQrResponse | null>(null)
   const [processing, setProcessing] = useState(false)
@@ -282,7 +287,7 @@ export function EntryQrPanel({
           ) : null}
         </section>
         <div ref={resultRef} className={styles.resultArea}>
-          <EntryQrResultPanel response={response} processing={processing} />
+          <EntryQrResultPanel response={response} processing={processing} examId={examId} onReportIncident={onReportIncident} onViewIncident={onViewIncident} />
         </div>
       </div>
     </section>

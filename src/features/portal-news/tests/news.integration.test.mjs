@@ -30,7 +30,7 @@ function editor(handlers = {}, initial = admin, props = {}) {
   const saved = []
   const dirtyStates = []
   const stateChanges = []
-  const ui = component(c, 'features/portal-news/NewsEditor.tsx', 'NewsEditor', {
+  const ui = component(c, 'features/portal-news/components/NewsEditor.tsx', 'NewsEditor', {
     initial,
     onSaved: () => saved.push(true),
     onBusy() {},
@@ -70,7 +70,7 @@ async function confirmUnpublish(ui) {
 test('HU40 public list consumes backend news and pagination without search controls', async () => {
   const ui = component(
     client({ get: () => ({ data: page([news], 1, 2, 16) }) }),
-    'features/portal-news/NewsPage.tsx',
+    'features/portal-news/pages/NewsPage.tsx',
     'NewsList',
   )
   await ui.ready()
@@ -99,7 +99,7 @@ test('HU40 public list consumes backend news and pagination without search contr
 test('HU40 Home requests six news and handles empty public news without fixtures', async () => {
   const ui = component(
     client({ get: () => ({ data: page([]) }) }),
-    'features/portal-news/NewsPage.tsx',
+    'features/portal-news/pages/NewsPage.tsx',
     'NewsList',
     { compact: true },
   )
@@ -114,7 +114,7 @@ test('HU40 detail obtains content from detail API and renders it as text', async
     { get: () => ({ data: { data: news } }) },
     { 'react-router': { Link: 'link', useParams: () => ({ newsId: '42' }) } },
   )
-  const ui = component(c, 'features/portal-news/NewsPage.tsx', 'NewsDetailPage')
+  const ui = component(c, 'features/portal-news/pages/NewsPage.tsx', 'NewsDetailPage')
   await ui.ready()
   assert.equal(ui.calls[0].args[0], '/portal/news/42')
   assert.ok(textContent(ui.tree).includes(news.content))
@@ -128,7 +128,7 @@ test('HU40 detail obtains content from detail API and renders it as text', async
 test('HU40 image_url is used verbatim; absent image renders no fabricated URL', () => {
   const ui = component(
     client(),
-    'features/portal-news/NewsImage.tsx',
+    'features/portal-news/components/NewsImage.tsx',
     'NewsImage',
     { url: 'https://backend.example/private/image?id=42', title: news.title },
   )
@@ -145,7 +145,7 @@ test('HU41 administrative preview fetches authenticated blob and revokes Object 
   })
   const ui = component(
     c,
-    'features/portal-news/NewsImage.tsx',
+    'features/portal-news/components/NewsImage.tsx',
     'AuthenticatedNewsImage',
     {
       url: 'https://backend.example/api/v1/admin/portal/news/42/image',
@@ -274,7 +274,7 @@ test('HU41 upload and image deletion send current revision without deleting the 
     post: () => ({ data: { data: admin } }),
     delete: () => ({ data: { data: admin } }),
   })
-  const api = c.h.load('features/portal-news/newsApi.ts')
+  const api = c.h.load('features/portal-news/api/newsApi.ts')
   const file = new File(['png'], 'foto.png', { type: 'image/png' })
   await api.uploadNewsImage(42, file, 7)
   assert.equal(c.calls[0].args[0], '/admin/portal/news/42/image')

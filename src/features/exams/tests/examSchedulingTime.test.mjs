@@ -70,7 +70,7 @@ test('creation and editing keep required fields, real dates, time formats and nu
   }
 })
 
-function modalHarness(clock, post = async () => ({ data: { data: { id: 1 } } })) {
+function creationHarness(clock, post = async () => ({ data: { data: { id: 1 } } })) {
   const calls = []
   const h = sourceHarness({
     '@/features/exams/utils/examValidation': clock,
@@ -79,20 +79,19 @@ function modalHarness(clock, post = async () => ({ data: { data: { id: 1 } } }))
       rooms: [{ id: 7, code: 'A-07', name: 'Aula 7' }], roomError: null,
       isLoadingRooms: false, hasSchedule: true, isReady: true,
     }) },
-    '@/shared/hooks/useBodyScrollLock': { useBodyScrollLock() {} },
+    '../hooks/useExamNavigationGuard': { useExamNavigationGuard: () => ({ blocked: false, allowNavigation() {} }) },
     '@/shared/api/httpClient': { httpClient: { post: async (...args) => {
       calls.push(args)
       return post(...args)
     } } },
   })
   const { createExam } = h.load('features/exams/api/teacherExamsApi.ts')
-  const { CreateExamModal } = h.load('features/exams/components/CreateExamModal.tsx')
+  const { CreateExamForm } = h.load('features/exams/components/CreateExamForm.tsx')
   let tree
   const render = () => {
-    tree = h.render(() => CreateExamModal({
-      isOpen: true,
+    tree = h.render(() => CreateExamForm({
       subject: { courseOfferingId: 3, name: 'Programación', academicManagement: 'II/2026' },
-      onClose() {}, onSubmit: (payload, subject) => createExam(subject.courseOfferingId, payload),
+      onCancel() {}, onCreated() {}, onSubmit: async (payload, subject) => (await createExam(subject.courseOfferingId, payload)).id,
     }))
     return tree
   }
@@ -107,7 +106,7 @@ function modalHarness(clock, post = async () => ({ data: { data: { id: 1 } } }))
     save: async () => {
       const button = nodes(tree, (node) => node.type === 'button' && textContent(node) === 'Guardar examen')[0]
       assert.equal(button.props.disabled, false)
-      button.props.onClick()
+      tree.props.onSubmit({ preventDefault() {} })
       await settle()
       render()
     },
@@ -134,7 +133,7 @@ for (const skew of [-86_400_000, 0, 86_400_000]) {
   test(`creation submits unchanged institutional fields with device skew ${skew}`, async (t) => {
     mockFrames(t)
     const clock = validationClock(fixedNow + skew)
-    const ui = modalHarness(clock)
+    const ui = creationHarness(clock)
     ui.fill()
     assert.equal(ui.fields().props.enforceDateMinimum, false)
     await ui.save()
@@ -150,7 +149,7 @@ for (const skew of [-86_400_000, 0, 86_400_000]) {
 test('a delayed form submits and displays the real API wrapper 422 under the time field', async (t) => {
   mockFrames(t)
   const clock = validationClock()
-  const ui = modalHarness(clock, async () => {
+  const ui = creationHarness(clock, async () => {
     throw { isAxiosError: true, response: { status: 422, data: {
       message: 'The given data was invalid.', errors: { start_time: [futureError] },
     } } }

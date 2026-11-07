@@ -5,12 +5,10 @@ import styles from '../pages/AdminAcademicTermsPage.module.css'
 
 export function AcademicTermsTable({
   terms,
-  onDetail,
   onEdit,
   onStatus,
 }: {
   terms: AcademicTerm[]
-  onDetail: (id: number) => void
   onEdit: (id: number) => void
   onStatus: (term: AcademicTerm) => void
 }) {
@@ -50,14 +48,6 @@ export function AcademicTermsTable({
               </td>
               <td data-label="Acciones">
                 <div className={styles.rowActions}>
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    aria-label={`Ver detalle de ${term.name}`}
-                    onClick={() => onDetail(term.id)}
-                  >
-                    Ver detalle
-                  </button>
                   <button
                     type="button"
                     className={styles.secondaryButton}
