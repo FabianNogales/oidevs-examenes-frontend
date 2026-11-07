@@ -33,6 +33,7 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 
 Pruebas de `Button`: `ui/tests/button.test.mjs` (SSR y CSS) y `ui/tests/button.browser.mjs` (catálogo aislado: contraste AA, foco con teclado, 4 anchos).
 Pruebas de los campos: `ui/tests/field.test.mjs` (SSR y CSS) y `ui/tests/field.browser.mjs` (label↔control, `aria-describedby`, teclado, `select` nativo, contraste, 4 anchos).
+Consumidores de `Button`, `ButtonLink`, `Field` y controles (DS2.2c, lista cerrada por componente en `button.test.mjs` y `field.test.mjs`): solo Aulas (`AdminRoomsPage`, `RoomFormField`, `RoomForm`, `RoomDetails`, `RoomDialog`, `RoomStatusDialog`). Excepciones en Aulas, pendientes de decisión: acciones de cada fila de `RoomsTable` ("Desactivar" usa un estilo de peligro suave sin variante en el DS), el botón de cerrar × de `RoomModal` (botón de icono) y el panel de importación CSV (estilos compartidos con Materias en `CsvImport.module.css`; se migra con Materias en DS2.2d). Dentro de páginas del portal, `.page button` (`portalBase.module.css`) tiene más especificidad que `.button`: revisar al migrar el portal.
 Pruebas: `ui/tests/pageLayout.test.mjs` (SSR, CSS y lista cerrada de consumidores autorizados) y
 `ui/tests/pageLayout.browser.mjs` (navegador con transporte simulado: Importar aulas/materias, Gestión de
 aulas/materias, Carreras, Auditoría y Noticias, Servicios e Información (admin y pública) a 320/390/768/1440px; solo renderizado y layout, sin importar ni guardar).

@@ -1,7 +1,10 @@
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useCallback, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
+import { Select } from '@/shared/components/ui/Field/Select'
+import { TextInput } from '@/shared/components/ui/Field/TextInput'
 import { Snackbar } from '@/shared/components/Snackbar'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { RoomDialog } from '../components/RoomDialog'
@@ -89,18 +92,12 @@ export function AdminRoomsPage() {
           { label: 'Gestionar aulas' },
         ]}
         actions={
-          <div className={styles.headerActions}>
-            <Link to="/admin/rooms/import" className={styles.primaryButton}>
-              + Importar aulas (CSV)
-            </Link>
-            <button
-              type="button"
-              className={styles.primaryButton}
-              onClick={() => setSelection({ mode: 'create' })}
-            >
+          <>
+            <ButtonLink to="/admin/rooms/import">+ Importar aulas (CSV)</ButtonLink>
+            <Button onClick={() => setSelection({ mode: 'create' })}>
               + Registrar aula
-            </button>
-          </div>
+            </Button>
+          </>
         }
       />
       <div className={styles.card}>
@@ -118,7 +115,7 @@ export function AdminRoomsPage() {
               <circle cx="10.5" cy="10.5" r="6.5" />
               <path d="m16 16 5 5" />
             </svg>
-            <input
+            <TextInput
               id="rooms-search"
               type="search"
               value={search}
@@ -127,12 +124,10 @@ export function AdminRoomsPage() {
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
-          <button className={styles.primaryButton} type="submit">
-            Buscar
-          </button>
+          <Button type="submit">Buscar</Button>
           <label className={styles.filter}>
             Estado
-            <select
+            <Select
               value={query.status}
               onChange={(event) =>
                 changeQuery({
@@ -145,19 +140,18 @@ export function AdminRoomsPage() {
               <option value="">Todos</option>
               <option value="ACTIVE">Activos</option>
               <option value="INACTIVE">Inactivos</option>
-            </select>
+            </Select>
           </label>
           {filtered && (
-            <button
-              type="button"
-              className={styles.secondaryButton}
+            <Button
+              variant="secondary"
               onClick={() => {
                 setSearch('')
                 changeQuery({ page: 1, search: '', status: '' })
               }}
             >
               Limpiar filtros
-            </button>
+            </Button>
           )}
         </form>
         <p className={styles.hint}>
@@ -174,13 +168,7 @@ export function AdminRoomsPage() {
             <div className={styles.state} role="alert">
               <h2>No se pudieron cargar las aulas</h2>
               <p>{rooms.error}</p>
-              <button
-                type="button"
-                className={styles.primaryButton}
-                onClick={rooms.reload}
-              >
-                Reintentar
-              </button>
+              <Button onClick={rooms.reload}>Reintentar</Button>
             </div>
           )}
           {rooms.status === 'ready' &&
@@ -214,29 +202,27 @@ export function AdminRoomsPage() {
               {meta.from ?? 0}–{meta.to ?? 0} de {meta.total} aulas
             </p>
             <div>
-              <button
-                type="button"
-                className={styles.secondaryButton}
+              <Button
+                variant="secondary"
                 disabled={meta.current_page <= 1}
                 onClick={() =>
                   changeQuery({ ...query, page: meta.current_page - 1 })
                 }
               >
                 Anterior
-              </button>
+              </Button>
               <span>
                 Página {meta.current_page} de {meta.last_page}
               </span>
-              <button
-                type="button"
-                className={styles.secondaryButton}
+              <Button
+                variant="secondary"
                 disabled={meta.current_page >= meta.last_page}
                 onClick={() =>
                   changeQuery({ ...query, page: meta.current_page + 1 })
                 }
               >
                 Siguiente
-              </button>
+              </Button>
             </div>
           </nav>
         )}

@@ -1,4 +1,5 @@
 import type { Room } from '../types/room.types'
+import { Button } from '@/shared/components/ui/Button/Button'
 import styles from './RoomDialog.module.css'
 
 export function RoomDetails({
@@ -51,16 +52,10 @@ export function RoomDetails({
         </section>
       )}
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={onClose}
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cerrar
-        </button>
-        <button type="button" className={styles.primaryButton} onClick={onEdit}>
-          Editar aula
-        </button>
+        </Button>
+        <Button onClick={onEdit}>Editar aula</Button>
       </footer>
     </>
   )

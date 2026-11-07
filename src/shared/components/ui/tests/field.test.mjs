@@ -133,10 +133,41 @@ test('Field and control CSS use tokens and define focus, hover, invalid and disa
   }
 })
 
-test('Field, TextInput, Select and Textarea have no consumers yet (DS2.2b)', () => {
-  const consumers = readdirSync(srcRoot, { recursive: true })
+// Closed list of authorized consumers per component (DS2.2c: the Rooms pilot is the first adopter).
+const authorizedConsumers = {
+  Field: ['features/rooms/components/RoomFormField.tsx'],
+  TextInput: ['features/rooms/components/RoomFormField.tsx', 'features/rooms/pages/AdminRoomsPage.tsx'],
+  Select: ['features/rooms/pages/AdminRoomsPage.tsx'],
+  Textarea: ['features/rooms/components/RoomFormField.tsx'],
+}
+const consumersOf = (sources, component) =>
+  [...sources].filter(([, text]) => new RegExp(`components/ui/Field/${component}['"]`).test(text)).map(([file]) => file).sort()
+const folderConsumers = (sources) => [...sources].filter(([, text]) => /components\/ui\/Field\//.test(text)).map(([file]) => file).sort()
+const allowedFiles = [...new Set(Object.values(authorizedConsumers).flat())].sort()
+
+test('Field, TextInput, Select and Textarea are consumed only by the authorized files (DS2.2c)', () => {
+  const sources = new Map(readdirSync(srcRoot, { recursive: true })
     .map((file) => String(file).replaceAll('\\', '/'))
     .filter((file) => /\.(tsx|ts)$/.test(file) && !file.startsWith('shared/components/ui/'))
-    .filter((file) => /components\/ui\/Field\//.test(readFileSync(resolve(srcRoot, file), 'utf8')))
-  assert.deepEqual(consumers, [])
+    .map((file) => [file, readFileSync(resolve(srcRoot, file), 'utf8')]))
+  for (const [component, expected] of Object.entries(authorizedConsumers)) {
+    assert.deepEqual(consumersOf(sources, component), expected, `${component} consumers`)
+  }
+  // Any reference to the Field folder (any file or path form) must come from an authorized file.
+  assert.deepEqual(folderConsumers(sources), allowedFiles)
+  assert.ok(allowedFiles.every((file) => file.startsWith('features/rooms/')), 'only the Rooms pilot is authorized')
+})
+
+test('the consumer guard rejects an unauthorized import (negative check)', () => {
+  const sources = new Map([
+    ['features/rooms/components/RoomFormField.tsx', "import { Field } from '@/shared/components/ui/Field/Field'\nimport { TextInput } from '@/shared/components/ui/Field/TextInput'\nimport { Textarea } from '@/shared/components/ui/Field/Textarea'"],
+    ['features/rooms/pages/AdminRoomsPage.tsx', "import { Select } from '@/shared/components/ui/Field/Select'\nimport { TextInput } from '@/shared/components/ui/Field/TextInput'"],
+    ['features/subjects/components/SubjectForm.tsx', "import { Field } from '@/shared/components/ui/Field/Field'"],
+  ])
+  assert.notDeepEqual(consumersOf(sources, 'Field'), authorizedConsumers.Field)
+  assert.ok(consumersOf(sources, 'Field').includes('features/subjects/components/SubjectForm.tsx'))
+  assert.notDeepEqual(folderConsumers(sources), allowedFiles)
+  // Without the intruder the same sources match the authorized lists exactly.
+  sources.delete('features/subjects/components/SubjectForm.tsx')
+  for (const [component, expected] of Object.entries(authorizedConsumers)) assert.deepEqual(consumersOf(sources, component), expected)
 })

@@ -128,11 +128,42 @@ test('Button CSS uses tokens and defines hover, active, focus-visible and disabl
   }
 })
 
-test('Button and ButtonLink have no consumers yet (DS2.2a)', () => {
+// Closed list of authorized consumers per component (DS2.2c: the Rooms pilot is the first adopter).
+const authorizedConsumers = {
+  Button: [
+    'features/rooms/components/RoomDetails.tsx',
+    'features/rooms/components/RoomDialog.tsx',
+    'features/rooms/components/RoomForm.tsx',
+    'features/rooms/components/RoomStatusDialog.tsx',
+    'features/rooms/pages/AdminRoomsPage.tsx',
+  ],
+  ButtonLink: ['features/rooms/pages/AdminRoomsPage.tsx'],
+}
+const consumersOf = (sources, component) =>
+  [...sources].filter(([, text]) => new RegExp(`components/ui/Button/${component}['"]`).test(text)).map(([file]) => file).sort()
+const folderConsumers = (sources) => [...sources].filter(([, text]) => /components\/ui\/Button\//.test(text)).map(([file]) => file).sort()
+const allowedFiles = [...new Set(Object.values(authorizedConsumers).flat())].sort()
+
+test('Button and ButtonLink are consumed only by the authorized files (DS2.2c)', () => {
   const { readdirSync } = require('node:fs')
-  const consumers = readdirSync(srcRoot, { recursive: true })
+  const sources = new Map(readdirSync(srcRoot, { recursive: true })
     .map((file) => String(file).replaceAll('\\', '/'))
     .filter((file) => /\.(tsx|ts)$/.test(file) && !file.startsWith('shared/components/ui/'))
-    .filter((file) => /components\/ui\/Button\//.test(readFileSync(resolve(srcRoot, file), 'utf8')))
-  assert.deepEqual(consumers, [])
+    .map((file) => [file, readFileSync(resolve(srcRoot, file), 'utf8')]))
+  for (const [component, expected] of Object.entries(authorizedConsumers)) {
+    assert.deepEqual(consumersOf(sources, component), expected, `${component} consumers`)
+  }
+  // Any reference to the Button folder (any file or path form) must come from an authorized file.
+  assert.deepEqual(folderConsumers(sources), allowedFiles)
+  assert.ok(allowedFiles.every((file) => file.startsWith('features/rooms/')), 'only the Rooms pilot is authorized')
+})
+
+test('the consumer guard rejects an unauthorized import (negative check)', () => {
+  const sources = new Map([
+    ...allowedFiles.map((file) => [file, "import { Button } from '@/shared/components/ui/Button/Button'\nimport { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'"]),
+    ['features/subjects/pages/AdminSubjectsPage.tsx', "import { Button } from '@/shared/components/ui/Button/Button'"],
+  ])
+  assert.notDeepEqual(consumersOf(sources, 'Button'), authorizedConsumers.Button)
+  assert.ok(consumersOf(sources, 'Button').includes('features/subjects/pages/AdminSubjectsPage.tsx'))
+  assert.notDeepEqual(folderConsumers(sources), allowedFiles)
 })
