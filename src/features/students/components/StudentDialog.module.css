@@ -1,3 +1,4 @@
+/* Box of the student dialogs (formerly ManualStudentEnrollmentDialog.module.css). */
 .dialog {
   width: min(calc(100% - 2rem), 560px);
   max-height: 88dvh;
@@ -10,6 +11,11 @@
   box-shadow: var(--shadow-lg);
 }
 
+.dialog:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
 .dialog::backdrop {
-  background: rgb(15 23 42 / 45%);
+  background: color-mix(in srgb, var(--color-text) 45%, transparent);
 }

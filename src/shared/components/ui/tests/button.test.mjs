@@ -130,7 +130,7 @@ test('Button CSS uses tokens and defines hover, active, focus-visible and disabl
 
 // Closed list of authorized consumers per component (DS2.2c: the Rooms pilot is the first adopter;
 // DS2.2d: Subjects and Academic terms; DS4.1a: the teacher's subject students page;
-// DS4.2a: the shared CSV import panels).
+// DS4.2a: the shared CSV import panels; DS4.2b: the student dialogs).
 const authorizedConsumers = {
   Button: [
     'features/academic-terms/components/AcademicTermDetails.tsx',
@@ -151,8 +151,10 @@ const authorizedConsumers = {
     'features/rooms/components/import/RoomImportPanel.tsx',
     'features/rooms/components/import/RoomImportTable.tsx',
     'features/rooms/pages/AdminRoomsPage.tsx',
+    'features/students/components/CreateStudentModal.tsx',
     'features/students/components/CsvDropzone.tsx',
     'features/students/components/EnrollmentImportPanel.tsx',
+    'features/students/components/ManualStudentEnrollmentDialog.tsx',
     'features/students/components/StudentImportPanel.tsx',
     'features/students/components/StudentImportSuccess.tsx',
     'features/students/pages/TeacherSubjectStudentsPage.tsx',
@@ -182,8 +184,10 @@ const migratedScopes = [
   'features/rooms/components/import/RoomCsvDropzone.tsx',
   'features/rooms/components/import/RoomImportPanel.tsx',
   'features/rooms/components/import/RoomImportTable.tsx',
+  'features/students/components/CreateStudentModal.tsx',
   'features/students/components/CsvDropzone.tsx',
   'features/students/components/EnrollmentImportPanel.tsx',
+  'features/students/components/ManualStudentEnrollmentDialog.tsx',
   'features/students/components/StudentImportPanel.tsx',
   'features/students/components/StudentImportSuccess.tsx',
   'features/students/pages/TeacherSubjectStudentsPage.tsx',

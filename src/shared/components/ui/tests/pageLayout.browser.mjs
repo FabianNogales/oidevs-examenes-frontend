@@ -388,9 +388,9 @@ try {
       await writeFile(join(evidence, shotName), Buffer.from(shot.data, 'base64'))
       if (!baseline && screen.path === '/admin/students/manage') {
         await evaluate(`(()=>{const button=[...document.querySelectorAll('main button')].find(b=>b.textContent.includes('+ Registrar estudiante'));button.focus();button.click()})()`)
-        await wait(`!!document.querySelector('[role=dialog] form')`, 'formulario de registro de estudiante')
-        await evaluate(`[...document.querySelectorAll('[role=dialog] button')].find(b=>b.textContent.trim()==='Cancelar').click()`)
-        await wait(`!document.querySelector('[role=dialog]')`, 'cancelar registro de estudiante')
+        await wait(`!!document.querySelector('[role=dialog] form, dialog[open] form')`, 'formulario de registro de estudiante')
+        await evaluate(`[...document.querySelectorAll('[role=dialog] button, dialog[open] button')].find(b=>b.textContent.trim()==='Cancelar').click()`)
+        await wait(`!document.querySelector('[role=dialog], dialog[open]')`, 'cancelar registro de estudiante')
         await evaluate(`[...document.querySelectorAll('main button')].find(b=>b.textContent.trim()==='Desactivar').click()`)
         await wait(`document.body.innerText.includes('Desactivar cuenta')`, 'confirmación de estado')
         await evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Cancelar').click()`)

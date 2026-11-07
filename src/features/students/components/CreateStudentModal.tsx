@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
-import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import { createAdminStudent, StudentApiError } from '@/features/students/api/adminStudentsApi'
 import { getSubjectCareers } from '@/features/subjects/api/adminSubjectsApi'
 import type { SubjectCareer } from '@/features/subjects/types/adminSubject.types'
 import type { CreateStudentPayload, Student, StudentFieldErrors } from '@/features/students/types/adminStudent.types'
 import styles from '@/features/students/components/AddStudentsModal.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { StudentDialog } from './StudentDialog'
 
 const fields = [
   ['institutional_code', 'Código SIS'], ['identity_number', 'CI'], ['first_names', 'Nombres'],
@@ -53,7 +54,7 @@ export function CreateStudentModal({ onClose, onCreated }: { onClose: () => void
     }
   }
 
-  return <CollaborationModal title="Registrar estudiante" onClose={onClose} busy={saving}>
+  return <StudentDialog title="Registrar estudiante" onClose={onClose} busy={saving} closeOnBackdrop>
     <form className={styles.tabPanel} onSubmit={(event) => void submit(event)}>
       <p>La contraseña inicial será el CI. El estudiante deberá cambiarla al ingresar.</p>
       {error && <p role="alert" className={styles.inlineError}>{error}</p>}
@@ -81,18 +82,18 @@ export function CreateStudentModal({ onClose, onCreated }: { onClose: () => void
           </option>)}
         </select>
         {errors.career_id?.length ? <p id={`${id}-career-error`} className={styles.inlineError}>{errors.career_id.join(' ')}</p> : null}
-        {catalogError && <p role="alert">{catalogError} <button type="button" onClick={() => {
+        {catalogError && <p role="alert">{catalogError} <Button variant="secondary" size="sm" onClick={() => {
           setCatalogLoading(true); setCatalogVersion((value) => value + 1)
-        }}>Reintentar</button></p>}
+        }}>Reintentar</Button></p>}
         {!catalogLoading && !catalogError && careers.length === 0 && <p role="status">No hay carreras registradas.</p>}
       </div>
       <div className={styles.actions}>
-        <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={saving}>Cancelar</button>
-        <button type="submit" className={styles.primaryButton}
+        <Button variant="secondary" onClick={onClose} disabled={saving}>Cancelar</Button>
+        <Button type="submit"
           disabled={saving || catalogLoading || Boolean(catalogError) || careers.length === 0}>
           {saving ? 'Registrando…' : 'Registrar estudiante'}
-        </button>
+        </Button>
       </div>
     </form>
-  </CollaborationModal>
+  </StudentDialog>
 }

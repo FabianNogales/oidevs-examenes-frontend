@@ -19,6 +19,8 @@ function harness() {
     post: (...args) => { calls.push(['post', ...args]); return post(...args) },
   } }, '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { id: 1 }, notify() {}, clearSession() {} }) },
     '@/features/subjects/api/adminSubjectsApi': { getSubjectCareers: (...args) => catalog(...args) },
+    // DS4.2b: the Design System Button renders a native <button>; keep inspecting it as one.
+    '@/shared/components/ui/Button/Button': { Button: 'button' },
     'react-router': { NavLink: 'link', useLocation: () => ({ pathname: h.pathname }) },
     '@/features/users/api/adminUsersMock': { getAdminUsersMock: async () => { calls.push(['mock']); return { users: [], meta: meta(0) } } },
   })

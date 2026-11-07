@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
+import { useRef, useState } from 'react'
+import { Button } from '@/shared/components/ui/Button/Button'
 import styles from './AddStudentsModal.module.css'
-import local from './ManualStudentEnrollmentDialog.module.css'
+import { StudentDialog } from './StudentDialog'
 
 export function ManualStudentEnrollmentDialog({
   subjectName,
@@ -16,20 +16,7 @@ export function ManualStudentEnrollmentDialog({
   const [error, setError] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
   const busy = useRef(false)
-  const dialog = useRef<HTMLDialogElement>(null)
   const input = useRef<HTMLInputElement>(null)
-  useBodyScrollLock(true)
-  useEffect(() => {
-    const element = dialog.current
-    const previous = document.activeElement
-    element?.showModal()
-    input.current?.focus()
-    return () => {
-      element?.close()
-      if (previous instanceof HTMLElement && previous.isConnected)
-        previous.focus()
-    }
-  }, [])
   function close() {
     if (!busy.current) onClose()
   }
@@ -56,31 +43,14 @@ export function ManualStudentEnrollmentDialog({
     }
   }
   return (
-    <dialog
-      ref={dialog}
-      className={local.dialog}
-      aria-labelledby="manual-student-title"
-      onCancel={(event) => {
-        event.preventDefault()
-        close()
-      }}
+    <StudentDialog
+      title="Agregar estudiante manualmente"
+      kicker="Materia"
+      subtitle={subjectName}
+      busy={processing}
+      initialFocus={input}
+      onClose={close}
     >
-      <header className={styles.header}>
-        <div>
-          <p className={styles.kicker}>Materia</p>
-          <h2 id="manual-student-title">Agregar estudiante manualmente</h2>
-        </div>
-        <button
-          type="button"
-          className={styles.closeButton}
-          aria-label="Cerrar modal"
-          disabled={processing}
-          onClick={close}
-        >
-          ×
-        </button>
-      </header>
-      <p className={styles.subjectName}>{subjectName}</p>
       <form
         className={styles.tabPanel}
         onSubmit={(event) => {
@@ -109,23 +79,14 @@ export function ManualStudentEnrollmentDialog({
           </p>
         )}
         <footer className={styles.actions}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            disabled={processing}
-            onClick={close}
-          >
+          <Button variant="secondary" disabled={processing} onClick={close}>
             Cancelar
-          </button>
-          <button
-            type="submit"
-            className={styles.primaryButton}
-            disabled={processing}
-          >
+          </Button>
+          <Button type="submit" disabled={processing}>
             {processing ? 'Agregando…' : 'Agregar estudiante'}
-          </button>
+          </Button>
         </footer>
       </form>
-    </dialog>
+    </StudentDialog>
   )
 }
