@@ -17,6 +17,8 @@ import type {
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 
 import styles from './AdminManageStudentsPage.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 
 const PER_PAGE = 10
 
@@ -180,24 +182,11 @@ export function AdminManageStudentsPage() {
     : ''
 
   return (
-    <div className={styles.pageContainer}>
-      <nav aria-label="Breadcrumbs" className={styles.breadcrumbs}>
-        <span className={styles.breadcrumbLink}>Inicio</span>
-        <span className={styles.breadcrumbSeparator}>/</span>
-        <span className={styles.breadcrumbLink}>Estudiantes</span>
-        <span className={styles.breadcrumbSeparatorActive}>/</span>
-        <span className={styles.breadcrumbCurrent}>Gestionar estudiantes</span>
-      </nav>
-
-      <header className={styles.pageHeader}>
-        <div className={styles.headerTitles}>
-          <h1>Gestión de estudiantes</h1>
-          <p>
-            Consulta y administra los estudiantes registrados en el sistema EIDA.
-          </p>
-        </div>
-
-        <div className={styles.headerActions}>
+    <PageContainer>
+      <PageHeader title="Gestión de estudiantes"
+        description="Consulta y administra los estudiantes registrados en el sistema EIDA."
+        breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Estudiantes', to: '/admin/students/manage' }, { label: 'Gestionar estudiantes' }]}
+        actions={<>
           <button type="button" className={styles.secondaryButton} onClick={() => { setCreatedNotice(null); setCreating(true) }}>
             + Registrar estudiante
           </button>
@@ -207,8 +196,8 @@ export function AdminManageStudentsPage() {
           >
             + Importar CSV
           </NavLink>
-        </div>
-      </header>
+        </>}
+      />
 
       {createdNotice && <p role="status">{createdNotice}</p>}
       {creating && <CreateStudentModal onClose={() => setCreating(false)} onCreated={() => {
@@ -252,6 +241,6 @@ export function AdminManageStudentsPage() {
         onConfirm={handleConfirmToggle}
         onCancel={() => setPendingToggle(null)}
       />
-    </div>
+    </PageContainer>
   )
 }

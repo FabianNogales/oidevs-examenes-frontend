@@ -135,6 +135,7 @@ const authorizedConsumers = [
   'features/portal-shared/components/PortalAdminCollection.tsx',
   'features/rooms/pages/AdminRoomsPage.tsx',
   'features/rooms/pages/ImportRoomsPage.tsx',
+  'features/students/pages/AdminManageStudentsPage.tsx',
   'features/students/pages/ImportStudentsPage.tsx',
   'features/subjects/pages/AdminSubjectsPage.tsx',
   'features/subjects/pages/ImportSubjectsPage.tsx',

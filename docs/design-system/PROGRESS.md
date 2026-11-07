@@ -139,3 +139,12 @@ Bloqueos pendientes:
 
 - D5.2 no detectaba la introducción externa a PageHeader: `.intro` conservaba `max-width:70ch` y `margin:auto`, desplazando el subtítulo respecto al H1. Se integra como `description` y se eliminan los estilos intro duplicados. Se mantiene narrow=960px.
 - PASS: Node focalizado 48/48, build/TypeScript, ESLint del TSX y diff --check. Chrome pageLayout 45/45 y hu42-hu43.ui PASS a 320/390/768/1024/1440 con HTTP simulado; nueva comprobación del eje X del subtítulo y su margen de 8px. Capturas: `.validation.local/visual-d5.2-information/`. Sin revisión humana; revisión técnica asistida por IA.
+
+## D5.3 - H1 de Gestión de estudiantes (2026-11-07)
+
+- Rama ds/sync-arqmoc-erick, base 3db55bd, inicio limpio. Causa confirmada antes de editar en Chrome: encabezado local .headerTitles h1, font-size:var(--font-size-2xl), font-weight:600, line-height:var(--line-height-tight), margin:0; no usaba PageHeader. Contenedor local max1600 con gutters50. Docentes ya usaba el contrato compartido.
+- Calculado antes (tamaño/peso/línea/margen): Estudiantes 24px/600/30px/0 en los cinco anchos; Docentes 24px/700/30px/0 a 320/390 y 32px/700/40px/0 a 768/1024/1440. Después: Estudiantes coincide exactamente con Docentes.
+- Migrado AdminManageStudentsPage a PageContainer (max1280) y PageHeader (breadcrumbs, descripción y acciones). Eliminadas cabecera, breadcrumbs y contenedor CSS duplicados; estilos de botones conservados. Sin cambios en búsqueda, paginación, registro, CSV, estado, API o permisos; sin cambios de producción en otras pantallas.
+- PASS: node --test (tests de Students, UI y adminBatch.integration) 174/174; npm.cmd run build (incluye tsc -b); npx.cmd eslint src/features/students/pages/AdminManageStudentsPage.tsx; git diff --check. La prueba de registro expande PageHeader para acceder a la misma acción y conserva sus asserts de recarga.
+- Chrome con HTTP simulado: comparación Estudiantes/Docentes 10/10 y regresión pageLayout.browser 110/110 a 320/390/768/1024/1440. Valores computados, geometría, overflow y acciones: abrir/cancelar registro, abrir/cancelar cambio de estado, navegar a CSV; cero escrituras. Capturas y result.json antes/después en .validation.local/visual-d5.3/. Sin perfiles nuevos pendientes.
+- Sin revisión humana; revisión técnica asistida por IA. Pendiente: comprobación con backend real, fuera del transporte simulado. Sin discrepancia H1 pendiente en los cinco anchos verificados.

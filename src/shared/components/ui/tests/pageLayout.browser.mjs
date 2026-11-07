@@ -11,7 +11,7 @@ import { createServer } from 'vite'
 import { cleanupBrowserProfile, createBrowserProfile } from '../../../tests/browserProfile.mjs'
 
 const baseline = process.env.EIDA_D5_PHASE === 'before'
-const structuralBaseline = baseline && process.env.EIDA_LAYOUT_BASE_REF === 'e53225a'
+const structuralBaseline = baseline && Boolean(process.env.EIDA_LAYOUT_BASE_REF)
 const evidence = join(process.cwd(), '.validation.local', process.env.EIDA_LAYOUT_OUTPUT ?? 'visual-d5', process.env.EIDA_D5_PHASE ?? 'after')
 await mkdir(evidence, { recursive: true })
 
@@ -43,6 +43,7 @@ import {AdminUserHistoryPage} from '/src/features/users/pages/AdminUserHistoryPa
 import {ManageAccounts} from '/src/features/users/pages/AdminManageUsersPage.tsx';
 import {AdminUserRolesPage} from '/src/features/users/pages/AdminUserRolesPage.tsx';
 import {ImportStudentsPage} from '/src/features/students/pages/ImportStudentsPage.tsx';
+import {AdminManageStudentsPage} from '/src/features/students/pages/AdminManageStudentsPage.tsx';
 import {ImportCourseOfferingsPage} from '/src/features/course-offerings/pages/ImportCourseOfferingsPage.tsx';
 import {Header} from '/src/shared/components/Header/Header.tsx';
 import {setStudentImportIdentity} from '/src/features/students/utils/studentImportDraft.ts';
@@ -52,6 +53,7 @@ const career={id:1,code:'QA-SIS',name:'Carrera QA Sistemas',status:'ACTIVE'};
 const account={id:15,full_name:'Persona QA de prueba',first_names:'Persona',last_names:'QA de prueba',email:'persona.qa.con.correo.institucional.largo@example.edu',institutional_code:'QA-15',identity_number:'123',status:'ACTIVE',roles:[],student_id:null,teacher_id:null,student_status:null,teacher_status:null};
 const page=(data,extra={})=>({data,meta:{current_page:1,last_page:1,total:data.length,per_page:15,from:data.length?1:null,to:data.length||null,...extra}});
 const fixtures={
+  '/admin/students':page([{id:8,sis_code:'QA-008',first_names:'Estudiante',last_names:'QA',email:'estudiante.qa@example.edu',status:'ACTIVE'}]),
   '/admin/academic-terms/active':{data:{id:1,name:'Periodo QA 2026',start_date:'2026-01-01',end_date:'2026-12-31',status:'ACTIVE'}},
   '/admin/users':page([account]),
   '/admin/users/15':{data:account},
@@ -83,6 +85,7 @@ const respond=(method)=>async(url,body)=>{
 };
 qa.client={get:respond('get'),post:respond('post'),put:respond('put'),patch:respond('patch'),delete:respond('delete')};
 const routes=[
+  {path:'/admin/students/manage',element:e(AdminManageStudentsPage)},
   {path:'/admin/users/manage',element:e(ManageAccounts)},
   {path:'/admin/users/roles',element:e(ManageAccounts,{rolesView:true})},
   {path:'/admin/users/:userId/roles',element:e(AdminUserRolesPage)},
@@ -111,6 +114,7 @@ qa.show=(path)=>{qa.calls=[];qa.unexpected=[];root.render(e(RouterProvider,{key:
 `
 
 const screens = [
+  {path:'/admin/students/manage',title:'Gestión de estudiantes',crumbs:['Inicio','Estudiantes','Gestionar estudiantes'],structural:true,actions:['+ Registrar estudiante','+ Importar CSV']},
   {path:'/admin/users/manage',title:'Gestión de usuarios',crumbs:['Inicio','Usuarios','Gestionar usuarios'],structural:true,rows:['QA de prueba Persona']},
   {path:'/admin/users/roles',title:'Roles y permisos',crumbs:['Inicio','Usuarios','Roles y permisos'],structural:true,rows:['QA de prueba Persona']},
   {path:'/admin/users/15/roles',title:'Gestionar roles y permisos',crumbs:['Inicio','Roles y permisos','Gestionar roles y permisos'],structural:true,rows:['Asignar rol']},
@@ -138,7 +142,7 @@ const screens = [
     description: 'Administra las secciones institucionales y las preguntas frecuentes del portal.', rows: ['Sección QA institucional'] },
   { path: '/information', title: 'Información institucional', crumbs: ['Inicio', 'Información institucional'], kind: 'portal-public', rows: ['Sección QA institucional', '¿Pregunta QA?'] },
   { path: '/admin/audit-logs', title: 'Auditoría', crumbs: baseline && !structuralBaseline ? [] : ['Inicio', 'Auditoría'], kind: 'read', legacy: baseline, description: 'El total cuenta eventos.', rows: ['UPDATE'] },
-].filter(screen => process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
+].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
 // Collected in the page: structure, visibility and overflow of the key elements.
 const inspect = `(()=>{
@@ -163,7 +167,7 @@ const inspect = `(()=>{
     current:nav?.querySelector('[aria-current=page]')?.textContent.trim(),
     links:nav?[...nav.querySelectorAll('a')].map(a=>a.getAttribute('href')):[],
     mains:document.querySelectorAll('main').length,
-    h1:h1s.map((h)=>({text:h.textContent.trim(),id:h.id,tab:h.getAttribute('tabindex'),visible:visible(h),clipped:h.scrollWidth>h.clientWidth+1,weight:getComputedStyle(h).fontWeight,size:getComputedStyle(h).fontSize,lineHeight:getComputedStyle(h).lineHeight})),
+    h1:h1s.map((h)=>({text:h.textContent.trim(),id:h.id,tab:h.getAttribute('tabindex'),visible:visible(h),clipped:h.scrollWidth>h.clientWidth+1,weight:getComputedStyle(h).fontWeight,size:getComputedStyle(h).fontSize,lineHeight:getComputedStyle(h).lineHeight,margin:getComputedStyle(h).margin})),
     crumbs:nav?[...nav.querySelectorAll('li')].map((li)=>li.textContent.trim()):[], crumbsVisible:visible(nav),
     labelled:document.querySelector('section[aria-labelledby]')?.getAttribute('aria-labelledby')??null,
     text:document.body.innerText,
@@ -288,6 +292,7 @@ try {
       check(page.mains === 1, `${page.mains} <main> (se esperaba solo el del layout)`)
       check(page.h1.length === 1, `${page.h1.length} h1`)
       if (!baseline) check(page.h1[0]?.size === (width <= 640 ? '24px' : '32px'), 'escala H1: '+page.h1[0]?.size)
+      if (!baseline && screen.path === '/admin/students/manage') check(page.h1[0]?.margin === '0px', 'margen H1: '+page.h1[0]?.margin)
       if (!screen.legacy) check(page.h1[0]?.weight === '700', `peso del h1 ${page.h1[0]?.weight}`)
       check(page.h1[0]?.text === screen.title && page.h1[0].visible && !page.h1[0].clipped, `h1 incorrecto/oculto/recortado ${JSON.stringify(page.h1[0])}`)
       check(JSON.stringify(page.crumbs) === JSON.stringify(screen.crumbs), `migas ${JSON.stringify(page.crumbs)}`)
@@ -350,6 +355,19 @@ try {
       const shotName = `${screen.path.replaceAll('/', '_').slice(1)}-${width}.png`
       const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
       await writeFile(join(evidence, shotName), Buffer.from(shot.data, 'base64'))
+      if (!baseline && screen.path === '/admin/students/manage') {
+        await evaluate(`(()=>{const button=[...document.querySelectorAll('main button')].find(b=>b.textContent.includes('+ Registrar estudiante'));button.focus();button.click()})()`)
+        await wait(`!!document.querySelector('[role=dialog] form')`, 'formulario de registro de estudiante')
+        await evaluate(`[...document.querySelectorAll('[role=dialog] button')].find(b=>b.textContent.trim()==='Cancelar').click()`)
+        await wait(`!document.querySelector('[role=dialog]')`, 'cancelar registro de estudiante')
+        await evaluate(`[...document.querySelectorAll('main button')].find(b=>b.textContent.trim()==='Desactivar').click()`)
+        await wait(`document.body.innerText.includes('Desactivar cuenta')`, 'confirmación de estado')
+        await evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Cancelar').click()`)
+        await wait(`!document.body.innerText.includes('Desactivar cuenta')`, 'cancelar cambio de estado')
+        check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`),'escritura inesperada en botones de estudiante')
+        await evaluate(`document.querySelector('main a[href="/admin/students/import"]').click()`)
+        await wait(`document.querySelector('h1')?.textContent==='Importar estudiantes'`, 'navegación a importar CSV')
+      }
       if (screen.path === '/admin/users/manage') {
         const menuSelector='button[aria-controls][aria-label*="principal"]'
         if (await evaluate(`(()=>{const b=document.querySelector('${menuSelector}');return !!b&&b.getBoundingClientRect().width>0})()`)) {
@@ -386,7 +404,7 @@ try {
   }
   await writeFile(join(evidence, 'result.json'), JSON.stringify(results, null, 2))
   if (!baseline) for (const width of widths) {
-    const admin=results.filter(result=>result.width===width && ['/admin/users/manage','/admin/users/roles','/admin/users/15/roles','/admin/users/history','/admin/students/import','/admin/teachers/assignments/import'].includes(result.path))
+    const admin=results.filter(result=>result.width===width && ['/admin/students/manage','/admin/teachers','/admin/users/manage','/admin/users/roles','/admin/users/15/roles','/admin/users/history','/admin/students/import','/admin/teachers/assignments/import'].includes(result.path))
     // Tall CSV pages reserve the browser's vertical scrollbar: compare the shared contract,
     // while each page's width and alignment are checked against its own clientWidth above.
     assert.equal(new Set(admin.map(result=>JSON.stringify((({x,width,...contract})=>contract)(result.layout)))).size,1,`${width}: contrato administrativo computado desigual`)

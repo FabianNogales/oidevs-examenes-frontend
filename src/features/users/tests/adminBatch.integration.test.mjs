@@ -96,7 +96,8 @@ test('028: successful creation closes the modal and refreshes the real student l
   h.setGet(async () => ({ data: { data: [student], meta: meta() } }))
   const { AdminManageStudentsPage } = h.load('features/students/pages/AdminManageStudentsPage.tsx')
   let tree = h.render(AdminManageStudentsPage); await settle(); tree = h.render()
-  nodes(tree, (node) => node.type === 'button' && textContent(node).includes('Registrar estudiante'))[0].props.onClick()
+  const header = nodes(tree, node => node.type?.name === 'PageHeader')[0]
+  nodes(header.type(header.props), (node) => node.type === 'button' && textContent(node).includes('Registrar estudiante'))[0].props.onClick()
   tree = h.render()
   const modal = nodes(tree, (node) => typeof node.props?.onCreated === 'function')[0]
   assert.ok(modal)
