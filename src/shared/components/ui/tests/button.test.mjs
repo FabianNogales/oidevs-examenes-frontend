@@ -128,7 +128,8 @@ test('Button CSS uses tokens and defines hover, active, focus-visible and disabl
   }
 })
 
-// Closed list of authorized consumers per component (DS2.2c: the Rooms pilot is the first adopter).
+// Closed list of authorized consumers per component (DS2.2c: the Rooms pilot is the first adopter;
+// DS4.1a: the teacher's subject students page).
 const authorizedConsumers = {
   Button: [
     'features/rooms/components/RoomDetails.tsx',
@@ -136,9 +137,15 @@ const authorizedConsumers = {
     'features/rooms/components/RoomForm.tsx',
     'features/rooms/components/RoomStatusDialog.tsx',
     'features/rooms/pages/AdminRoomsPage.tsx',
+    'features/students/pages/TeacherSubjectStudentsPage.tsx',
   ],
-  ButtonLink: ['features/rooms/pages/AdminRoomsPage.tsx'],
+  ButtonLink: [
+    'features/rooms/pages/AdminRoomsPage.tsx',
+    'features/students/pages/TeacherSubjectStudentsPage.tsx',
+  ],
 }
+// Migrated scopes: any new consumer outside them needs its own Design System subetapa.
+const migratedScopes = ['features/rooms/', 'features/students/pages/TeacherSubjectStudentsPage.tsx']
 const consumersOf = (sources, component) =>
   [...sources].filter(([, text]) => new RegExp(`components/ui/Button/${component}['"]`).test(text)).map(([file]) => file).sort()
 const folderConsumers = (sources) => [...sources].filter(([, text]) => /components\/ui\/Button\//.test(text)).map(([file]) => file).sort()
@@ -155,15 +162,15 @@ test('Button and ButtonLink are consumed only by the authorized files (DS2.2c)',
   }
   // Any reference to the Button folder (any file or path form) must come from an authorized file.
   assert.deepEqual(folderConsumers(sources), allowedFiles)
-  assert.ok(allowedFiles.every((file) => file.startsWith('features/rooms/')), 'only the Rooms pilot is authorized')
+  assert.ok(allowedFiles.every((file) => migratedScopes.some((scope) => file.startsWith(scope))), 'only migrated scopes are authorized')
 })
 
 test('the consumer guard rejects an unauthorized import (negative check)', () => {
   const sources = new Map([
     ...allowedFiles.map((file) => [file, "import { Button } from '@/shared/components/ui/Button/Button'\nimport { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'"]),
-    ['features/subjects/pages/AdminSubjectsPage.tsx', "import { Button } from '@/shared/components/ui/Button/Button'"],
+    ['features/exams/pages/EntryControlPage.tsx', "import { Button } from '@/shared/components/ui/Button/Button'"],
   ])
   assert.notDeepEqual(consumersOf(sources, 'Button'), authorizedConsumers.Button)
-  assert.ok(consumersOf(sources, 'Button').includes('features/subjects/pages/AdminSubjectsPage.tsx'))
+  assert.ok(consumersOf(sources, 'Button').includes('features/exams/pages/EntryControlPage.tsx'))
   assert.notDeepEqual(folderConsumers(sources), allowedFiles)
 })

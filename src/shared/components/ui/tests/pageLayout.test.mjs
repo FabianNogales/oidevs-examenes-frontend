@@ -139,6 +139,8 @@ const authorizedConsumers = [
   'features/rooms/pages/ImportRoomsPage.tsx',
   'features/students/pages/AdminManageStudentsPage.tsx',
   'features/students/pages/ImportStudentsPage.tsx',
+  'features/students/pages/ImportSubjectStudentsPage.tsx',
+  'features/students/pages/TeacherSubjectStudentsPage.tsx',
   'features/subjects/pages/AdminSubjectsPage.tsx',
   'features/subjects/pages/ImportSubjectsPage.tsx',
   'features/teachers/pages/AdminTeachersPage.tsx',
@@ -150,12 +152,14 @@ const authorizedConsumers = [
 ]
 // Files that keep a legacy <h1> path for consumers not yet migrated.
 const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']
-// Public pages render the page's only <main> landmark themselves (AppLayout has none).
+// Public and teacher pages render the page's only <main> landmark themselves (AppLayout has none).
 const ownsMain = [
   'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/InformationPage.tsx',
   'features/portal-news/pages/NewsPage.tsx',
   'features/portal-services/pages/ServicesPage.tsx',
+  'features/students/pages/ImportSubjectStudentsPage.tsx',
+  'features/students/pages/TeacherSubjectStudentsPage.tsx',
 ]
 // Portal administration pages get their PageHeader through PortalAdminCollection headerVariant="page".
 const portalAdmin = [

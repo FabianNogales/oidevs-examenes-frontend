@@ -47,6 +47,8 @@ import {AdminUserRolesPage} from '/src/features/users/pages/AdminUserRolesPage.t
 import {ImportStudentsPage} from '/src/features/students/pages/ImportStudentsPage.tsx';
 import {AdminManageStudentsPage} from '/src/features/students/pages/AdminManageStudentsPage.tsx';
 import {ImportCourseOfferingsPage} from '/src/features/course-offerings/pages/ImportCourseOfferingsPage.tsx';
+import {TeacherSubjectStudentsPage} from '/src/features/students/pages/TeacherSubjectStudentsPage.tsx';
+import {ImportSubjectStudentsPage} from '/src/features/students/pages/ImportSubjectStudentsPage.tsx';
 import {Header} from '/src/shared/components/Header/Header.tsx';
 import {setStudentImportIdentity} from '/src/features/students/utils/studentImportDraft.ts';
 setStudentImportIdentity({id:1,status:'ACTIVE',must_change_password:false,roles:['ADMINISTRADOR']});
@@ -76,6 +78,12 @@ const fixtures={
   '/portal/services':{data:[{id:42,name:'Servicio QA activo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/activo',display_order:1}],meta:{current_page:1,last_page:1,per_page:15,total:1}},
   '/admin/portal/information/sections':{data:[{id:144,key:'about',revision:2,is_published:true,has_unpublished_changes:false,draft:{title:'Sección QA institucional',description:'Descripción QA.',links:[],sort_order:1},published:{title:'Sección QA institucional',description:'Descripción QA.',links:[],sort_order:1},published_at:'2026-11-05T10:00:00-04:00',created_by:1,updated_by:1}],meta:{current_page:1,last_page:1,per_page:15,total:1}},
   '/portal/information':{data:{sections:[{id:1,key:'about',title:'Sección QA institucional',description:'Descripción QA.',links:[],sort_order:1}],faqs:[{id:1,question:'¿Pregunta QA?',answer:'Respuesta QA.',sort_order:1}]}},
+  // DS4.1a: teacher offerings (7 manageable, 8 read-only) and the enrollments of offering 7.
+  '/teacher/dashboard/subjects':{data:[
+    {course_offering_id:7,subject:{code:'QA-111',name:'Materia QA de programación con un nombre largo',status:'ACTIVE'},academic_term:{name:'Periodo QA 2026',status:'ACTIVE'},status:'ACTIVE',can_manage:true},
+    {course_offering_id:8,subject:{code:'QA-222',name:'Materia QA de consulta',status:'ACTIVE'},academic_term:{name:'Periodo QA 2025',status:'INACTIVE'},status:'ACTIVE',can_manage:false}]},
+  '/course-offerings/7/enrollments':{data:[{id:3,sis_code:'QA-301',first_names:'Estudiante',last_names:'QA inscrito'}]},
+  '/course-offerings/8/enrollments':{data:[]},
   '/admin/audit-logs':page([{id:1,actor_id:1,action:'UPDATE',entity_type:'Room',entity_id:1,created_at:'2026-01-01T10:00:00Z',old_context:{},new_context:{}}]),
 };
 const qa=window.pageLayoutQa={calls:[],unexpected:[]};
@@ -112,6 +120,8 @@ const routes=[
   {path:'/services',element:e(ServicesPage)},
   {path:'/admin/portal/information',element:e('main',{'data-qa':'layout-main'},e(AdminInformationPage))},
   {path:'/information',element:e(InformationPage)},
+  {path:'/teacher/students/:courseOfferingId',element:e(TeacherSubjectStudentsPage)},
+  {path:'/teacher/students/:courseOfferingId/import',element:e(ImportSubjectStudentsPage)},
 ]).map(route=>({...route,element:e(React.Fragment,null,e(Header,{user:route.path.startsWith('/admin')?{name:'Administradora QA con nombre y apellidos extraordinariamente largos',role:'admin'}:null}),route.element)}));
 const root=createRoot(document.getElementById('root'));
 qa.show=(path)=>{qa.calls=[];qa.unexpected=[];root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
@@ -152,6 +162,15 @@ const screens = [
     description: 'Administra las secciones institucionales y las preguntas frecuentes del portal.', rows: ['Sección QA institucional'] },
   { path: '/information', title: 'Información institucional', crumbs: ['Inicio', 'Información institucional'], kind: 'portal-public', rows: ['Sección QA institucional', '¿Pregunta QA?'] },
   { path: '/admin/audit-logs', title: 'Auditoría', crumbs: baseline && !structuralBaseline ? [] : ['Inicio', 'Auditoría'], kind: 'read', legacy: baseline, description: 'El total cuenta eventos.', rows: ['UPDATE'] },
+  // DS4.1a: teacher pages own their main landmark (AppLayout has none).
+  { path: '/teacher/students/7', title: 'Materia QA de programación con un nombre largo', crumbs: ['Inicio', 'Mis materias', 'Estudiantes de Materia QA de programación con un nombre largo'],
+    structural: true, teacher: 'manage', noDescription: true, actions: ['+ Agregar estudiante manualmente', 'Importar estudiantes (CSV)'], rows: ['QA-301', 'Periodo QA 2026'] },
+  { path: '/teacher/students/8', title: 'Materia QA de consulta', crumbs: ['Inicio', 'Mis materias', 'Estudiantes de Materia QA de consulta'],
+    structural: true, teacher: 'readonly', noDescription: true, actions: ['+ Agregar estudiante manualmente', 'Importar estudiantes (CSV)'], rows: ['Oferta de solo consulta'] },
+  { path: '/teacher/students/99', title: 'No se pudo acceder a la materia', crumbs: ['Inicio', 'Mis materias', 'Estudiantes de la materia'],
+    structural: true, teacher: 'error', noDescription: true, actions: ['← Volver a mis materias'], rows: ['no está disponible para este docente'] },
+  { path: '/teacher/students/7/import', title: 'Importar estudiantes', crumbs: ['Inicio', 'Mis materias', 'Estudiantes inscritos', 'Importar estudiantes'],
+    structural: true, csv: true, description: 'Materia QA de programación con un nombre largo · Periodo QA 2026' },
 ].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
 // Collected in the page: structure, visibility and overflow of the key elements.
@@ -309,7 +328,7 @@ try {
       if (screen.crumbs.length) {
         check(page.crumbsVisible, 'migas no visibles')
         check(page.current === screen.crumbs.at(-1), 'aria-current de breadcrumb')
-        check(page.links.every(href => ['/', '/admin', '/admin/rooms', '/admin/subjects', '/admin/teachers', '/admin/users/manage', '/admin/users/roles', '/admin/students/manage', '/admin/teachers/assignments'].includes(href)), 'ruta breadcrumb desconocida')
+        check(page.links.every(href => ['/', '/admin', '/admin/rooms', '/admin/subjects', '/admin/teachers', '/admin/users/manage', '/admin/users/roles', '/admin/students/manage', '/admin/teachers/assignments', '/teacher/subjects', '/teacher/students/7'].includes(href)), 'ruta breadcrumb desconocida')
       }
       if (!baseline) check(page.headingSurface === page.bodySurface, 'superficie de página: '+page.headingSurface+' / '+page.bodySurface)
       if (!baseline && (screen.structural || screen.path === '/admin/users/history')) {
@@ -318,7 +337,7 @@ try {
         check(Math.abs(page.layout.width-expectedWidth)<=1, 'contenedor fuera del ancho disponible')
         check(Math.abs(page.layout.x-((page.client-expectedWidth)/2+gutter))<=1, 'alineación H1 y contenedor')
         check(page.h1[0]?.lineHeight === (width <= 640 ? '30px' : '40px'), 'altura de línea H1')
-        check(page.layout?.breadcrumbGap === '24px' && page.layout?.headerGap === '24px' && page.layout?.descriptionGap === '8px', 'espaciado de encabezado: '+JSON.stringify(page.layout))
+        check(page.layout?.breadcrumbGap === '24px' && page.layout?.headerGap === '24px' && page.layout?.descriptionGap === (screen.noDescription ? null : '8px'), 'espaciado de encabezado: '+JSON.stringify(page.layout))
         check(page.escapedControls.length === 0, 'controles CSV recortados/fuera del panel: '+page.escapedControls.join(', '))
       }
       if (!baseline && ['/information', '/news', '/services'].includes(screen.path)) {
@@ -379,6 +398,26 @@ try {
         check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`),'escritura inesperada en botones de estudiante')
         await evaluate(`document.querySelector('main a[href="/admin/students/import"]').click()`)
         await wait(`document.querySelector('h1')?.textContent==='Importar estudiantes'`, 'navegación a importar CSV')
+      }
+      if (!baseline && screen.teacher) {
+        const state = await evaluate(`(()=>{const find=(t)=>[...document.querySelectorAll('main a,main button')].find(el=>el.textContent.trim()===t);const add=find('+ Agregar estudiante manualmente'),imp=find('Importar estudiantes (CSV)');return {add:add&&{tag:add.tagName,disabled:add.disabled,cls:add.className},imp:imp&&{tag:imp.tagName,disabled:!!imp.disabled,href:imp.getAttribute('href'),cls:imp.className},eyebrow:document.querySelector('main header p')?.textContent.trim()??null,alert:!!document.querySelector('[role=alert]')}})()`)
+        if (screen.teacher === 'error') check(state.alert && !state.add && state.eyebrow === null, 'estado de error: '+JSON.stringify(state))
+        else {
+          check(state.eyebrow === 'Materia', 'eyebrow de materia: '+state.eyebrow)
+          check(/button/.test(state.add?.cls) && /button/.test(state.imp?.cls), 'clases Button: '+JSON.stringify(state))
+          if (screen.teacher === 'readonly') check(state.add.disabled && state.imp.tag === 'BUTTON' && state.imp.disabled, 'solo consulta deshabilitado: '+JSON.stringify(state))
+          else {
+            check(!state.add.disabled && state.imp.tag === 'A' && state.imp.href === '/teacher/students/7/import', 'acciones habilitadas: '+JSON.stringify(state))
+            await evaluate(`(()=>{const b=[...document.querySelectorAll('main button')].find(b=>b.textContent.trim()==='+ Agregar estudiante manualmente');b.focus();b.click()})()`)
+            await wait(`!!document.querySelector('dialog[open]')`, 'abrir inscripción manual')
+            check(await evaluate(`document.querySelector('dialog[open]').contains(document.activeElement)`), 'foco inicial fuera del diálogo')
+            await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+            await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+            await wait(`!document.querySelector('dialog')`, 'Escape cierra inscripción manual')
+            check(await evaluate(`document.activeElement?.textContent.trim()==='+ Agregar estudiante manualmente'`), 'foco no devuelto al botón que abrió el diálogo')
+            check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`), 'escritura inesperada en inscripción manual')
+          }
+        }
       }
       if (screen.path === '/admin/users/manage') {
         const menuSelector='button[aria-controls][aria-label*="principal"]'
