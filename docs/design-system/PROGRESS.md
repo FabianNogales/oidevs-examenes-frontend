@@ -28,7 +28,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | DS2.2a | `Button` y `ButtonLink` en `ui/Button/` (4 variantes, 2 tamaños, `loading`); contrato de tokens DS1.4 con lista cerrada (`Button.module.css` usa `--control-height*`) | ✅ | Erick | `button.test` y `button.browser` (AA, foco, 4 anchos) PASS. Sin revisión humana; revisión técnica asistida por IA (rules.md §9) |
 | DS2.2b | `Field`, `TextInput`, `Select` y `Textarea` en `ui/Field/` (render-prop con `id`, `required`, `aria-invalid` y `aria-describedby`; controles nativos con `ref`) | ✅ | Erick | `field.test` y `field.browser` PASS. Sin revisión humana; revisión técnica asistida por IA (rules.md §9) |
 | DS2.2c | Piloto Aulas: `Button`/`ButtonLink` en cabecera, búsqueda, paginación y diálogos; `TextInput`/`Select` en búsqueda y filtro; `RoomFormField` sobre `Field` (misma API). CSS de Aulas sin cambios (lo importan Materias y Periodos) | ✅ | Erick | `rooms.browser.mjs` 10/10 antes y después (comportamiento idéntico). Excepciones: acciones de fila, cerrar ×, importación CSV. Sin revisión humana; revisión técnica asistida por IA (rules.md §9) |
-| DS2.2d | Materias e importación CSV (Aulas y Materias juntas) con `Button`/`Field` | ⏳ | Pendiente | — |
+| DS2.2d | Materias e importación CSV (Aulas y Materias juntas) con `Button`/`Field` | 🔄 | Erick | Botones de Materias y Periodos ✅ `b750e55` (32 `Button` y 1 `ButtonLink`; mismas excepciones que Aulas). Pendientes: `Field`/controles, acciones de fila, cerrar × e importación CSV compartida. Sin revisión humana; revisión técnica asistida por IA |
 
 ## Matriz por módulo (DS3–DS4)
 
@@ -41,14 +41,14 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | portal-services | Bajo | DS3 | ⏳ (alineado F1–F2) | Pendiente | |
 | portal-calendar | Bajo | DS3 | ⏳ (alineado F1–F2) | Pendiente | |
 | portal-shared | Bajo | DS3 | ⏳ | Pendiente | Base de `ui/` (AdminStatusBadge, PortalUi) |
-| academic-terms | Bajo | DS3 | 🔄 (cabecera ✅ DS3.1 `c6864f5`) | Erick | Cabecera migrada a `PageContainer`/`PageHeader`; botones, modales, tabla y paginación propios aún sin migrar (DS2.2d) |
+| academic-terms | Bajo | DS3 | 🔄 (cabecera ✅ DS3.1 `c6864f5`; botones ✅ DS2.2d `b750e55`) | Erick | Pendientes: acciones de fila, cerrar ×, campos (`Field`), tabla y paginación propias |
 | rooms | Bajo | DS3 | ⏳ | Pendiente | 3 modales, 2 tablas |
-| subjects | Bajo | DS3 | ⏳ | Pendiente | 3 modales, 2 tablas |
+| subjects | Bajo | DS3 | 🔄 (botones ✅ DS2.2d `b750e55`) | Erick | 3 modales, 2 tablas. Pendientes: acciones de fila, cerrar ×, campos (`Field`) e importación CSV |
 | course-offerings | Bajo | DS3 | ⏳ | Pendiente | 3 paginaciones propias |
 | collaborations | Bajo | DS3 | ⏳ | Pendiente | 4 modales |
 | eligibilities / eligibility-automation | Medio | DS3 | ⏳ | Pendiente | 4 tablas |
 | admin | Alto | DS4 | ⏳ | Pendiente | 330 colores literales; `EntityProfileLayout` duplicado; 22 clases de botón |
-| students | Alto | DS4 | ⏳ | Pendiente | 56 colores literales; importación y QR |
+| students | Alto | DS4 | 🔄 (DS4.1a ✅ `54988fb`) | Erick | Docente: alumnos de la materia e importación migrados. Pendientes: `StudentProfilePage`, `StudentQrPage`, modales y panel CSV compartido; QR |
 | exams | Alto | DS4 | ⏳ | Pendiente | Control de ingreso en vivo: validación manual |
 | home | Medio | DS4 | ⏳ | Pendiente | 59 `font-size` en px |
 | shared/components (Header, DataTable, DataCardGrid) | Alto | DS4 | ⏳ | Pendiente | Unos 217 literales; usados por muchas features |
@@ -217,4 +217,20 @@ Bloqueos pendientes:
   - home: portada con escala propia.
   - Botones de Periodos, Materias y demás pantallas (DS2.2d: `Button` solo en Aulas).
   - `AdminModulePage` no tiene ruta (código muerto; no se modifica).
+- Sin revisión humana; revisión técnica asistida por IA.
+
+## DS4.1 - Pantallas docentes de estudiantes y botones DS2.2d (2026-11-07)
+
+- Rama ds/sync-arqmoc-erick, base afb389b, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (transporte simulado: solo GET).
+- DS4.1a `54988fb` — `TeacherSubjectStudentsPage` (`/teacher/students/:id`) e `ImportSubjectStudentsPage` (`/teacher/students/:id/import`):
+  - Causa: cabeceras propias (H1 `clamp(24px, 4vw, 32px)` y `clamp(32px, 3vw, 36px)`), tarjeta de 1120px y botones con clases locales.
+  - Ahora: conservan su `<main>` (AppLayout no lo aporta; lista `ownsMain`) con `PageContainer labelledBy` y `PageHeader`. El estado de error comparte el único `PageHeader` (un solo H1). Acciones con `Button`/`ButtonLink`; solo consulta: ambos `Button` deshabilitados, como antes. `--brand-navy` → `--color-text` (mismo valor).
+  - Sin cambios en carga de datos, inscripción, rutas ni textos. `SubjectStudentsTable` conserva `.status`.
+- DS2.2d `b750e55` — botones de Materias y Periodos: 32 `Button` y 1 `ButtonLink` («+ Importar materias (CSV)»). Todos los botones migrados ya declaraban `type` (sin cambio de semántica submit). El envoltorio `.headerActions` de Materias pasa a fragmento, como en Aulas, para que `.headerActions a` no anule el borde de `ButtonLink`. CSS de Aulas (compartido) sin cambios.
+  - Excepciones: acciones de fila (`AdminSubjectsTable`, `AcademicTermsTable`), cerrar × de los modales e importación CSV compartida (`CsvImport.module.css`). `Field` no forma parte de este paquete.
+- Contratos: listas cerradas de `button.test.mjs` y `pageLayout.test.mjs` ampliadas; `pageLayout.browser` cubre las pantallas docentes (gestionable, solo consulta, error e importación CSV) y abre el diálogo de registro en Materias y Periodos (Escape y retorno de foco).
+- Validación:
+  - Automatizada: Node 869/870 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = línea base (0 nuevos); `git diff --check` OK.
+  - Browser simulado: `pageLayout` 140/140 (28 pantallas × 5 anchos); `rooms.browser` 10/10.
+  - Backend real: pendiente; requiere sesión docente iniciada manualmente.
 - Sin revisión humana; revisión técnica asistida por IA.
