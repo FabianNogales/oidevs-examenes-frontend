@@ -28,8 +28,11 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 | `PageHeader` | `ui/PageHeader/` | `title` (obligatorio, no vacío; único `<h1>`), `titleId?`, `focusableTitle?` (`tabIndex={-1}` para la gestión de foco existente), `eyebrow?`, `description?` (contenido en línea, va dentro de un `<p>`), `breadcrumbs?: BreadcrumbItem[]` (reutiliza `Breadcrumbs`), `actions?` (se renderizan tal cual). `h1` `--font-size-3xl` (`2xl` ≤640px), bold; descripción `md` (`sm` ≤640px); separación inferior `--space-6`; acciones a la derecha y apiladas ≤640px |
 | `Button` | `ui/Button/` | `variant?: 'primary' \| 'secondary' \| 'danger' \| 'ghost'` (por defecto `primary`), `size?: 'md' \| 'sm'` (44px `--control-height` / 36px `--control-height-sm`, solo acciones secundarias de escritorio), `loading?` (añade `disabled` y `aria-busy`; el texto lo pone el consumidor), `type="button"` por defecto y props nativas (incluido `ref`). No impone nombre accesible: un botón solo con icono necesita `aria-label`. Deshabilitado con `--color-disabled-*` y `opacity: 1` (anula el 0.65 global de `base.css`) |
 | `ButtonLink` | `ui/Button/` | `Link` de `react-router` con el aspecto de `Button` (`variant`, `size`); siempre renderiza `<a>`; sin `disabled` ni `loading` |
+| `Field` | `ui/Field/` | `label`, `htmlFor?` (si falta, `useId`), `required?`, `hint?`, `error?`, `className?` y `children` como función que recibe `{ id, required, aria-invalid, aria-describedby }`. Enlaza ayuda (`<id>-hint`) y error (`<id>-error`) por `aria-describedby`; el error marca `aria-invalid` y **no** es región viva (sin `role="alert"`): los avisos generales van en un resumen del formulario. `*` visual con `aria-hidden` |
+| `TextInput`, `Select`, `Textarea` | `ui/Field/` | Elementos nativos (props nativas y `ref`; `Select` con `<option>`/`<optgroup>` nativos; `Textarea` con `resize: vertical`) más `invalid?`. Estilos compartidos en `controls.module.css` con `--input-height`, `--input-radius` y `--color-input-border`; foco, hover, inválido y deshabilitado con tokens |
 
 Pruebas de `Button`: `ui/tests/button.test.mjs` (SSR y CSS) y `ui/tests/button.browser.mjs` (catálogo aislado: contraste AA, foco con teclado, 4 anchos).
+Pruebas de los campos: `ui/tests/field.test.mjs` (SSR y CSS) y `ui/tests/field.browser.mjs` (label↔control, `aria-describedby`, teclado, `select` nativo, contraste, 4 anchos).
 Pruebas: `ui/tests/pageLayout.test.mjs` (SSR, CSS y lista cerrada de consumidores autorizados) y
 `ui/tests/pageLayout.browser.mjs` (navegador con transporte simulado: Importar aulas/materias, Gestión de
 aulas/materias, Carreras, Auditoría y Noticias, Servicios e Información (admin y pública) a 320/390/768/1440px; solo renderizado y layout, sin importar ni guardar).
@@ -79,7 +82,6 @@ Medido en DS0:
 | Componente | Base existente | Notas de API (borrador) |
 |---|---|---|
 | `IconButton` | Botones de icono (p. ej. cerrar ×) | Pendiente de decisión. Mientras tanto: `Button variant="ghost"` con `aria-label` |
-| `Field`, `TextInput`, `Select`, `Textarea` | `PortalField`, `AuthField`, `RoomFormField` | Etiqueta, error y ayuda con `aria-invalid` y `aria-describedby` |
 | `Badge` | `AdminStatusBadge` | `tone`: neutral, info, success, warning, danger. `AdminStatusBadge` pasaría a ser un mapeo de estados sobre `Badge`, sin cambiar su API |
 | `Pagination` | Paginación interna de DataTable y `PortalPager` | Extraída sin cambiar la API de DataTable |
 | `EmptyState`, `LoadingState`, `Notice` | Estados de DataTable y `PortalFeedback` | |
