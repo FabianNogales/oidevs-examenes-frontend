@@ -214,17 +214,29 @@ test('DS1.4a semantic tokens exist with their approved values', () => {
   for (const [name, value] of Object.entries(ds14aTokens.light)) assert.equal(light.get(name), value, `light ${name}`)
   assert.deepEqual([...base.keys()].filter((name) => name.startsWith('--control-')), Object.keys(ds14aTokens.base))
   assert.deepEqual([...light.keys()].filter((name) => name.startsWith('--status-')), Object.keys(ds14aTokens.light))
-  // The z-index scale is approved as pending design (DS1.4b) and must not be declared yet.
-  assert.doesNotMatch(read(`${globalStyles}/tokens.css`), /--z-[\w-]+\s*:/)
 })
 
-test('DS1.4a tokens have no consumers yet and the dark theme block is unchanged', () => {
+// DS1.4b: approved stacking scale, declared only in :root and not consumed yet.
+const ds14bTokens = { '--z-sticky': '50', '--z-dropdown': '60', '--z-dialog': '1000', '--z-toast': '1100' }
+
+test('DS1.4b z-index tokens exist only in :root with their approved values', () => {
+  const blocks = tokenBlocks(read(`${globalStyles}/tokens.css`))
+  const base = blocks.get(':root')
+  for (const [name, value] of Object.entries(ds14bTokens)) assert.equal(base.get(name), value, `:root ${name}`)
+  assert.deepEqual([...base.keys()].filter((name) => name.startsWith('--z-')), Object.keys(ds14bTokens))
+  for (const [selector, declarations] of blocks) {
+    if (selector === ':root') continue
+    assert.deepEqual([...declarations.keys()].filter((name) => name.startsWith('--z-')), [], `${selector} must not declare --z-*`)
+  }
+})
+
+test('DS1.4 tokens have no consumers yet and the dark theme block is unchanged', () => {
   const tokensFile = `${globalStyles}/tokens.css`
   const sources = readdirSync(resolve(root, 'src'), { recursive: true })
     .map((file) => `src/${String(file).replaceAll('\\', '/')}`)
     .filter((file) => /\.(css|tsx|jsx|ts|js)$/.test(file) && file !== tokensFile)
   for (const file of sources) {
-    assert.doesNotMatch(read(file), /--(status|control-height)[\w-]*/, `${file} must not consume DS1.4a tokens yet`)
+    assert.doesNotMatch(read(file), /--(status|control-height|z-)[\w-]*/, `${file} must not consume DS1.4 tokens yet`)
   }
   const css = stripComments(read(tokensFile))
   const [, darkBody] = /\[data-theme='dark'\]\s*\{([^{}]*)\}/.exec(css)

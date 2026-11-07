@@ -4,9 +4,10 @@ Fuente única de verdad del diseño del frontend de EIDA. La comparten los dos
 desarrolladores frontend y sus agentes (Claude Code, OpenCode). Si un documento
 local o una conversación contradice estos archivos, prevalecen estos archivos.
 
-> Estado: **en preparación**. Hoy existen tokens en `src/assets/styles/tokens.css` y varios
-> componentes compartidos; la capa `ui/` y los tokens semánticos nuevos son
-> **planificados** y todavía no existen en el código.
+> Estado: **en preparación**. Hoy existen en `src/assets/styles/tokens.css` los tokens
+> base y semánticos, incluidos los de estado, alturas de control y `z-index` (DS1.4, aún
+> sin consumidores), y varios componentes compartidos. La capa `ui/` es **planificada** y
+> todavía no existe en el código.
 
 ## Objetivo
 
@@ -27,7 +28,7 @@ los contratos de la API.
 
 | Archivo | Contenido |
 |---|---|
-| [tokens.md](tokens.md) | Tokens reales (`tokens.css`) y tokens semánticos propuestos (marcados como pendientes) |
+| [tokens.md](tokens.md) | Tokens reales (`tokens.css`), incluidos los semánticos de DS1.4, y su estado |
 | [components.md](components.md) | Componentes compartidos existentes y componentes planificados en `ui/` |
 | [rules.md](rules.md) | Reglas obligatorias de implementación |
 | [validation.md](validation.md) | Cómo validar cada cambio (Node, browser, anchos, evidencia) |
@@ -84,7 +85,7 @@ El detalle por módulo está en [PROGRESS.md](PROGRESS.md).
 
 | | Existente (usable hoy) | Futuro (planificado) |
 |---|---|---|
-| Tokens | Los listados como "existentes" en [tokens.md](tokens.md) | Los marcados como "propuestos" |
+| Tokens | Los marcados ✅ en [tokens.md](tokens.md), incluidos `--status-*`, `--control-height*` y `--z-*` (DS1.4) | Los marcados 🕒 (hoy ninguno); la migración de consumidores a los tokens de DS1.4 se hace en DS2–DS4 |
 | Componentes | DataTable, PortalDialog, ConfirmDialog, AdminStatusBadge, PortalAdminCollection, Breadcrumbs… | Button, Field, Badge genérico, Pagination, EmptyState, Dialog, PageHeader en `ui/` |
 | Breakpoints | Valores dispersos (21 distintos en el código) | Canónicos aprobados 480/640/768/1024 px (se adoptan al migrar cada módulo) |
 

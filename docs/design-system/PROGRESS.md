@@ -16,7 +16,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | DS1.3a | Separar `global.css` en `tokens.css`, `base.css`, `shell.css`, `auth.css`, `snackbar.css` y `responsive.css` (bloques contiguos, mismo orden); `global.css` queda solo con `@import` | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` del build idéntico byte a byte (CSS principal SHA-256 `bb0bf29b…`) |
 | DS1.3b | Contratos CSS de la separación en `cssContracts.test.mjs` (orden de `@import`, archivos existentes, tokens documentados con sus valores, sin `data-theme` en componentes) y documentación actualizada | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` sigue idéntico a la referencia de DS1.3a |
 | DS1.4a | Tokens semánticos de estado (`--status-*`, 10) y de controles (`--control-height`, `--control-height-sm`) en `tokens.css`, sin consumidores; contratos CSS | ✅ | Erick | rama `ds/trabajo-erick`; CSS compilado: solo las 12 declaraciones nuevas; 20 CSS de features idénticos |
-| DS1.4b | Escala `--z-*` (50/60/1000/1100, aprobada en diseño) | ⏳ | Pendiente | — |
+| DS1.4b | Escala `--z-*` en `:root` (`--z-sticky` 50, `--z-dropdown` 60, `--z-dialog` 1000, `--z-toast` 1100), sin consumidores; contratos CSS | ✅ | Erick | rama `ds/trabajo-erick`; CSS compilado: solo las 4 declaraciones nuevas. Conflictos de apilamiento (Snackbar, `AddStudentsModal`) pendientes de DS2–DS4 |
 | DS2 | Primitivas en `ui/` y catálogo de QA | ⏳ | Pendiente | — |
 
 ## Matriz por módulo (DS3–DS4)
@@ -58,8 +58,8 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 1. Primitivas de UI en `src/shared/components/ui/`.
 2. Tema oscuro: se conservan sus tokens y **no se activa**.
 3. Breakpoints canónicos: 480, 640, 768 y 1024px.
-4. Tokens semánticos de [tokens.md](tokens.md): `--status-*` y `--control-height*` implementados en DS1.4a. Escala `--z-*` aprobada (`--z-sticky` 50, `--z-dropdown` 60, `--z-dialog` 1000, `--z-toast` 1100), **pendiente de implementar** en DS1.4b.
-5. Erick es responsable de DS0, DS1.1–DS1.2, SK3, DS1.3 y DS1.4a.
+4. Tokens semánticos de [tokens.md](tokens.md): `--status-*` y `--control-height*` implementados en DS1.4a; escala `--z-*` (`--z-sticky` 50, `--z-dropdown` 60, `--z-dialog` 1000, `--z-toast` 1100) implementada en DS1.4b. Ninguno tiene consumidores todavía: se adoptan al migrar cada componente o módulo (DS2–DS4).
+5. Erick es responsable de DS0, DS1.1–DS1.2, SK3, DS1.3 y DS1.4.
 
 ## Hallazgos visuales reservados para DS2
 

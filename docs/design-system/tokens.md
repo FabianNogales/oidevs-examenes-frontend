@@ -105,7 +105,9 @@ crear las primitivas de DS2 (p. ej. `Badge`) y al migrar cada módulo.
 - El estado nunca se comunica solo con color ([rules.md](rules.md) §6): los badges llevan siempre texto.
 - Tema oscuro (no activado): un token con `var()` se resuelve en el elemento donde se declara. Como los `--status-*` están en `:root`, solo seguirían al tema oscuro si `data-theme` se aplica en `<html>`; aplicarlo en un descendiente heredaría los valores claros. A tener en cuenta en la etapa que active el tema oscuro.
 
-## 🕒 Escala de `z-index` (aprobada, pendiente de implementar en DS1.4b)
+## ✅ Escala de `z-index` (DS1.4b)
+
+Declarada en `:root`. Todavía sin consumidores: los componentes siguen con sus valores literales.
 
 | Token | Valor | Uso |
 |---|---|---|
@@ -114,11 +116,18 @@ crear las primitivas de DS2 (p. ej. `Badge`) y al migrar cada módulo.
 | `--z-dialog` | `1000` | Overlays de modal no nativos |
 | `--z-toast` | `1100` | Notificaciones temporales |
 
-No existen todavía en el código: **no usar** hasta DS1.4b. Hoy hay valores sueltos
-(1, 2, 20, 30, 50, 60, 100, 200, 1000) y conflictos conocidos (toast por debajo de los
-overlays, overlay de `AddStudentsModal` por debajo de la cabecera), que se corrigen al
-migrar cada consumidor (DS2–DS4), no al declarar la escala. Los `<dialog>` nativos usan la
-*top layer* del navegador, donde `z-index` no influye.
+- **Declarar la escala no resuelve los conflictos de apilamiento actuales.** Hoy hay valores
+  sueltos (1, 2, 20, 30, 50, 60, 100, 200, 1000) y siguen pendientes:
+  - `.snackbar` (20) queda por debajo de todos los overlays de modal (30–1000);
+  - el overlay de pantalla completa de `AddStudentsModal` (30) queda por debajo de la cabecera (50);
+  - `customOptionsList` de `EntityProfileLayout` (50) empata con la cabecera.
+- La migración de consumidores a `var(--z-*)` se hace al migrar cada componente o módulo
+  (DS2–DS4), en su propia subetapa y con validación browser.
+- Los `<dialog>` nativos (`PortalDialog`, `ConfirmDialog` en modo `native` y los modales
+  con `showModal()`) se muestran en la *top layer* del navegador, que **no se ordena con
+  `z-index`**: ningún `--z-*` coloca un elemento por encima de ellos. Un toast visible sobre
+  un `<dialog>` requiere una solución de *top layer*, no un valor mayor.
+- Los valores locales `1` y `2` (orden dentro de un mismo componente) no forman parte de la escala.
 
 ## Breakpoints
 

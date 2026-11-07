@@ -62,6 +62,12 @@
   --transition-normal: 250ms ease;
   --focus-width: 3px;
   --focus-offset: 4px;
+
+  /* Stacking scale (DS1.4b). Not consumed yet; native <dialog> uses the top layer instead. */
+  --z-sticky: 50;
+  --z-dropdown: 60;
+  --z-dialog: 1000;
+  --z-toast: 1100;
 }
 
 :root,
