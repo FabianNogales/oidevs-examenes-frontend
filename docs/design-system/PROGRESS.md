@@ -289,3 +289,38 @@ Bloqueos pendientes:
   - `StudentProfilePage`/`StudentQrPage` (cuenta de estudiante), acciones de fila y ×, `Field` en Materias y Periodos.
 - Nota: el mensaje de `871b314` menciona «two node harnesses»; en ese commit solo cambia uno (`adminBatch.integration`).
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## DS4.2c.1 - Consolidación de PortalDialog (2026-11-07) ✅
+
+- Rama ds/sync-arqmoc-erick, base 801254f, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (sin HTTP en las pruebas nuevas).
+- D0:
+  - Consumidores directos de `PortalDialog`: `CalendarModal` y `PortalModal` (`PortalUi`), y a través de ellos `AdminEventDialog`, `PublicEventDialog`, `AdminNewsPage`, `AdminServicesPage` y `AdminInformationPage`. Ninguno usaba `Button`.
+  - Reproducción (nueva `shared/tests/portalDialog.browser.mjs`): **5/5 FAIL en 801254f**. `.dialog button` (0,1,1) anula `Button` (0,1,0): un primario se ve blanco, 36px y radio 6px; deshabilitado, opacidad 0,5. El foco inicial no era configurable.
+  - Diferencias de contrato `PortalDialog` / `StudentDialog`:
+
+    | Contrato | PortalDialog | Inscripción manual | Registro de estudiante |
+    |---|---|---|---|
+    | Foco inicial | × «Cerrar ventana» (ahora configurable) | campo SIS | el propio diálogo |
+    | Nombre del × | «Cerrar ventana» | «Cerrar modal» | «Cerrar modal» |
+    | Escape | `keydown` + `cancel`, diálogos anidados | `cancel` | `cancel` |
+    | Clic fuera | no cierra | no cierra | cierra si no está ocupado |
+    | Ocupado | bloquea × y Escape | bloquea y reenfoca el diálogo | igual |
+    | Cabecera | solo título | antetítulo + título + subtítulo | título |
+    | Caja | 720px, 24px, `--radius-md` | 560px, `--space-5`, `--radius-lg`, `--shadow-lg` | igual |
+    | Devolución del foco y bloqueo de scroll | sí | sí | sí |
+
+- Commit `2a91425` (5 archivos):
+  - `Button` emite `data-ds-button` (antes de `disabled`); las tres reglas genéricas de `PortalDialog` lo excluyen con `:where(:not([data-ds-button]))`, con la misma especificidad, así que los botones propios de los diálogos no cambian. Sin `z-index` ni CSS global.
+  - `PortalDialog` admite `initialFocus` (ref opcional); por defecto, «Cerrar ventana» como antes.
+  - `StudentDialog` **no** pasa a `PortalDialog`: cambiaría el nombre del ×, el foco inicial y el cierre por fondo del registro, la cabecera, la caja y el reenfoque al estar ocupado. Se mantiene hasta que `PortalDialog` cubra esos contratos.
+- Validación:
+  - `portalDialog.browser`: **antes 5/5 FAIL; ahora 5/5 PASS** (aspecto de `Button`, botones propios idénticos, foco inicial por defecto y configurable, Escape, clic fuera, devolución del foco, Snackbar tras cerrar y controles sin tapar a 320–1440px). Guarda Node de los selectores en `button.test.mjs` (falla con el CSS anterior).
+  - Consumidores (simulados): `confirmDialogEscape`, `eventVisibility`, `newsEditor`, `adminCalendarFocus`, `adminCalendarPendingEscape`, `hu42-hu43.ui`; además `studentDialogs` 10/10, `rooms` 10/10 y `pageLayout` 140/140. No se ejecutan `hu40`/`hu41` (backend real).
+  - Node 874/875 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = línea base; `git diff --check` OK. Una prueba SSR de importación esperaba `disabled` como último atributo; se resolvió colocando el marcador antes de `disabled`.
+- Plan para `CollaborationModal` (DS4.2c.2, sin ejecutar):
+  1. Inventariar sus ≈20 consumidores con su foco inicial, cierre por fondo, Escape anidado, uso de `busy` y diálogos que abren encima (`ConfirmDialog` 200, `SharedRoomConsentModal` 120, overlays propios 100/1000).
+  2. Regresión de navegador por familia (colaboraciones, exámenes/control de ingreso, elegibilidad, incidencias, offline, usuarios) que reproduzca la cabecera sobre el overlay.
+  3. Reimplementar `CollaborationModal` sobre `<dialog>` nativo (top layer) conservando su API (`title`, `busy`, `onClose`, cierre por fondo, foco en el contenedor, «Cerrar modal»), sin `z-index`; verificar que los diálogos que abre encima siguen visibles (también en la top layer o anidados).
+  4. Con los contratos ya cubiertos, unificar `StudentDialog` con `CollaborationModal`/`PortalDialog` y retirar `AddStudentsModal.tsx` (muerto).
+  5. Validar el control de ingreso en vivo (`EntryControlPage`) aparte, por su riesgo.
+- Sin revisión humana; revisión técnica asistida por IA.

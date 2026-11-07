@@ -11,7 +11,7 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 | Componente | Ruta | Propósito |
 |---|---|---|
 | `DataTable` (+ `DataTableRow`, tipos en `dataTable.types.ts`) | `shared/components/DataTable/` | Tabla con búsqueda (incluye su botón "Limpiar"), filtros (`filters`, `filterLayout: 'below' \| 'inline'`), estados de carga, error y vacío, paginación y vista de tarjeta en móvil |
-| `PortalDialog` | `shared/components/PortalDialog/` | Modal o Drawer (`drawer`) sobre `<dialog>` nativo: foco inicial, bloqueo de scroll, `footer` fuera del cuerpo, Escape gestionado en `keydown` y reapertura ante cierres nativos inesperados |
+| `PortalDialog` | `shared/components/PortalDialog/` | Modal o Drawer (`drawer`) sobre `<dialog>` nativo: foco inicial (por defecto el ×; `initialFocus` opcional, DS4.2c.1), bloqueo de scroll, `footer` fuera del cuerpo, Escape gestionado en `keydown` y reapertura ante cierres nativos inesperados. Admite `Button`: sus reglas genéricas excluyen `data-ds-button` |
 | `ConfirmDialog` | `shared/components/ConfirmDialog/` | Confirmación. Modo `native` para confirmar sobre un Drawer (Escape robusto, `loading`); modo overlay heredado. `features/admin/components/ConfirmDialog` solo lo reexporta |
 | `Breadcrumbs` | `shared/components/Breadcrumbs/` | Miga de pan (`BreadcrumbItem[]`) |
 | `Header` (+ `headerNavigation.config.ts`) | `shared/components/Header/` | Cabecera y navegación por rol |
