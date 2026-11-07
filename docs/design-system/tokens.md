@@ -120,14 +120,16 @@ Declarada en `:root`. Todavía sin consumidores: los componentes siguen con sus 
 - **Declarar la escala no resuelve los conflictos de apilamiento actuales.** Hoy hay valores
   sueltos (1, 2, 20, 30, 50, 60, 100, 200, 1000) y siguen pendientes:
   - `.snackbar` (20) queda por debajo de todos los overlays de modal (30–1000);
-  - el overlay de pantalla completa de `AddStudentsModal` (30) queda por debajo de la cabecera (50);
+  - el overlay de pantalla completa de `AddStudentsModal.module.css` (30, lo usa `CollaborationModal`) queda por debajo de la cabecera (50); los diálogos de estudiantes ya no lo usan (DS4.2b);
   - `customOptionsList` de `EntityProfileLayout` (50) empata con la cabecera.
 - La migración de consumidores a `var(--z-*)` se hace al migrar cada componente o módulo
   (DS2–DS4), en su propia subetapa y con validación browser.
 - Los `<dialog>` nativos (`PortalDialog`, `ConfirmDialog` en modo `native` y los modales
   con `showModal()`) se muestran en la *top layer* del navegador, que **no se ordena con
-  `z-index`**: ningún `--z-*` coloca un elemento por encima de ellos. Un toast visible sobre
-  un `<dialog>` requiere una solución de *top layer*, no un valor mayor.
+  `z-index`**: ningún `--z-*` coloca un elemento por encima de ellos. Comprobado en Chrome
+  (DS4.2b): con un `<dialog>` modal abierto nada fuera de él es operable, ni siquiera un
+  *popover* de la top layer, se abra antes o después; solo lo es lo que está dentro del diálogo.
+  Por eso el Snackbar queda, a propósito, bajo el fondo del modal y vuelve a ser usable al cerrarlo.
 - Los valores locales `1` y `2` (orden dentro de un mismo componente) no forman parte de la escala.
 
 ## Breakpoints

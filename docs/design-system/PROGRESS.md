@@ -262,5 +262,30 @@ Bloqueos pendientes:
 - Pendientes:
   - Backend real de las 5 importaciones (sin cargar archivo): requiere sesión de administrador y docente; no disponible en esta etapa.
   - Botones de paginación de `StudentImportSummary` (`summaryItem`, chips de filtro: fuera del alcance de `Button`) y `academicTemplateButton` de elegibilidad (fija `min-height: 45px` con más especificidad).
-  - Resto de DS4.2: `ManualStudentEnrollmentDialog`/`AddStudentsModal`, `StudentProfilePage`/`StudentQrPage`, acciones de fila y × de cierre, `Field` en Materias y Periodos.
+  - Resto de DS4.2: `ManualStudentEnrollmentDialog`/`AddStudentsModal` (✅ DS4.2b), `StudentProfilePage`/`StudentQrPage`, acciones de fila y × de cierre, `Field` en Materias y Periodos.
+- Sin revisión humana; revisión técnica asistida por IA.
+
+## DS4.2b - Diálogos de estudiantes y Snackbar (2026-11-07) ✅
+
+- Rama ds/sync-arqmoc-erick, base 8caf9e4, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (transporte simulado dentro del navegador).
+- D0:
+  - `AddStudentsModal.tsx` **no tiene consumidores** (código muerto); su CSS sí se usa: `ManualStudentEnrollmentDialog`, `CreateStudentModal` y `CollaborationModal` (≈20 modales de colaboraciones, exámenes, elegibilidad, incidencias, offline y usuarios).
+  - `ManualStudentEnrollmentDialog`: `<dialog>` nativo con `showModal()` (top layer). `CreateStudentModal`: dentro de `CollaborationModal`, overlay `div` con `z-index: 30`.
+  - Reproducción (nueva `studentDialogs.browser.mjs`, antes de cambiar código): **10/10 FAIL**. En «Registrar estudiante» la cabecera sticky (50) se pinta sobre el overlay (30) y tapa el título y el × del modal **en los cinco anchos** (a 320px, de 38 a 162px); a 320/390 la cabecera responde a clics con el modal abierto. El Snackbar (20) queda bajo el overlay.
+  - Causa: overlay fuera de la top layer (no falta de un `z-index` mayor). Experimento en Chrome: con un `<dialog>` modal abierto nada exterior es operable, ni un *popover* de la top layer, así que «toast sobre el modal» no es alcanzable sin romper la semántica modal (corrige la hipótesis de `tokens.md`).
+  - Descartado: subir el overlay de `CollaborationModal` a `--z-dialog` (global: ≈20 modales y el orden con `ConfirmDialog` 200, `StudentDetailModal` 100…) y usar `PortalDialog` (su regla `.dialog button`, especificidad 0,1,1, anula `Button`).
+- Commit `871b314` (10 archivos):
+  - `StudentDialog` (local de students): el `<dialog>` nativo que ya usaba la inscripción manual, extraído con foco inicial configurable, Escape vía `cancel`, devolución del foco, `useBodyScrollLock`, bloqueo mientras está ocupado y cierre opcional por fondo. Sin `z-index`.
+  - `ManualStudentEnrollmentDialog` y `CreateStudentModal` lo usan; cada uno conserva su comportamiento (inscripción: foco en SIS, sin cierre por fondo; registro: foco en el diálogo, cierre por fondo si no está ocupado). Botones con `Button` (incluido «Reintentar» del catálogo). Fondo del backdrop y título con tokens (`--brand-navy` → `--color-text`, idéntico). `CollaborationModal` intacto.
+  - Pruebas: `adminBatch.integration` sustituye `Button` por `'button'` en su arnés (aserciones intactas); `pageLayout.browser` acepta el `<dialog>` nativo (`dialog[open]`); contrato de `Button` ampliado.
+- Validación:
+  - `studentDialogs.browser`: S1 (docente: añadir, aviso de éxito visible, reabrir) y S2 (administración: aviso visible, «Registrar estudiante») × 320/390/768/1024/1440. Comprueba controles del diálogo sin tapar, cabecera inerte con clic real, botones del DS, Tab dentro, Escape, foco devuelto y × del aviso operable tras cerrar. **Antes (fuentes de 8caf9e4): 10/10 FAIL; ahora: 10/10 PASS.**
+  - `pageLayout.browser` 140/140; Node 873/874 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = línea base; `git diff --check` OK.
+- Pendientes para DS4.2c:
+  - `PortalDialog`: neutralizar `.dialog button` para admitir `Button` y una opción de foco inicial; después, migrar `StudentDialog` a `PortalDialog` (subetapa de componente compartido).
+  - `CollaborationModal` (≈20 consumidores): mismo defecto de cabecera sobre el overlay; requiere su propia subetapa con validación de los consumidores y del orden con `ConfirmDialog`.
+  - `AddStudentsModal.tsx` muerto (y sus clases `.primaryButton`/`.secondaryButton`/`.summaryBox`): decidir su eliminación.
+  - El Snackbar sigue con `z-index: 20` y medidas en rem propias (`snackbar.css`): migrar a `--z-toast` y tokens en su subetapa.
+  - `StudentProfilePage`/`StudentQrPage` (cuenta de estudiante), acciones de fila y ×, `Field` en Materias y Periodos.
+- Nota: el mensaje de `871b314` menciona «two node harnesses»; en ese commit solo cambia uno (`adminBatch.integration`).
 - Sin revisión humana; revisión técnica asistida por IA.
