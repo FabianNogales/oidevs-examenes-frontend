@@ -28,7 +28,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | DS2.2a | `Button` y `ButtonLink` en `ui/Button/` (4 variantes, 2 tamaños, `loading`); contrato de tokens DS1.4 con lista cerrada (`Button.module.css` usa `--control-height*`) | ✅ | Erick | `button.test` y `button.browser` (AA, foco, 4 anchos) PASS. Sin revisión humana; revisión técnica asistida por IA (rules.md §9) |
 | DS2.2b | `Field`, `TextInput`, `Select` y `Textarea` en `ui/Field/` (render-prop con `id`, `required`, `aria-invalid` y `aria-describedby`; controles nativos con `ref`) | ✅ | Erick | `field.test` y `field.browser` PASS. Sin revisión humana; revisión técnica asistida por IA (rules.md §9) |
 | DS2.2c | Piloto Aulas: `Button`/`ButtonLink` en cabecera, búsqueda, paginación y diálogos; `TextInput`/`Select` en búsqueda y filtro; `RoomFormField` sobre `Field` (misma API). CSS de Aulas sin cambios (lo importan Materias y Periodos) | ✅ | Erick | `rooms.browser.mjs` 10/10 antes y después (comportamiento idéntico). Excepciones: acciones de fila, cerrar ×, importación CSV. Sin revisión humana; revisión técnica asistida por IA (rules.md §9) |
-| DS2.2d | Materias e importación CSV (Aulas y Materias juntas) con `Button`/`Field` | 🔄 | Erick | Botones de Materias y Periodos ✅ `b750e55` (32 `Button` y 1 `ButtonLink`; mismas excepciones que Aulas). Pendientes: `Field`/controles, acciones de fila, cerrar × e importación CSV compartida. Sin revisión humana; revisión técnica asistida por IA |
+| DS2.2d | Materias e importación CSV (Aulas y Materias juntas) con `Button`/`Field` | 🔄 | Erick | Botones de Materias y Periodos ✅ `b750e55` (32 `Button` y 1 `ButtonLink`; mismas excepciones que Aulas). Importación CSV compartida ✅ DS4.2a `3bdfcab`. Pendientes: `Field`/controles, acciones de fila y cerrar ×. Sin revisión humana; revisión técnica asistida por IA |
 
 ## Matriz por módulo (DS3–DS4)
 
@@ -48,7 +48,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | collaborations | Bajo | DS3 | ⏳ | Pendiente | 4 modales |
 | eligibilities / eligibility-automation | Medio | DS3 | ⏳ | Pendiente | 4 tablas |
 | admin | Alto | DS4 | ⏳ | Pendiente | 330 colores literales; `EntityProfileLayout` duplicado; 22 clases de botón |
-| students | Alto | DS4 | 🔄 (DS4.1a ✅ `54988fb`) | Erick | Docente: alumnos de la materia e importación migrados. Pendientes: `StudentProfilePage`, `StudentQrPage`, modales y panel CSV compartido; QR |
+| students | Alto | DS4 | 🔄 (DS4.1a ✅ `54988fb`; DS4.2a ✅ `3bdfcab`) | Erick | Docente: alumnos de la materia e importación migrados; paneles CSV unificados. Pendientes: `StudentProfilePage`, `StudentQrPage`, modales; QR |
 | exams | Alto | DS4 | ⏳ | Pendiente | Control de ingreso en vivo: validación manual |
 | home | Medio | DS4 | ⏳ | Pendiente | 59 `font-size` en px |
 | shared/components (Header, DataTable, DataCardGrid) | Alto | DS4 | ⏳ | Pendiente | Unos 217 literales; usados por muchas features |
@@ -244,4 +244,23 @@ Bloqueos pendientes:
   - `StudentProfilePage` y `StudentQrPage` (H1 `clamp(32px, 4vw, 40px)`): requieren cuenta de estudiante para validar.
   - Acciones de fila y cerrar × en Aulas, Materias y Periodos; `Field`/controles en Materias y Periodos.
   - Validar en real una oferta de solo consulta cuando exista una.
+- Sin revisión humana; revisión técnica asistida por IA.
+
+## DS4.2a - Unificación del panel CSV compartido (2026-11-07) ✅
+
+- Rama ds/sync-arqmoc-erick, base b23e914, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (transporte simulado; ninguna importación ejecutada).
+- D0: el «panel compartido» son **dos familias de estilos**. A: `shared/styles/CsvImport.module.css` (+ `CsvImportReport`): Aulas, Materias, Inscripción docente y el dropzone de Ofertas (`SubjectCsvDropzone` con estilos inyectados). B: `ImportStudentsPage.module.css` + `StudentImportDesign.module.css`: Estudiantes, Ofertas (`OfferingImport.module.css` las importa) y un sexto consumidor, `AcademicCsvImportPanel` (elegibilidad), que se migra para que sus botones no pierdan el estilo.
+- Commit `3bdfcab` (23 archivos):
+  - 60 `<button>` nativos → `Button` (`primary`: continuar/seleccionar archivo; `secondary`: cancelar, plantilla, cambiar/quitar archivo, descarga, paginación). Tamaño `md` (44px, objetivo táctil). Todos declaraban `type="button"`. La clase local se conserva solo para layout (`min-width`, `white-space`, `flex`, márgenes), sin propiedades que compitan con `.button`.
+  - Familia A: eliminada la cabecera legacy muerta desde DS4.1a (`.page`, `.content`, `.breadcrumb`, `.pageHeader` y 3 reglas `:global(...):has(.page)`); 900px → 1024px.
+  - Familia B: 33 colores literales y 13 `font-size` en px → tokens; `var(--x, #fallback)` sin fallback (los tokens existen); `--brand-*` → semánticos (idénticos: navy, blue-light, pink, pink-light; con cambio: `--brand-blue` → `--color-primary`, como la familia A, y crimson → `--color-accent-strong`); sombra → `--shadow-sm`; tonos de revisión con `--color-success*`, `--color-accent*` y `--color-error*` (contraste 4,6 / 5,1 / 5,3:1; el aviso anterior daba 3,6:1, por debajo de AA); `.panelTitle` igual que el `h2` de la familia A (mismo tamaño y peso, color `--color-text-primary`); 820/720px → 768px; las etiquetas largas pueden partirse en paneles estrechos.
+  - Sin cambios en carga de archivos, validación, mensajes, estados, borradores ni llamadas a la API. Dos pruebas Node que inspeccionan el árbol sustituyen `Button` por `'button'` (aserciones intactas).
+- Validación:
+  - Prueba nueva `shared/tests/csvImportDesignSystem.test.mjs`: **0/4 en b23e914, 4/4 ahora** (tokens, clases de botón solo de layout, cabecera legacy eliminada y paneles sin botones nativos legacy ni H1).
+  - `pageLayout.browser`: los 5 importadores seleccionan un CSV local y comprueban jerarquía de títulos (h1 → h2 sin saltos), botones del DS y Tab hasta «Descargar plantilla» con foco visible. **Con las fuentes de b23e914 fallan los 5** (4 botones legacy, 0 del DS); ahora **140/140** a 320/390/768/1024/1440, con un `<main>` y sin desbordamiento.
+  - Regresión: `rooms.browser` 10/10; `hu34.ui.browser` PASS (detectó 4px de desborde a 320px en elegibilidad, corregido con el salto de línea); Node 873/874 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = línea base; `git diff --check` OK.
+- Pendientes:
+  - Backend real de las 5 importaciones (sin cargar archivo): requiere sesión de administrador y docente; no disponible en esta etapa.
+  - Botones de paginación de `StudentImportSummary` (`summaryItem`, chips de filtro: fuera del alcance de `Button`) y `academicTemplateButton` de elegibilidad (fija `min-height: 45px` con más especificidad).
+  - Resto de DS4.2: `ManualStudentEnrollmentDialog`/`AddStudentsModal`, `StudentProfilePage`/`StudentQrPage`, acciones de fila y × de cierre, `Field` en Materias y Periodos.
 - Sin revisión humana; revisión técnica asistida por IA.
