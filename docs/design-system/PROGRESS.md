@@ -17,7 +17,9 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | DS1.3b | Contratos CSS de la separación en `cssContracts.test.mjs` (orden de `@import`, archivos existentes, tokens documentados con sus valores, sin `data-theme` en componentes) y documentación actualizada | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` sigue idéntico a la referencia de DS1.3a |
 | DS1.4a | Tokens semánticos de estado (`--status-*`, 10) y de controles (`--control-height`, `--control-height-sm`) en `tokens.css`, sin consumidores; contratos CSS | ✅ | Erick | rama `ds/trabajo-erick`; CSS compilado: solo las 12 declaraciones nuevas; 20 CSS de features idénticos |
 | DS1.4b | Escala `--z-*` en `:root` (`--z-sticky` 50, `--z-dropdown` 60, `--z-dialog` 1000, `--z-toast` 1100), sin consumidores; contratos CSS | ✅ | Erick | rama `ds/trabajo-erick`; CSS compilado: solo las 4 declaraciones nuevas. Conflictos de apilamiento (Snackbar, `AddStudentsModal`) pendientes de DS2–DS4 |
-| DS2 | Primitivas en `ui/` y catálogo de QA | ⏳ | Pendiente | — |
+| DS2 | Primitivas en `ui/` y catálogo de QA | 🔄 | Pendiente | — |
+| DS2.1a | `PageContainer` y `PageHeader` en `src/shared/components/ui/`, sin consumidores; pruebas SSR y de CSS (`ui/tests/pageLayout.test.mjs`) | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` idéntico (sin consumidores) |
+| DS2.1b | Piloto: `ImportRoomsPage` con `PageContainer`/`PageHeader` (sin tocar `CsvImport.module.css`) | ⏳ | Pendiente | — |
 
 ## Matriz por módulo (DS3–DS4)
 
@@ -59,14 +61,15 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 2. Tema oscuro: se conservan sus tokens y **no se activa**.
 3. Breakpoints canónicos: 480, 640, 768 y 1024px.
 4. Tokens semánticos de [tokens.md](tokens.md): `--status-*` y `--control-height*` implementados en DS1.4a; escala `--z-*` (`--z-sticky` 50, `--z-dropdown` 60, `--z-dialog` 1000, `--z-toast` 1100) implementada en DS1.4b. Ninguno tiene consumidores todavía: se adoptan al migrar cada componente o módulo (DS2–DS4).
-5. Erick es responsable de DS0, DS1.1–DS1.2, SK3, DS1.3 y DS1.4.
+5. Erick es responsable de DS0, DS1.1–DS1.2, SK3, DS1.3, DS1.4 y DS2.1a.
+6. Estructura de página (DS2.1): `h1` de página `--font-size-3xl` (`--font-size-2xl` ≤640px) en bold; anchos `default` 1280px (`--content-max-width`) y `narrow` 960px. Adoptarlos en una pantalla existente es un cambio visual intencionado que se valida pantalla por pantalla.
 
 ## Hallazgos visuales reservados para DS2
 
 Registrados en la verificación manual de DS1.4 (no se corrigen en DS1):
 
-- Tamaños de título distintos entre módulos (→ `PageHeader`).
-- Espaciados y anchos de contenido no uniformes (→ `PageContainer`).
+- Tamaños de título distintos entre módulos (→ `PageHeader`, creado en DS2.1a; pantallas sin migrar).
+- Espaciados y anchos de contenido no uniformes (→ `PageContainer`, creado en DS2.1a; pantallas sin migrar).
 - Botones sin estilo común: 64 clases y alturas de 36 a 48px (→ `Button` con `--control-height*`).
 - Pantalla de criterios de habilitación (`eligibility-automation`) con distribución visual mejorable.
 

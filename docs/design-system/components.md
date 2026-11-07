@@ -20,6 +20,16 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 | `AuthenticatedImage` | `shared/components/AuthenticatedImage/` | Imagen que requiere sesión (usa `useAuthenticatedImage`) |
 | `Snackbar` | `shared/components/Snackbar.tsx` | Notificación temporal (clases `.snackbar*` de `assets/styles/snackbar.css`) |
 
+### `src/shared/components/ui` (primitivas del Design System, DS2)
+
+| Componente | Ruta | API |
+|---|---|---|
+| `PageContainer` | `ui/PageContainer/` | `children`, `width?: 'default' \| 'narrow'` (1280px = `--content-max-width` / 960px), `className?`, `labelledBy?` (renderiza `<section aria-labelledby>`; sin él, `<div>`). Padding `--space-8` / `--content-gutter` (`--space-5` vertical ≤640px). **Nunca renderiza `<main>`** (lo aportan los layouts) y no es una tarjeta: sin fondo, borde ni sombra |
+| `PageHeader` | `ui/PageHeader/` | `title` (obligatorio, no vacío; único `<h1>`), `titleId?`, `focusableTitle?` (`tabIndex={-1}` para la gestión de foco existente), `eyebrow?`, `description?` (contenido en línea, va dentro de un `<p>`), `breadcrumbs?: BreadcrumbItem[]` (reutiliza `Breadcrumbs`), `actions?` (se renderizan tal cual). `h1` `--font-size-3xl` (`2xl` ≤640px), bold; descripción `md` (`sm` ≤640px); separación inferior `--space-6`; acciones a la derecha y apiladas ≤640px |
+
+Pruebas: `ui/tests/pageLayout.test.mjs` (SSR y CSS). Sin consumidores todavía; la migración
+de pantallas es una subetapa por pantalla ([PROGRESS.md](PROGRESS.md)).
+
 ### `src/features/portal-shared` (portal administrativo)
 
 | Componente | Propósito |
@@ -54,7 +64,7 @@ Medido en DS0:
 - **Badges de dominio:** `AcademicTermStatusBadge`, `EntryConditionBadge`, `AcademicResultBadge`, `ProfileActiveTermBadge`.
 - **Duplicado literal:** `EntityProfileLayout` existe en `features/admin/components/` y en `features/admin/profile/components/`.
 
-## 🕒 Planificados en `src/shared/components/ui/` (ubicación aprobada; no existen todavía, se crean en DS2)
+## 🕒 Planificados en `src/shared/components/ui/` (ubicación aprobada; aún no existen, se crean a lo largo de DS2)
 
 | Componente | Base existente | Notas de API (borrador) |
 |---|---|---|
@@ -64,7 +74,6 @@ Medido en DS0:
 | `Pagination` | Paginación interna de DataTable y `PortalPager` | Extraída sin cambiar la API de DataTable |
 | `EmptyState`, `LoadingState`, `Notice` | Estados de DataTable y `PortalFeedback` | |
 | `Dialog` | `PortalDialog` y `ConfirmDialog` nativo | Una sola familia; conservar el Escape robusto |
-| `PageHeader`, `PageContainer` | Cabecera de `PortalAdminCollection` (1280px, título, descripción, acción) | |
 
 Regla: un componente planificado no se usa hasta que exista en el código y esta
 tabla lo mueva a "Existentes".

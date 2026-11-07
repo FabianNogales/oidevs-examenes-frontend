@@ -44,6 +44,8 @@ test('CSV consumers and repaired components reference real CSS Module exports', 
     'src/features/portal-services/AdminServicesPage.tsx',
     'src/features/portal-services/ServiceEditor.tsx',
     'src/features/course-offerings/components/OfferingImportPanel.tsx',
+    'src/shared/components/ui/PageContainer/PageContainer.tsx',
+    'src/shared/components/ui/PageHeader/PageHeader.tsx',
   ]
   for (const feature of ['rooms', 'subjects']) {
     const folder = `src/features/${feature}/components/import`
