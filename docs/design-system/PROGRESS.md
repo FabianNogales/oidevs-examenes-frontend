@@ -172,3 +172,23 @@ Bloqueos pendientes:
   - **Menor, sin corregir:** `/favicon.ico` 404. `index.html` nunca declaró icono; elegirlo es una decisión de marca.
 - Validación final: Node 867/868 (0 fallos, 1 `todo` del mínimo de calendario de D3); `tsc` OK; build OK; ESLint 36 = Arqmoc (0 nuevos); `git diff --check` OK. Batería browser simulada 24/24 en 479c62f. Tras la corrección, `pageLayout.browser` 111 PASS y `examReports.browser` sin errores.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## D7 - Cierre funcional y preparación para publicación (2026-11-07)
+
+- Rama ds/sync-arqmoc-erick, base 1ceab94, inicio limpio. Mismo método de D6: sesión manual (docente y luego administrador), CDP con todo lo que no es GET/HEAD/OPTIONS abortado: **0 escrituras**. El backend no se modificó.
+- **Matriz de contratos.** De 129 llamadas literales del frontend, 110 existen en el backend local (`Dev_Hector` `a69dae4`, 154 rutas según `artisan route:list`). Las 19 restantes pertenecen a 7 features: reportes, incidencias, infracciones, expulsiones, asistencia, anulación de ingresos y offline.
+  - GET anónimo: «route could not be found» (404) en todas; las rutas de control existentes dan 401.
+  - Esas rutas **sí existen en `origin/main` del backend (`ca126a6`)**. El checkout local va 25 commits por detrás de `origin/Dev_Hector` y 1 más hasta `origin/main`, con 3 migraciones pendientes.
+  - Clasificación: **BLOQUEADO POR BACKEND**. Se resuelve actualizando el entorno local (lo hace el responsable del backend, con autorización y copia de la BD). No se sustituyeron por mocks ni se cambiaron rutas.
+- Corregido `d56a046`: tras un «Reintentar» que vuelve a fallar, el foco caía a `<body>`. Nuevo hook compartido `useRetryFocus` en `DataTable`, `DataCardGrid` e `IncidentExamPicker`; solo devuelve el foco si se había perdido. Comprobado en backend real en Reportes (docente y administrador) e Incidencias: 1 GET, 1 alerta, foco en el botón. `retryFocus.test.mjs` falla sin el cableado.
+- Corregido `e432b43`: el calendario público tenía un `<h1>` sin estilo (40px en todos los anchos). Ahora usa `PageContainer narrow` y `PageHeader`, igual que Noticias, Información y Servicios. En backend real: `h1` 24/32px, 960px y migas.
+- Pendiente (no corregido): `/admin/academic-terms` (Periodos académicos) tiene un `h1` de 27,2/28,8px y no usa el contenedor de 1280px. Es una migración DS3 sin hacer (`academic-terms` ⏳), fuera del alcance de D7.
+- Validación en backend real a 320/390/768/1024/1440, sin desbordamiento:
+  - 16 rutas de administración (80 mediciones). Todas con `h1` 24/32px y 1280px, salvo `/admin` (portada) y Periodos.
+  - 5 rutas docentes (25 mediciones).
+  - 5 rutas públicas (25 mediciones).
+  - Los 12 enlaces internos de las páginas docentes y públicas llevan a páginas válidas.
+- Validación automatizada: Node 869/870 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = Arqmoc (0 nuevos); `git diff --check` OK. Batería browser simulada 24/24. Tras la corrección del calendario, `publicCalendar`, `eventVisibility`, `adminCalendarFocus`, `adminCalendarPendingEscape` y `pageLayout` (111) PASS. Las pruebas simuladas no cuentan como validación con backend real.
+- Bloqueados: `hu40`, `hu41` y `sprint3.integration` (backend real con escrituras), `imageProxy` (`.env`), detalle y subpáginas de examen (el docente no tiene exámenes) y rol estudiante (sin cuenta de prueba).
+- Plan de escritura preparado y **no ejecutado**: [D7_PLAN_PRUEBAS_ESCRITURA.md](../D7_PLAN_PRUEBAS_ESCRITURA.md). El backend no tiene `DELETE` de exámenes (solo cancelar); incidencias, expulsiones, anulaciones y preparación offline son irreversibles.
+- Sin revisión humana; revisión técnica asistida por IA.
