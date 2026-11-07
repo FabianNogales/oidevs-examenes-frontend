@@ -41,7 +41,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | portal-services | Bajo | DS3 | ⏳ (alineado F1–F2) | Pendiente | |
 | portal-calendar | Bajo | DS3 | ⏳ (alineado F1–F2) | Pendiente | |
 | portal-shared | Bajo | DS3 | ⏳ | Pendiente | Base de `ui/` (AdminStatusBadge, PortalUi) |
-| academic-terms | Bajo | DS3 | ⏳ | Pendiente | 3 modales, tabla y paginación propias |
+| academic-terms | Bajo | DS3 | 🔄 (cabecera ✅ DS3.1 `c6864f5`) | Erick | Cabecera migrada a `PageContainer`/`PageHeader`; botones, modales, tabla y paginación propios aún sin migrar (DS2.2d) |
 | rooms | Bajo | DS3 | ⏳ | Pendiente | 3 modales, 2 tablas |
 | subjects | Bajo | DS3 | ⏳ | Pendiente | 3 modales, 2 tablas |
 | course-offerings | Bajo | DS3 | ⏳ | Pendiente | 3 paginaciones propias |
@@ -191,4 +191,30 @@ Bloqueos pendientes:
 - Validación automatizada: Node 869/870 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = Arqmoc (0 nuevos); `git diff --check` OK. Batería browser simulada 24/24. Tras la corrección del calendario, `publicCalendar`, `eventVisibility`, `adminCalendarFocus`, `adminCalendarPendingEscape` y `pageLayout` (111) PASS. Las pruebas simuladas no cuentan como validación con backend real.
 - Bloqueados: `hu40`, `hu41` y `sprint3.integration` (backend real con escrituras), `imageProxy` (`.env`), detalle y subpáginas de examen (el docente no tiene exámenes) y rol estudiante (sin cuenta de prueba).
 - Plan de escritura preparado y **no ejecutado**: [D7_PLAN_PRUEBAS_ESCRITURA.md](../D7_PLAN_PRUEBAS_ESCRITURA.md). El backend no tiene `DELETE` de exámenes (solo cancelar); incidencias, expulsiones, anulaciones y preparación offline son irreversibles.
+- Sin revisión humana; revisión técnica asistida por IA.
+
+## DS3 - Unificación visual pendiente (2026-11-07)
+
+- Rama ds/sync-arqmoc-erick, base 81f3663, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (sesión manual de administrador, escrituras abortadas por CDP).
+- DS3.1 `c6864f5` — Periodos académicos (`/admin/academic-terms`):
+  - Causa: cabecera propia sobre clases legacy de `AdminRoomsPage.module.css` (H1 27,2/28,8px, sin `max-width`, separaciones de 22 y 7px).
+  - Ahora usa `PageContainer labelledBy` y `PageHeader` (mismo `id` y `tabIndex` del H1, eyebrow, descripción, migas y acción). Se conservan «Volver al inicio» y el Snackbar.
+  - `pageLayout.browser` falla antes (5/5 anchos) y pasa después.
+  - Backend real: H1 24/700/30 y 32/700/40, 1280px, un `<main>`; Escape en el diálogo devuelve el foco a «+ Registrar periodo».
+- DS3.2 `978c74b` — 404 de administración (ruta `*` bajo `AdminLayout`):
+  - Antes: tarjeta propia con H1 `clamp()` (28,8–40px), sin 1280px y sin migas.
+  - Ahora usa `PageContainer` y `PageHeader`. El enlace «Volver al inicio» sigue siendo `Link`: `Button`/`ButtonLink` siguen limitados al piloto de Aulas.
+  - Backend real: 24/32px, 1280px y migas.
+- DS3.3 `425c77b` — tokens: 4 colores literales sustituidos por tokens semánticos con valor idéntico en el tema claro activo (sin cambio visual): Colaboraciones `#fff` → `--color-on-primary`; Mis materias `#eaf3ff` → `--color-background` y `--brand-navy` ×2 → `--color-text`. `#bfdbfe`/`#eff6ff` no tienen token equivalente y se conservan. `#eff6fc` de Servicios se mantiene por la decisión de DS2.1g.
+- Validación:
+  - Automatizada: Node 869/870 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = Arqmoc (0 nuevos); `git diff --check` OK.
+  - Browser simulado: 24/24 (`pageLayout` 121 PASS).
+  - Backend real: 16 rutas de administración × 5 anchos, 80/80 dentro del contrato salvo `/admin` (portada); «Reintentar» conserva el foco.
+- Pendientes de Design System (con evidencia; para DS4):
+  - students: `TeacherSubjectStudentsPage` (H1 `clamp(24px, 4vw, 32px)`: 30,7px a 768), `ImportSubjectStudentsPage` (H1 `clamp(32px, 3vw, 36px)`), `StudentProfilePage` y `StudentQrPage` (`clamp(32px, 4vw, 40px)`; sin cuenta de estudiante para verificarlas).
+  - exams: `EntryControlPage` (H1 `--font-size-xl` y ancho de 1120px; control de ingreso en vivo, riesgo alto) y `TeacherExamDetailPage` (sin datos para verificar).
+  - offline-entry: H1 `clamp(26,4–35,2px)` y ancho de 1300px.
+  - home: portada con escala propia.
+  - Botones de Periodos, Materias y demás pantallas (DS2.2d: `Button` solo en Aulas).
+  - `AdminModulePage` no tiene ruta (código muerto; no se modifica).
 - Sin revisión humana; revisión técnica asistida por IA.
