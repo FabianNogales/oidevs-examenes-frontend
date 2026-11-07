@@ -1,9 +1,9 @@
 .page {
   flex: 1;
   min-width: 0;
-  padding: 28px 24px 36px;
-  color: #0c2d6c;
-  background: #f6f8fb;
+
+  color: var(--color-text);
+  background: var(--color-background);
 }
 
 .container {
@@ -543,9 +543,6 @@
    RESPONSIVO MÓVIL
    ============================== */
 @media (max-width: 767px) {
-  .page {
-    padding: 20px 14px 28px;
-  }
   .pageHeader {
     flex-direction: column;
     align-items: flex-start;

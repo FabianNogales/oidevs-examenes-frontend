@@ -31,7 +31,7 @@ export function ServicesPage() {
   )
   const result = usePortalResource(load)
   return (
-    <main className={styles.servicesPage}>
+    <main>
       <PageContainer width="narrow">
         <PageHeader
           title="Servicios institucionales"

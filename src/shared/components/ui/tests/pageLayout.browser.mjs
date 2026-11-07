@@ -3,13 +3,15 @@
 // 320/390/768/1440px; it does not run imports, saves or status changes. Run from the frontend root;
 // requires local Chrome (EIDA_QA_CHROME overrides the path).
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { spawn } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createServer } from 'vite'
 import { cleanupBrowserProfile, createBrowserProfile } from '../../../tests/browserProfile.mjs'
 
-const evidence = join(process.cwd(), '.validation.local', 'ds2.1-page-layout')
+const baseline = process.env.EIDA_D5_PHASE === 'before'
+const evidence = join(process.cwd(), '.validation.local', 'visual-d5', process.env.EIDA_D5_PHASE ?? 'after')
 await mkdir(evidence, { recursive: true })
 
 // Synthetic QA fixtures (not real institutional data).
@@ -33,10 +35,20 @@ import {AdminServicesPage} from '/src/features/portal-services/pages/AdminServic
 import {ServicesPage} from '/src/features/portal-services/pages/ServicesPage.tsx';
 import {AdminInformationPage} from '/src/features/portal-information/pages/AdminInformationPage.tsx';
 import {InformationPage} from '/src/features/portal-information/pages/InformationPage.tsx';
+import {AdminCalendarPage} from '/src/features/portal-calendar/pages/AdminCalendarPage.tsx';
+import {AdminTeachersPage} from '/src/features/teachers/pages/AdminTeachersPage.tsx';
+import {AdminCourseOfferingsPage} from '/src/features/course-offerings/pages/AdminCourseOfferingsPage.tsx';
+import {AdminUserHistoryPage} from '/src/features/users/pages/AdminUserHistoryPage.tsx';
 const e=React.createElement;
 const career={id:1,code:'QA-SIS',name:'Carrera QA Sistemas',status:'ACTIVE'};
 const page=(data,extra={})=>({data,meta:{current_page:1,last_page:1,total:data.length,per_page:15,from:data.length?1:null,to:data.length||null,...extra}});
 const fixtures={
+  '/admin/teachers':page([]),
+  '/admin/users/history':page([]),
+  '/admin/academic-terms':page([]),
+  '/admin/course-offerings':page([]),
+  '/admin/portal/event-categories':{data:[]},
+  '/admin/portal/events':page([]),
   '/admin/rooms':page([{id:1,code:'QA-101',name:'Aula QA 101',location:'Bloque QA',capacity:40,status:'ACTIVE'},{id:2,code:'QA-202',name:'Laboratorio QA 202',location:'Bloque QA',capacity:25,status:'INACTIVE'}]),
   '/admin/subjects':page([{id:1,code:'QA-111',name:'Materia QA de programación',status:'ACTIVE',careers:[career]}]),
   '/admin/subjects/careers':{data:[career]},
@@ -58,6 +70,10 @@ const respond=(method)=>async(url,body)=>{
 };
 qa.client={get:respond('get'),post:respond('post'),put:respond('put'),patch:respond('patch'),delete:respond('delete')};
 const routes=[
+  {path:'/admin/teachers',element:e(AdminTeachersPage)},
+  {path:'/admin/teachers/assignments',element:e(AdminCourseOfferingsPage)},
+  {path:'/admin/users/history',element:e(AdminUserHistoryPage)},
+  {path:'/admin/portal/events',element:e(AdminCalendarPage)},
   {path:'/admin/rooms/import',element:e(ImportRoomsPage)},
   {path:'/admin/subjects/import',element:e(ImportSubjectsPage)},
   {path:'/admin/rooms',element:e(AdminRoomsPage)},
@@ -77,13 +93,17 @@ qa.show=(path)=>{qa.calls=[];qa.unexpected=[];root.render(e(RouterProvider,{key:
 `
 
 const screens = [
+  {path:'/admin/teachers',title:'Gestión de docentes',crumbs:['Inicio','Docentes','Gestionar docentes'],legacy:baseline},
+  {path:'/admin/teachers/assignments',title:'Materias asignadas a docentes',crumbs:['Inicio','Docentes','Asignación de materias'],legacy:baseline},
+  {path:'/admin/users/history',title:'Historial de usuarios y roles',crumbs:baseline?[]:['Inicio','Historial de usuarios y roles'],legacy:baseline},
+  {path:'/admin/portal/events',title:'Gestión del calendario',crumbs:['Inicio','Gestión del calendario'],legacy:baseline},
   { path: '/admin/rooms/import', title: 'Importar aulas', crumbs: ['Inicio', 'Aulas', 'Importar aulas'], kind: 'import' },
   { path: '/admin/subjects/import', title: 'Importar materias', crumbs: ['Inicio', 'Materias', 'Importar materias'], kind: 'import' },
   { path: '/admin/rooms', title: 'Gestión de aulas', crumbs: ['Inicio', 'Aulas', 'Gestionar aulas'], kind: 'catalog',
     actions: ['+ Importar aulas (CSV)', '+ Registrar aula'], rows: ['Aula QA 101', 'Laboratorio QA 202'] },
   { path: '/admin/subjects', title: 'Gestión de materias', crumbs: ['Inicio', 'Materias', 'Gestionar materias'], kind: 'catalog',
     actions: ['+ Importar materias (CSV)', '+ Registrar materia'], rows: ['Materia QA de programación'] },
-  { path: '/admin/careers', title: 'Carreras', crumbs: [], kind: 'read', description: 'Consulta del catálogo. Incluye carreras activas e inactivas.',
+  { path: '/admin/careers', title: 'Carreras', crumbs: baseline ? [] : ['Inicio', 'Carreras'], kind: 'read', description: 'Consulta del catálogo. Incluye carreras activas e inactivas.',
     rows: ['Carrera QA Sistemas', 'Carrera QA Industrial'] },
   { path: '/admin/portal/news', title: 'Gestión de noticias', crumbs: ['Inicio', 'Gestión de noticias'], kind: 'news-admin',
     description: 'Crea, publica y archiva las noticias del portal institucional.', actions: ['Crear noticia'], rows: ['Noticia QA publicada', 'Noticia QA en borrador'] },
@@ -94,7 +114,7 @@ const screens = [
   { path: '/admin/portal/information', title: 'Gestión de información y FAQ', crumbs: ['Inicio', 'Gestión de información y FAQ'], kind: 'portal-admin', selects: 2,
     description: 'Administra las secciones institucionales y las preguntas frecuentes del portal.', rows: ['Sección QA institucional'] },
   { path: '/information', title: 'Información institucional', crumbs: ['Inicio', 'Información institucional'], kind: 'portal-public', rows: ['Sección QA institucional', '¿Pregunta QA?'] },
-  { path: '/admin/audit-logs', title: 'Auditoría', crumbs: [], kind: 'read', legacy: true, description: 'El total cuenta eventos.', rows: ['UPDATE'] },
+  { path: '/admin/audit-logs', title: 'Auditoría', crumbs: baseline ? [] : ['Inicio', 'Auditoría'], kind: 'read', legacy: baseline, description: 'El total cuenta eventos.', rows: ['UPDATE'] },
 ]
 
 // Collected in the page: structure, visibility and overflow of the key elements.
@@ -108,8 +128,12 @@ const inspect = `(()=>{
   const overflowing=[...document.querySelectorAll('#root *')].filter((el)=>{const b=r(el);return b.width>0&&b.right>vw+1&&getComputedStyle(el).position!=='fixed'}).slice(0,8).map((el)=>el.tagName+'.'+String(el.className).slice(0,40));
   return {
     scroll:document.documentElement.scrollWidth, vw,
+    headingSurface:(()=>{for(let el=h1s[0];el;el=el.parentElement){const bg=getComputedStyle(el).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')return bg}return getComputedStyle(document.body).backgroundColor})(),
+    bodySurface:getComputedStyle(document.body).backgroundColor,
+    current:nav?.querySelector('[aria-current=page]')?.textContent.trim(),
+    links:nav?[...nav.querySelectorAll('a')].map(a=>a.getAttribute('href')):[],
     mains:document.querySelectorAll('main').length,
-    h1:h1s.map((h)=>({text:h.textContent.trim(),id:h.id,tab:h.getAttribute('tabindex'),visible:visible(h),clipped:h.scrollWidth>h.clientWidth+1,weight:getComputedStyle(h).fontWeight})),
+    h1:h1s.map((h)=>({text:h.textContent.trim(),id:h.id,tab:h.getAttribute('tabindex'),visible:visible(h),clipped:h.scrollWidth>h.clientWidth+1,weight:getComputedStyle(h).fontWeight,size:getComputedStyle(h).fontSize,lineHeight:getComputedStyle(h).lineHeight})),
     crumbs:nav?[...nav.querySelectorAll('li')].map((li)=>li.textContent.trim()):[], crumbsVisible:visible(nav),
     labelled:document.querySelector('section[aria-labelledby]')?.getAttribute('aria-labelledby')??null,
     text:document.body.innerText,
@@ -144,6 +168,11 @@ try {
         if (normalized.endsWith('/src/shared/api/httpClient.ts'))
           return 'export const httpClient={get:(...a)=>window.pageLayoutQa.client.get(...a),post:(...a)=>window.pageLayoutQa.client.post(...a),put:(...a)=>window.pageLayoutQa.client.put(...a),patch:(...a)=>window.pageLayoutQa.client.patch(...a),delete:(...a)=>window.pageLayoutQa.client.delete(...a)};'
         if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts')) return 'export const useAuth=()=>({notify(){}});'
+        if (baseline && /\/src\/.*\.(tsx|css)$/.test(normalized)) {
+          const path = normalized.slice(normalized.indexOf('/src/') + 1)
+          try { return execFileSync('git', ['show', 'f56e082:' + path], { encoding: 'utf8' }) } catch { /* virtual modules use the current source */ }
+        }
+
       },
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
@@ -209,7 +238,7 @@ try {
   await send('Page.navigate', { url: origin + '/__ds21-layout' })
   await wait(`!!window.pageLayoutQa?.show`, 'arranque de la app QA')
 
-  for (const width of [320, 390, 768, 1440]) {
+  for (const width of [320, 390, 768, 1024, 1440]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
     await pause(150)
     for (const screen of screens) {
@@ -226,10 +255,16 @@ try {
       check(page.scroll <= page.vw + 1, `desbordamiento horizontal ${page.scroll}>${page.vw} ${page.overflowing.join(', ')}`)
       check(page.mains === 1, `${page.mains} <main> (se esperaba solo el del layout)`)
       check(page.h1.length === 1, `${page.h1.length} h1`)
+      if (!baseline) check(page.h1[0]?.size === (width <= 640 ? '24px' : '32px'), 'escala H1: '+page.h1[0]?.size)
       if (!screen.legacy) check(page.h1[0]?.weight === '700', `peso del h1 ${page.h1[0]?.weight}`)
       check(page.h1[0]?.text === screen.title && page.h1[0].visible && !page.h1[0].clipped, `h1 incorrecto/oculto/recortado ${JSON.stringify(page.h1[0])}`)
       check(JSON.stringify(page.crumbs) === JSON.stringify(screen.crumbs), `migas ${JSON.stringify(page.crumbs)}`)
-      if (screen.crumbs.length) check(page.crumbsVisible, 'migas no visibles')
+      if (screen.crumbs.length) {
+        check(page.crumbsVisible, 'migas no visibles')
+        check(page.current === screen.crumbs.at(-1), 'aria-current de breadcrumb')
+        check(page.links.every(href => ['/', '/admin', '/admin/rooms', '/admin/subjects', '/admin/teachers'].includes(href)), 'ruta breadcrumb desconocida')
+      }
+      if (!baseline) check(page.headingSurface === page.bodySurface, 'superficie de página: '+page.headingSurface+' / '+page.bodySurface)
       if (screen.description) check(page.text.includes(screen.description), 'descripción ausente')
       for (const action of page.actions) check(action.found && action.visible && action.name, `acción ${action.label} ${JSON.stringify(action)}`)
       if (screen.kind === 'import') {
@@ -265,7 +300,7 @@ try {
       const shotName = `${screen.path.replaceAll('/', '_').slice(1)}-${width}.png`
       const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
       await writeFile(join(evidence, shotName), Buffer.from(shot.data, 'base64'))
-      results.push({ width, screen: screen.title, pass: failures.length === 0, failures, visibleButtons: page.panelButtons.slice(0, 12) })
+      results.push({ width, screen: screen.title, pass: failures.length === 0, failures, heading:page.h1[0], surface:page.headingSurface, breadcrumbs:page.crumbs, visibleButtons: page.panelButtons.slice(0, 12) })
       console.log(`${failures.length ? 'FAIL' : 'PASS'} ${label}${failures.length ? ': ' + failures.join(' · ') : ''}`)
     }
   }
