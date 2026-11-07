@@ -30,6 +30,7 @@ import {ImportSubjectsPage} from '/src/features/subjects/pages/ImportSubjectsPag
 import {AdminRoomsPage} from '/src/features/rooms/pages/AdminRoomsPage.tsx';
 import {AdminSubjectsPage} from '/src/features/subjects/pages/AdminSubjectsPage.tsx';
 import {AdminAcademicTermsPage} from '/src/features/academic-terms/pages/AdminAcademicTermsPage.tsx';
+import {AdminNotFoundPage} from '/src/features/users/pages/AdminNotFoundPage.tsx';
 import {AdminReadPage} from '/src/features/users/pages/AdminReadPage.tsx';
 import {AdminNewsPage} from '/src/features/portal-news/pages/AdminNewsPage.tsx';
 import {NewsPage} from '/src/features/portal-news/pages/NewsPage.tsx';
@@ -101,6 +102,7 @@ const routes=[
   {path:'/admin/rooms',element:e(AdminRoomsPage)},
   {path:'/admin/subjects',element:e(AdminSubjectsPage)},
   {path:'/admin/academic-terms',element:e(AdminAcademicTermsPage)},
+  {path:'/admin/ruta-inexistente',element:e(AdminNotFoundPage)},
   {path:'/admin/careers',element:e(AdminReadPage,{kind:'careers'})},
   {path:'/admin/audit-logs',element:e(AdminReadPage,{kind:'audit-logs'})},
 ].map((route)=>({...route,element:e('main',{'data-qa':'layout-main'},route.element)})).concat([
@@ -135,6 +137,9 @@ const screens = [
   // DS3.1: Periodos académicos adopts PageContainer/PageHeader (structural admin contract).
   { path: '/admin/academic-terms', title: 'Periodos académicos', crumbs: ['Inicio', 'Periodos académicos'], structural: true, focusTitle: true,
     description: 'Consulta las gestiones disponibles para organizar las ofertas académicas y conservar su historial.', actions: ['+ Registrar periodo'], rows: ['Periodo QA 2026'] },
+  // DS3.2: admin catch-all route (router `*` under AdminLayout).
+  { path: '/admin/ruta-inexistente', title: 'Página no encontrada', crumbs: ['Inicio', 'Página no encontrada'], structural: true,
+    description: 'La sección administrativa que buscas no existe o no se encuentra disponible.', actions: ['Volver al inicio'] },
   { path: '/admin/careers', title: 'Carreras', crumbs: baseline && !structuralBaseline ? [] : ['Inicio', 'Carreras'], kind: 'read', description: 'Consulta del catálogo. Incluye carreras activas e inactivas.',
     rows: ['Carrera QA Sistemas', 'Carrera QA Industrial'] },
   { path: '/admin/portal/news', title: 'Gestión de noticias', crumbs: ['Inicio', 'Gestión de noticias'], kind: 'news-admin',

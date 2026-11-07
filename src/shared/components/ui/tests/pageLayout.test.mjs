@@ -143,6 +143,7 @@ const authorizedConsumers = [
   'features/subjects/pages/ImportSubjectsPage.tsx',
   'features/teachers/pages/AdminTeachersPage.tsx',
   'features/users/pages/AdminManageUsersPage.tsx',
+  'features/users/pages/AdminNotFoundPage.tsx',
   'features/users/pages/AdminReadPage.tsx',
   'features/users/pages/AdminUserHistoryPage.tsx',
   'features/users/pages/AdminUserRolesPage.tsx',
