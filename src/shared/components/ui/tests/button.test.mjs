@@ -129,7 +129,8 @@ test('Button CSS uses tokens and defines hover, active, focus-visible and disabl
 })
 
 // Closed list of authorized consumers per component (DS2.2c: the Rooms pilot is the first adopter;
-// DS2.2d: Subjects and Academic terms; DS4.1a: the teacher's subject students page).
+// DS2.2d: Subjects and Academic terms; DS4.1a: the teacher's subject students page;
+// DS4.2a: the shared CSV import panels).
 const authorizedConsumers = {
   Button: [
     'features/academic-terms/components/AcademicTermDetails.tsx',
@@ -139,16 +140,29 @@ const authorizedConsumers = {
     'features/academic-terms/components/AcademicTermsFilters.tsx',
     'features/academic-terms/components/ActiveAcademicTermSummary.tsx',
     'features/academic-terms/pages/AdminAcademicTermsPage.tsx',
+    'features/course-offerings/components/OfferingImportPanel.tsx',
+    'features/course-offerings/components/OfferingImportReport.tsx',
+    'features/eligibility-automation/components/AcademicCsvImportPanel.tsx',
     'features/rooms/components/RoomDetails.tsx',
     'features/rooms/components/RoomDialog.tsx',
     'features/rooms/components/RoomForm.tsx',
     'features/rooms/components/RoomStatusDialog.tsx',
+    'features/rooms/components/import/RoomCsvDropzone.tsx',
+    'features/rooms/components/import/RoomImportPanel.tsx',
+    'features/rooms/components/import/RoomImportTable.tsx',
     'features/rooms/pages/AdminRoomsPage.tsx',
+    'features/students/components/CsvDropzone.tsx',
+    'features/students/components/EnrollmentImportPanel.tsx',
+    'features/students/components/StudentImportPanel.tsx',
+    'features/students/components/StudentImportSuccess.tsx',
     'features/students/pages/TeacherSubjectStudentsPage.tsx',
     'features/subjects/components/SubjectDetails.tsx',
     'features/subjects/components/SubjectDialog.tsx',
     'features/subjects/components/SubjectForm.tsx',
     'features/subjects/components/SubjectStatusDialog.tsx',
+    'features/subjects/components/import/SubjectCsvDropzone.tsx',
+    'features/subjects/components/import/SubjectImportPanel.tsx',
+    'features/subjects/components/import/SubjectImportTable.tsx',
     'features/subjects/pages/AdminSubjectsPage.tsx',
   ],
   ButtonLink: [
@@ -161,9 +175,22 @@ const authorizedConsumers = {
 // Row actions, the modal close button (×) and the shared CSV import are still pending.
 const migratedScopes = [
   'features/academic-terms/',
+  'features/course-offerings/components/OfferingImportPanel.tsx',
+  'features/course-offerings/components/OfferingImportReport.tsx',
+  'features/eligibility-automation/components/AcademicCsvImportPanel.tsx',
   'features/rooms/',
+  'features/rooms/components/import/RoomCsvDropzone.tsx',
+  'features/rooms/components/import/RoomImportPanel.tsx',
+  'features/rooms/components/import/RoomImportTable.tsx',
+  'features/students/components/CsvDropzone.tsx',
+  'features/students/components/EnrollmentImportPanel.tsx',
+  'features/students/components/StudentImportPanel.tsx',
+  'features/students/components/StudentImportSuccess.tsx',
   'features/students/pages/TeacherSubjectStudentsPage.tsx',
   'features/subjects/',
+  'features/subjects/components/import/SubjectCsvDropzone.tsx',
+  'features/subjects/components/import/SubjectImportPanel.tsx',
+  'features/subjects/components/import/SubjectImportTable.tsx',
 ]
 const consumersOf = (sources, component) =>
   [...sources].filter(([, text]) => new RegExp(`components/ui/Button/${component}['"]`).test(text)).map(([file]) => file).sort()

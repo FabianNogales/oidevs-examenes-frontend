@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { DragEvent, KeyboardEvent } from 'react'
 import styles from './StudentImportDesign.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 type CsvDropzoneProps = {
   selectedFile: File | null
@@ -116,8 +117,7 @@ export function CsvDropzone({
             </span>
           </div>
           {labels?.changeButtonLabel ? (
-            <button
-              type="button"
+            <Button
               className={styles.selectFileButton}
               onClick={(event) => {
                 event.stopPropagation()
@@ -125,10 +125,10 @@ export function CsvDropzone({
               }}
             >
               {labels.changeButtonLabel}
-            </button>
+            </Button>
           ) : null}
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             className={styles.removeFileButton}
             onClick={(event) => {
               event.stopPropagation()
@@ -136,7 +136,7 @@ export function CsvDropzone({
             }}
           >
             {labels?.removeButtonLabel ?? 'Quitar archivo'}
-          </button>
+          </Button>
         </div>
       ) : (
         <div className={styles.emptyDropzoneState}>
@@ -145,8 +145,7 @@ export function CsvDropzone({
             {labels?.title ?? 'Arrastra tu archivo CSV aquí'}
           </p>
           <span>o selecciónalo desde tu equipo</span>
-          <button
-            type="button"
+          <Button
             className={styles.selectFileButton}
             onClick={(event) => {
               event.stopPropagation()
@@ -154,7 +153,7 @@ export function CsvDropzone({
             }}
           >
             {labels?.selectButtonLabel ?? 'Seleccionar archivo'}
-          </button>
+          </Button>
           <small>{labels?.formatLabel ?? 'Formato admitido: .csv'}</small>
         </div>
       )}

@@ -3,6 +3,7 @@ import type { RoomImportRow } from '../../types/roomImport.types'
 import { ROOM_CSV_COLUMNS } from '../../utils/roomCsv'
 import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportRoomsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 const PAGE_SIZE = 20
 
@@ -106,25 +107,25 @@ export function RoomImportTable({
             {filtered.length} registros
           </span>
           <div>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               disabled={currentPage === 1}
               onClick={() => setPage(currentPage - 1)}
             >
               Anterior
-            </button>
+            </Button>
             <span>
               Página {currentPage} de {lastPage}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               disabled={currentPage === lastPage}
               onClick={() => setPage(currentPage + 1)}
             >
               Siguiente
-            </button>
+            </Button>
           </div>
         </nav>
       )}

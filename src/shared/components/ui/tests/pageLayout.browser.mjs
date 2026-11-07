@@ -138,8 +138,8 @@ const screens = [
   {path:'/admin/teachers/assignments',title:'Materias asignadas a docentes',crumbs:['Inicio','Docentes','Asignación de materias'],legacy:baseline},
   {path:'/admin/users/history',title:'Historial de usuarios y roles',crumbs:baseline&&!structuralBaseline?[]:['Inicio','Historial de usuarios y roles'],legacy:baseline,rows:['Responsable QA con nombre y apellidos extensos']},
   {path:'/admin/portal/events',title:'Gestión del calendario',crumbs:['Inicio','Gestión del calendario'],legacy:baseline},
-  { path: '/admin/rooms/import', title: 'Importar aulas', crumbs: ['Inicio', 'Aulas', 'Importar aulas'], kind: 'import' },
-  { path: '/admin/subjects/import', title: 'Importar materias', crumbs: ['Inicio', 'Materias', 'Importar materias'], kind: 'import' },
+  { path: '/admin/rooms/import', title: 'Importar aulas', crumbs: ['Inicio', 'Aulas', 'Importar aulas'], kind: 'import', csv: true },
+  { path: '/admin/subjects/import', title: 'Importar materias', crumbs: ['Inicio', 'Materias', 'Importar materias'], kind: 'import', csv: true },
   { path: '/admin/rooms', title: 'Gestión de aulas', crumbs: ['Inicio', 'Aulas', 'Gestionar aulas'], kind: 'catalog',
     actions: ['+ Importar aulas (CSV)', '+ Registrar aula'], rows: ['Aula QA 101', 'Laboratorio QA 202'] },
   { path: '/admin/subjects', title: 'Gestión de materias', crumbs: ['Inicio', 'Materias', 'Gestionar materias'], kind: 'catalog',
@@ -452,6 +452,25 @@ try {
         await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
         await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
         await wait(`document.querySelector('button[aria-haspopup="menu"]')?.getAttribute('aria-expanded')==='false'`, 'cerrar cuenta')
+      }
+      // DS4.2a: the shared CSV panels use Design System buttons, a coherent heading outline and keyboard access.
+      if (!baseline && screen.csv) {
+        const panel = await evaluate(`(()=>{const levels=[...document.querySelectorAll('main h1, main h2, main h3, main h4')].map(h=>Number(h.tagName[1]));
+          const legacy=[...document.querySelectorAll('main button, main a')].filter(el=>/(template|cancel|continue|selectFile|removeFile|changeFile|pager|downloadView)Button/.test(el.className)&&!/(^|_)button(_|$)/.test(el.className)).length;
+          const ds=[...document.querySelectorAll('main button')].filter(el=>/(^|_)button(_|$)/.test(el.className)).length;
+          return {levels,legacy,ds,h2:levels.filter(l=>l===2).length}})()`)
+        check(panel.levels[0] === 1 && panel.levels.every((level, index) => index === 0 || level <= panel.levels[index - 1] + 1), 'jerarquía de títulos '+JSON.stringify(panel.levels))
+        check(panel.h2 >= 1, 'panel sin h2')
+        check(panel.legacy === 0 && panel.ds >= 2, 'botones del panel: '+JSON.stringify(panel))
+        await evaluate('document.activeElement?.blur();document.body.focus()')
+        let reached = false
+        for (let index = 0; index < 60 && !reached; index++) {
+          await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9})
+          await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9})
+          reached = await evaluate(`/plantilla/i.test(document.activeElement?.textContent??'')`)
+        }
+        check(reached, 'Tab no alcanza «Descargar plantilla»')
+        if (reached) check(await evaluate(`(()=>{const s=getComputedStyle(document.activeElement);return s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>0})()`), 'foco no visible en «Descargar plantilla»')
       }
       if (screen.csv) {
         await evaluate(`(()=>{const dt=new DataTransfer();dt.items.add(new File(['sis_code,identity_number,first_names,last_names,email,career,profile_photo\\n'], 'padron_con_nombre_extremadamente_largo_para_verificar_que_el_archivo_y_los_botones_siguen_accesibles_en_pantallas_pequenas.csv',{type:'text/csv'}));const input=document.querySelector('input[type=file]');input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}))})()`)
