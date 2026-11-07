@@ -1,6 +1,6 @@
-// Browser QA for DS2.1b–d: screens migrated to PageContainer/PageHeader, rendered with the real
-// components, a data router and a simulated httpClient (no backend). Checks rendering and layout at
-// 320/390/768/1440px; it does not run imports, saves or status changes. Run from the frontend root;
+// Browser QA for DS2.1 and D5: real pages and Header, a data router and simulated HTTP (no backend).
+// Checks computed layout at 320/390/768/1024/1440px, menus and local CSV selection with long names.
+// It never confirms imports, saves or status changes. Run from the frontend root;
 // requires local Chrome (EIDA_QA_CHROME overrides the path).
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
@@ -11,7 +11,8 @@ import { createServer } from 'vite'
 import { cleanupBrowserProfile, createBrowserProfile } from '../../../tests/browserProfile.mjs'
 
 const baseline = process.env.EIDA_D5_PHASE === 'before'
-const evidence = join(process.cwd(), '.validation.local', 'visual-d5', process.env.EIDA_D5_PHASE ?? 'after')
+const structuralBaseline = baseline && process.env.EIDA_LAYOUT_BASE_REF === 'e53225a'
+const evidence = join(process.cwd(), '.validation.local', process.env.EIDA_LAYOUT_OUTPUT ?? 'visual-d5', process.env.EIDA_D5_PHASE ?? 'after')
 await mkdir(evidence, { recursive: true })
 
 // Synthetic QA fixtures (not real institutional data).
@@ -39,12 +40,24 @@ import {AdminCalendarPage} from '/src/features/portal-calendar/pages/AdminCalend
 import {AdminTeachersPage} from '/src/features/teachers/pages/AdminTeachersPage.tsx';
 import {AdminCourseOfferingsPage} from '/src/features/course-offerings/pages/AdminCourseOfferingsPage.tsx';
 import {AdminUserHistoryPage} from '/src/features/users/pages/AdminUserHistoryPage.tsx';
+import {ManageAccounts} from '/src/features/users/pages/AdminManageUsersPage.tsx';
+import {AdminUserRolesPage} from '/src/features/users/pages/AdminUserRolesPage.tsx';
+import {ImportStudentsPage} from '/src/features/students/pages/ImportStudentsPage.tsx';
+import {ImportCourseOfferingsPage} from '/src/features/course-offerings/pages/ImportCourseOfferingsPage.tsx';
+import {Header} from '/src/shared/components/Header/Header.tsx';
+import {setStudentImportIdentity} from '/src/features/students/utils/studentImportDraft.ts';
+setStudentImportIdentity({id:1,status:'ACTIVE',must_change_password:false,roles:['ADMINISTRADOR']});
 const e=React.createElement;
 const career={id:1,code:'QA-SIS',name:'Carrera QA Sistemas',status:'ACTIVE'};
+const account={id:15,full_name:'Persona QA de prueba',first_names:'Persona',last_names:'QA de prueba',email:'persona.qa.con.correo.institucional.largo@example.edu',institutional_code:'QA-15',identity_number:'123',status:'ACTIVE',roles:[],student_id:null,teacher_id:null,student_status:null,teacher_status:null};
 const page=(data,extra={})=>({data,meta:{current_page:1,last_page:1,total:data.length,per_page:15,from:data.length?1:null,to:data.length||null,...extra}});
 const fixtures={
+  '/admin/academic-terms/active':{data:{id:1,name:'Periodo QA 2026',start_date:'2026-01-01',end_date:'2026-12-31',status:'ACTIVE'}},
+  '/admin/users':page([account]),
+  '/admin/users/15':{data:account},
+  '/admin/users/15/roles':{data:[{id:2,name:'DOCENTE',status:'ACTIVE',assigned:false}]},
   '/admin/teachers':page([]),
-  '/admin/users/history':page([]),
+  '/admin/users/history':page([{id:1,user_id:15,actor_id:1,actor_name:'Responsable QA con nombre y apellidos extensos',action:'ROLE_ASSIGNED',created_at:'2026-11-07T10:00:00-04:00',old_context:{},new_context:{role:'DOCENTE'}}]),
   '/admin/academic-terms':page([]),
   '/admin/course-offerings':page([]),
   '/admin/portal/event-categories':{data:[]},
@@ -70,6 +83,11 @@ const respond=(method)=>async(url,body)=>{
 };
 qa.client={get:respond('get'),post:respond('post'),put:respond('put'),patch:respond('patch'),delete:respond('delete')};
 const routes=[
+  {path:'/admin/users/manage',element:e(ManageAccounts)},
+  {path:'/admin/users/roles',element:e(ManageAccounts,{rolesView:true})},
+  {path:'/admin/users/:userId/roles',element:e(AdminUserRolesPage)},
+  {path:'/admin/students/import',element:e(ImportStudentsPage)},
+  {path:'/admin/teachers/assignments/import',element:e(ImportCourseOfferingsPage)},
   {path:'/admin/teachers',element:e(AdminTeachersPage)},
   {path:'/admin/teachers/assignments',element:e(AdminCourseOfferingsPage)},
   {path:'/admin/users/history',element:e(AdminUserHistoryPage)},
@@ -87,15 +105,20 @@ const routes=[
   {path:'/services',element:e(ServicesPage)},
   {path:'/admin/portal/information',element:e('main',{'data-qa':'layout-main'},e(AdminInformationPage))},
   {path:'/information',element:e(InformationPage)},
-]);
+]).map(route=>({...route,element:e(React.Fragment,null,e(Header,{user:route.path.startsWith('/admin')?{name:'Administradora QA con nombre y apellidos extraordinariamente largos',role:'admin'}:null}),route.element)}));
 const root=createRoot(document.getElementById('root'));
 qa.show=(path)=>{qa.calls=[];qa.unexpected=[];root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
 `
 
 const screens = [
+  {path:'/admin/users/manage',title:'Gestión de usuarios',crumbs:['Inicio','Usuarios','Gestionar usuarios'],structural:true,rows:['QA de prueba Persona']},
+  {path:'/admin/users/roles',title:'Roles y permisos',crumbs:['Inicio','Usuarios','Roles y permisos'],structural:true,rows:['QA de prueba Persona']},
+  {path:'/admin/users/15/roles',title:'Gestionar roles y permisos',crumbs:['Inicio','Roles y permisos','Gestionar roles y permisos'],structural:true,rows:['Asignar rol']},
+  {path:'/admin/students/import',title:'Importar estudiantes',crumbs:['Inicio','Estudiantes','Importar estudiantes'],structural:true,csv:true},
+  {path:'/admin/teachers/assignments/import',title:'Importar asignaciones de materias',crumbs:['Inicio','Docentes','Asignación de materias','Importar asignaciones'],structural:true,csv:true},
   {path:'/admin/teachers',title:'Gestión de docentes',crumbs:['Inicio','Docentes','Gestionar docentes'],legacy:baseline},
   {path:'/admin/teachers/assignments',title:'Materias asignadas a docentes',crumbs:['Inicio','Docentes','Asignación de materias'],legacy:baseline},
-  {path:'/admin/users/history',title:'Historial de usuarios y roles',crumbs:baseline?[]:['Inicio','Historial de usuarios y roles'],legacy:baseline},
+  {path:'/admin/users/history',title:'Historial de usuarios y roles',crumbs:baseline&&!structuralBaseline?[]:['Inicio','Historial de usuarios y roles'],legacy:baseline,rows:['Responsable QA con nombre y apellidos extensos']},
   {path:'/admin/portal/events',title:'Gestión del calendario',crumbs:['Inicio','Gestión del calendario'],legacy:baseline},
   { path: '/admin/rooms/import', title: 'Importar aulas', crumbs: ['Inicio', 'Aulas', 'Importar aulas'], kind: 'import' },
   { path: '/admin/subjects/import', title: 'Importar materias', crumbs: ['Inicio', 'Materias', 'Importar materias'], kind: 'import' },
@@ -103,7 +126,7 @@ const screens = [
     actions: ['+ Importar aulas (CSV)', '+ Registrar aula'], rows: ['Aula QA 101', 'Laboratorio QA 202'] },
   { path: '/admin/subjects', title: 'Gestión de materias', crumbs: ['Inicio', 'Materias', 'Gestionar materias'], kind: 'catalog',
     actions: ['+ Importar materias (CSV)', '+ Registrar materia'], rows: ['Materia QA de programación'] },
-  { path: '/admin/careers', title: 'Carreras', crumbs: baseline ? [] : ['Inicio', 'Carreras'], kind: 'read', description: 'Consulta del catálogo. Incluye carreras activas e inactivas.',
+  { path: '/admin/careers', title: 'Carreras', crumbs: baseline && !structuralBaseline ? [] : ['Inicio', 'Carreras'], kind: 'read', description: 'Consulta del catálogo. Incluye carreras activas e inactivas.',
     rows: ['Carrera QA Sistemas', 'Carrera QA Industrial'] },
   { path: '/admin/portal/news', title: 'Gestión de noticias', crumbs: ['Inicio', 'Gestión de noticias'], kind: 'news-admin',
     description: 'Crea, publica y archiva las noticias del portal institucional.', actions: ['Crear noticia'], rows: ['Noticia QA publicada', 'Noticia QA en borrador'] },
@@ -114,8 +137,8 @@ const screens = [
   { path: '/admin/portal/information', title: 'Gestión de información y FAQ', crumbs: ['Inicio', 'Gestión de información y FAQ'], kind: 'portal-admin', selects: 2,
     description: 'Administra las secciones institucionales y las preguntas frecuentes del portal.', rows: ['Sección QA institucional'] },
   { path: '/information', title: 'Información institucional', crumbs: ['Inicio', 'Información institucional'], kind: 'portal-public', rows: ['Sección QA institucional', '¿Pregunta QA?'] },
-  { path: '/admin/audit-logs', title: 'Auditoría', crumbs: baseline ? [] : ['Inicio', 'Auditoría'], kind: 'read', legacy: baseline, description: 'El total cuenta eventos.', rows: ['UPDATE'] },
-]
+  { path: '/admin/audit-logs', title: 'Auditoría', crumbs: baseline && !structuralBaseline ? [] : ['Inicio', 'Auditoría'], kind: 'read', legacy: baseline, description: 'El total cuenta eventos.', rows: ['UPDATE'] },
+].filter(screen => process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
 // Collected in the page: structure, visibility and overflow of the key elements.
 const inspect = `(()=>{
@@ -125,9 +148,15 @@ const inspect = `(()=>{
   const nav=document.querySelector('nav[aria-label="Ruta de navegación"]');
   const buttons=[...document.querySelectorAll('a,button')];
   const action=(label)=>{const el=buttons.find((b)=>b.textContent.trim()===label);return {label,found:!!el,visible:visible(el),name:el?(el.getAttribute('aria-label')||el.textContent.trim()):''}};
+  const header=h1s[0]?.closest('header'), container=header?.parentElement, description=header?.querySelector('p:last-child');
+  const panelControls=[...document.querySelectorAll('main section[aria-label] button,main section[aria-label] select,main section[aria-label] input:not([type=file])')].filter(el=>r(el).width>0);
+  const escapedControls=panelControls.filter(el=>{const panel=el.closest('section[aria-label]'),b=r(el),p=r(panel);return b.left<p.left-1||b.right>p.right+1||el.scrollWidth>el.clientWidth+1}).map(el=>el.textContent.trim().slice(0,60));
   const overflowing=[...document.querySelectorAll('#root *')].filter((el)=>{const b=r(el);return b.width>0&&b.right>vw+1&&getComputedStyle(el).position!=='fixed'}).slice(0,8).map((el)=>el.tagName+'.'+String(el.className).slice(0,40));
   return {
     scroll:document.documentElement.scrollWidth, vw,
+    client:document.documentElement.clientWidth,
+    layout:header&&container?{x:r(h1s[0]).left,width:r(container).width,maxWidth:getComputedStyle(container).maxWidth,padding:getComputedStyle(container).padding,breadcrumbGap:nav?getComputedStyle(nav).marginBottom:null,headerGap:getComputedStyle(header).marginBottom,descriptionGap:description?getComputedStyle(description).marginTop:null}:null,
+    escapedControls,
     headingSurface:(()=>{for(let el=h1s[0];el;el=el.parentElement){const bg=getComputedStyle(el).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')return bg}return getComputedStyle(document.body).backgroundColor})(),
     bodySurface:getComputedStyle(document.body).backgroundColor,
     current:nav?.querySelector('[aria-current=page]')?.textContent.trim(),
@@ -149,6 +178,7 @@ const inspect = `(()=>{
 let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const results = []
+const widths = process.env.EIDA_LAYOUT_WIDTHS?.split(',').map(Number) ?? [320,390,768,1024,1440]
 try {
   browserProfile = await createBrowserProfile('ds21-page-layout')
   const profile = browserProfile.dir
@@ -170,7 +200,7 @@ try {
         if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts')) return 'export const useAuth=()=>({notify(){}});'
         if (baseline && /\/src\/.*\.(tsx|css)$/.test(normalized)) {
           const path = normalized.slice(normalized.indexOf('/src/') + 1)
-          try { return execFileSync('git', ['show', 'f56e082:' + path], { encoding: 'utf8' }) } catch { /* virtual modules use the current source */ }
+          try { return execFileSync('git', ['show', (process.env.EIDA_LAYOUT_BASE_REF ?? 'f56e082') + ':' + path], { encoding: 'utf8' }) } catch { /* virtual modules use the current source */ }
         }
 
       },
@@ -238,7 +268,7 @@ try {
   await send('Page.navigate', { url: origin + '/__ds21-layout' })
   await wait(`!!window.pageLayoutQa?.show`, 'arranque de la app QA')
 
-  for (const width of [320, 390, 768, 1024, 1440]) {
+  for (const width of widths) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
     await pause(150)
     for (const screen of screens) {
@@ -247,12 +277,13 @@ try {
       await evaluate(`window.__qaActions=${JSON.stringify(screen.actions ?? [])};pageLayoutQa.show(${JSON.stringify(screen.path)})`)
       await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(screen.title)}`, `${label}: título`)
       if (screen.rows) await wait(`${JSON.stringify(screen.rows)}.every((t)=>document.body.innerText.includes(t))`, `${label}: filas`)
+      if (screen.csv) await wait(`!!document.querySelector('input[type=file]')`, `${label}: formulario CSV`)
       await pause(150)
       const page = await evaluate(inspect)
       const unexpected = await evaluate('pageLayoutQa.unexpected')
       const failures = []
       const check = (ok, message) => { if (!ok) failures.push(message) }
-      check(page.scroll <= page.vw + 1, `desbordamiento horizontal ${page.scroll}>${page.vw} ${page.overflowing.join(', ')}`)
+      check(page.scroll <= page.client + 1, `desbordamiento horizontal ${page.scroll}>${page.client} ${page.overflowing.join(', ')}`)
       check(page.mains === 1, `${page.mains} <main> (se esperaba solo el del layout)`)
       check(page.h1.length === 1, `${page.h1.length} h1`)
       if (!baseline) check(page.h1[0]?.size === (width <= 640 ? '24px' : '32px'), 'escala H1: '+page.h1[0]?.size)
@@ -262,9 +293,23 @@ try {
       if (screen.crumbs.length) {
         check(page.crumbsVisible, 'migas no visibles')
         check(page.current === screen.crumbs.at(-1), 'aria-current de breadcrumb')
-        check(page.links.every(href => ['/', '/admin', '/admin/rooms', '/admin/subjects', '/admin/teachers'].includes(href)), 'ruta breadcrumb desconocida')
+        check(page.links.every(href => ['/', '/admin', '/admin/rooms', '/admin/subjects', '/admin/teachers', '/admin/users/manage', '/admin/users/roles', '/admin/students/manage', '/admin/teachers/assignments'].includes(href)), 'ruta breadcrumb desconocida')
       }
       if (!baseline) check(page.headingSurface === page.bodySurface, 'superficie de página: '+page.headingSurface+' / '+page.bodySurface)
+      if (!baseline && (screen.structural || screen.path === '/admin/users/history')) {
+        check(page.layout?.maxWidth === '1280px', 'ancho administrativo: '+JSON.stringify(page.layout))
+        const expectedWidth=Math.min(page.client,1280), padding=page.layout.padding.split(' '), gutter=parseFloat(padding[1] ?? padding[0])
+        check(Math.abs(page.layout.width-expectedWidth)<=1, 'contenedor fuera del ancho disponible')
+        check(Math.abs(page.layout.x-((page.client-expectedWidth)/2+gutter))<=1, 'alineación H1 y contenedor')
+        check(page.h1[0]?.lineHeight === (width <= 640 ? '30px' : '40px'), 'altura de línea H1')
+        check(page.layout?.breadcrumbGap === '24px' && page.layout?.headerGap === '24px' && page.layout?.descriptionGap === '8px', 'espaciado de encabezado: '+JSON.stringify(page.layout))
+        check(page.escapedControls.length === 0, 'controles CSV recortados/fuera del panel: '+page.escapedControls.join(', '))
+      }
+      if (!baseline && ['/information', '/news', '/services'].includes(screen.path)) {
+        check(page.layout?.maxWidth === '960px', 'contrato público narrow: '+JSON.stringify(page.layout))
+        check(page.layout?.headerGap === '24px', 'separación pública')
+      }
+      if (screen.csv) check(page.fileInputs >= 1 && page.templateButton, 'archivo o plantilla CSV ausente')
       if (screen.description) check(page.text.includes(screen.description), 'descripción ausente')
       for (const action of page.actions) check(action.found && action.visible && action.name, `acción ${action.label} ${JSON.stringify(action)}`)
       if (screen.kind === 'import') {
@@ -300,14 +345,51 @@ try {
       const shotName = `${screen.path.replaceAll('/', '_').slice(1)}-${width}.png`
       const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
       await writeFile(join(evidence, shotName), Buffer.from(shot.data, 'base64'))
-      results.push({ width, screen: screen.title, pass: failures.length === 0, failures, heading:page.h1[0], surface:page.headingSurface, breadcrumbs:page.crumbs, visibleButtons: page.panelButtons.slice(0, 12) })
+      if (screen.path === '/admin/users/manage') {
+        const menuSelector='button[aria-controls][aria-label*="principal"]'
+        if (await evaluate(`(()=>{const b=document.querySelector('${menuSelector}');return !!b&&b.getBoundingClientRect().width>0})()`)) {
+          await evaluate(`(()=>{const button=document.querySelector('${menuSelector}');button.focus();button.click()})()`)
+          await wait(`document.querySelector('${menuSelector}')?.getAttribute('aria-expanded')==='true'`, 'abrir menú global')
+          check(await evaluate(`document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`), 'overflow al abrir menú global')
+          await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+          await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+          await wait(`document.querySelector('${menuSelector}')?.getAttribute('aria-expanded')==='false'`, 'cerrar menú global')
+        }
+        await evaluate(`(()=>{const button=document.querySelector('button[aria-haspopup="menu"]');button.focus();button.click()})()`)
+        await wait(`document.querySelector('button[aria-haspopup="menu"]')?.getAttribute('aria-expanded')==='true'`, 'abrir cuenta')
+        check(await evaluate(`(()=>{const menu=document.querySelector('[role=menu]');if(!menu)return false;const r=menu.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1})()`), 'menú de cuenta recortado')
+        check(await evaluate(`document.querySelector('button[aria-haspopup="menu"]').textContent.includes('extraordinariamente largos')`), 'nombre completo inaccesible')
+        const menuShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})
+        await writeFile(join(evidence,shotName.replace('.png','-account.png')),Buffer.from(menuShot.data,'base64'))
+        await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+        await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+        await wait(`document.querySelector('button[aria-haspopup="menu"]')?.getAttribute('aria-expanded')==='false'`, 'cerrar cuenta')
+      }
+      if (screen.csv) {
+        await evaluate(`(()=>{const dt=new DataTransfer();dt.items.add(new File(['sis_code,identity_number,first_names,last_names,email,career,profile_photo\\n'], 'padron_con_nombre_extremadamente_largo_para_verificar_que_el_archivo_y_los_botones_siguen_accesibles_en_pantallas_pequenas.csv',{type:'text/csv'}));const input=document.querySelector('input[type=file]');input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}))})()`)
+        await pause(150)
+        const selected=await evaluate(inspect)
+        check(selected.scroll<=selected.client+1,'overflow con nombre CSV largo: '+selected.scroll+'/'+selected.client)
+        check(selected.escapedControls.length===0,'controles CSV inaccesibles tras seleccionar archivo: '+selected.escapedControls.join(', '))
+        check(selected.text.includes('padron_con_nombre_extremadamente_largo'), 'selección CSV no visible')
+        const selectedShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:true})
+        await writeFile(join(evidence,shotName.replace('.png','-selected.png')),Buffer.from(selectedShot.data,'base64'))
+      }
+      results.push({ width, path:screen.path, screen: screen.title, pass: failures.length === 0, failures, layout:page.layout, heading:page.h1[0], surface:page.headingSurface, breadcrumbs:page.crumbs, visibleButtons: page.panelButtons.slice(0, 12) })
       console.log(`${failures.length ? 'FAIL' : 'PASS'} ${label}${failures.length ? ': ' + failures.join(' · ') : ''}`)
     }
   }
   await writeFile(join(evidence, 'result.json'), JSON.stringify(results, null, 2))
+  if (!baseline) for (const width of widths) {
+    const admin=results.filter(result=>result.width===width && ['/admin/users/manage','/admin/users/roles','/admin/users/15/roles','/admin/users/history','/admin/students/import','/admin/teachers/assignments/import'].includes(result.path))
+    // Tall CSV pages reserve the browser's vertical scrollbar: compare the shared contract,
+    // while each page's width and alignment are checked against its own clientWidth above.
+    assert.equal(new Set(admin.map(result=>JSON.stringify((({x,width,...contract})=>contract)(result.layout)))).size,1,`${width}: contrato administrativo computado desigual`)
+  }
+  await writeFile(join(evidence, 'result.json'), JSON.stringify(results, null, 2))
   const failed = results.filter((result) => !result.pass)
-  assert.equal(failed.length, 0, `${failed.length} combinaciones con fallos`)
-  console.log(`QA DS2.1: PASS ${results.length}/${results.length} · evidencia en ${evidence}`)
+  if (!structuralBaseline) assert.equal(failed.length, 0, `${failed.length} combinaciones con fallos`)
+  console.log(`${structuralBaseline ? 'BASELINE registrada' : 'QA pageLayout PASS'} ${results.length - failed.length}/${results.length} · evidencia en ${evidence}`)
 } finally {
   ws?.close()
   await cleanupBrowserProfile(browserProfile, chrome)

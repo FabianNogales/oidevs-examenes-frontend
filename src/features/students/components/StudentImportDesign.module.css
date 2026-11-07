@@ -93,7 +93,10 @@
 
 .fileState {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  width: 100%;
+  min-width: 0;
   gap: var(--space-4);
   color: var(--brand-navy);
 }
@@ -101,10 +104,13 @@
 .fileState div {
   display: flex;
   flex-direction: column;
+  flex: 1 1 12ch;
+  min-width: 0;
   gap: 2px;
 }
 
 .fileState strong {
+  overflow-wrap: anywhere;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
 }
