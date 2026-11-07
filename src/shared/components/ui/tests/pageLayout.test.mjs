@@ -122,6 +122,7 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
 
 // Only screens explicitly migrated in DS2.1 may consume the layout primitives.
 const authorizedConsumers = [
+  'features/academic-terms/pages/AdminAcademicTermsPage.tsx',
   'features/course-offerings/pages/AdminCourseOfferingsPage.tsx',
   'features/course-offerings/pages/ImportCourseOfferingsPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',

@@ -29,6 +29,7 @@ import {ImportRoomsPage} from '/src/features/rooms/pages/ImportRoomsPage.tsx';
 import {ImportSubjectsPage} from '/src/features/subjects/pages/ImportSubjectsPage.tsx';
 import {AdminRoomsPage} from '/src/features/rooms/pages/AdminRoomsPage.tsx';
 import {AdminSubjectsPage} from '/src/features/subjects/pages/AdminSubjectsPage.tsx';
+import {AdminAcademicTermsPage} from '/src/features/academic-terms/pages/AdminAcademicTermsPage.tsx';
 import {AdminReadPage} from '/src/features/users/pages/AdminReadPage.tsx';
 import {AdminNewsPage} from '/src/features/portal-news/pages/AdminNewsPage.tsx';
 import {NewsPage} from '/src/features/portal-news/pages/NewsPage.tsx';
@@ -99,6 +100,7 @@ const routes=[
   {path:'/admin/subjects/import',element:e(ImportSubjectsPage)},
   {path:'/admin/rooms',element:e(AdminRoomsPage)},
   {path:'/admin/subjects',element:e(AdminSubjectsPage)},
+  {path:'/admin/academic-terms',element:e(AdminAcademicTermsPage)},
   {path:'/admin/careers',element:e(AdminReadPage,{kind:'careers'})},
   {path:'/admin/audit-logs',element:e(AdminReadPage,{kind:'audit-logs'})},
 ].map((route)=>({...route,element:e('main',{'data-qa':'layout-main'},route.element)})).concat([
@@ -130,6 +132,9 @@ const screens = [
     actions: ['+ Importar aulas (CSV)', '+ Registrar aula'], rows: ['Aula QA 101', 'Laboratorio QA 202'] },
   { path: '/admin/subjects', title: 'Gestión de materias', crumbs: ['Inicio', 'Materias', 'Gestionar materias'], kind: 'catalog',
     actions: ['+ Importar materias (CSV)', '+ Registrar materia'], rows: ['Materia QA de programación'] },
+  // DS3.1: Periodos académicos adopts PageContainer/PageHeader (structural admin contract).
+  { path: '/admin/academic-terms', title: 'Periodos académicos', crumbs: ['Inicio', 'Periodos académicos'], structural: true, focusTitle: true,
+    description: 'Consulta las gestiones disponibles para organizar las ofertas académicas y conservar su historial.', actions: ['+ Registrar periodo'], rows: ['Periodo QA 2026'] },
   { path: '/admin/careers', title: 'Carreras', crumbs: baseline && !structuralBaseline ? [] : ['Inicio', 'Carreras'], kind: 'read', description: 'Consulta del catálogo. Incluye carreras activas e inactivas.',
     rows: ['Carrera QA Sistemas', 'Carrera QA Industrial'] },
   { path: '/admin/portal/news', title: 'Gestión de noticias', crumbs: ['Inicio', 'Gestión de noticias'], kind: 'news-admin',
@@ -326,6 +331,8 @@ try {
         check(page.fileInputs >= 1, 'sin input de archivo CSV')
         check(page.labelled === `${screen.path.includes('rooms') ? 'import-rooms' : 'import-subjects'}-title`, `aria-labelledby ${page.labelled}`)
       }
+      // The h1 keeps its id and tabIndex: dialogs return focus to it (AcademicTermModal).
+      if (screen.focusTitle) check(page.h1[0]?.tab === '-1' && page.labelled === page.h1[0]?.id && page.h1[0]?.id === 'academic-terms-title', `id/tabIndex del h1 ${JSON.stringify(page.h1[0])} / ${page.labelled}`)
       if (screen.kind === 'catalog') {
         check(page.search, 'sin formulario de búsqueda')
         check(page.table, 'sin tabla/lista')
