@@ -41,13 +41,15 @@ let student = {
   career: null,
   historical_photo_url: null,
   historical_photo_revision: 0,
-  profile_photo_url: '/src/assets/images/eida-logo.svg',
+  profile_photo_url: '/admin/students/8/profile-photo',
 }
+// Arqmoc ad44491: both entry photos are private binaries fetched through the authenticated client.
 const snapshot = () => ({
   ...student,
   historical_photo_url: student.historical_photo_revision
     ? origin + '/__hu14-api/admin/students/8/historical-photo'
     : null,
+  profile_photo_url: origin + '/__hu14-api' + student.profile_photo_url,
 })
 const field = (body, name) =>
   body
@@ -111,7 +113,8 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
               return json(200, { data: snapshot() })
             if (
               req.method === 'GET' &&
-              url.pathname.endsWith('/historical-photo')
+              (url.pathname.endsWith('/historical-photo') ||
+                url.pathname === student.profile_photo_url)
             ) {
               res.setHeader('Content-Type', 'image/png')
               res.setHeader('Cache-Control', 'private, no-store')
@@ -321,12 +324,12 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
   await screenshot('admin-confirmation')
   await click('Confirmar carga')
   await wait(
-    'window.__qaStudent.historical_photo_revision===1 && [...document.querySelectorAll(\'img[src^="blob:"]\')].filter(x=>x.complete&&x.naturalWidth>0).length===2',
+    'window.__qaStudent.historical_photo_revision===1 && [...document.querySelectorAll(\'img[src^="blob:"]\')].filter(x=>x.complete&&x.naturalWidth>0).length===3',
   )
   assert.equal(requests.find((r) => r.method === 'POST').revision, '0')
   assert.equal(
     await evaluate('window.__qaStudent.profile_photo_url'),
-    student.profile_photo_url,
+    snapshot().profile_photo_url,
   )
   pass(
     'multipart first upload with revision 0; authenticated blob images decoded; profile unchanged',
@@ -412,7 +415,7 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
   pass('422 displays field errors and preserves revision')
   await click('Cancelar')
   await wait(
-    '[...document.querySelectorAll(\'img[src^="blob:"]\')].filter(x=>x.complete&&x.naturalWidth>0).length===2',
+    '[...document.querySelectorAll(\'img[src^="blob:"]\')].filter(x=>x.complete&&x.naturalWidth>0).length===3',
   )
   for (const width of [1440, 390]) {
     await send('Emulation.setDeviceMetricsOverride', {
@@ -430,7 +433,12 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
     )
     assert.equal(identity.images.length, 2)
     assert.ok(identity.images[0].src.startsWith('blob:'))
-    assert.ok(identity.images[1].src.endsWith('eida-logo.svg'))
+    assert.ok(identity.images[1].src.startsWith('blob:'))
+    assert.notEqual(identity.images[1].src, identity.images[0].src)
+    assert.deepEqual(
+      identity.images.map((image) => image.alt),
+      ['Foto histórica de Ana Demo', 'Foto actual de Ana Demo'],
+    )
     for (const text of ['Ana Demo', 'SIS: 00123', 'CI: 123456'])
       assert.ok(identity.text.includes(text))
     await screenshot('photos-' + width)
@@ -445,6 +453,12 @@ getAdminStudent('8').then(initial=>root.render(React.createElement(Demo,{initial
   const revoked = await evaluate('window.__objectUrls.revoked.length')
   assert.equal(created, revoked)
   assert.ok(requests.every((r) => r.authenticated))
+  assert.ok(
+    requests.some(
+      (r) => r.method === 'GET' && r.path === student.profile_photo_url,
+    ),
+    'current photo requested through the authenticated client',
+  )
   assert.deepEqual(errors, [])
   pass(
     'all private requests authenticated; all ' +
