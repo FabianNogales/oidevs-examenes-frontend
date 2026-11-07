@@ -118,11 +118,29 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
   assert.match(mobile, /\.actions \{\s*flex-direction: column;/)
 })
 
-test('PageHeader and PageContainer have no consumers yet (DS2.1a)', () => {
+// Only screens explicitly migrated in DS2.1 may consume the layout primitives.
+const authorizedConsumers = [
+  'features/admin/pages/AdminReadPage.tsx',
+  'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
+  'features/rooms/pages/AdminRoomsPage.tsx',
+  'features/rooms/pages/ImportRoomsPage.tsx',
+  'features/subjects/pages/AdminSubjectsPage.tsx',
+  'features/subjects/pages/ImportSubjectsPage.tsx',
+]
+
+test('PageHeader and PageContainer are consumed only by the authorized DS2.1 screens', () => {
   const { readdirSync } = require('node:fs')
   const consumers = readdirSync(srcRoot, { recursive: true })
     .map((file) => String(file).replaceAll('\\', '/'))
     .filter((file) => /\.(tsx|ts)$/.test(file) && !file.startsWith('shared/components/ui/'))
     .filter((file) => /components\/ui\/Page(Header|Container)/.test(readFileSync(resolve(srcRoot, file), 'utf8')))
-  assert.deepEqual(consumers, [])
+    .sort()
+  assert.deepEqual(consumers, authorizedConsumers)
+  for (const file of consumers) {
+    const source = readFileSync(resolve(srcRoot, file), 'utf8')
+    assert.doesNotMatch(source, /<main\b/, `${file} must not render a nested <main>`)
+    assert.equal((source.match(/<PageHeader\b/g) ?? []).length, 1, `${file}: one PageHeader`)
+    // AdminReadPage keeps the legacy <h1> only for the non-migrated audit variant.
+    if (!file.endsWith('AdminReadPage.tsx')) assert.doesNotMatch(source, /<h1\b/, `${file}: the h1 comes from PageHeader`)
+  }
 })

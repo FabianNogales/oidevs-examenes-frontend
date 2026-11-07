@@ -19,7 +19,11 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | DS1.4b | Escala `--z-*` en `:root` (`--z-sticky` 50, `--z-dropdown` 60, `--z-dialog` 1000, `--z-toast` 1100), sin consumidores; contratos CSS | ✅ | Erick | rama `ds/trabajo-erick`; CSS compilado: solo las 4 declaraciones nuevas. Conflictos de apilamiento (Snackbar, `AddStudentsModal`) pendientes de DS2–DS4 |
 | DS2 | Primitivas en `ui/` y catálogo de QA | 🔄 | Pendiente | — |
 | DS2.1a | `PageContainer` y `PageHeader` en `src/shared/components/ui/`, sin consumidores; pruebas SSR y de CSS (`ui/tests/pageLayout.test.mjs`) | ✅ | Erick | rama `ds/trabajo-erick`; `dist/` idéntico (sin consumidores) |
-| DS2.1b | Piloto: `ImportRoomsPage` con `PageContainer`/`PageHeader` (sin tocar `CsvImport.module.css`) | ⏳ | Pendiente | — |
+| DS2.1b | Importar aulas y materias con `PageContainer`/`PageHeader` (sin tocar `CsvImport.module.css`) | ✅ | Erick | Sin commit; `pageLayout.browser.mjs` PASS a 320/390/768/1440px |
+| DS2.1c | Gestión de aulas y materias (`id` y `tabIndex={-1}` del `h1`, migas y acciones conservadas) | ✅ | Erick | Sin commit; `pageLayout.browser.mjs` PASS a 320/390/768/1440px |
+| DS2.1d | Carreras (`AdminReadPage` variante `careers`; Auditoría y Estudiantes sin cambios) | ✅ | Erick | Sin commit; `adminBatch.integration` PASS; `pageLayout.browser.mjs` PASS (Carreras y Auditoría) a 320/390/768/1440px |
+| DS2.1e | Criterios de habilitación: sin tarjeta exterior ni `<main>` anidado, rejilla `minmax(420px)` (máx. 2 columnas), todas las acciones conservadas; diálogo de estado sin migrar | ✅ | Erick | Sin commit; `hu34.ui.browser` PASS a 320–1440px |
+| DS2.1f | Noticias admin y pública | ⏳ (bloqueada) | Pendiente | Requiere cambiar `PortalAdminCollection`/`PortalPageLayout` (compartidos con Servicios, Información y Calendario): subetapa propia con revisión cruzada |
 
 ## Matriz por módulo (DS3–DS4)
 
@@ -68,10 +72,10 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 
 Registrados en la verificación manual de DS1.4 (no se corrigen en DS1):
 
-- Tamaños de título distintos entre módulos (→ `PageHeader`, creado en DS2.1a; pantallas sin migrar).
-- Espaciados y anchos de contenido no uniformes (→ `PageContainer`, creado en DS2.1a; pantallas sin migrar).
+- Tamaños de título distintos entre módulos (→ `PageHeader`; 6 pantallas migradas en DS2.1b–e, Noticias pendiente).
+- Espaciados y anchos de contenido no uniformes (→ `PageContainer`; mismas pantallas).
 - Botones sin estilo común: 64 clases y alturas de 36 a 48px (→ `Button` con `--control-height*`).
-- Pantalla de criterios de habilitación (`eligibility-automation`) con distribución visual mejorable.
+- Pantalla de criterios de habilitación (`eligibility-automation`): distribución corregida en DS2.1e.
 
 ## Pendiente de coordinación
 

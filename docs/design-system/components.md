@@ -27,8 +27,14 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 | `PageContainer` | `ui/PageContainer/` | `children`, `width?: 'default' \| 'narrow'` (1280px = `--content-max-width` / 960px), `className?`, `labelledBy?` (renderiza `<section aria-labelledby>`; sin él, `<div>`). Padding `--space-8` / `--content-gutter` (`--space-5` vertical ≤640px). **Nunca renderiza `<main>`** (lo aportan los layouts) y no es una tarjeta: sin fondo, borde ni sombra |
 | `PageHeader` | `ui/PageHeader/` | `title` (obligatorio, no vacío; único `<h1>`), `titleId?`, `focusableTitle?` (`tabIndex={-1}` para la gestión de foco existente), `eyebrow?`, `description?` (contenido en línea, va dentro de un `<p>`), `breadcrumbs?: BreadcrumbItem[]` (reutiliza `Breadcrumbs`), `actions?` (se renderizan tal cual). `h1` `--font-size-3xl` (`2xl` ≤640px), bold; descripción `md` (`sm` ≤640px); separación inferior `--space-6`; acciones a la derecha y apiladas ≤640px |
 
-Pruebas: `ui/tests/pageLayout.test.mjs` (SSR y CSS). Sin consumidores todavía; la migración
-de pantallas es una subetapa por pantalla ([PROGRESS.md](PROGRESS.md)).
+Pruebas: `ui/tests/pageLayout.test.mjs` (SSR, CSS y lista cerrada de consumidores autorizados) y
+`ui/tests/pageLayout.browser.mjs` (navegador con transporte simulado: Importar aulas/materias, Gestión de
+aulas/materias, Carreras y Auditoría a 320/390/768/1440px; solo renderizado y layout, sin importar ni guardar).
+Consumidores (DS2.1b–e): Importar aulas/materias, Gestión de aulas/materias, Carreras
+(`AdminReadPage`, solo la variante `careers`; Auditoría conserva su cabecera) y Criterios de
+habilitación. Las acciones de cabecera existentes se pasan tal cual en `actions` (p. ej. dentro de
+su `.headerActions` original). Noticias (DS2.1f) sigue pendiente: depende de `PortalAdminCollection`
+y `PortalPageLayout` ([PROGRESS.md](PROGRESS.md)).
 
 ### `src/features/portal-shared` (portal administrativo)
 
