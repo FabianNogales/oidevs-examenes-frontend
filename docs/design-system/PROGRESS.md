@@ -219,7 +219,7 @@ Bloqueos pendientes:
   - `AdminModulePage` no tiene ruta (código muerto; no se modifica).
 - Sin revisión humana; revisión técnica asistida por IA.
 
-## DS4.1 - Pantallas docentes de estudiantes y botones DS2.2d (2026-11-07)
+## DS4.1 - Pantallas docentes de estudiantes y botones DS2.2d (2026-11-07) ✅
 
 - Rama ds/sync-arqmoc-erick, base afb389b, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (transporte simulado: solo GET).
 - DS4.1a `54988fb` — `TeacherSubjectStudentsPage` (`/teacher/students/:id`) e `ImportSubjectStudentsPage` (`/teacher/students/:id/import`):
@@ -232,5 +232,16 @@ Bloqueos pendientes:
 - Validación:
   - Automatizada: Node 869/870 (0 fallos, 1 `todo` de D3); `tsc` OK; build OK; ESLint 36 = línea base (0 nuevos); `git diff --check` OK.
   - Browser simulado: `pageLayout` 140/140 (28 pantallas × 5 anchos); `rooms.browser` 10/10.
-  - Backend real: pendiente; requiere sesión docente iniciada manualmente.
+  - Backend real (sesión docente iniciada a mano por el usuario en un Chrome aislado con CDP; Vite 5173 con este árbol): toda petición distinta de GET/HEAD/OPTIONS se abortaba desde antes de navegar; **0 escrituras** (ningún intento). Solo se registraron rutas, estados y medidas; sin capturas ni datos personales. **21/21 PASS**:
+    - `/teacher/students/:id` (oferta gestionable), `/teacher/students/:id/import` y el estado de error de ambas (id inexistente) a 320/390/768/1024/1440 (20/20): un solo `<main>` y ningún anidado, un H1 (24/700 hasta 640 y 32/700 desde 768), `PageContainer` como `section` con `aria-labelledby`, `max-width` 1280 al ancho disponible, separación de cabecera 24px, migas visibles con `aria-current` y enlaces esperados, eyebrow «Materia» solo con datos, 2 `Button`/`ButtonLink` visibles, 0 clases de botón antiguas, formulario CSV presente (sin cargar archivo), alerta en error, sin desbordamiento ni excepciones.
+    - Inscripción manual a 1440: foco inicial en el diálogo; Escape lo cierra y devuelve el foco a «+ Agregar estudiante manualmente» (no se envió nada).
+    - API: `GET /api/v1/me`, `/me/collaborations`, `/teacher/dashboard/subjects` y `/course-offerings/:id/enrollments` → 200 (los 204 son preflight `OPTIONS`).
+    - Descartado tras reproducir: «Escape no cierra» en la primera pasada. La ventana real no tenía el foco del sistema; con `Emulation.setFocusEmulationEnabled` (y también con clic real) cierra y devuelve el foco.
+    - Sin cubrir en real: oferta de solo consulta (el docente no tiene ninguna enlazada en el periodo; cubierta con transporte simulado).
+- Pendientes para DS4.2 (students y restos de DS2.2d):
+  - Panel CSV compartido (`CsvImport.module.css`, usado por Aulas, Materias, Estudiantes, Ofertas e inscripción docente): botones propios (`templateButton`, `continueButton`, etc.), H1 legacy y `.page` con gradiente; migrar en una subetapa con revisión de los cinco consumidores.
+  - `ManualStudentEnrollmentDialog`/`AddStudentsModal`: botones propios y conflicto de apilamiento con Snackbar pendiente desde DS1.4b.
+  - `StudentProfilePage` y `StudentQrPage` (H1 `clamp(32px, 4vw, 40px)`): requieren cuenta de estudiante para validar.
+  - Acciones de fila y cerrar × en Aulas, Materias y Periodos; `Field`/controles en Materias y Periodos.
+  - Validar en real una oferta de solo consulta cuando exista una.
 - Sin revisión humana; revisión técnica asistida por IA.
