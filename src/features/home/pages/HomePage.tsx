@@ -6,13 +6,15 @@ import { InstitutionalCalendar } from '@/features/portal-calendar/components/Ins
 import { NewsList } from '@/features/portal-news/components/NewsList'
 import styles from './HomePage.module.css'
 
-export function HomePage() {
+// `embedded`: rendered inside a layout that already provides the <main> landmark (AdminLayout).
+export function HomePage({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth()
   const isTeacher = user?.roles.includes('DOCENTE') ?? false
+  const Content = embedded ? 'div' : 'main'
 
   return (
     <div className={styles.page}>
-      <main>
+      <Content className={styles.content}>
         <section className={styles.hero}>
           <div className={styles.heroContent}>
             <div className={styles.eidaBrand}>
@@ -64,7 +66,7 @@ export function HomePage() {
         </section>
 
         {isTeacher ? <TeacherUpcomingExamsSection key={user?.id} /> : null}
-      </main>
+      </Content>
     </div>
   )
 }

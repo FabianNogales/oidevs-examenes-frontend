@@ -10,7 +10,7 @@
   background: var(--color-surface-soft);
 }
 
-.page main {
+.page .content {
   min-width: 0;
 }
 
@@ -829,7 +829,7 @@
    ================================================== */
 
 @media (min-width: 1024px) {
-  .page main {
+  .page .content {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -1151,7 +1151,7 @@
     background: #f5f9fe;
   }
 
-  .page main {
+  .page .content {
     display: flex;
     flex: 1;
     flex-direction: column;

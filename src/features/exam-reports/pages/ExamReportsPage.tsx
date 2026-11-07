@@ -19,8 +19,10 @@ function Layout({
   examId?: number
   children: ReactNode
 }) {
+  // AdminLayout already renders the page's <main>; teacher routes (AppLayout) need their own.
+  const Root = role === 'admin' ? 'div' : 'main'
   return (
-    <main className={shared.page}>
+    <Root className={shared.page}>
       <section className={shared.content}>
         <Breadcrumbs
           items={[
@@ -43,7 +45,7 @@ function Layout({
         )}
         {children}
       </section>
-    </main>
+    </Root>
   )
 }
 function Fixed({ examId }: { examId: number }) {
