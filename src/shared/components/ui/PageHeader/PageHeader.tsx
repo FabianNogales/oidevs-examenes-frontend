@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import type { BreadcrumbItem } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import styles from './PageHeader.module.css'
@@ -7,6 +7,7 @@ export interface PageHeaderProps {
   /** Text of the page's only <h1>. Must not be empty. */
   title: string
   titleId?: string
+  titleRef?: Ref<HTMLHeadingElement>
   /** Adds tabIndex={-1} so existing focus management can move focus to the heading. */
   focusableTitle?: boolean
   eyebrow?: string
@@ -20,6 +21,7 @@ export interface PageHeaderProps {
 export function PageHeader({
   title,
   titleId,
+  titleRef,
   focusableTitle = false,
   eyebrow,
   description,
@@ -33,7 +35,7 @@ export function PageHeader({
       <header className={styles.header}>
         <div className={styles.text}>
           {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
-          <h1 id={titleId} tabIndex={focusableTitle ? -1 : undefined} className={styles.title}>
+          <h1 ref={titleRef} id={titleId} tabIndex={focusableTitle ? -1 : undefined} className={styles.title}>
             {title}
           </h1>
           {description ? <p className={styles.description}>{description}</p> : null}
