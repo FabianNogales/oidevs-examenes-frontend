@@ -14,6 +14,8 @@ export interface ButtonProps extends ComponentProps<'button'> {
 
 // Native <button> with Design System styles. Icon-only buttons must receive an accessible
 // name from the consumer (aria-label or visually hidden text); no generic name is imposed.
+// data-ds-button is a stable marker: containers with generic `button` rules (PortalDialog)
+// exclude it so they never override the Design System look (DS4.2c.1).
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -32,6 +34,7 @@ export function Button({
       {...props}
       type={type}
       className={classes}
+      data-ds-button=""
       disabled={disabled || loading}
       aria-busy={loading || undefined}
     >

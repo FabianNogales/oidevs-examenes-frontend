@@ -45,11 +45,11 @@ const render = (element) => renderToStaticMarkup(h(MemoryRouter, null, element))
 
 test('Button renders the four variants and both sizes with type="button" by default', () => {
   for (const variant of ['primary', 'secondary', 'danger', 'ghost']) {
-    assert.equal(render(h(Button, { variant }, 'Guardar')), `<button type="button" class="button ${variant}">Guardar</button>`)
+    assert.equal(render(h(Button, { variant }, 'Guardar')), `<button type="button" class="button ${variant}" data-ds-button="">Guardar</button>`)
   }
-  assert.equal(render(h(Button, null, 'Guardar')), '<button type="button" class="button primary">Guardar</button>')
-  assert.equal(render(h(Button, { size: 'sm' }, 'Ver')), '<button type="button" class="button primary sm">Ver</button>')
-  assert.equal(render(h(Button, { size: 'md' }, 'Ver')), '<button type="button" class="button primary">Ver</button>')
+  assert.equal(render(h(Button, null, 'Guardar')), '<button type="button" class="button primary" data-ds-button="">Guardar</button>')
+  assert.equal(render(h(Button, { size: 'sm' }, 'Ver')), '<button type="button" class="button primary sm" data-ds-button="">Ver</button>')
+  assert.equal(render(h(Button, { size: 'md' }, 'Ver')), '<button type="button" class="button primary" data-ds-button="">Ver</button>')
 })
 
 test('Button keeps an explicit type and propagates native attributes and className', () => {
@@ -223,4 +223,17 @@ test('the consumer guard rejects an unauthorized import (negative check)', () =>
   assert.notDeepEqual(consumersOf(sources, 'Button'), authorizedConsumers.Button)
   assert.ok(consumersOf(sources, 'Button').includes('features/exams/pages/EntryControlPage.tsx'))
   assert.notDeepEqual(folderConsumers(sources), allowedFiles)
+})
+
+// DS4.2c.1: containers with generic `button` rules must exclude Button through its stable marker.
+test('PortalDialog generic button rules exclude Button (data-ds-button) without raising specificity', () => {
+  const css = readFileSync(resolve(uiRoot, '../PortalDialog/PortalDialog.module.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const selectors = [...css.matchAll(/([^{}]+)\{/g)].map(([, selector]) => selector.trim()).filter((selector) => /\bbutton\b/.test(selector))
+  assert.ok(selectors.length >= 3, 'generic button rules found')
+  for (const selector of selectors) {
+    for (const part of selector.split(/,(?![^(]*\))/)) {
+      if (!/\bbutton\b/.test(part)) continue
+      assert.match(part, /button:where\(:not\(\[data-ds-button\]\)\)/, `${part.trim()} excludes Button`)
+    }
+  }
 })
