@@ -6,7 +6,8 @@ import { DataTable } from '@/shared/components/DataTable/DataTable'
 import { changeUserRole, getAdminUser, getUserRoles, roleLabel } from '../api/adminUsersApi'
 import type { AdminUserItem, UserRoleItem } from '../api/adminUsersApi'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
-import styles from './AdminManageUsersPage.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 
 export function AdminUserRolesPage() {
@@ -48,16 +49,16 @@ export function AdminUserRolesPage() {
     { id: 'actions', header: 'Acciones', cell: (role) => <button type="button" className={role.assigned ? tableStyles.btnDeactivate : tableStyles.btnActivate} disabled={busy || (!role.assigned && role.status !== 'ACTIVE') || (user?.id === id && role.name === 'ADMINISTRADOR' && role.assigned)} onClick={() => setPending({ ...role, userId: id })}>{role.assigned ? 'Retirar rol' : 'Asignar rol'}</button> },
   ]
   if (!Number.isSafeInteger(id) || id < 1) return <p role="alert">El identificador de cuenta no es válido.</p>
-  return <section className={styles.pageContainer}>
-    <Link to="/admin/users/roles">Volver a roles y permisos</Link>
-    <header className={styles.pageHeader}><div className={styles.headerTitles}><h1>Gestionar roles y permisos</h1>
-      <p>{visible.account?.full_name ?? 'Cuenta seleccionada'} · HU22</p>
-      <p>La asignación requiere el perfil académico correspondiente. La colaboración temporal se gestiona por examen. Todo cambio revoca las sesiones anteriores.</p>
-    </div></header>
+  return <PageContainer>
+    <PageHeader title="Gestionar roles y permisos"
+      eyebrow={`${visible.account?.full_name ?? 'Cuenta seleccionada'} · HU22`}
+      description="La asignación requiere el perfil académico correspondiente. La colaboración temporal se gestiona por examen. Todo cambio revoca las sesiones anteriores."
+      breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Roles y permisos', to: '/admin/users/roles' }, { label: 'Gestionar roles y permisos' }]}
+      actions={<Link to="/admin/users/roles">Volver a roles y permisos</Link>} />
     <DataTable columns={columns} data={visible.roles} loading={visible.loading} error={visible.error} entityLabel="roles"
       onRetry={() => { setState((current) => ({ ...current, loading: true, error: null })); setVersion((value) => value + 1) }} />
     <ConfirmDialog isOpen={pending?.userId === id} title={pending?.assigned ? 'Retirar rol permanente' : 'Asignar rol permanente'}
       message={`${pending?.assigned ? 'Retirar' : 'Asignar'} ${pending ? roleLabel(pending.name) : ''} a esta cuenta. Se conservarán sus datos e historial y deberá iniciar sesión nuevamente.`}
       loading={busy} onConfirm={() => void confirm()} onCancel={() => { if (!busy) setPending(null) }} />
-  </section>
+  </PageContainer>
 }

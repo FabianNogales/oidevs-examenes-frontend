@@ -20,6 +20,8 @@ import type {
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 
 import styles from './AdminManageUsersPage.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 
 const PER_PAGE = 10
 
@@ -217,23 +219,18 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
     : ''
 
   return (
-    <div className={styles.pageContainer}>
-      <nav aria-label="Breadcrumbs" className={styles.breadcrumbs}>
-        <span className={styles.breadcrumbLink}>Inicio</span>
-        <span className={styles.breadcrumbSeparator}>/</span>
-        <span className={styles.breadcrumbLink}>Usuarios</span>
-        <span className={styles.breadcrumbSeparatorActive}>/</span>
-        <span className={styles.breadcrumbCurrent}>{rolesView ? 'Roles y permisos' : 'Gestionar usuarios'}</span>
-      </nav>
-
-      <header className={styles.pageHeader}>
-        <div className={styles.headerTitles}>
-          <h1>{rolesView ? 'Roles y permisos' : 'Gestión de usuarios'}</h1>
-          <p>
-            Cuentas institucionales. El estado de cuenta es global y no modifica el estado particular de sus perfiles. Los roles se administran por separado en HU22.
-          </p>
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader
+        title={rolesView ? 'Roles y permisos' : 'Gestión de usuarios'}
+        description={rolesView
+          ? 'Selecciona una cuenta para consultar y administrar sus roles permanentes.'
+          : 'Cuentas institucionales. El estado de cuenta es global y no modifica el estado particular de sus perfiles. Los roles se administran por separado en HU22.'}
+        breadcrumbs={[
+          { label: 'Inicio', to: '/' },
+          { label: 'Usuarios', to: '/admin/users/manage' },
+          { label: rolesView ? 'Roles y permisos' : 'Gestionar usuarios' },
+        ]}
+      />
 
       <>
         <DataTable<AdminUserItem>
@@ -289,6 +286,6 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
         onConfirm={handleConfirmToggle}
         onCancel={() => setPendingToggle(null)}
       />
-    </div>
+    </PageContainer>
   )
 }
