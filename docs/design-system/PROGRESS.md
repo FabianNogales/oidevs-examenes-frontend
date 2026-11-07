@@ -148,3 +148,27 @@ Bloqueos pendientes:
 - PASS: node --test (tests de Students, UI y adminBatch.integration) 174/174; npm.cmd run build (incluye tsc -b); npx.cmd eslint src/features/students/pages/AdminManageStudentsPage.tsx; git diff --check. La prueba de registro expande PageHeader para acceder a la misma acción y conserva sus asserts de recarga.
 - Chrome con HTTP simulado: comparación Estudiantes/Docentes 10/10 y regresión pageLayout.browser 110/110 a 320/390/768/1024/1440. Valores computados, geometría, overflow y acciones: abrir/cancelar registro, abrir/cancelar cambio de estado, navegar a CSV; cero escrituras. Capturas y result.json antes/después en .validation.local/visual-d5.3/. Sin perfiles nuevos pendientes.
 - Sin revisión humana; revisión técnica asistida por IA. Pendiente: comprobación con backend real, fuera del transporte simulado. Sin discrepancia H1 pendiente en los cinco anchos verificados.
+
+## D6 - Validación funcional con backend real (2026-11-07)
+
+- Rama ds/sync-arqmoc-erick, base 479c62f, inicio limpio. Frontend local (Vite 5173, este árbol) y backend local Laravel (127.0.0.1:8000, rama `Dev_Hector` `a69dae4`) disponibles; `/up` y `/api/v1/health` 200.
+- Método: Chrome por CDP. Sesión iniciada a mano por el usuario (administrador y luego docente); el agente no vio ni registró credenciales. Durante cada recorrido se abortó toda petición distinta de GET/HEAD/OPTIONS: **0 escrituras en todo D6**. Solo se registraron rutas, estados HTTP y recuentos; no se ejecutaron creación, edición, publicación, importación ni cambios de estado.
+- Validado con datos reales:
+  - Portal público (inicio, calendario, noticias y detalle, información, servicios y detalle) a 1440/390px. Las rutas protegidas sin sesión redirigen a `/login`.
+  - Las 24 rutas de administración (usuarios, roles, historial, auditoría, carreras, docentes y asignaciones, estudiantes, materias, periodos, aulas, importaciones CSV abiertas sin cargar archivo, portal: calendario, noticias, información y servicios; criterios, reportes, incidencias). Cada una con un `h1`, migas y sin desbordamiento.
+  - Interacciones de administración: búsqueda de usuarios y estudiantes (al enviar), paginación de usuarios, estudiantes y auditoría (página 1 → 2 de 262), detalle de cuenta (diálogo con Escape), detalle de estudiante y docente.
+  - Docente: Mis materias (selector de periodo), Mis exámenes, Estudiantes (lista de inscritos), inicio docente y formulario de programación a 1440/768/390. En el formulario: calendario con días pasados deshabilitados, disponibilidad de aulas por GET, día y aula disponible → «Confirmar Programación» habilitado (**no enviado**), guarda de navegación «Tienes cambios sin guardar» con Continuar/Descartar.
+- Defecto corregido (`82c753d`): `<main>` anidado en `/admin` y `/admin/exam-reports`. `AdminLayout` ya aporta el `<main>` y `HomePage`/`ExamReportsPage` se comparten con `AppLayout`. Ahora `HomePage embedded` y la variante de administración de reportes usan `<div>`, y el CSS de inicio apunta a `.content` en lugar del elemento. `mainLandmarks.test.mjs`: 0/3 sin la corrección, 3/3 con ella. En backend real: un `<main>` por página y estilos de inicio idénticos (`flex` a 1440px, `block` a 390px).
+- Descartados tras reproducir (no son defectos):
+  - «búsqueda sin efecto»: filtra al enviar;
+  - «Escape no cierra»: el evento de teclado del script estaba incompleto;
+  - páginas «sin h1»: se midieron antes de terminar la carga;
+  - `input type=time` «sin nombre»: tiene `label[for]`;
+  - imágenes por URL en los detalles: son el logo de la cabecera.
+- Bloqueos:
+  - **Backend:** `GET /api/v1/exam-reports/catalog` y `/api/v1/admin/incidents/exams` devuelven 404 porque el backend local no define esas rutas. Afecta a reportes (administración y docente) e incidencias de administración. El frontend muestra el error con «Reintentar».
+  - **Sin datos:** el docente no tiene exámenes (0), así que no se comprobaron el detalle, la edición, la asistencia, las infracciones, las expulsiones, los colaboradores, las habilitaciones ni el reparto offline. Crear un examen requiere autorización de escritura.
+  - **Sin autorización:** escrituras reales (programar, editar, importar CSV, publicar), rol estudiante (QR, perfil), `hu41` y `sprint3.integration` (crean datos). `imageProxy` depende del `.env`.
+  - **Menor, sin corregir:** `/favicon.ico` 404. `index.html` nunca declaró icono; elegirlo es una decisión de marca.
+- Validación final: Node 867/868 (0 fallos, 1 `todo` del mínimo de calendario de D3); `tsc` OK; build OK; ESLint 36 = Arqmoc (0 nuevos); `git diff --check` OK. Batería browser simulada 24/24 en 479c62f. Tras la corrección, `pageLayout.browser` 111 PASS y `examReports.browser` sin errores.
+- Sin revisión humana; revisión técnica asistida por IA.
