@@ -16,7 +16,6 @@ const demo = `
 import React from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter,Routes,Route}from'react-router';import{AxiosError}from'axios';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';
 // Reproduce the existing unscoped input rule loaded by the full application.
-import '/src/features/exams/components/CreateExamModal.module.css';
 import{ExamEligibilitiesPage}from'/src/features/eligibilities/pages/ExamEligibilitiesPage.tsx';
 import{EligibilityAutomationPage}from'/src/features/eligibility-automation/pages/EligibilityAutomationPage.tsx';
 import{AdminEligibilityPoliciesPage}from'/src/features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx';

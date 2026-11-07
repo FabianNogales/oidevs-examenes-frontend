@@ -52,7 +52,7 @@ const requests = [],
   checks = []
 const moduleSource = `import React from 'react';import {createRoot} from 'react-dom/client';import {createMemoryRouter,RouterProvider} from 'react-router';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';import '@fontsource/poppins/600.css';
-import '/src/features/exams/components/CreateExamModal.module.css';
+
 import {httpClient} from '/src/shared/api/httpClient.ts';import {EntryControlPage} from '/src/features/exams/pages/EntryControlPage.tsx';
 httpClient.defaults.baseURL='/__browser-api';httpClient.defaults.headers.common.Authorization='Bearer hu28-fixture';
 const router=createMemoryRouter([{path:'/control/:examId',Component:EntryControlPage},{path:'/other',element:React.createElement('p',null,'Otra página')}],{initialEntries:['/control/4?from=teacher']});window.__router=router;

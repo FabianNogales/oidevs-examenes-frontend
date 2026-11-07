@@ -13,7 +13,7 @@ let saved = null,
 const requests = [],
   checks = []
 const moduleSource = `import React from 'react';import{createRoot}from'react-dom/client';import{createMemoryRouter,RouterProvider,Outlet}from'react-router';
-import'/src/assets/styles/global.css';import'@fontsource/poppins/400.css';import'@fontsource/poppins/500.css';import'@fontsource/poppins/600.css';import'@fontsource/poppins/700.css';import'/src/features/exams/components/CreateExamModal.module.css';
+import'/src/assets/styles/global.css';import'@fontsource/poppins/400.css';import'@fontsource/poppins/500.css';import'@fontsource/poppins/600.css';import'@fontsource/poppins/700.css';
 import{Header}from'/src/shared/components/Header/Header.tsx';import{Footer}from'/src/shared/components/Footer/Footer.tsx';import{httpClient}from'/src/shared/api/httpClient.ts';import{ExamInfractionsPage}from'/src/features/infractions/pages/ExamInfractionsPage.tsx';import{CreateInfractionPage}from'/src/features/infractions/pages/CreateInfractionPage.tsx';import{InfractionDetailPage}from'/src/features/infractions/pages/InfractionDetailPage.tsx';
 httpClient.defaults.baseURL='/__browser-api';httpClient.defaults.headers.common.Authorization='Bearer hu30-fixture';
 function Layout(){return React.createElement(React.Fragment,null,React.createElement(Header,{user:{name:'Docente de prueba',role:'teacher'}}),React.createElement(Outlet),React.createElement(Footer))}

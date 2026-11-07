@@ -34,7 +34,7 @@ const fixture = {
 const demo = `import React from 'react';import {createRoot} from 'react-dom/client';
 import {createMemoryRouter,RouterProvider} from 'react-router';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';import '@fontsource/poppins/600.css';
-import '/src/features/exams/components/CreateExamModal.module.css';
+
 import {IncidentControlDialog} from '/src/features/incidents/components/IncidentControlDialog.tsx';
 import {httpClient} from '/src/shared/api/httpClient.ts';
 import {CreateIncidentPage} from '/src/features/incidents/pages/CreateIncidentPage.tsx';

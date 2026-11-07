@@ -43,7 +43,10 @@ test('cancel returns to the selected period, and invalid/unassigned/inactive off
     const blocked = await setup(subjects, id)
     assert.equal(blocked.form, undefined)
     assert.equal(blocked.writes.length, 0)
-    assert.ok(textContent(blocked.tree).length > 0)
+    // Arqmoc moved blocked states into ExamPageStateNotice; expand it to read the visible text.
+    const notice = nodes(blocked.tree, n => n.type?.name === 'ExamPageStateNotice')[0]
+    assert.ok(notice && !notice.props.isLoading && notice.props.title)
+    assert.ok(textContent(blocked.h.render(() => notice.type(notice.props))).length > 0)
     blocked.h.unmount()
   }
 })

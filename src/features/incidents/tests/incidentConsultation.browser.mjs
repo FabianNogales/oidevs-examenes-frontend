@@ -46,7 +46,7 @@ let role = 'teacher',
 const downloadDir = await mkdtemp(join(tmpdir(), 'eida-hu29-downloads-'))
 const moduleSource = `import React from 'react';import {createRoot} from 'react-dom/client';import {createMemoryRouter,RouterProvider,Outlet} from 'react-router';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';import '@fontsource/poppins/500.css';import '@fontsource/poppins/600.css';import '@fontsource/poppins/700.css';
-import '/src/features/exams/components/CreateExamModal.module.css';
+
 import {Header} from '/src/shared/components/Header/Header.tsx';import {Footer} from '/src/shared/components/Footer/Footer.tsx';
 import {httpClient} from '/src/shared/api/httpClient.ts';import {ExamIncidentsPage} from '/src/features/incidents/pages/ExamIncidentsPage.tsx';import {IncidentDetailPage} from '/src/features/incidents/pages/IncidentDetailPage.tsx';import {AdminIncidentsPage} from '/src/features/incidents/pages/AdminIncidentsPage.tsx';
 httpClient.defaults.baseURL='/__browser-api';httpClient.defaults.headers.common.Authorization='Bearer hu29-fixture';
