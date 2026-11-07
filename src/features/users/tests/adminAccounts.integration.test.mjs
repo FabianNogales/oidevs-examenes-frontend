@@ -98,7 +98,7 @@ test('account history consumes persisted events, supports real paging and has an
   const { AdminUserHistoryPage } = h.load('features/users/pages/AdminUserHistoryPage.tsx')
   h.render(AdminUserHistoryPage); await settle(); let tree = h.render()
   assert.equal(h.calls[0][1], '/admin/users/history'); assert.equal(table(tree, 'eventos').props.data.length, 0)
-  assert.match(textContent(tree), /No se reconstruyen/)
+  assert.match(nodes(tree, (node) => node.type?.name === 'PageHeader')[0].props.description, /No se reconstruyen/)
   table(tree, 'eventos').props.onSearch('15'); h.render(); await settle()
   assert.equal(h.calls.at(-1)[2].params.search, '15'); h.unmount()
 })

@@ -122,7 +122,9 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
 
 // Only screens explicitly migrated in DS2.1 may consume the layout primitives.
 const authorizedConsumers = [
+  'features/course-offerings/pages/AdminCourseOfferingsPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
+  'features/portal-calendar/pages/AdminCalendarPage.tsx',
   'features/portal-information/pages/AdminInformationPage.tsx',
   'features/portal-information/pages/InformationPage.tsx',
   'features/portal-news/pages/AdminNewsPage.tsx',
@@ -134,7 +136,9 @@ const authorizedConsumers = [
   'features/rooms/pages/ImportRoomsPage.tsx',
   'features/subjects/pages/AdminSubjectsPage.tsx',
   'features/subjects/pages/ImportSubjectsPage.tsx',
+  'features/teachers/pages/AdminTeachersPage.tsx',
   'features/users/pages/AdminReadPage.tsx',
+  'features/users/pages/AdminUserHistoryPage.tsx',
 ]
 // Files that keep a legacy <h1> path for consumers not yet migrated.
 const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']

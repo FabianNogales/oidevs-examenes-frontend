@@ -6,13 +6,10 @@ import { listAuditEvents, readAuditEvent, listCareers, readCareer } from '@/feat
 import type { AuditEvent, Career, ReadPage as PageResult, ReadQuery } from '@/features/users/api/adminReadApi'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
-import styles from '../../students/pages/AdminManageStudentsPage.module.css'
 
-// `description` opts a page into the shared PageContainer/PageHeader layout (DS2.1d: Carreras only);
-// pages that pass `children` keep the legacy header until they are migrated.
-function ReadPage<T extends BaseTableEntity & { id: number }>({ title, label, columns, list, detail, renderDetail, searchable = false, description, children }: {
+function ReadPage<T extends BaseTableEntity & { id: number }>({ title, label, columns, list, detail, renderDetail, searchable = false, description }: {
   title: string; label: string; columns: readonly TableColumnDef<T>[]; list: (query: ReadQuery, signal: AbortSignal) => Promise<PageResult<T>>;
-  detail: (id: number, signal: AbortSignal) => Promise<T>; renderDetail: (entry: T) => ReactNode; searchable?: boolean; description?: string; children?: ReactNode;
+  detail: (id: number, signal: AbortSignal) => Promise<T>; renderDetail: (entry: T) => ReactNode; searchable?: boolean; description?: string;
 }) {
   const [query, setQuery] = useState({ page: 1, search: '', version: 0 })
   const key = JSON.stringify(query)
@@ -59,14 +56,10 @@ function ReadPage<T extends BaseTableEntity & { id: number }>({ title, label, co
       {selected.error ? <p role="alert">{selected.error}</p> : selected.value ? renderDetail(selected.value) : <p role="status">Cargando detalle…</p>}
     </CollaborationModal>}
   </>
-  if (description !== undefined) return <PageContainer>
-    <PageHeader title={title} description={description} />
+  return <PageContainer>
+    <PageHeader title={title} description={description} breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: title }]} />
     {content}
   </PageContainer>
-  return <div className={styles.pageContainer}>
-    <header className={styles.pageHeader}><div className={styles.headerTitles}><h1>{title}</h1>{children}</div></header>
-    {content}
-  </div>
 }
 
 const careerColumns: readonly TableColumnDef<Career>[] = [
@@ -82,12 +75,10 @@ const auditColumns: readonly TableColumnDef<AuditEvent>[] = [
 export function AdminReadPage({ kind }: { kind: 'careers' | 'audit-logs' }) {
   return kind === 'careers' ? <ReadPage<Career> title="Carreras" label="carreras" columns={careerColumns} list={listCareers} detail={readCareer} searchable
     description="Consulta del catálogo. Incluye carreras activas e inactivas."
-    renderDetail={(row) => <dl><dt>Código</dt><dd>{row.code}</dd><dt>Nombre</dt><dd>{row.name}</dd><dt>Estado</dt><dd>{row.status === 'ACTIVE' ? 'Activa' : 'Inactiva'}</dd></dl>} /> : <ReadPage<AuditEvent> title="Auditoría" label="eventos" columns={auditColumns} list={listAuditEvents} detail={readAuditEvent}
+    renderDetail={(row) => <dl><dt>Código</dt><dd>{row.code}</dd><dt>Nombre</dt><dd>{row.name}</dd><dt>Estado</dt><dd>{row.status === 'ACTIVE' ? 'Activa' : 'Inactiva'}</dd></dl>} /> : <ReadPage<AuditEvent> title="Auditoría" description="El total cuenta eventos. WRITE/Exam y CREATE/Exam pueden describir la misma programación; no representan dos exámenes creados." label="eventos" columns={auditColumns} list={listAuditEvents} detail={readAuditEvent}
     renderDetail={(row) => <><dl><dt>Evento</dt><dd>{row.id}</dd><dt>Actor (ID)</dt><dd>{row.actor_id ?? 'No registrado'}</dd>
       <dt>Acción</dt><dd>{row.action}</dd><dt>Entidad</dt><dd>{row.entity_type} · {row.entity_id ?? 'Sin ID individual'}</dd>
       <dt>Fecha</dt><dd>{row.created_at ? new Date(row.created_at).toLocaleString('es-BO', { timeZone: 'America/La_Paz' }) : 'No registrada'}</dd></dl>
       <h3>Contexto anterior permitido</h3><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(row.old_context, null, 2)}</pre>
-      <h3>Contexto nuevo permitido</h3><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(row.new_context, null, 2)}</pre></>}>
-    <p>El total cuenta eventos. WRITE/Exam y CREATE/Exam pueden describir la misma programación; no representan dos exámenes creados.</p>
-  </ReadPage>
+      <h3>Contexto nuevo permitido</h3><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(row.new_context, null, 2)}</pre></>} />
 }

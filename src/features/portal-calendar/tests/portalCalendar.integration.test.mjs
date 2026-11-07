@@ -448,6 +448,13 @@ function adminPage(categories = [category]) {
   let tree
   const render = () => {
     tree = c.h.render(() => AdminCalendarPage())
+    const expand = (node) => {
+      if (Array.isArray(node)) return node.map(expand)
+      if (!node || typeof node !== 'object') return node
+      if (node.type?.name === 'PageHeader') return expand(node.type(node.props))
+      return { ...node, props: { ...node.props, children: expand(node.props?.children) } }
+    }
+    tree = expand(tree)
     return tree
   }
   render()
@@ -795,7 +802,7 @@ test('F2.1 admin calendar page uses the shared content width; the public page is
     resolve(sourceRoot, 'features/portal-calendar/pages/CalendarPage.tsx'),
     'utf8',
   )
-  assert.match(admin, /className=\{styles\.page\}/)
+  assert.match(admin, /<PageContainer>/)
   assert.doesNotMatch(publicPage, /styles\.page\b/, 'public calendar keeps publicPage')
 })
 

@@ -3,7 +3,8 @@ import { DataTable } from '@/shared/components/DataTable/DataTable'
 import { eventLabel, getAccountHistory, roleLabel } from '../api/adminUsersApi'
 import type { AccountEvent, ReadPage } from '../api/adminUsersApi'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
-import styles from './AdminManageUsersPage.module.css'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 
 const columns: readonly TableColumnDef<AccountEvent>[] = [
   { id: 'date', header: 'Fecha y hora', cell: (item) => item.created_at ? new Date(item.created_at).toLocaleString('es-BO', { timeZone: 'America/La_Paz' }) : 'No registrada' },
@@ -27,14 +28,14 @@ export function AdminUserHistoryPage() {
   }, [query])
   function change(next: typeof query) { setState({ result: null, loading: true, error: null }); setQuery(next) }
   const meta = state.result?.meta
-  return <section className={styles.pageContainer}>
-    <header className={styles.pageHeader}><div className={styles.headerTitles}><h1>Historial de usuarios y roles</h1>
-      <p>Eventos persistidos de cuentas y roles. No se reconstruyen cambios anteriores sin auditoría; el nombre del responsable corresponde a su perfil actual.</p>
-    </div></header>
+  return <PageContainer>
+    <PageHeader title="Historial de usuarios y roles"
+      breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Historial de usuarios y roles' }]}
+      description="Eventos persistidos de cuentas y roles. No se reconstruyen cambios anteriores sin auditoría; el nombre del responsable corresponde a su perfil actual." />
     <DataTable columns={columns} data={state.result?.data ?? []} loading={state.loading} error={state.error}
       entityLabel="eventos" pagination={meta ? { currentPage: meta.current_page, lastPage: meta.last_page, total: meta.total, from: meta.from, to: meta.to } : null}
       onSearch={(search) => change({ page: 1, search, version: query.version + 1 })} searchPlaceholder="Buscar por ID de cuenta, acción o responsable"
       onPageChange={(page) => change({ ...query, page })} onRetry={() => change({ ...query, version: query.version + 1 })}
       emptyTitle="Sin eventos registrados" emptyDescription="No hay eventos conservados para esta consulta." />
-  </section>
+  </PageContainer>
 }

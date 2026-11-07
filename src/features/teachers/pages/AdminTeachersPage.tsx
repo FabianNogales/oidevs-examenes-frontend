@@ -1,4 +1,6 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+
 import { useEffect, useState, useRef, useCallback, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
@@ -328,24 +330,10 @@ export function AdminTeachersPage() {
 
   return (
     <section className={styles.page}>
-      <div className={styles.container}>
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', to: '/admin' },
-            { label: 'Docentes' },
-            { label: 'Gestionar docentes' },
-          ]}
-        />
-        <header className={styles.pageHeader}>
-          <div>
-            <p className={styles.eyebrow}>Administración</p>
-            <h1>Gestión de docentes</h1>
-            <p className={styles.description}>
-              Consulta y administra los docentes registrados en el sistema EIDA.
-            </p>
-          </div>
-
-          <div className={styles.headerActions}>
+      <PageContainer>
+        <PageHeader title="Gestión de docentes" eyebrow="Administración" description="Consulta y administra los docentes registrados en el sistema EIDA."
+          breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Docentes', to: '/admin/teachers' }, { label: 'Gestionar docentes' }]}
+          actions={<div className={styles.headerActions}>
             <Link className={styles.assignButton} to="/admin/teachers/assignments">
               Asignación de materias
             </Link>
@@ -357,8 +345,7 @@ export function AdminTeachersPage() {
               <span aria-hidden="true">+</span>
               Registrar docente
             </button>
-          </div>
-        </header>
+          </div>} />
 
         {/* Redirige automáticamente a /admin/teachers/:id al pulsar "Ver perfil" */}
         <DataTable<Teacher>
@@ -381,7 +368,7 @@ export function AdminTeachersPage() {
               : 'Todavía no existen docentes registrados en el sistema.'
           }
         />
-      </div>
+      </PageContainer>
 
       {/* Modal de Registro de Nuevo Docente */}
       {formOpen && (
