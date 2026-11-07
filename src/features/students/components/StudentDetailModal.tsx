@@ -4,15 +4,15 @@ import {
   StudentApiError,
   getAdminStudent,
   updateAdminStudent,
-} from '@/features/admin/api/adminStudentsApi'
-import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
+} from '@/features/students/api/adminStudentsApi'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import type {
   StudentCareer,
   StudentDetail,
   StudentField,
   StudentFieldErrors,
   UpdateStudentPayload,
-} from '@/features/admin/types/student.types'
+} from '@/features/students/types/adminStudent.types'
 
 type EditableField = 'first_names' | 'last_names' | 'identity_number' | 'email'
 

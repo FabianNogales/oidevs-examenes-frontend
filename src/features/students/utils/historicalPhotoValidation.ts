@@ -1,4 +1,4 @@
-import type { HistoricalPhotoFieldErrors } from '../types/student.types'
+import type { HistoricalPhotoFieldErrors } from '@/features/students/types/adminStudent.types';
 
 export const HISTORICAL_PHOTO_ACCEPT = 'image/jpeg,image/png,image/webp'
 export const HISTORICAL_PHOTO_MAX_BYTES = 5 * 1024 * 1024

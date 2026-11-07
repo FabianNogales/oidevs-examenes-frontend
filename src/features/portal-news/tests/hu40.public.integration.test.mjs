@@ -24,7 +24,7 @@ const older = {
   published_at: '2026-10-30T09:00:00-04:00',
 }
 const setupList = (get, compact = false) =>
-  component(client({ get }), 'features/portal-news/NewsList.tsx', 'NewsList', {
+  component(client({ get }), 'features/portal-news/components/NewsList.tsx', 'NewsList', {
     compact,
   })
 const articles = (tree) => nodes(tree, (node) => node.type === 'article')
@@ -36,7 +36,7 @@ const detail = (get) =>
         'react-router': { Link: 'link', useParams: () => ({ newsId: '42' }) },
       },
     ),
-    'features/portal-news/NewsPage.tsx',
+    'features/portal-news/pages/NewsPage.tsx',
     'NewsDetailPage',
   )
 
@@ -225,7 +225,7 @@ test('HU40 detail renders the full escaped content and uses only the backend ima
 test('HU40 image absence and failed downloads preserve readable news without fabricated routes', () => {
   const ui = component(
     client(),
-    'features/portal-news/NewsImage.tsx',
+    'features/portal-news/components/NewsImage.tsx',
     'NewsImage',
     { url: null, title: latest.title },
   )

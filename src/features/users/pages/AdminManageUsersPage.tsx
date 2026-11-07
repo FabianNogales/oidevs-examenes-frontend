@@ -4,13 +4,13 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import { AdminUserHistoryPage } from './AdminUserHistoryPage'
 
-import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import {
   getAdminUsers,
   getAdminUser,
   updateAdminUserStatus,
   type AdminUserItem,
-} from '@/features/admin/api/adminUsersApi'
+} from '@/features/users/api/adminUsersApi'
 
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type {

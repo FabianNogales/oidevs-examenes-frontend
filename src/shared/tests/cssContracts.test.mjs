@@ -26,7 +26,7 @@ test('CSV consumers and repaired components reference real CSS Module exports', 
     'src/features/rooms/pages/ImportRoomsPage.tsx',
     'src/features/subjects/pages/ImportSubjectsPage.tsx',
     'src/features/students/components/CsvDropzone.tsx',
-    'src/features/admin/profile/components/EntityProfileLayout.tsx',
+    'src/features/users/profile/components/EntityProfileLayout.tsx',
     'src/shared/components/DataTable/DataTable.tsx',
     'src/features/course-offerings/components/OfferingImportPanel.tsx',
   ]

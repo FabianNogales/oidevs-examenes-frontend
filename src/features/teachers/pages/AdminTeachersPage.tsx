@@ -8,12 +8,12 @@ import {
   getAdminTeachers,
   TeacherApiError,
   updateAdminTeacherStatus,
-} from '@/features/admin/api/adminTeachersApi'
+} from '@/features/teachers/api/adminTeachersApi'
 import type {
   Teacher,
   TeacherFieldErrors,
   TeacherFormValues,
-} from '@/features/admin/types/teacher.types'
+} from '@/features/teachers/types/teacher.types'
 import { Snackbar } from '@/shared/components/Snackbar'
 
 import { DataTable } from '@/shared/components/DataTable/DataTable'

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
-import styles from '../portalCalendar.module.css'
+import styles from '../pages/portalCalendar.module.css'
 
 export function CalendarModal({
   title,

@@ -3,8 +3,7 @@ import homeHeroImage from '@/assets/images/logo-home.png'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { TeacherUpcomingExamsSection } from '@/features/home/components/TeacherUpcomingExamsSection'
 import { InstitutionalCalendar } from '@/features/portal-calendar/components/InstitutionalCalendar'
-import { NewsList } from '@/features/portal-news/NewsList'
-
+import { NewsList } from '@/features/portal-news/components/NewsList'
 import styles from './HomePage.module.css'
 
 export function HomePage() {

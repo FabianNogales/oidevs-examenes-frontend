@@ -3,8 +3,8 @@ import { CheckCircle2, Clock, Copy, Inbox, Info, ListFilter, RefreshCw, Search, 
 import type { useOfflineSync } from '../hooks/useOfflineSync'
 import type { LocalEntry, StoredPackage } from '../types/offline.types'
 import { formatOfflineTime, studentName } from '../utils/offlineRules'
-import shared from './styles/OfflineShared.module.css'
-import syncStyles from './styles/OfflineSyncPanel.module.css'
+import shared from './OfflineShared.module.css'
+import syncStyles from './OfflineSyncPanel.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 const labels: Record<LocalEntry['status'], string> = {

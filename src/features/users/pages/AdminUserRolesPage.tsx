@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import { changeUserRole, getAdminUser, getUserRoles, roleLabel } from '../api/adminUsersApi'
 import type { AdminUserItem, UserRoleItem } from '../api/adminUsersApi'

@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { NavLink } from 'react-router'
 
-import { ConfirmDialog } from '@/features/admin/components/ConfirmDialog'
-import { CreateStudentModal } from '@/features/admin/components/CreateStudentModal'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
+import { CreateStudentModal } from '@/features/students/components/CreateStudentModal'
 import {
   getAdminStudents,
   updateAdminStudentStatus,
-} from '@/features/admin/api/adminStudentsApi'
-import type { Student } from '@/features/admin/types/student.types'
+} from '@/features/students/api/adminStudentsApi'
+import type { Student } from '@/features/students/types/adminStudent.types'
 
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type {

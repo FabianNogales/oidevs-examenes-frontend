@@ -7,24 +7,24 @@ import {
   useLocation,
 } from 'react-router'
 
-import { EntityProfileLayout } from '@/features/admin/profile/components/EntityProfileLayout'
-import layoutStyles from '@/features/admin/profile/components/EntityProfileLayout.module.css'
+import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
+import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
 import {
   getProfileTabs,
   getBackRouteByContext,
-} from '@/features/admin/profile/config/profileTabs.registry'
+} from '@/features/users/profile/config/profileTabs.registry'
 import type {
   EditableEntityValues,
   ProfileModuleContext,
   UnifiedEntityProfile,
-} from '@/features/admin/profile/types/entityProfile.types'
+} from '@/features/users/profile/types/entityProfile.types'
 
 import {
   getAdminStudent,
   updateAdminStudent,
   updateAdminStudentStatus,
-} from '@/features/admin/api/adminStudentsApi'
-import type { StudentDetail } from '@/features/admin/types/student.types'
+} from '@/features/students/api/adminStudentsApi'
+import type { StudentDetail } from '@/features/students/types/adminStudent.types'
 import { StudentHistoricalPhotoSection } from '../components/StudentHistoricalPhotoSection'
 import photoStyles from '../components/StudentHistoricalPhotoSection.module.css'
 

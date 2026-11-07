@@ -15,8 +15,8 @@ import { DistributionActionBanner } from '../components/DistributionActionBanner
 import { DistributionSummaryMetrics } from '../components/DistributionSummaryMetrics'
 import { OfflineAssignmentCards } from '../components/OfflineAssignmentCards'
 import { OfflineConnectionStatus } from '../components/OfflineConnectionStatus'
-import shared from '../components/styles/OfflineShared.module.css'
-import distStyles from '../components/styles/OfflineDistribution.module.css'
+import shared from '../components/OfflineShared.module.css'
+import distStyles from '../components/OfflineDistribution.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 function DistributionContent({ examId }: { examId: number }) {

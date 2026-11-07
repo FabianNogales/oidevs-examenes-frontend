@@ -527,7 +527,7 @@ test('HU39 historial existente presenta visibility recibido sin reconstruir snap
         },
       }),
     }),
-    'features/portal-shared/PortalHistory.tsx',
+    'features/portal-shared/components/PortalHistory.tsx',
     'PortalHistoryPanel',
     { resource: 'events', id: 47 },
   )

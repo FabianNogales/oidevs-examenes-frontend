@@ -7,8 +7,8 @@ import { offlineError } from '../api/offlineApi'
 import { formatOfflineTime } from '../utils/offlineRules'
 import type { OfflineIdentity } from '../services/offlineIdentity'
 import type { StoredPackage } from '../types/offline.types'
-import shared from '../components/styles/OfflineShared.module.css'
-import distStyles from '../components/styles/OfflineDistribution.module.css'
+import shared from "../components/OfflineShared.module.css";
+import distStyles from "../components/OfflineDistribution.module.css";
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 function OwnedLists({ identity }: { identity: OfflineIdentity }) {

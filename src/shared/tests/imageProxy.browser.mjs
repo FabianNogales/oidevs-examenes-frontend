@@ -67,7 +67,7 @@ import React,{StrictMode,useState} from 'react';import {createRoot} from 'react-
 import {getStudentProfile,updateStudentProfilePhoto} from '/src/features/students/api/studentProfileApi.ts';
 import {StudentProfilePhoto} from '/src/features/students/components/StudentProfilePhoto.tsx';
 import {AuthenticatedImage} from '/src/shared/components/AuthenticatedImage/AuthenticatedImage.tsx';
-import {AuthenticatedNewsImage,NewsImage} from '/src/features/portal-news/NewsImage.tsx';
+import {AuthenticatedNewsImage,NewsImage} from '/src/features/portal-news/components/NewsImage.tsx';
 document.cookie='eida_image_fixture=1; Path=/; SameSite=Lax';
 window.__urls={created:[],revoked:[]};const create=URL.createObjectURL.bind(URL),revoke=URL.revokeObjectURL.bind(URL);
 URL.createObjectURL=blob=>{const url=create(blob);window.__urls.created.push(url);return url};

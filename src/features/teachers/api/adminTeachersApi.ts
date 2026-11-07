@@ -11,7 +11,7 @@ import type {
   TeachersPageResult,
   TeachersResponse,
   TeacherStatus,
-} from '@/features/admin/types/teacher.types'
+} from '@/features/teachers/types/teacher.types'
 import { httpClient } from '@/shared/api/httpClient'
 
 const TEACHERS_ENDPOINT = '/admin/teachers'

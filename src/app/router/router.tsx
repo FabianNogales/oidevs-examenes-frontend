@@ -31,12 +31,12 @@ import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
 import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
-import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
-import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
-import { AdminManageStudentsPage } from '@/features/admin/pages/AdminManageStudentsPage'
-import { AdminStudentDetailPage } from '@/features/admin/pages/AdminStudentDetailPage'
-import { AdminTeacherDetailPage } from '@/features/admin/pages/AdminTeacherDetailPage'
-import { AdminManageUsersPage } from '@/features/admin/pages/AdminManageUsersPage'
+import { AdminNotFoundPage } from '@/features/users/pages/AdminNotFoundPage'
+import { AdminTeachersPage } from '@/features/teachers/pages/AdminTeachersPage'
+import { AdminManageStudentsPage } from '@/features/students/pages/AdminManageStudentsPage'
+import { AdminStudentDetailPage } from '@/features/students/pages/AdminStudentDetailPage'
+import { AdminTeacherDetailPage } from '@/features/teachers/pages/AdminTeacherDetailPage'
+import { AdminManageUsersPage } from '@/features/users/pages/AdminManageUsersPage'
 
 export const router = createBrowserRouter([
   {
@@ -63,35 +63,35 @@ export const router = createBrowserRouter([
           {
             path: 'news',
             lazy: async () => {
-              const { NewsPage } = await import('@/features/portal-news/NewsPage')
+              const { NewsPage } = await import('@/features/portal-news/pages/NewsPage')
               return { Component: NewsPage }
             },
           },
           {
             path: 'news/:newsId',
             lazy: async () => {
-              const { NewsDetailPage } = await import('@/features/portal-news/NewsPage')
+              const { NewsDetailPage } = await import('@/features/portal-news/pages/NewsPage')
               return { Component: NewsDetailPage }
             },
           },
           {
             path: 'information',
             lazy: async () => {
-              const { InformationPage } = await import('@/features/portal-information/InformationPage')
+              const { InformationPage } = await import('@/features/portal-information/pages/InformationPage')
               return { Component: InformationPage }
             },
           },
           {
             path: 'services',
             lazy: async () => {
-              const { ServicesPage } = await import('@/features/portal-services/ServicesPage')
+              const { ServicesPage } = await import('@/features/portal-services/pages/ServicesPage')
               return { Component: ServicesPage }
             },
           },
           {
             path: 'services/:serviceId',
             lazy: async () => {
-              const { ServiceDetailPage } = await import('@/features/portal-services/ServicesPage')
+              const { ServiceDetailPage } = await import('@/features/portal-services/pages/ServicesPage')
               return { Component: ServiceDetailPage }
             },
           },
@@ -158,21 +158,21 @@ export const router = createBrowserRouter([
                   {
                     path: 'portal/news',
                     lazy: async () => {
-                      const { AdminNewsPage } = await import('@/features/portal-news/AdminNewsPage')
+                      const { AdminNewsPage } = await import('@/features/portal-news/pages/AdminNewsPage')
                       return { Component: AdminNewsPage }
                     },
                   },
                   {
                     path: 'portal/information',
                     lazy: async () => {
-                      const { AdminInformationPage } = await import('@/features/portal-information/AdminInformationPage')
+                      const { AdminInformationPage } = await import('@/features/portal-information/pages/AdminInformationPage')
                       return { Component: AdminInformationPage }
                     },
                   },
                   {
                     path: 'portal/services',
                     lazy: async () => {
-                      const { AdminServicesPage } = await import('@/features/portal-services/AdminServicesPage')
+                      const { AdminServicesPage } = await import('@/features/portal-services/pages/AdminServicesPage')
                       return { Component: AdminServicesPage }
                     },
                   },
@@ -192,7 +192,7 @@ export const router = createBrowserRouter([
                     path: 'audit-logs',
                     lazy: async () => {
                       const { AdminReadPage } =
-                        await import('@/features/admin/pages/AdminReadPage')
+                        await import('@/features/users/pages/AdminReadPage')
                       return {
                         Component: () => <AdminReadPage kind="audit-logs" />,
                       }
@@ -223,7 +223,7 @@ export const router = createBrowserRouter([
                     path: 'careers',
                     lazy: async () => {
                       const { AdminReadPage } =
-                        await import('@/features/admin/pages/AdminReadPage')
+                        await import('@/features/users/pages/AdminReadPage')
                       return {
                         Component: () => <AdminReadPage kind="careers" />,
                       }
@@ -237,7 +237,7 @@ export const router = createBrowserRouter([
                     path: 'users/:userId/roles',
                     lazy: async () => {
                       const { AdminUserRolesPage } =
-                        await import('@/features/admin/pages/AdminUserRolesPage')
+                        await import('@/features/users/pages/AdminUserRolesPage')
                       return { Component: AdminUserRolesPage }
                     },
                   },

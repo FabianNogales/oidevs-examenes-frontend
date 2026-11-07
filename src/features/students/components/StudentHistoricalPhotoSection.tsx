@@ -8,14 +8,14 @@ import {
 import type {
   HistoricalPhotoFieldErrors,
   StudentDetail,
-} from '../types/student.types'
+} from '../types/adminStudent.types'
 import {
   HISTORICAL_PHOTO_ACCEPT,
   validateHistoricalPhoto,
 } from '../utils/historicalPhotoValidation'
 import { AuthenticatedImage } from '@/shared/components/AuthenticatedImage/AuthenticatedImage'
-import { ConfirmDialog } from './ConfirmDialog'
-import layoutStyles from '../profile/components/EntityProfileLayout.module.css'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
+import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
 import styles from './StudentHistoricalPhotoSection.module.css'
 
 type Confirmation = {

@@ -2,8 +2,8 @@ import { useId, useState } from 'react'
 import { Camera, Flashlight } from 'lucide-react'
 import { useEntryQrCamera } from '@/features/exams/hooks/useEntryQrCamera'
 import { provisionalQr } from '../utils/offlineRules'
-import shared from './styles/OfflineShared.module.css'
-import captureStyles from './styles/OfflineCapturePanel.module.css'
+import shared from './OfflineShared.module.css'
+import captureStyles from './OfflineCapturePanel.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export function OfflineQrScanner({

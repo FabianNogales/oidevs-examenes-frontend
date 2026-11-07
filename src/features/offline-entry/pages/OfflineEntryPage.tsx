@@ -14,8 +14,8 @@ import { useOfflinePreparation } from '../hooks/useOfflinePreparation'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { useConnectivity, useLocalClock } from '../hooks/useConnectivity'
 import type { OfflineIdentity } from '../services/offlineIdentity'
-import shared from '../components/styles/OfflineShared.module.css'
-import workspace from '../components/styles/OfflineWorkspace.module.css'
+import shared from '../components/OfflineShared.module.css'
+import workspace from '../components/OfflineWorkspace.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 function OfflineWorkspace({

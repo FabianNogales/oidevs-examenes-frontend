@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getTeacherSubjects } from '@/features/subjects/api/teacherSubjectsApi'
 import type { Subject } from '@/features/subjects/types/subject.types'
-import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardError'
+import { getTeacherDashboardErrorMessage } from '@/features/home/api/teacherDashboardError'
 import { parseExamId } from '../api/examDetailsApi'
 
 export interface UseTeacherSubjectOfferingResult {

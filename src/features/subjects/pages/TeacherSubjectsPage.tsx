@@ -7,7 +7,7 @@ import { SubjectList } from '@/features/subjects/components/SubjectList'
 import { TeacherOfferingFilters } from '@/features/course-offerings/components/TeacherOfferingFilters'
 import { SubjectsSkeleton } from '@/features/subjects/components/SubjectsSkeleton'
 import type { Subject } from '@/features/subjects/types/subject.types'
-import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardError'
+import { getTeacherDashboardErrorMessage } from '@/features/home/api/teacherDashboardError'
 
 import styles from './TeacherSubjectsPage.module.css'
 

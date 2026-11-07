@@ -11,11 +11,11 @@ import type {
   EventCategory,
   EventInput,
   EventStatus,
-} from '../types'
-import { STATUS_LABELS, VISIBILITY_LABELS } from '../types'
+} from '../types/calendar.types'
+import { STATUS_LABELS, VISIBILITY_LABELS } from '../types/calendar.types'
 import { boliviaInput, inputToIso } from '../utils/calendarDates'
 import { EventDetails } from './EventDetails'
-import styles from '../portalCalendar.module.css'
+import styles from '../pages/portalCalendar.module.css'
 
 const STATUS_ACTIONS: Record<EventStatus, string> = {
   DRAFT: 'Despublicar',

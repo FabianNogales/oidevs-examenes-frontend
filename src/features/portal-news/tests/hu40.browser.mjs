@@ -26,7 +26,7 @@ import {AxiosError} from 'axios';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
 import {HomePage} from '/src/features/home/pages/HomePage.tsx';
-import {NewsPage,NewsDetailPage} from '/src/features/portal-news/NewsPage.tsx';
+import {NewsPage,NewsDetailPage} from '/src/features/portal-news/pages/NewsPage.tsx';
 const e=React.createElement,root=createRoot(document.getElementById('root'));
 const image=location.origin+'/__hu40-image.png?backend-contract=1';
 const records=Array.from({length:13},(_,i)=>({id:200-i,title:'Publicación de prueba '+String(i+1).padStart(2,'0'),

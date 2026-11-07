@@ -26,7 +26,7 @@ function editor(handlers, initial = draft) {
   const saved = []
   const ui = component(
     client(handlers),
-    'features/portal-news/NewsEditor.tsx',
+    'features/portal-news/components/NewsEditor.tsx',
     'NewsEditor',
     {
       initial,
@@ -191,7 +191,7 @@ test('HU41 state filter no longer remounts the collection or drops the search', 
       {},
       { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
     ),
-    'features/portal-news/AdminNewsPage.tsx',
+    'features/portal-news/pages/AdminNewsPage.tsx',
     'AdminNewsPage',
   )
   const collection = () =>
@@ -221,7 +221,7 @@ test('HU41 collection combines retained search, new state and first-page reset; 
   }
   const ui = component(
     client(),
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
     'PortalAdminCollection',
     props,
   )
@@ -262,7 +262,7 @@ test('HU41 collection combines retained search, new state and first-page reset; 
 
   const unchanged = component(
     client(),
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
     'PortalAdminCollection',
     { ...props, resetPageKey: undefined },
   )

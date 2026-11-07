@@ -1,4 +1,4 @@
-import shared from './styles/OfflineShared.module.css'
+import shared from './OfflineShared.module.css'
 
 export function OfflineConnectionStatus({ online }: { online: boolean }) {
   return (

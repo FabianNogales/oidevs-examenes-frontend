@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getTeacherUpcomingExams } from '@/features/exams/api/teacherExamsApi'
 import type { TeacherUpcomingExamDto } from '@/features/exams/types/exam.types'
-import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardError'
+import { getTeacherDashboardErrorMessage } from '@/features/home/api/teacherDashboardError'
 
 export function useTeacherUpcomingExams() {
   const [exams, setExams] = useState<TeacherUpcomingExamDto[]>([])

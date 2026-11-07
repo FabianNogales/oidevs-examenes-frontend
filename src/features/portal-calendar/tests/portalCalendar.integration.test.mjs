@@ -868,7 +868,7 @@ test('calendar UI/API contain no physical deletion or raw HTML injection', () =>
 
 test('responsive contract uses seven shrinkable calendar columns, bounded dialogs and single-column mobile forms', () => {
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
     'utf8',
   )
   assert.match(css, /repeat\(7, minmax\(0, 1fr\)\)/)

@@ -12,7 +12,7 @@ import {
   shiftMonth,
 } from '../utils/calendarDates'
 import { PublicEventDialog } from './PublicEventDialog'
-import styles from '../portalCalendar.module.css'
+import styles from '../pages/portalCalendar.module.css'
 
 export function InstitutionalCalendar({
   compact = false,

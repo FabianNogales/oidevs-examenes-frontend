@@ -1,6 +1,6 @@
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { InstitutionalCalendar } from '../components/InstitutionalCalendar'
-import styles from '../portalCalendar.module.css'
+import styles from './portalCalendar.module.css'
 
 export function CalendarPage() {
   return (

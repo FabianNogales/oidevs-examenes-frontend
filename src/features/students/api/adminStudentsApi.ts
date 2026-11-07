@@ -13,7 +13,7 @@ import type {
   UpdateStudentPayload,
   HistoricalPhotoField,
   HistoricalPhotoFieldErrors,
-} from '@/features/admin/types/student.types'
+} from '@/features/students/types/adminStudent.types'
 import type {
   StudentImportConfirmation,
   StudentImportPreview,

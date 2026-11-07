@@ -1,7 +1,7 @@
 import { ArrowRight, Check } from 'lucide-react'
 import type { OfflineDistribution } from '../types/offline.types'
 import { GetResponsibleInitials } from './AssignedListStudentsView'
-import distStyles from './styles/OfflineDistribution.module.css'
+import distStyles from './OfflineDistribution.module.css'
 
 export interface OfflineAssignmentCardsProps {
   distribution: OfflineDistribution

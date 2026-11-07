@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getAdminTeacher } from '@/features/admin/api/adminTeachersApi'
+import { getAdminTeacher } from '@/features/teachers/api/adminTeachersApi'
 import { getSubjectChoices, getTeacherChoices } from '../api/offeringChoicesApi'
 import type { OfferingChoice } from '../api/offeringChoicesApi'
 import {

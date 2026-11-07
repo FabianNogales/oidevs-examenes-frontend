@@ -2,23 +2,23 @@ import { useState, useEffect, useMemo } from 'react'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
 
-import { EntityProfileLayout } from '@/features/admin/profile/components/EntityProfileLayout'
-import layoutStyles from '@/features/admin/profile/components/EntityProfileLayout.module.css'
+import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
+import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
 import {
   getProfileTabs,
   getBackRouteByContext,
-} from '@/features/admin/profile/config/profileTabs.registry'
+} from '@/features/users/profile/config/profileTabs.registry'
 import type {
   EditableEntityValues,
   ProfileModuleContext,
   UnifiedEntityProfile,
-} from '@/features/admin/profile/types/entityProfile.types'
+} from '@/features/users/profile/types/entityProfile.types'
 
 import {
   getAdminTeacher,
   updateAdminTeacher,
-} from '@/features/admin/api/adminTeachersApi'
-import type { Teacher } from '@/features/admin/types/teacher.types'
+} from '@/features/teachers/api/adminTeachersApi'
+import type { Teacher } from '@/features/teachers/types/teacher.types'
 
 function getInitials(firstNames?: string, lastNames?: string): string {
   const first = firstNames?.trim().charAt(0) ?? ''
