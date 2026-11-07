@@ -156,6 +156,7 @@ const inspect = `(()=>{
     scroll:document.documentElement.scrollWidth, vw,
     client:document.documentElement.clientWidth,
     layout:header&&container?{x:r(h1s[0]).left,width:r(container).width,maxWidth:getComputedStyle(container).maxWidth,padding:getComputedStyle(container).padding,breadcrumbGap:nav?getComputedStyle(nav).marginBottom:null,headerGap:getComputedStyle(header).marginBottom,descriptionGap:description?getComputedStyle(description).marginTop:null}:null,
+    descriptionX:description?r(description).left:null,
     escapedControls,
     headingSurface:(()=>{for(let el=h1s[0];el;el=el.parentElement){const bg=getComputedStyle(el).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')return bg}return getComputedStyle(document.body).backgroundColor})(),
     bodySurface:getComputedStyle(document.body).backgroundColor,
@@ -308,6 +309,10 @@ try {
       if (!baseline && ['/information', '/news', '/services'].includes(screen.path)) {
         check(page.layout?.maxWidth === '960px', 'contrato público narrow: '+JSON.stringify(page.layout))
         check(page.layout?.headerGap === '24px', 'separación pública')
+      }
+      if (!baseline && screen.path === '/information') {
+        check(page.layout?.descriptionGap === '8px', 'subtítulo fuera de PageHeader')
+        check(Math.abs(page.descriptionX-page.layout.x)<=1, 'subtítulo desalineado del H1')
       }
       if (screen.csv) check(page.fileInputs >= 1 && page.templateButton, 'archivo o plantilla CSV ausente')
       if (screen.description) check(page.text.includes(screen.description), 'descripción ausente')

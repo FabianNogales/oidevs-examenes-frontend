@@ -42,16 +42,13 @@ export function InformationPage() {
       <PageContainer width="narrow">
         <PageHeader
           title="Información institucional"
+          description="Conoce el propósito de EIDA, sus orientaciones de uso y las respuestas a consultas frecuentes."
           breadcrumbs={[
             { label: 'Inicio', to: '/' },
             { label: 'Información institucional' },
           ]}
         />
         <div className={`${styles.page} ${informationStyles.pageBody}`}>
-          <p className={informationStyles.intro}>
-            Conoce el propósito de EIDA, sus orientaciones de uso y las respuestas a
-            consultas frecuentes.
-          </p>
           <PortalFeedback {...result} retry={result.reload} />
           {result.data ? (
             result.data.sections.length > 0 || result.data.faqs.length > 0 ? (
