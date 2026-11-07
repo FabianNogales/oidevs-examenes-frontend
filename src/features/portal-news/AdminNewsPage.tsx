@@ -1,3 +1,4 @@
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { useCallback, useId, useState } from 'react'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
@@ -176,9 +177,10 @@ export function AdminNewsPage() {
     [status],
   )
   return (
-    <>
+    <PageContainer>
       <PortalAdminCollection
         resetPageKey={status}
+        headerVariant="page"
         title="Gestión de noticias"
         description="Crea, publica y archiva las noticias del portal institucional."
         className={adminStyles.newsAdminPage}
@@ -232,6 +234,6 @@ export function AdminNewsPage() {
           }}
         />
       ) : null}
-    </>
+    </PageContainer>
   )
 }

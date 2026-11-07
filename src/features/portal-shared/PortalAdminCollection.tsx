@@ -1,6 +1,7 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import {
   portalPagination,
@@ -29,6 +30,7 @@ export function PortalAdminCollection<T extends { id: number }>({
   filters,
   filterLayout,
   resetPageKey,
+  headerVariant = 'legacy',
   children,
 }: {
   title: string
@@ -48,6 +50,8 @@ export function PortalAdminCollection<T extends { id: number }>({
   filters?: ReactNode
   filterLayout?: 'below' | 'inline'
   resetPageKey?: string
+  /** 'page' renders the shared PageHeader (same title, description, breadcrumbs and create action). Default: legacy toolbar. */
+  headerVariant?: 'legacy' | 'page'
   children?: ReactNode
 }) {
   const [query, setQuery] = useState({
@@ -104,27 +108,49 @@ export function PortalAdminCollection<T extends { id: number }>({
   const visible = refreshing ? settled.data : list.data
   return (
     <div className={`${styles.page}${className ? ` ${className}` : ''}`}>
-      <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: title }]} />
-      <header className={styles.toolbar}>
-        {description ? (
-          <div className={styles.collectionHeading}>
+      {headerVariant === 'page' ? (
+        <PageHeader
+          title={title}
+          description={description}
+          breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: title }]}
+          actions={
+            onCreate ? (
+              <button
+                type="button"
+                className={styles.primary}
+                disabled={createDisabled}
+                onClick={onCreate}
+              >
+                {createLabel}
+              </button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <>
+        <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: title }]} />
+        <header className={styles.toolbar}>
+          {description ? (
+            <div className={styles.collectionHeading}>
+              <h1>{title}</h1>
+              <p className={styles.collectionDescription}>{description}</p>
+            </div>
+          ) : (
             <h1>{title}</h1>
-            <p className={styles.collectionDescription}>{description}</p>
-          </div>
-        ) : (
-          <h1>{title}</h1>
-        )}
-        {onCreate ? (
-          <button
-            type="button"
-            className={styles.primary}
-            disabled={createDisabled}
-            onClick={onCreate}
-          >
-            {createLabel}
-          </button>
-        ) : null}
-      </header>
+          )}
+          {onCreate ? (
+            <button
+              type="button"
+              className={styles.primary}
+              disabled={createDisabled}
+              onClick={onCreate}
+            >
+              {createLabel}
+            </button>
+          ) : null}
+        </header>
+        </>
+      )}
       {children}
       <div className={styles.collectionList} aria-busy={refreshing}>
         <DataTable<PortalRow<T>>

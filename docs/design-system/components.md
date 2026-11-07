@@ -29,18 +29,19 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 
 Pruebas: `ui/tests/pageLayout.test.mjs` (SSR, CSS y lista cerrada de consumidores autorizados) y
 `ui/tests/pageLayout.browser.mjs` (navegador con transporte simulado: Importar aulas/materias, Gestión de
-aulas/materias, Carreras y Auditoría a 320/390/768/1440px; solo renderizado y layout, sin importar ni guardar).
-Consumidores (DS2.1b–e): Importar aulas/materias, Gestión de aulas/materias, Carreras
+aulas/materias, Carreras, Auditoría y Noticias, Servicios e Información (admin y pública) a 320/390/768/1440px; solo renderizado y layout, sin importar ni guardar).
+Consumidores (DS2.1b–g): Importar aulas/materias, Gestión de aulas/materias, Carreras
 (`AdminReadPage`, solo la variante `careers`; Auditoría conserva su cabecera) y Criterios de
-habilitación. Las acciones de cabecera existentes se pasan tal cual en `actions` (p. ej. dentro de
-su `.headerActions` original). Noticias (DS2.1f) sigue pendiente: depende de `PortalAdminCollection`
-y `PortalPageLayout` ([PROGRESS.md](PROGRESS.md)).
+habilitación, Gestión de noticias, servicios e información (vía `PortalAdminCollection headerVariant="page"`)
+y las páginas públicas de Noticias, Servicios e Información (cada una aporta su propio `<main>`;
+`NewsDetailPage` y `ServiceDetailPage` sin migrar). Las acciones de cabecera existentes se pasan tal cual en `actions` (p. ej. dentro de
+su `.headerActions` original).
 
 ### `src/features/portal-shared` (portal administrativo)
 
 | Componente | Propósito |
 |---|---|
-| `PortalAdminCollection` | Página de listado administrativo: cabecera (título, descripción, botón de crear), DataTable, búsqueda, `filters`, `resetPageKey` y recarga tras guardar sin perder filas (`aria-busy`) |
+| `PortalAdminCollection` | Página de listado administrativo: cabecera (título, descripción, botón de crear; `headerVariant?: 'legacy' \| 'page'`, por defecto `legacy`; `page` usa `PageHeader` dentro del mismo `.page`, hoy Noticias, Servicios e Información), DataTable, búsqueda, `filters`, `resetPageKey` y recarga tras guardar sin perder filas (`aria-busy`) |
 | `AdminStatusBadge` | Badge de estado de solo presentación (`status` ∈ PUBLISHED, DRAFT, UNPUBLISHED, ARCHIVED, ACTIVE, INACTIVE, PENDING_CHANGES, CANCELLED; `children` sustituye la etiqueta) |
 | `PortalUi` | `PortalModal` (adaptador de PortalDialog), `PortalPageLayout`, `PortalFeedback`, `PortalPager`, `EditorFeedback`, `PortalField`, `ContentLink` |
 | `PortalHistory` / `PortalHistoryPanel` | Historial de cambios bajo demanda |

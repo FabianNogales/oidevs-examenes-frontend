@@ -1,7 +1,9 @@
-/* Same content width as the News and Information administration pages. */
-.servicesAdminPage {
-  max-width: var(--content-max-width);
-  margin-inline: auto;
+/* Width and padding come from PageContainer. The doubled class beats portalBase .page
+   regardless of CSS load order, so padding is not applied twice. */
+.servicesAdminPage.servicesAdminPage {
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
 }
 
 /* Inline "Estado" filter aligned with the search row (same pattern as News). */

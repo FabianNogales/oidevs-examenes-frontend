@@ -364,11 +364,15 @@ test('F2.1 admin services page uses the shared content width like News and Infor
     resolve(sourceRoot, 'features/portal-services/adminServices.module.css'),
     'utf8',
   )
-  const rule = css.match(/\.servicesAdminPage\s*\{([^}]*)\}/)?.[1]
+  // DS2.1g: the shared content width (--content-max-width) now comes from PageContainer, and the
+  // collection uses the shared PageHeader; the local class only cancels width/padding inherited from .page.
+  const source = readFileSync(resolve(sourceRoot, 'features/portal-services/AdminServicesPage.tsx'), 'utf8')
+  assert.match(source, /<PageContainer>\s*<PortalAdminCollection\s+headerVariant="page"/)
+  const rule = css.match(/\.servicesAdminPage\.servicesAdminPage\s*\{([^}]*)\}/)?.[1]
   assert.ok(rule)
-  assert.match(rule, /max-width:\s*var\(--content-max-width\)/)
-  assert.match(rule, /margin-inline:\s*auto/)
-  assert.doesNotMatch(rule, /padding/, 'no duplicated padding')
+  assert.match(rule, /max-width:\s*none/)
+  assert.match(rule, /margin-inline:\s*0/)
+  assert.match(rule, /padding:\s*0/, 'no duplicated padding')
 })
 
 test('F2.3 inline Estado filter and "Limpiar filtros" reset only the status through resetPageKey', () => {

@@ -14,6 +14,7 @@ import type { PortalQuery } from '@/features/portal-shared/portalApi'
 import { getAdminService, listAdminServices } from './servicesApi'
 import { ServiceEditor } from './ServiceEditor'
 import type { AdminService, ServiceStatus } from './types'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import styles from '@/features/portal-shared/portalShared.module.css'
 import adminStyles from './adminServices.module.css'
 
@@ -138,8 +139,9 @@ export function AdminServicesPage() {
     [status],
   )
   return (
-    <>
+    <PageContainer>
       <PortalAdminCollection
+        headerVariant="page"
         resetPageKey={status}
         title="Gestión de servicios"
         description="Administra los servicios y enlaces institucionales."
@@ -196,6 +198,6 @@ export function AdminServicesPage() {
           }}
         />
       ) : null}
-    </>
+    </PageContainer>
   )
 }

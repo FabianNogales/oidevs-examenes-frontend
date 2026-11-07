@@ -9,6 +9,9 @@ import { usePortalResource } from '@/features/portal-shared/usePortalResource'
 import { getService, listServices } from './servicesApi'
 import { ServiceCard } from './ServiceCard'
 import styles from '@/features/portal-shared/portalShared.module.css'
+import servicesStyles from './ServicesPage.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 
 const publicLoadError =
   'No fue posible cargar los servicios institucionales. Intenta nuevamente.'
@@ -28,36 +31,45 @@ export function ServicesPage() {
   )
   const result = usePortalResource(load)
   return (
-    <div className={styles.servicesPage}>
-      <PortalPageLayout title="Servicios institucionales">
-        <PortalFeedback
-          loading={result.loading}
-          error={
-            result.error ? { ...result.error, message: publicLoadError } : null
-          }
-          retry={result.reload}
+    <main className={styles.servicesPage}>
+      <PageContainer width="narrow">
+        <PageHeader
+          title="Servicios institucionales"
+          breadcrumbs={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Servicios institucionales' },
+          ]}
         />
-        {result.data?.data.length === 0 ? (
-          <p className={styles.servicesEmpty} role="status">
-            No hay servicios disponibles actualmente.
-          </p>
-        ) : null}
-        {result.data?.data.length ? (
-          <p className={styles.servicesIntro}>
-            Accede a los servicios y plataformas oficiales de la Universidad
-            Mayor de San Simón.
-          </p>
-        ) : null}
-        <div className={styles.serviceCards}>
-          {result.data?.data.map((service) => (
-            <ServiceCard key={service.id} service={service} horizontal />
-          ))}
+        <div className={`${styles.page} ${servicesStyles.pageBody}`}>
+          <PortalFeedback
+            loading={result.loading}
+            error={
+              result.error ? { ...result.error, message: publicLoadError } : null
+            }
+            retry={result.reload}
+          />
+          {result.data?.data.length === 0 ? (
+            <p className={styles.servicesEmpty} role="status">
+              No hay servicios disponibles actualmente.
+            </p>
+          ) : null}
+          {result.data?.data.length ? (
+            <p className={styles.servicesIntro}>
+              Accede a los servicios y plataformas oficiales de la Universidad
+              Mayor de San Simón.
+            </p>
+          ) : null}
+          <div className={styles.serviceCards}>
+            {result.data?.data.map((service) => (
+              <ServiceCard key={service.id} service={service} horizontal />
+            ))}
+          </div>
+          {result.data && result.data.meta.last_page > 1 ? (
+            <PortalPager meta={result.data.meta} onPage={setPage} />
+          ) : null}
         </div>
-        {result.data && result.data.meta.last_page > 1 ? (
-          <PortalPager meta={result.data.meta} onPage={setPage} />
-        ) : null}
-      </PortalPageLayout>
-    </div>
+      </PageContainer>
+    </main>
   )
 }
 

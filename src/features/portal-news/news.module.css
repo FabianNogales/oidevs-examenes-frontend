@@ -12,8 +12,7 @@
   margin-top: 8px;
 }
 
-@media (max-width: 480px) {
-  .page h1 {
-    font-size: clamp(1.75rem, 8vw, 2rem);
-  }
+/* NewsPage keeps portalBase .page for its descendant styles; PageContainer owns the padding. */
+.content.content {
+  padding: 0;
 }

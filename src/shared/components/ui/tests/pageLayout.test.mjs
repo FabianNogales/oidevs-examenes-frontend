@@ -17,11 +17,13 @@ const srcRoot = fileURLToPath(new URL('../../../../', import.meta.url))
 const uiRoot = fileURLToPath(new URL('../', import.meta.url))
 
 const cache = new Map()
-function load(filename) {
-  if (cache.has(filename)) return cache.get(filename).exports
+// `source` lets a test render another revision of a file (e.g. a reference markup) with the same dependencies.
+function load(filename, source) {
+  const key = source === undefined ? filename : `${filename}#${source.length}`
+  if (cache.has(key)) return cache.get(key).exports
   const module = { exports: {} }
-  cache.set(filename, module)
-  const output = ts.transpileModule(readFileSync(filename, 'utf8'), {
+  cache.set(key, module)
+  const output = ts.transpileModule(source ?? readFileSync(filename, 'utf8'), {
     fileName: filename,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2023, jsx: ts.JsxEmit.ReactJSX },
   }).outputText
@@ -122,10 +124,31 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
 const authorizedConsumers = [
   'features/admin/pages/AdminReadPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
+  'features/portal-information/AdminInformationPage.tsx',
+  'features/portal-information/InformationPage.tsx',
+  'features/portal-news/AdminNewsPage.tsx',
+  'features/portal-news/NewsPage.tsx',
+  'features/portal-services/AdminServicesPage.tsx',
+  'features/portal-services/ServicesPage.tsx',
+  'features/portal-shared/PortalAdminCollection.tsx',
   'features/rooms/pages/AdminRoomsPage.tsx',
   'features/rooms/pages/ImportRoomsPage.tsx',
   'features/subjects/pages/AdminSubjectsPage.tsx',
   'features/subjects/pages/ImportSubjectsPage.tsx',
+]
+// Files that keep a legacy <h1> path for consumers not yet migrated.
+const legacyHeading = ['features/admin/pages/AdminReadPage.tsx', 'features/portal-shared/PortalAdminCollection.tsx']
+// Public pages render the page's only <main> landmark themselves (AppLayout has none).
+const ownsMain = [
+  'features/portal-information/InformationPage.tsx',
+  'features/portal-news/NewsPage.tsx',
+  'features/portal-services/ServicesPage.tsx',
+]
+// Portal administration pages get their PageHeader through PortalAdminCollection headerVariant="page".
+const portalAdmin = [
+  'features/portal-information/AdminInformationPage.tsx',
+  'features/portal-news/AdminNewsPage.tsx',
+  'features/portal-services/AdminServicesPage.tsx',
 ]
 
 test('PageHeader and PageContainer are consumed only by the authorized DS2.1 screens', () => {
@@ -138,9 +161,53 @@ test('PageHeader and PageContainer are consumed only by the authorized DS2.1 scr
   assert.deepEqual(consumers, authorizedConsumers)
   for (const file of consumers) {
     const source = readFileSync(resolve(srcRoot, file), 'utf8')
-    assert.doesNotMatch(source, /<main\b/, `${file} must not render a nested <main>`)
-    assert.equal((source.match(/<PageHeader\b/g) ?? []).length, 1, `${file}: one PageHeader`)
-    // AdminReadPage keeps the legacy <h1> only for the non-migrated audit variant.
-    if (!file.endsWith('AdminReadPage.tsx')) assert.doesNotMatch(source, /<h1\b/, `${file}: the h1 comes from PageHeader`)
+    assert.equal((source.match(/<main\b/g) ?? []).length, ownsMain.includes(file) ? 1 : 0, `${file}: <main> landmarks`)
+    const headers = (source.match(/<PageHeader\b/g) ?? []).length
+    if (portalAdmin.includes(file)) {
+      assert.equal(headers, 0, `${file}: header comes from PortalAdminCollection`)
+      assert.equal((source.match(/headerVariant="page"/g) ?? []).length, 1, `${file}: headerVariant="page"`)
+    } else assert.equal(headers, 1, `${file}: one PageHeader`)
+    if (!legacyHeading.includes(file)) assert.doesNotMatch(source, /<h1\b/, `${file}: the h1 comes from PageHeader`)
   }
+})
+
+// Reference: SSR markup of PortalAdminCollection at e4f5bbd (before headerVariant existed), for the two
+// default (legacy) shapes. No screen uses the legacy header after DS2.1g, but it stays the default. Regenerate only if the legacy header is changed on purpose:
+// render `git show e4f5bbd:src/features/portal-shared/PortalAdminCollection.tsx` with these same props.
+const legacyCollectionMarkup = {
+  withDescription: '253b602a77b1aec6c47b69aec17910daecf96953850b19142d1ab468c6eac6a9',
+  withoutDescription: '7e1bf9ede548997d68a13df9f30067babf27ca83b6eceabae1aa1a0fcd2084bb',
+}
+const collectionProps = (description) => ({
+  title: 'Gestión de servicios',
+  ...(description ? { description: 'Administra los servicios del portal.' } : {}),
+  load: () => new Promise(() => {}),
+  columns: [{ key: 'title', header: 'Título', render: (row) => row.item.title }],
+  version: 0,
+  onSelect: () => {},
+  onCreate: () => {},
+  createLabel: 'Crear servicio',
+})
+const sha256 = (text) => require('node:crypto').createHash('sha256').update(text).digest('hex')
+
+test('PortalAdminCollection legacy default header markup is unchanged since e4f5bbd', () => {
+  const { PortalAdminCollection } = load(resolve(srcRoot, 'features/portal-shared/PortalAdminCollection.tsx'))
+  for (const [key, description] of [['withDescription', true], ['withoutDescription', false]]) {
+    const html = render(React.createElement(PortalAdminCollection, collectionProps(description)))
+    assert.equal(sha256(html), legacyCollectionMarkup[key], `${key}: default markup changed`)
+    assert.match(html, /<header class="toolbar">/)
+    assert.equal(count(html, /<h1\b/g), 1)
+  }
+})
+
+test('PortalAdminCollection headerVariant="page" renders PageHeader with the same title, crumbs and action', () => {
+  const { PortalAdminCollection } = load(resolve(srcRoot, 'features/portal-shared/PortalAdminCollection.tsx'))
+  const html = render(React.createElement(PortalAdminCollection, { ...collectionProps(true), headerVariant: 'page' }))
+  assert.equal(count(html, /<h1\b/g), 1)
+  assert.match(html, /<h1 class="title">Gestión de servicios<\/h1>/)
+  assert.match(html, /<p class="description">Administra los servicios del portal\.<\/p>/)
+  assert.match(html, /<a href="\/"[^>]*>Inicio<\/a>/)
+  assert.match(html, /<div class="actions"><button type="button" class="primary">Crear servicio<\/button><\/div>/)
+  assert.doesNotMatch(html, /class="toolbar"|<main\b/)
+  assert.match(html, /^<div class="page">/, 'PageHeader stays inside the .page wrapper')
 })

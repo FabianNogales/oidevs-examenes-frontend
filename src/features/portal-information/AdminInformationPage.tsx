@@ -14,6 +14,7 @@ import type { PortalQuery } from '@/features/portal-shared/portalApi'
 import { getInformationContent, listInformation } from './informationApi'
 import { InformationEditor } from './InformationEditor'
 import type { AdminInformation, InformationKind } from './types'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import styles from '@/features/portal-shared/portalShared.module.css'
 import adminStyles from './adminInformation.module.css'
 
@@ -185,12 +186,13 @@ export function AdminInformationPage() {
     [kind, published],
   )
   return (
-    <>
+    <PageContainer>
       <PortalAdminCollection
+        headerVariant="page"
         resetPageKey={`${kind}-${published}`}
         title="Gestión de información y FAQ"
         description="Administra las secciones institucionales y las preguntas frecuentes del portal."
-        className={styles.informationAdminPage}
+        className={`${styles.informationAdminPage} ${adminStyles.pageReset}`}
         searchLayout="wide"
         searchPlaceholder="Buscar información"
         createLabel="Crear pregunta frecuente"
@@ -270,6 +272,6 @@ export function AdminInformationPage() {
           }}
         />
       ) : null}
-    </>
+    </PageContainer>
   )
 }

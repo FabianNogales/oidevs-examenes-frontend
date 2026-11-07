@@ -4,3 +4,11 @@ button.clearFilters[type='button'] {
   min-height: 44px;
   white-space: nowrap;
 }
+
+/* Width and padding come from PageContainer; doubled class beats the shared
+   .informationAdminPage and portalBase .page regardless of CSS load order. */
+.pageReset.pageReset {
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
+}

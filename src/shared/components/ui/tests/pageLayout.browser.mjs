@@ -27,6 +27,12 @@ import {ImportSubjectsPage} from '/src/features/subjects/pages/ImportSubjectsPag
 import {AdminRoomsPage} from '/src/features/rooms/pages/AdminRoomsPage.tsx';
 import {AdminSubjectsPage} from '/src/features/subjects/pages/AdminSubjectsPage.tsx';
 import {AdminReadPage} from '/src/features/admin/pages/AdminReadPage.tsx';
+import {AdminNewsPage} from '/src/features/portal-news/AdminNewsPage.tsx';
+import {NewsPage} from '/src/features/portal-news/NewsPage.tsx';
+import {AdminServicesPage} from '/src/features/portal-services/AdminServicesPage.tsx';
+import {ServicesPage} from '/src/features/portal-services/ServicesPage.tsx';
+import {AdminInformationPage} from '/src/features/portal-information/AdminInformationPage.tsx';
+import {InformationPage} from '/src/features/portal-information/InformationPage.tsx';
 const e=React.createElement;
 const career={id:1,code:'QA-SIS',name:'Carrera QA Sistemas',status:'ACTIVE'};
 const page=(data,extra={})=>({data,meta:{current_page:1,last_page:1,total:data.length,per_page:15,from:data.length?1:null,to:data.length||null,...extra}});
@@ -35,6 +41,12 @@ const fixtures={
   '/admin/subjects':page([{id:1,code:'QA-111',name:'Materia QA de programación',status:'ACTIVE',careers:[career]}]),
   '/admin/subjects/careers':{data:[career]},
   '/admin/careers':page([career,{id:2,code:'QA-IND',name:'Carrera QA Industrial',status:'INACTIVE'}]),
+  '/admin/portal/news':{data:[{id:41,title:'Noticia QA publicada',summary:'Resumen QA.',image_url:null,published_at:'2026-11-04T10:00:00-04:00',status:'PUBLISHED',revision:1,created_by:1,updated_by:1,published_by:1},{id:42,title:'Noticia QA en borrador',summary:'Resumen QA.',image_url:null,published_at:null,status:'DRAFT',revision:1,created_by:1,updated_by:1,published_by:null}],meta:{current_page:1,last_page:1,per_page:15,total:2}},
+  '/portal/news':{data:[{id:41,title:'Noticia QA publicada',summary:'Resumen QA.',image_url:null,published_at:'2026-11-04T10:00:00-04:00'}],meta:{current_page:1,last_page:1,per_page:15,total:1}},
+  '/admin/portal/services':{data:[{id:42,name:'Servicio QA activo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/activo',display_order:1,status:'ACTIVE',revision:1,needs_review:false},{id:43,name:'Servicio QA inactivo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/inactivo',display_order:2,status:'INACTIVE',revision:1,needs_review:false}],meta:{current_page:1,last_page:1,per_page:15,total:2}},
+  '/portal/services':{data:[{id:42,name:'Servicio QA activo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/activo',display_order:1}],meta:{current_page:1,last_page:1,per_page:15,total:1}},
+  '/admin/portal/information/sections':{data:[{id:144,key:'about',revision:2,is_published:true,has_unpublished_changes:false,draft:{title:'Sección QA institucional',description:'Descripción QA.',links:[],sort_order:1},published:{title:'Sección QA institucional',description:'Descripción QA.',links:[],sort_order:1},published_at:'2026-11-05T10:00:00-04:00',created_by:1,updated_by:1}],meta:{current_page:1,last_page:1,per_page:15,total:1}},
+  '/portal/information':{data:{sections:[{id:1,key:'about',title:'Sección QA institucional',description:'Descripción QA.',links:[],sort_order:1}],faqs:[{id:1,question:'¿Pregunta QA?',answer:'Respuesta QA.',sort_order:1}]}},
   '/admin/audit-logs':page([{id:1,actor_id:1,action:'UPDATE',entity_type:'Room',entity_id:1,created_at:'2026-01-01T10:00:00Z',old_context:{},new_context:{}}]),
 };
 const qa=window.pageLayoutQa={calls:[],unexpected:[]};
@@ -52,7 +64,14 @@ const routes=[
   {path:'/admin/subjects',element:e(AdminSubjectsPage)},
   {path:'/admin/careers',element:e(AdminReadPage,{kind:'careers'})},
   {path:'/admin/audit-logs',element:e(AdminReadPage,{kind:'audit-logs'})},
-].map((route)=>({...route,element:e('main',{'data-qa':'layout-main'},route.element)}));
+].map((route)=>({...route,element:e('main',{'data-qa':'layout-main'},route.element)})).concat([
+  {path:'/admin/portal/news',element:e('main',{'data-qa':'layout-main'},e(AdminNewsPage))},
+  {path:'/news',element:e(NewsPage)},
+  {path:'/admin/portal/services',element:e('main',{'data-qa':'layout-main'},e(AdminServicesPage))},
+  {path:'/services',element:e(ServicesPage)},
+  {path:'/admin/portal/information',element:e('main',{'data-qa':'layout-main'},e(AdminInformationPage))},
+  {path:'/information',element:e(InformationPage)},
+]);
 const root=createRoot(document.getElementById('root'));
 qa.show=(path)=>{qa.calls=[];qa.unexpected=[];root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
 `
@@ -66,6 +85,15 @@ const screens = [
     actions: ['+ Importar materias (CSV)', '+ Registrar materia'], rows: ['Materia QA de programación'] },
   { path: '/admin/careers', title: 'Carreras', crumbs: [], kind: 'read', description: 'Consulta del catálogo. Incluye carreras activas e inactivas.',
     rows: ['Carrera QA Sistemas', 'Carrera QA Industrial'] },
+  { path: '/admin/portal/news', title: 'Gestión de noticias', crumbs: ['Inicio', 'Gestión de noticias'], kind: 'news-admin',
+    description: 'Crea, publica y archiva las noticias del portal institucional.', actions: ['Crear noticia'], rows: ['Noticia QA publicada', 'Noticia QA en borrador'] },
+  { path: '/news', title: 'Noticias institucionales', crumbs: ['Inicio', 'Noticias institucionales'], kind: 'news-public', rows: ['Noticia QA publicada'] },
+  { path: '/admin/portal/services', title: 'Gestión de servicios', crumbs: ['Inicio', 'Gestión de servicios'], kind: 'portal-admin', selects: 1,
+    description: 'Administra los servicios y enlaces institucionales.', actions: ['Crear servicio'], rows: ['Servicio QA activo', 'Servicio QA inactivo'] },
+  { path: '/services', title: 'Servicios institucionales', crumbs: ['Inicio', 'Servicios institucionales'], kind: 'portal-public', rows: ['Servicio QA activo'] },
+  { path: '/admin/portal/information', title: 'Gestión de información y FAQ', crumbs: ['Inicio', 'Gestión de información y FAQ'], kind: 'portal-admin', selects: 2,
+    description: 'Administra las secciones institucionales y las preguntas frecuentes del portal.', rows: ['Sección QA institucional'] },
+  { path: '/information', title: 'Información institucional', crumbs: ['Inicio', 'Información institucional'], kind: 'portal-public', rows: ['Sección QA institucional', '¿Pregunta QA?'] },
   { path: '/admin/audit-logs', title: 'Auditoría', crumbs: [], kind: 'read', legacy: true, description: 'El total cuenta eventos.', rows: ['UPDATE'] },
 ]
 
@@ -213,6 +241,18 @@ try {
         check(page.table, 'sin tabla/lista')
         check(page.h1[0]?.tab === '-1' && page.labelled === page.h1[0]?.id, `id/tabIndex del h1 ${JSON.stringify(page.h1[0])} / ${page.labelled}`)
       }
+      if (screen.kind === 'news-admin') {
+        check(page.search, 'sin búsqueda de noticias')
+        check(await evaluate("!!document.querySelector('select[name=news_status]')"), 'sin filtro de estado')
+        check(page.text.includes('Gestionar'), 'acción Gestionar ausente')
+      }
+      if (screen.kind === 'portal-admin') {
+        check(page.search, 'sin búsqueda')
+        const selects = await evaluate("document.querySelectorAll('[role=group][aria-label=Filtros] select, select').length")
+        check(selects >= screen.selects, `filtros: ${selects} select (se esperaban ${screen.selects})`)
+        check(page.text.includes('Gestionar'), 'acción Gestionar ausente')
+      }
+      if (screen.kind === 'portal-public') check(page.labelled === null, 'la página pública no debe etiquetar una section con aria-labelledby')
       if (screen.kind === 'read') {
         for (const row of screen.rows) check(page.text.includes(row), `fila ${row} ausente`)
         check(page.text.includes('Ver detalle'), 'acción "Ver detalle" ausente')

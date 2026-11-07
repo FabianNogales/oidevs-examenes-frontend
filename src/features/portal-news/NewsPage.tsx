@@ -11,16 +11,27 @@ import { NewsImage } from './NewsImage'
 import { NewsList } from './NewsList'
 import styles from '@/features/portal-shared/portalShared.module.css'
 import newsStyles from './news.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 
 export { NewsList } from './NewsList'
 
 export function NewsPage() {
   return (
-    <div className={newsStyles.page}>
-      <PortalPageLayout title="Noticias institucionales">
-        <NewsList />
-      </PortalPageLayout>
-    </div>
+    <main className={newsStyles.page}>
+      <PageContainer width="narrow">
+        <PageHeader
+          title="Noticias institucionales"
+          breadcrumbs={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Noticias institucionales' },
+          ]}
+        />
+        <div className={`${styles.page} ${newsStyles.content}`}>
+          <NewsList />
+        </div>
+      </PageContainer>
+    </main>
   )
 }
 
