@@ -4,6 +4,7 @@ import type {
   AcademicTermStatus,
 } from '../types/academicTerm.types'
 import styles from '../pages/AdminAcademicTermsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function AcademicTermsFilters({
   query,
@@ -63,20 +64,19 @@ export function AcademicTermsFilters({
           <option value="INACTIVE">Inactivos</option>
         </select>
       </label>
-      <button type="submit" className={styles.primaryButton}>
+      <Button type="submit">
         Buscar
-      </button>
+      </Button>
       {(query.search || query.status || search) && (
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           onClick={() => {
             setSearch('')
             onChange({ page: 1, search: '', status: '' })
           }}
         >
           Limpiar filtros
-        </button>
+        </Button>
       )}
     </form>
   )

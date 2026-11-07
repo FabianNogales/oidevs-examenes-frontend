@@ -17,6 +17,7 @@ import { AcademicTermDialog } from '../components/AcademicTermDialog'
 import { AcademicTermStatusDialog } from '../components/AcademicTermStatusDialog'
 import { ActiveAcademicTermSummary } from '../components/ActiveAcademicTermSummary'
 import styles from './AdminAcademicTermsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 const INITIAL_QUERY: AcademicTermsQuery = { page: 1, search: '', status: '' }
 
@@ -74,13 +75,11 @@ export function AdminAcademicTermsPage() {
           { label: 'Periodos académicos' },
         ]}
         actions={
-          <button
-            type="button"
-            className={styles.primaryButton}
+          <Button
             onClick={() => setSelection({ mode: 'create' })}
           >
             + Registrar periodo
-          </button>
+          </Button>
         }
       />
       <ActiveAcademicTermSummary key={activeRevision} />
@@ -96,13 +95,11 @@ export function AdminAcademicTermsPage() {
             <div className={styles.state} role="alert">
               <h2>No se pudieron cargar los periodos</h2>
               <p>{state.message}</p>
-              <button
-                type="button"
-                className={styles.primaryButton}
+              <Button
                 onClick={reload}
               >
                 Reintentar catálogo
-              </button>
+              </Button>
             </div>
           )}
           {state?.status === 'ready' &&
@@ -139,29 +136,27 @@ export function AdminAcademicTermsPage() {
               {meta.from}-{meta.to} de {meta.total} periodos
             </p>
             <div>
-              <button
-                type="button"
-                className={styles.secondaryButton}
+              <Button
+                variant="secondary"
                 disabled={meta.current_page === 1}
                 onClick={() =>
                   changeQuery({ ...query, page: meta.current_page - 1 })
                 }
               >
                 Anterior
-              </button>
+              </Button>
               <span>
                 Página {meta.current_page} de {meta.last_page}
               </span>
-              <button
-                type="button"
-                className={styles.secondaryButton}
+              <Button
+                variant="secondary"
                 disabled={meta.current_page === meta.last_page}
                 onClick={() =>
                   changeQuery({ ...query, page: meta.current_page + 1 })
                 }
               >
                 Siguiente
-              </button>
+              </Button>
             </div>
           </footer>
         )}

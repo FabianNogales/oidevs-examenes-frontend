@@ -8,6 +8,7 @@ import { AcademicTermModal } from './AcademicTermModal'
 import { AcademicTermForm } from './AcademicTermForm'
 import { AcademicTermDetails } from './AcademicTermDetails'
 import styles from './AcademicTermModal.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function AcademicTermDialog({
   selection,
@@ -60,23 +61,21 @@ export function AcademicTermDialog({
               <div className={styles.error} role="alert">
                 <p>{record.state.message}</p>
                 {!record.state.unavailable && (
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
+                  <Button
+                    variant="secondary"
                     onClick={record.reload}
                   >
                     Reintentar detalle
-                  </button>
+                  </Button>
                 )}
               </div>
               <footer className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
+                <Button
+                  variant="secondary"
                   onClick={close}
                 >
                   Cerrar
-                </button>
+                </Button>
               </footer>
             </>
           )}

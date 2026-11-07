@@ -1,7 +1,6 @@
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useCallback, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
 import { Snackbar } from '@/shared/components/Snackbar'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { SubjectDialog } from '../components/SubjectDialog'
@@ -15,6 +14,8 @@ import type {
   SubjectStatus,
 } from '../types/adminSubject.types'
 import styles from './AdminSubjectsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
 
 const INITIAL_QUERY: SubjectsQuery = {
   page: 1,
@@ -83,18 +84,17 @@ export function AdminSubjectsPage() {
           { label: 'Gestionar materias' },
         ]}
         actions={
-          <div className={styles.headerActions}>
-            <Link to="/admin/subjects/import" className={styles.primaryButton}>
+          <>
+            <ButtonLink to="/admin/subjects/import">
               + Importar materias (CSV)
-            </Link>
-            <button
-              type="button"
-              className={styles.secondaryButton}
+            </ButtonLink>
+            <Button
+              variant="secondary"
               onClick={() => setSelection({ mode: 'create' })}
             >
               + Registrar materia
-            </button>
-          </div>
+            </Button>
+          </>
         }
       />
       <div className={styles.card}>
@@ -167,20 +167,19 @@ export function AdminSubjectsPage() {
               <option value="INACTIVE">Inactivos</option>
             </select>
           </label>
-          <button className={styles.primaryButton} type="submit">
+          <Button type="submit">
             Buscar
-          </button>
+          </Button>
           {filtered && (
-            <button
-              className={styles.secondaryButton}
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => {
                 setSearch('')
                 changeQuery(INITIAL_QUERY)
               }}
             >
               Limpiar filtros
-            </button>
+            </Button>
           )}
         </form>
         {careers.error && (
@@ -189,13 +188,12 @@ export function AdminSubjectsPage() {
               {careers.error} Puedes consultar el catálogo sin filtrar por
               carrera.
             </p>
-            <button
-              type="button"
-              className={styles.secondaryButton}
+            <Button
+              variant="secondary"
               onClick={careers.reload}
             >
               Reintentar carreras
-            </button>
+            </Button>
           </div>
         )}
         <div aria-busy={catalog.status === 'loading'}>
@@ -208,13 +206,11 @@ export function AdminSubjectsPage() {
             <div className={styles.state} role="alert">
               <h2>No se pudo cargar el catálogo</h2>
               <p>{catalog.error}</p>
-              <button
-                type="button"
-                className={styles.primaryButton}
+              <Button
                 onClick={catalog.reload}
               >
                 Reintentar
-              </button>
+              </Button>
             </div>
           )}
           {catalog.status === 'ready' &&
@@ -250,29 +246,27 @@ export function AdminSubjectsPage() {
               {meta.from ?? 0}–{meta.to ?? 0} de {meta.total} materias
             </p>
             <div>
-              <button
-                type="button"
-                className={styles.secondaryButton}
+              <Button
+                variant="secondary"
                 disabled={meta.current_page <= 1}
                 onClick={() =>
                   changeQuery({ ...query, page: meta.current_page - 1 })
                 }
               >
                 Anterior
-              </button>
+              </Button>
               <span>
                 Página {meta.current_page} de {meta.last_page}
               </span>
-              <button
-                type="button"
-                className={styles.secondaryButton}
+              <Button
+                variant="secondary"
                 disabled={meta.current_page >= meta.last_page}
                 onClick={() =>
                   changeQuery({ ...query, page: meta.current_page + 1 })
                 }
               >
                 Siguiente
-              </button>
+              </Button>
             </div>
           </nav>
         )}

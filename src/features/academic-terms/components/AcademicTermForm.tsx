@@ -13,6 +13,7 @@ import { validateAcademicTerm } from '../utils/academicTermValidation'
 import { formatAcademicTermDate } from '../utils/academicTermDate'
 import { AcademicTermFields } from './AcademicTermFields'
 import styles from './AcademicTermModal.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function AcademicTermForm({
   term,
@@ -130,17 +131,15 @@ export function AcademicTermForm({
         onChange={change}
       />
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           onClick={onCancel}
           disabled={saving}
         >
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className={styles.primaryButton}
           disabled={saving || unavailable}
         >
           {saving
@@ -148,7 +147,7 @@ export function AcademicTermForm({
             : term
               ? 'Guardar cambios'
               : 'Registrar periodo'}
-        </button>
+        </Button>
       </footer>
     </form>
   )

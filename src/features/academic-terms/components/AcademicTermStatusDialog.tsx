@@ -12,6 +12,7 @@ import type {
 import { formatAcademicTermDate } from '../utils/academicTermDate'
 import { AcademicTermModal } from './AcademicTermModal'
 import styles from './AcademicTermModal.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function AcademicTermStatusDialog({
   termId,
@@ -86,13 +87,12 @@ export function AcademicTermStatusDialog({
         <div role="alert" className={styles.error}>
           <p>{record.state.message}</p>
           {!record.state.unavailable && (
-            <button
-              type="button"
-              className={styles.secondaryButton}
+            <Button
+              variant="secondary"
               onClick={refresh}
             >
               Reintentar consulta
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -134,34 +134,31 @@ export function AcademicTermStatusDialog({
             </p>
           )}
           {!unavailable && (
-            <button
-              type="button"
-              className={styles.secondaryButton}
+            <Button
+              variant="secondary"
               onClick={refresh}
             >
               Consultar estado actual
-            </button>
+            </Button>
           )}
         </div>
       )}
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           disabled={saving}
           onClick={close}
         >
           {alreadyChanged ? 'Cerrar' : 'Cancelar'}
-        </button>
+        </Button>
         {term && !alreadyChanged && (
-          <button
-            type="button"
-            className={activating ? styles.primaryButton : styles.dangerButton}
+          <Button
+            variant={activating ? 'primary' : 'danger'}
             disabled={saving || Boolean(error)}
             onClick={confirm}
           >
             {saving ? 'Guardando…' : `${action} periodo`}
-          </button>
+          </Button>
         )}
       </footer>
     </AcademicTermModal>

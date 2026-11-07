@@ -419,6 +419,20 @@ try {
           }
         }
       }
+      // DS2.2d: Subjects and Academic terms use Button/ButtonLink; the create dialog keeps Escape and focus return.
+      const createLabel = { '/admin/subjects': '+ Registrar materia', '/admin/academic-terms': '+ Registrar periodo' }[screen.path]
+      if (!baseline && createLabel) {
+        const ds = (selector) => `[...document.querySelectorAll(${JSON.stringify(selector)})].filter(el=>/(^|_)button(_|$)/.test(el.className)&&!/Button/.test(el.className)).length`
+        check(await evaluate(ds('main button, main a')) >= (screen.path === '/admin/subjects' ? 3 : 1), 'botones de página sin Button')
+        await evaluate(`(()=>{const b=[...document.querySelectorAll('main button')].find(b=>b.textContent.trim()===${JSON.stringify(createLabel)});b.focus();b.click()})()`)
+        await wait(`!!document.querySelector('dialog[open] form')`, `${label}: abrir registro`)
+        check(await evaluate(ds('dialog[open] footer button, dialog[open] form button')) >= 2, 'pie del diálogo sin Button')
+        await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+        await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+        await wait(`!document.querySelector('dialog[open]')`, `${label}: Escape cierra el registro`)
+        check(await evaluate(`document.activeElement?.textContent.trim()===${JSON.stringify(createLabel)}`), 'foco no devuelto al botón de registro')
+        check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`), 'escritura inesperada en registro')
+      }
       if (screen.path === '/admin/users/manage') {
         const menuSelector='button[aria-controls][aria-label*="principal"]'
         if (await evaluate(`(()=>{const b=document.querySelector('${menuSelector}');return !!b&&b.getBoundingClientRect().width>0})()`)) {

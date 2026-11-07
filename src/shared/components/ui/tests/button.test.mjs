@@ -129,23 +129,42 @@ test('Button CSS uses tokens and defines hover, active, focus-visible and disabl
 })
 
 // Closed list of authorized consumers per component (DS2.2c: the Rooms pilot is the first adopter;
-// DS4.1a: the teacher's subject students page).
+// DS2.2d: Subjects and Academic terms; DS4.1a: the teacher's subject students page).
 const authorizedConsumers = {
   Button: [
+    'features/academic-terms/components/AcademicTermDetails.tsx',
+    'features/academic-terms/components/AcademicTermDialog.tsx',
+    'features/academic-terms/components/AcademicTermForm.tsx',
+    'features/academic-terms/components/AcademicTermStatusDialog.tsx',
+    'features/academic-terms/components/AcademicTermsFilters.tsx',
+    'features/academic-terms/components/ActiveAcademicTermSummary.tsx',
+    'features/academic-terms/pages/AdminAcademicTermsPage.tsx',
     'features/rooms/components/RoomDetails.tsx',
     'features/rooms/components/RoomDialog.tsx',
     'features/rooms/components/RoomForm.tsx',
     'features/rooms/components/RoomStatusDialog.tsx',
     'features/rooms/pages/AdminRoomsPage.tsx',
     'features/students/pages/TeacherSubjectStudentsPage.tsx',
+    'features/subjects/components/SubjectDetails.tsx',
+    'features/subjects/components/SubjectDialog.tsx',
+    'features/subjects/components/SubjectForm.tsx',
+    'features/subjects/components/SubjectStatusDialog.tsx',
+    'features/subjects/pages/AdminSubjectsPage.tsx',
   ],
   ButtonLink: [
     'features/rooms/pages/AdminRoomsPage.tsx',
     'features/students/pages/TeacherSubjectStudentsPage.tsx',
+    'features/subjects/pages/AdminSubjectsPage.tsx',
   ],
 }
 // Migrated scopes: any new consumer outside them needs its own Design System subetapa.
-const migratedScopes = ['features/rooms/', 'features/students/pages/TeacherSubjectStudentsPage.tsx']
+// Row actions, the modal close button (×) and the shared CSV import are still pending.
+const migratedScopes = [
+  'features/academic-terms/',
+  'features/rooms/',
+  'features/students/pages/TeacherSubjectStudentsPage.tsx',
+  'features/subjects/',
+]
 const consumersOf = (sources, component) =>
   [...sources].filter(([, text]) => new RegExp(`components/ui/Button/${component}['"]`).test(text)).map(([file]) => file).sort()
 const folderConsumers = (sources) => [...sources].filter(([, text]) => /components\/ui\/Button\//.test(text)).map(([file]) => file).sort()
