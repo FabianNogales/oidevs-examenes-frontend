@@ -52,6 +52,7 @@ import {ImportSubjectStudentsPage} from '/src/features/students/pages/ImportSubj
 import {TeacherSubjectsPage} from '/src/features/subjects/pages/TeacherSubjectsPage.tsx';
 import {TeacherStudentsPage} from '/src/features/students/pages/TeacherStudentsPage.tsx';
 import {TeacherExamsPage} from '/src/features/exams/pages/TeacherExamsPage.tsx';
+import {TeacherExamDetailPage} from '/src/features/exams/pages/TeacherExamDetailPage.tsx';
 import {StudentLayout} from '/src/layouts/StudentLayout/StudentLayout.tsx';
 import {StudentProfilePage} from '/src/features/students/pages/StudentProfilePage.tsx';
 import {StudentQrPage} from '/src/features/students/pages/StudentQrPage.tsx';
@@ -92,6 +93,9 @@ const fixtures={
   '/course-offerings/8/enrollments':{data:[]},
   // U1: teacher exam list (page 1 of 1). U2: student profile and exams (no QR available yet).
   '/teacher/exams':{data:[{id:5,name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',subject_code:'QA-111',exam_date:'2026-11-20',status:'SCHEDULED',start_time:'10:00:00',duration_minutes:90,academic_term_name:'Periodo QA 2026',evaluation_type:'partial',room:{id:1,name:'Aula QA 101',code:'QA-101'},course_offering_id:7}],meta:{current_page:1,last_page:1,total:1}},
+  // U3.1: exam detail (loaded) and a server failure (error state, simulated 500).
+  '/teacher/exams/5':{data:{id:5,name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',subject_code:'QA-111',exam_date:'2026-11-20',start_time:'10:00:00',duration_minutes:90,status:'SCHEDULED',course_offering_id:7,rules:'Sin material de consulta.',updated_at:'2026-11-08T10:00:00-04:00',can_edit:true,can_cancel:true,academic_term_name:'Periodo QA 2026',evaluation_type:'partial',room:{id:1,code:'QA-101',name:'Aula QA 101'}}},
+  '/teacher/exams/99':{__status:500},
   '/students/profile':{message:'OK',data:{profile_photo_url:null,personal_data:{first_names:'Estudiante',last_names:'QA con apellidos extensos',identity_number:'QA-123'},academic_data:{sis_code:'QA-STU-01',email:'estudiante.qa.con.correo.institucional.largo@example.edu',career_code:'QA-SIS',career_name:'Carrera QA Sistemas'}}},
   '/students/exams':{message:'OK',data:[{exam_id:5,subject:'Materia QA de programación con un nombre largo',exam_title:'Parcial QA de programación',scheduled_at:'2026-11-20T10:00:00-04:00',qr_status:'UPCOMING',is_qr_available:false,qr_code_base64:null,token:null}]},
   '/admin/audit-logs':page([{id:1,actor_id:1,action:'UPDATE',entity_type:'Room',entity_id:1,created_at:'2026-01-01T10:00:00Z',old_context:{},new_context:{}}]),
@@ -99,6 +103,7 @@ const fixtures={
 const qa=window.pageLayoutQa={calls:[],unexpected:[]};
 const respond=(method)=>async(url,body)=>{
   qa.calls.push({method,url});
+  if(method==='get'&&fixtures[url]?.__status)throw Object.assign(new Error('QA: simulated '+fixtures[url].__status),{isAxiosError:true,response:{status:fixtures[url].__status,data:{}}});
   if(method==='get'&&fixtures[url])return {data:structuredClone(fixtures[url])};
   qa.unexpected.push(method+' '+url);
   throw Object.assign(new Error('QA: unexpected request '+method+' '+url),{isAxiosError:true,response:{status:501,data:{}}});
@@ -135,6 +140,7 @@ const routes=[
   {path:'/teacher/subjects',element:e(TeacherSubjectsPage)},
   {path:'/teacher/students',element:e(TeacherStudentsPage)},
   {path:'/teacher/exams',element:e(TeacherExamsPage)},
+  {path:'/teacher/exams/:examId',element:e(TeacherExamDetailPage)},
   {path:'/students',element:e(StudentLayout),children:[{path:'profile',element:e(StudentProfilePage)},{path:'qr',element:e(StudentQrPage)}]},
 ]).map(route=>({...route,element:e(React.Fragment,null,e(Header,{user:route.path.startsWith('/admin')?{name:'Administradora QA con nombre y apellidos extraordinariamente largos',role:'admin'}:null}),route.element)}));
 const root=createRoot(document.getElementById('root'));
@@ -192,12 +198,17 @@ const screens = [
     description: 'Selecciona una materia para consultar la lista de estudiantes inscritos.', rows: ['Materia QA de programación con un nombre largo'] },
   { path: '/teacher/exams', title: 'Mis exámenes', crumbs: ['Inicio', 'Mis exámenes'], structural: true, card: true,
     description: 'Consulta tus exámenes por materia, fecha y estado.', rows: ['Parcial QA de programación'] },
+  // U3.1: exam detail keeps its section cards; no page-wide card around the header.
+  { path: '/teacher/exams/5', title: 'Parcial QA de programación', crumbs: ['Inicio', 'Mis exámenes', 'Detalle del examen'], structural: true, examDetail: 'loaded',
+    description: 'Materia QA de programación con un nombre largo · QA-111', rows: ['Preparación del ingreso', 'Normas y restricciones', 'Edición del examen'] },
+  { path: '/teacher/exams/99', title: 'Detalle del examen', crumbs: ['Inicio', 'Mis exámenes', 'Detalle del examen'], structural: true, examDetail: 'error',
+    description: 'Consulta la información de tu evaluación.', rows: ['No se pudo consultar el examen'] },
   // U2: student pages inside StudentLayout's main (no breadcrumbs: none existed; accent kept pending Figma).
   { path: '/students/profile', title: 'Mi perfil', crumbs: [], structural: true, student: true,
     description: 'Consulta tu información personal y académica registrada en el sistema.', rows: ['QA-STU-01'] },
   { path: '/students/qr', title: 'Mis exámenes', crumbs: [], structural: true, student: true,
     description: 'Consulta tus exámenes programados y accede a tu código QR cuando esté disponible.', rows: ['Parcial QA de programación'] },
-].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
+].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'u3f1' ? screen.examDetail : process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
 // Collected in the page: structure, visibility and overflow of the key elements.
 const inspect = `(()=>{
@@ -354,7 +365,7 @@ try {
       if (screen.crumbs.length) {
         check(page.crumbsVisible, 'migas no visibles')
         check(page.current === screen.crumbs.at(-1), 'aria-current de breadcrumb')
-        check(page.links.every(href => ['/', '/admin', '/admin/rooms', '/admin/subjects', '/admin/teachers', '/admin/users/manage', '/admin/users/roles', '/admin/students/manage', '/admin/teachers/assignments', '/teacher/subjects', '/teacher/students/7'].includes(href)), 'ruta breadcrumb desconocida')
+        check(page.links.every(href => ['/', '/admin', '/admin/rooms', '/admin/subjects', '/admin/teachers', '/admin/users/manage', '/admin/users/roles', '/admin/students/manage', '/admin/teachers/assignments', '/teacher/subjects', '/teacher/students/7', '/teacher/exams'].includes(href)), 'ruta breadcrumb desconocida')
       }
       if (!baseline) check(page.headingSurface === page.bodySurface, 'superficie de página: '+page.headingSurface+' / '+page.bodySurface)
       if (!baseline && (screen.structural || screen.path === '/admin/users/history')) {
@@ -381,6 +392,16 @@ try {
           const s=getComputedStyle(el),r=el.getBoundingClientRect(),cr=header.getBoundingClientRect();
           return {bg:s.backgroundColor,radius:s.borderTopLeftRadius,left:Math.round(r.left-cr.left),right:Math.round(cr.right-r.right),h1Inside:el.contains(h),rows:${JSON.stringify(screen.rows)}.every(t=>el.innerText.includes(t))}})()`)
         check(card && card.bg === 'rgb(255, 255, 255)' && card.radius !== '0px' && !card.h1Inside && card.rows && Math.abs(card.left) <= 1 && Math.abs(card.right) <= 1, 'tarjeta de contenido: ' + JSON.stringify(card))
+      }
+      if (!baseline && screen.examDetail) {
+        // Section cards stay; actions and navigation are still there; no ancestor card wraps the h1.
+        const detail = await evaluate(`(()=>{const h=document.querySelector('h1');let wrapped=false;for(let el=h.parentElement;el&&el.tagName!=='MAIN';el=el.parentElement){const s=getComputedStyle(el);if(s.boxShadow!=='none'||s.backgroundColor==='rgb(255, 255, 255)')wrapped=true}
+          const cards=[...document.querySelectorAll('main section, main article')].filter(el=>{const s=getComputedStyle(el);return s.backgroundColor==='rgb(255, 255, 255)'&&parseFloat(s.borderTopLeftRadius)>0}).length;
+          const names=[...document.querySelectorAll('main a, main button')].map(el=>el.textContent.trim());
+          return {wrapped,cards,names,alert:!!document.querySelector('main [role=alert]')}})()`)
+        check(!detail.wrapped, 'la cabecera sigue dentro de una tarjeta')
+        if (screen.examDetail === 'loaded') check(detail.cards >= 3 && ['Distribución de listas', 'Control sin conexión', 'Editar examen'].every(n => detail.names.includes(n)), 'secciones/acciones del detalle: ' + JSON.stringify(detail))
+        else check(detail.alert && detail.names.includes('Reintentar'), 'estado de error: ' + JSON.stringify(detail))
       }
       if (!baseline && screen.student) {
         // Accent underline kept provisionally (no Figma reference to verify); the content panels stay as cards.

@@ -1,10 +1,11 @@
 // Design guard for "Programar Evaluación" (/teacher/subjects/:id/exams/create), whose current design is
-// approved (decision of 2026-11-08). It renders the real page twice in headless Chrome — once with every
+// approved (decision of 2026-11-08), and for "Editar examen" (/teacher/exams/:id/edit), which shares its
+// ExamSchedulerPageShell (EIDA_EXAM_GUARD_SCREEN=edit). It renders the real page twice in headless Chrome — once with every
 // /src file taken from a base commit (git show) and once with the working tree — and requires an identical
 // signature (DOM structure, own text, rounded geometry and key computed styles) at 320/390/768/1024/1440px,
 // plus the approved landmarks: workspace columns, calendar, room selector, schedule fields and bottom bar.
 // Simulated GET-only HTTP and a stub auth hook; no backend, nothing is submitted.
-// Usage: EIDA_EXAM_CREATE_BASE=<commit> node src/features/exams/tests/examCreateDesignGuard.browser.mjs
+// Usage: EIDA_EXAM_CREATE_BASE=<commit> [EIDA_EXAM_GUARD_SCREEN=edit] node src/features/exams/tests/examCreateDesignGuard.browser.mjs
 import assert from 'node:assert/strict'
 import { execFileSync, spawn } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -13,8 +14,13 @@ import { createServer } from 'vite'
 import { cleanupBrowserProfile, createBrowserProfile } from '../../../shared/tests/browserProfile.mjs'
 
 const baseRef = process.env.EIDA_EXAM_CREATE_BASE ?? 'HEAD'
+const screen = process.env.EIDA_EXAM_GUARD_SCREEN === 'edit' ? 'edit' : 'create'
+const target = {
+  create: { path: '/teacher/subjects/7/exams/create?period=Periodo%20QA%202026', title: 'Programar Evaluación', submit: 'Confirmar Programación' },
+  edit: { path: '/teacher/exams/5/edit', title: 'Editar examen', submit: 'Guardar cambios' },
+}[screen]
 const widths = [320, 390, 768, 1024, 1440]
-const evidence = join(process.cwd(), '.validation.local', process.env.EIDA_EXAM_CREATE_OUTPUT ?? 'exam-create-guard')
+const evidence = join(process.cwd(), '.validation.local', process.env.EIDA_EXAM_CREATE_OUTPUT ?? `exam-${screen}-guard`)
 await mkdir(evidence, { recursive: true })
 
 // Fixed clock so both renders show the same calendar month and day states.
@@ -30,14 +36,16 @@ import '@fontsource/poppins/500.css';
 import '@fontsource/poppins/600.css';
 import '@fontsource/poppins/700.css';
 import {TeacherExamCreatePage} from '/src/features/exams/pages/TeacherExamCreatePage.tsx';
+import {TeacherExamEditPage} from '/src/features/exams/pages/TeacherExamEditPage.tsx';
 const e=React.createElement;
 const fixtures={
   '/teacher/dashboard/subjects':{data:[{course_offering_id:7,subject:{code:'QA-111',name:'Materia QA de programación con un nombre largo',status:'ACTIVE'},academic_term:{name:'Periodo QA 2026',status:'ACTIVE'},status:'ACTIVE',can_manage:true}]},
   '/rooms':{data:[
     {id:1,code:'QA-101',name:'Aula QA 101',location:'Bloque QA',floor:'1',capacity:40,status:'ACTIVE',busy_slots:[]},
-    {id:2,code:'QA-202',name:'Laboratorio QA 202',location:'Bloque QA',floor:'2',capacity:25,status:'ACTIVE',busy_slots:[{exam_date:'2026-11-12',start_time:'10:00:00',end_time:'11:30:00'}]}],
+    {id:2,code:'QA-202',name:'Laboratorio QA 202',location:'Bloque QA',floor:'2',capacity:25,status:'ACTIVE',busy_slots:[{date:'2026-11-12',start:'10:00',end:'11:30'}]}],
     meta:{next_partial_number:1,last_partial_number:0,enrolled_students_count:30,eligible_students_count:28,safety_margin:2,recommended_capacity:30}},
   '/teacher/dashboard/upcoming-exams':{data:[]},
+  '/teacher/exams/5':{data:{id:5,name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',subject_code:'QA-111',exam_date:'2026-11-20',start_time:'10:00:00',duration_minutes:90,status:'SCHEDULED',course_offering_id:7,rules:'Sin material de consulta.',updated_at:'2026-11-08T10:00:00-04:00',can_edit:true,can_cancel:true,academic_term_name:'Periodo QA 2026',evaluation_type:'partial',room:{id:1,code:'QA-101',name:'Aula QA 101'}}},
 };
 const qa=window.examCreateQa={calls:[],unexpected:[]};
 const respond=(method)=>async(url)=>{
@@ -49,7 +57,8 @@ const respond=(method)=>async(url)=>{
 qa.client={get:respond('get'),post:respond('post'),put:respond('put'),patch:respond('patch'),delete:respond('delete')};
 const router=createMemoryRouter([
   {path:'/teacher/subjects/:courseOfferingId/exams/create',element:e(TeacherExamCreatePage)},
-  {path:'*',element:e('p',null,'Fuera de la pantalla')}],{initialEntries:['/teacher/subjects/7/exams/create?period=Periodo%20QA%202026']});
+  {path:'/teacher/exams/:examId/edit',element:e(TeacherExamEditPage)},
+  {path:'*',element:e('p',null,'Fuera de la pantalla')}],{initialEntries:[${JSON.stringify(target.path)}]});
 createRoot(document.getElementById('root')).render(e(RouterProvider,{router}));
 `
 
@@ -64,7 +73,7 @@ const signature = `(()=>{
     [...el.children].forEach((c,i)=>walk(c,path+'/'+i));};
   walk(document.getElementById('root'),'r');
   const text=(t)=>[...document.querySelectorAll('button,h1,h2,h3,label,legend')].some(el=>el.textContent.includes(t));
-  const footer=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Confirmar Programación');
+  const footer=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===${JSON.stringify(target.submit)});
   const grid=[...document.querySelectorAll('#root *')].find(el=>/workspaceGrid/.test(el.className));
   const fb=footer?.getBoundingClientRect();
   return {rows:out,landmarks:{
@@ -82,7 +91,7 @@ const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 async function render(phase) {
   let vite, chrome, ws, profile
   try {
-    profile = await createBrowserProfile(`exam-create-guard-${phase}`)
+    profile = await createBrowserProfile(`exam-${screen}-guard-${phase}`)
     process.env.EIDA_DEV_HTTPS_KEY = ''
     process.env.EIDA_DEV_HTTPS_CERT = ''
     vite = await createServer({
@@ -145,11 +154,13 @@ async function render(phase) {
       await send('Page.navigate', { url: origin + '/__exam-create' })
       let ready = false
       for (let index = 0; index < 100 && !ready; index++) {
-        ready = await evaluate(`!!document.querySelector('h1') && document.body.innerText.includes('Aula QA 101') && [...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Confirmar Programación')`).catch(() => false)
+        ready = await evaluate(`!!document.querySelector('h1') && document.body.innerText.includes('Aula QA 101') && [...document.querySelectorAll('button')].some(b=>b.textContent.trim()===${JSON.stringify(target.submit)})`).catch(() => false)
         if (!ready) await pause(150)
       }
       assert.ok(ready, `${phase} ${width}px: la pantalla no terminó de cargar`)
       await evaluate('document.fonts.ready.then(()=>true)')
+      // Freeze transitions/animations so a card caught mid-transition cannot produce a false difference.
+      await evaluate(`(()=>{const s=document.createElement('style');s.textContent='*,*::before,*::after{transition:none!important;animation:none!important}';document.head.append(s);return true})()`)
       await pause(300)
       results[width] = await evaluate(signature)
       results[width].unexpected = await evaluate('window.examCreateQa.unexpected')
@@ -180,7 +191,7 @@ for (const width of widths) {
   const problems = []
   if (diff.length) problems.push(`${diff.length} elementos distintos de ${baseRef}`)
   if (JSON.stringify(a.landmarks) !== JSON.stringify(marks)) problems.push('referencias distintas: ' + JSON.stringify({ base: a.landmarks, current: marks }))
-  if (marks.h1 !== 'Programar Evaluación' && !marks.h1) problems.push('sin h1')
+  if (marks.h1 !== target.title) problems.push('h1 inesperado: ' + marks.h1)
   if (marks.columns !== expectedColumns) problems.push(`columnas del área de trabajo ${marks.columns} (se esperaban ${expectedColumns})`)
   if (!marks.calendar || !marks.rooms || !marks.time || !marks.footer) problems.push('falta calendario, aulas, horario o barra inferior: ' + JSON.stringify(marks))
   // Known pre-existing overflow at 320px in the approved design (base): it must not change, it is not fixed here.
@@ -188,9 +199,9 @@ for (const width of widths) {
   if (b.unexpected.length || b.writes.length) problems.push('peticiones inesperadas o de escritura: ' + [...b.unexpected, ...b.writes].join(', '))
   await writeFile(join(evidence, `diff-${width}.json`), JSON.stringify(diff.slice(0, 40), null, 2))
   if (problems.length) failures.push(`${width}px: ${problems.join(' · ')}`)
-  console.log(`${problems.length ? 'FAIL' : 'PASS'} ${width}px Programar Evaluación (${b.rows.length} elementos, h1 «${marks.h1}», ${marks.columns} columnas${marks.overflow ? ', desbordamiento previo' : ''})${problems.length ? ': ' + problems.join(' · ') : ''}`)
+  console.log(`${problems.length ? 'FAIL' : 'PASS'} ${width}px ${target.title} (${b.rows.length} elementos, h1 «${marks.h1}», ${marks.columns} columnas${marks.overflow ? ', desbordamiento previo' : ''})${problems.length ? ': ' + problems.join(' · ') : ''}`)
 }
 if (current.exceptions.length || base.exceptions.length) failures.push('excepciones JS: ' + [...base.exceptions, ...current.exceptions].join(' | '))
 await writeFile(join(evidence, 'result.json'), JSON.stringify({ baseRef, fixtureOnly: true, failures, landmarks: Object.fromEntries(widths.map((w) => [w, current[w].landmarks])) }, null, 2))
-assert.deepEqual(failures, [], 'Programar Evaluación cambió')
-console.log(`Guarda Programar Evaluación PASS ${widths.length}/${widths.length} frente a ${baseRef} · evidencia en ${evidence}`)
+assert.deepEqual(failures, [], `${target.title} cambió`)
+console.log(`Guarda ${target.title} PASS ${widths.length}/${widths.length} frente a ${baseRef} · evidencia en ${evidence}`)

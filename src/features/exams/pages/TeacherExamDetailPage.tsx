@@ -1,15 +1,18 @@
 import { safeExamMessage } from '../utils/examMessages'
 import { ExamIncidentNavigation } from '@/features/incidents/components/ExamIncidentNavigation'
 import { hasExamEnded } from '../utils/examDisplayStatus'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useLocation, useParams } from 'react-router'
 import { ExamInformation } from '@/features/exams/components/ExamInformation'
 import { ExamCancellation } from '@/features/exams/components/ExamCancellation'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import styles from './TeacherExamsPage.module.css'
 import detailStyles from './TeacherExamDetailPage.module.css'
 import management from './ExamManagement.module.css'
+
+const titleId = 'exam-detail-title'
 
 function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
   const { search } = useLocation()
@@ -18,25 +21,24 @@ function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
   const backToList = `/teacher/exams${search}`
 
   return (
-    <main className={`${styles.page} ${detailStyles.detailPage}`}>
-      <section className={`${styles.content} ${detailStyles.detailContent}`}>
-        <Breadcrumbs
-          items={[
+    <main className={detailStyles.detailPage}>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title={exam?.name ?? 'Detalle del examen'}
+          titleId={titleId}
+          description={
+            exam
+              ? [exam.subject_name, exam.subject_code]
+                  .filter(Boolean)
+                  .join(' · ')
+              : 'Consulta la información de tu evaluación.'
+          }
+          breadcrumbs={[
             { label: 'Inicio', to: '/' },
             { label: 'Mis exámenes', to: backToList },
             { label: 'Detalle del examen' },
           ]}
         />
-        <header className={`${styles.pageHeader} ${detailStyles.header}`}>
-          <h1>{exam?.name ?? 'Detalle del examen'}</h1>
-          <p>
-            {exam
-              ? [exam.subject_name, exam.subject_code]
-                  .filter(Boolean)
-                  .join(' · ')
-              : 'Consulta la información de tu evaluación.'}
-          </p>
-        </header>
         {isLoading ? <ExamsSkeleton /> : null}
         {errorMessage ? (
           <section className={styles.state} role="alert">
@@ -135,7 +137,7 @@ function TeacherExamDetailContent({ examId }: { examId: string | undefined }) {
             </div>
           </div>
         ) : null}
-      </section>
+      </PageContainer>
     </main>
   )
 }
