@@ -126,6 +126,7 @@ const authorizedConsumers = [
   'features/course-offerings/pages/AdminCourseOfferingsPage.tsx',
   'features/course-offerings/pages/ImportCourseOfferingsPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
+  'features/exams/pages/TeacherExamsPage.tsx',
   'features/portal-calendar/pages/AdminCalendarPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/AdminInformationPage.tsx',
@@ -140,9 +141,11 @@ const authorizedConsumers = [
   'features/students/pages/AdminManageStudentsPage.tsx',
   'features/students/pages/ImportStudentsPage.tsx',
   'features/students/pages/ImportSubjectStudentsPage.tsx',
+  'features/students/pages/TeacherStudentsPage.tsx',
   'features/students/pages/TeacherSubjectStudentsPage.tsx',
   'features/subjects/pages/AdminSubjectsPage.tsx',
   'features/subjects/pages/ImportSubjectsPage.tsx',
+  'features/subjects/pages/TeacherSubjectsPage.tsx',
   'features/teachers/pages/AdminTeachersPage.tsx',
   'features/users/pages/AdminManageUsersPage.tsx',
   'features/users/pages/AdminNotFoundPage.tsx',
@@ -154,12 +157,15 @@ const authorizedConsumers = [
 const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']
 // Public and teacher pages render the page's only <main> landmark themselves (AppLayout has none).
 const ownsMain = [
+  'features/exams/pages/TeacherExamsPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/InformationPage.tsx',
   'features/portal-news/pages/NewsPage.tsx',
   'features/portal-services/pages/ServicesPage.tsx',
   'features/students/pages/ImportSubjectStudentsPage.tsx',
+  'features/students/pages/TeacherStudentsPage.tsx',
   'features/students/pages/TeacherSubjectStudentsPage.tsx',
+  'features/subjects/pages/TeacherSubjectsPage.tsx',
 ]
 // Portal administration pages get their PageHeader through PortalAdminCollection headerVariant="page".
 const portalAdmin = [

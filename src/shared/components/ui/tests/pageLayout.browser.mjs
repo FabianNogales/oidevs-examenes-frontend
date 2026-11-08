@@ -49,6 +49,9 @@ import {AdminManageStudentsPage} from '/src/features/students/pages/AdminManageS
 import {ImportCourseOfferingsPage} from '/src/features/course-offerings/pages/ImportCourseOfferingsPage.tsx';
 import {TeacherSubjectStudentsPage} from '/src/features/students/pages/TeacherSubjectStudentsPage.tsx';
 import {ImportSubjectStudentsPage} from '/src/features/students/pages/ImportSubjectStudentsPage.tsx';
+import {TeacherSubjectsPage} from '/src/features/subjects/pages/TeacherSubjectsPage.tsx';
+import {TeacherStudentsPage} from '/src/features/students/pages/TeacherStudentsPage.tsx';
+import {TeacherExamsPage} from '/src/features/exams/pages/TeacherExamsPage.tsx';
 import {Header} from '/src/shared/components/Header/Header.tsx';
 import {setStudentImportIdentity} from '/src/features/students/utils/studentImportDraft.ts';
 setStudentImportIdentity({id:1,status:'ACTIVE',must_change_password:false,roles:['ADMINISTRADOR']});
@@ -84,6 +87,8 @@ const fixtures={
     {course_offering_id:8,subject:{code:'QA-222',name:'Materia QA de consulta',status:'ACTIVE'},academic_term:{name:'Periodo QA 2025',status:'INACTIVE'},status:'ACTIVE',can_manage:false}]},
   '/course-offerings/7/enrollments':{data:[{id:3,sis_code:'QA-301',first_names:'Estudiante',last_names:'QA inscrito'}]},
   '/course-offerings/8/enrollments':{data:[]},
+  // U1: teacher exam list (page 1 of 1).
+  '/teacher/exams':{data:[{id:5,name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',subject_code:'QA-111',exam_date:'2026-11-20',status:'SCHEDULED',start_time:'10:00:00',duration_minutes:90,academic_term_name:'Periodo QA 2026',evaluation_type:'partial',room:{id:1,name:'Aula QA 101',code:'QA-101'},course_offering_id:7}],meta:{current_page:1,last_page:1,total:1}},
   '/admin/audit-logs':page([{id:1,actor_id:1,action:'UPDATE',entity_type:'Room',entity_id:1,created_at:'2026-01-01T10:00:00Z',old_context:{},new_context:{}}]),
 };
 const qa=window.pageLayoutQa={calls:[],unexpected:[]};
@@ -122,6 +127,9 @@ const routes=[
   {path:'/information',element:e(InformationPage)},
   {path:'/teacher/students/:courseOfferingId',element:e(TeacherSubjectStudentsPage)},
   {path:'/teacher/students/:courseOfferingId/import',element:e(ImportSubjectStudentsPage)},
+  {path:'/teacher/subjects',element:e(TeacherSubjectsPage)},
+  {path:'/teacher/students',element:e(TeacherStudentsPage)},
+  {path:'/teacher/exams',element:e(TeacherExamsPage)},
 ]).map(route=>({...route,element:e(React.Fragment,null,e(Header,{user:route.path.startsWith('/admin')?{name:'Administradora QA con nombre y apellidos extraordinariamente largos',role:'admin'}:null}),route.element)}));
 const root=createRoot(document.getElementById('root'));
 qa.show=(path)=>{qa.calls=[];qa.unexpected=[];root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
@@ -171,7 +179,14 @@ const screens = [
     structural: true, teacher: 'error', noDescription: true, actions: ['← Volver a mis materias'], rows: ['no está disponible para este docente'] },
   { path: '/teacher/students/7/import', title: 'Importar estudiantes', crumbs: ['Inicio', 'Mis materias', 'Estudiantes inscritos', 'Importar estudiantes'],
     structural: true, csv: true, description: 'Materia QA de programación con un nombre largo · Periodo QA 2026' },
-].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
+  // U1: teacher lists own their main; header and breadcrumbs sit outside the content card.
+  { path: '/teacher/subjects', title: 'Mis materias', crumbs: ['Inicio', 'Mis materias'], structural: true, card: true,
+    description: 'Gestiona tus materias, crea examenes y administra estudiantes.', rows: ['Materia QA de programación con un nombre largo'] },
+  { path: '/teacher/students', title: 'Estudiantes', crumbs: ['Inicio', 'Estudiantes', 'Gestionar estudiantes'], structural: true, card: true,
+    description: 'Selecciona una materia para consultar la lista de estudiantes inscritos.', rows: ['Materia QA de programación con un nombre largo'] },
+  { path: '/teacher/exams', title: 'Mis exámenes', crumbs: ['Inicio', 'Mis exámenes'], structural: true, card: true,
+    description: 'Consulta tus exámenes por materia, fecha y estado.', rows: ['Parcial QA de programación'] },
+].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/teacher\/(subjects|students|exams)$/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
 // Collected in the page: structure, visibility and overflow of the key elements.
 const inspect = `(()=>{
@@ -348,6 +363,14 @@ try {
         check(page.layout?.descriptionGap === '8px', 'subtítulo fuera de PageHeader')
         check(Math.abs(page.descriptionX-page.layout.x)<=1, 'subtítulo desalineado del H1')
       }
+      if (!baseline && screen.card) {
+        // The content card follows the header inside the same container, aligned with the h1, and holds the list.
+        const card = await evaluate(`(()=>{const h=document.querySelector('h1'),header=h.closest('header'),container=header.parentElement;
+          const el=[...container.children].find(c=>c!==header&&!c.contains(header)&&getComputedStyle(c).boxShadow!=='none');if(!el)return null;
+          const s=getComputedStyle(el),r=el.getBoundingClientRect(),cr=header.getBoundingClientRect();
+          return {bg:s.backgroundColor,radius:s.borderTopLeftRadius,left:Math.round(r.left-cr.left),right:Math.round(cr.right-r.right),h1Inside:el.contains(h),rows:${JSON.stringify(screen.rows)}.every(t=>el.innerText.includes(t))}})()`)
+        check(card && card.bg === 'rgb(255, 255, 255)' && card.radius !== '0px' && !card.h1Inside && card.rows && Math.abs(card.left) <= 1 && Math.abs(card.right) <= 1, 'tarjeta de contenido: ' + JSON.stringify(card))
+      }
       if (screen.csv) check(page.fileInputs >= 1 && page.templateButton, 'archivo o plantilla CSV ausente')
       if (screen.description) check(page.text.includes(screen.description), 'descripción ausente')
       for (const action of page.actions) check(action.found && action.visible && action.name, `acción ${action.label} ${JSON.stringify(action)}`)
@@ -491,7 +514,7 @@ try {
     const admin=results.filter(result=>result.width===width && ['/admin/students/manage','/admin/teachers','/admin/users/manage','/admin/users/roles','/admin/users/15/roles','/admin/users/history','/admin/students/import','/admin/teachers/assignments/import'].includes(result.path))
     // Tall CSV pages reserve the browser's vertical scrollbar: compare the shared contract,
     // while each page's width and alignment are checked against its own clientWidth above.
-    assert.equal(new Set(admin.map(result=>JSON.stringify((({x,width,...contract})=>contract)(result.layout)))).size,1,`${width}: contrato administrativo computado desigual`)
+    if (admin.length) assert.equal(new Set(admin.map(result=>JSON.stringify((({x,width,...contract})=>contract)(result.layout)))).size,1,`${width}: contrato administrativo computado desigual`)
   }
   await writeFile(join(evidence, 'result.json'), JSON.stringify(results, null, 2))
   const failed = results.filter((result) => !result.pass)
