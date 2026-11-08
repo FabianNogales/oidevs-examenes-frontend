@@ -1,5 +1,4 @@
 import { useId, useState } from 'react'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -16,8 +15,12 @@ import { useExamCollaborators } from '../hooks/useExamCollaborators'
 import { useMyCollaborations } from '../hooks/useMyCollaborations'
 import type { ExamCollaborator } from '../types/collaboration.types'
 import { normalizeCollaborationSearch } from '../utils/collaborationFormat'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import pageStyles from '@/features/exams/pages/TeacherExamsPage.module.css'
 import styles from './Collaborations.module.css'
+
+const titleId = 'exam-collaborators-title'
 
 type ModalState =
   | { type: 'assign' }
@@ -63,116 +66,118 @@ function ExamCollaboratorsContent({ examId }: { examId: string | undefined }) {
   }
 
   return (
-    <main className={pageStyles.page}>
-      <section className={pageStyles.content}>
-        <Breadcrumbs
-          items={[{ label: 'Mis exámenes', to: '/teacher/exams' }, { label: 'Colaboradores' }]}
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Colaboradores temporales"
+          titleId={titleId}
+          description="Gestiona a los usuarios autorizados para colaborar en este examen."
+          breadcrumbs={[
+            { label: 'Mis exámenes', to: '/teacher/exams' },
+            { label: 'Colaboradores' },
+          ]}
         />
-        <header className={pageStyles.pageHeader}>
-          <h1>Colaboradores temporales</h1>
-          <p>
-            Gestiona a los usuarios autorizados para colaborar en este examen.
-          </p>
-        </header>
-        {isLoading ? (
-          <p role="status">Cargando examen…</p>
-        ) : errorMessage ? (
-          <section className={pageStyles.state} role="alert">
-            <p>{errorMessage}</p>
-            <button type="button" onClick={() => void loadExams()}>
-              Reintentar
-            </button>
-          </section>
-        ) : !exam ? (
-          <section className={pageStyles.state}>
-            <p>El examen no está disponible para tu cuenta.</p>
-            <Link to="/teacher/exams">Volver a Mis exámenes</Link>
-          </section>
-        ) : (
-          <>
-            <CollaborationExamCard exam={exam} />
-            <section
-              className={styles.section}
-              aria-labelledby="assigned-collaborators-title"
-            >
-              <div className={styles.sectionHeader}>
-                <h2 id="assigned-collaborators-title">
-                  Colaboradores asignados
-                </h2>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={() => setModal({ type: 'assign' })}
-                >
-                  + Asignar colaborador
-                </button>
-              </div>
-              <div className={styles.search}>
-                <label htmlFor={searchId}>Buscar colaboradores</label>
-                <input
-                  id={searchId}
-                  type="search"
-                  placeholder="Buscar por nombre, CI o correo..."
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-              </div>
-              {list.error ? (
-                <p className={styles.error} role="alert">
-                  {list.error}{' '}
+        <section className={`${pageStyles.content} ${pageStyles.contentFull}`}>
+          {isLoading ? (
+            <p role="status">Cargando examen…</p>
+          ) : errorMessage ? (
+            <section className={pageStyles.state} role="alert">
+              <p>{errorMessage}</p>
+              <button type="button" onClick={() => void loadExams()}>
+                Reintentar
+              </button>
+            </section>
+          ) : !exam ? (
+            <section className={pageStyles.state}>
+              <p>El examen no está disponible para tu cuenta.</p>
+              <Link to="/teacher/exams">Volver a Mis exámenes</Link>
+            </section>
+          ) : (
+            <>
+              <CollaborationExamCard exam={exam} />
+              <section
+                className={styles.section}
+                aria-labelledby="assigned-collaborators-title"
+              >
+                <div className={styles.sectionHeader}>
+                  <h2 id="assigned-collaborators-title">
+                    Colaboradores asignados
+                  </h2>
                   <button
                     type="button"
-                    className={styles.secondaryButton}
-                    onClick={list.reload}
+                    className={styles.primaryButton}
+                    onClick={() => setModal({ type: 'assign' })}
                   >
-                    Reintentar
+                    + Asignar colaborador
                   </button>
-                </p>
+                </div>
+                <div className={styles.search}>
+                  <label htmlFor={searchId}>Buscar colaboradores</label>
+                  <input
+                    id={searchId}
+                    type="search"
+                    placeholder="Buscar por nombre, CI o correo..."
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                </div>
+                {list.error ? (
+                  <p className={styles.error} role="alert">
+                    {list.error}{' '}
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={list.reload}
+                    >
+                      Reintentar
+                    </button>
+                  </p>
+                ) : null}
+                <CollaboratorsTable
+                  collaborators={filtered}
+                  loading={list.loading}
+                  emptyMessage={
+                    list.error
+                      ? 'No se pudieron consultar los colaboradores.'
+                      : search
+                        ? 'No se encontraron colaboradores.'
+                        : 'Aún no hay colaboradores asignados a este examen.'
+                  }
+                  onView={(collaborator) =>
+                    setModal({ type: 'view', collaborator })
+                  }
+                  onRevoke={(collaborator) =>
+                    setModal({ type: 'revoke', collaborator })
+                  }
+                />
+              </section>
+              {modal?.type === 'assign' ? (
+                <AssignCollaboratorModal
+                  key={exam.id}
+                  examId={exam.id}
+                  assignedUserIds={list.collaborators.map((item) => item.user_id)}
+                  onClose={() => setModal(null)}
+                  onAssign={assign}
+                />
               ) : null}
-              <CollaboratorsTable
-                collaborators={filtered}
-                loading={list.loading}
-                emptyMessage={
-                  list.error
-                    ? 'No se pudieron consultar los colaboradores.'
-                    : search
-                      ? 'No se encontraron colaboradores.'
-                      : 'Aún no hay colaboradores asignados a este examen.'
-                }
-                onView={(collaborator) =>
-                  setModal({ type: 'view', collaborator })
-                }
-                onRevoke={(collaborator) =>
-                  setModal({ type: 'revoke', collaborator })
-                }
-              />
-            </section>
-            {modal?.type === 'assign' ? (
-              <AssignCollaboratorModal
-                key={exam.id}
-                examId={exam.id}
-                assignedUserIds={list.collaborators.map((item) => item.user_id)}
-                onClose={() => setModal(null)}
-                onAssign={assign}
-              />
-            ) : null}
-            {modal?.type === 'view' ? (
-              <CollaboratorDetailModal
-                collaborator={modal.collaborator}
-                examName={exam.name}
-                onClose={() => setModal(null)}
-              />
-            ) : null}
-            {modal?.type === 'revoke' ? (
-              <RevokeCollaboratorModal
-                collaborator={modal.collaborator}
-                onClose={() => setModal(null)}
-                onRevoke={() => revoke(modal.collaborator)}
-              />
-            ) : null}
-          </>
-        )}
-      </section>
+              {modal?.type === 'view' ? (
+                <CollaboratorDetailModal
+                  collaborator={modal.collaborator}
+                  examName={exam.name}
+                  onClose={() => setModal(null)}
+                />
+              ) : null}
+              {modal?.type === 'revoke' ? (
+                <RevokeCollaboratorModal
+                  collaborator={modal.collaborator}
+                  onClose={() => setModal(null)}
+                  onRevoke={() => revoke(modal.collaborator)}
+                />
+              ) : null}
+            </>
+          )}
+        </section>
+      </PageContainer>
     </main>
   )
 }

@@ -123,6 +123,8 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
 // Only screens explicitly migrated in DS2.1 may consume the layout primitives.
 const authorizedConsumers = [
   'features/academic-terms/pages/AdminAcademicTermsPage.tsx',
+  'features/collaborations/pages/CollaboratorPage.tsx',
+  'features/collaborations/pages/ExamCollaboratorsPage.tsx',
   'features/course-offerings/pages/AdminCourseOfferingsPage.tsx',
   'features/course-offerings/pages/ImportCourseOfferingsPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
@@ -160,6 +162,8 @@ const authorizedConsumers = [
 const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']
 // Public and teacher pages render the page's only <main> landmark themselves (AppLayout has none).
 const ownsMain = [
+  'features/collaborations/pages/CollaboratorPage.tsx',
+  'features/collaborations/pages/ExamCollaboratorsPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
   'features/exams/pages/TeacherExamsPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',

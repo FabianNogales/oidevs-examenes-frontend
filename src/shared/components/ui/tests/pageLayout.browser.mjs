@@ -53,6 +53,9 @@ import {TeacherSubjectsPage} from '/src/features/subjects/pages/TeacherSubjectsP
 import {TeacherStudentsPage} from '/src/features/students/pages/TeacherStudentsPage.tsx';
 import {TeacherExamsPage} from '/src/features/exams/pages/TeacherExamsPage.tsx';
 import {TeacherExamDetailPage} from '/src/features/exams/pages/TeacherExamDetailPage.tsx';
+import {ExamCollaboratorsPage} from '/src/features/collaborations/pages/ExamCollaboratorsPage.tsx';
+import {CollaboratorPage} from '/src/features/collaborations/pages/CollaboratorPage.tsx';
+import {CollaborationsProvider} from '/src/features/collaborations/components/CollaborationsProvider.tsx';
 import {StudentLayout} from '/src/layouts/StudentLayout/StudentLayout.tsx';
 import {StudentProfilePage} from '/src/features/students/pages/StudentProfilePage.tsx';
 import {StudentQrPage} from '/src/features/students/pages/StudentQrPage.tsx';
@@ -96,6 +99,10 @@ const fixtures={
   // U3.1: exam detail (loaded) and a server failure (error state, simulated 500).
   '/teacher/exams/5':{data:{id:5,name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',subject_code:'QA-111',exam_date:'2026-11-20',start_time:'10:00:00',duration_minutes:90,status:'SCHEDULED',course_offering_id:7,rules:'Sin material de consulta.',updated_at:'2026-11-08T10:00:00-04:00',can_edit:true,can_cancel:true,academic_term_name:'Periodo QA 2026',evaluation_type:'partial',room:{id:1,code:'QA-101',name:'Aula QA 101'}}},
   '/teacher/exams/99':{__status:500},
+  // U3.2: collaborators of exam 5, the collaborator's own exams and the assign dialog's user search.
+  '/exams/5/collaborators':{data:[{id:1,user_id:21,display_name:'Colaborador QA con nombre extenso',email:'colaborador.qa@example.edu',identity_number:'QA-21',profile_photo_url:null,assigned_at:'2026-11-08T10:00:00-04:00',assigned_by:1,assigned_by_name:'Docente QA'}]},
+  '/me/collaborations':{data:[{exam_id:5,exam_name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',exam_date:'2026-11-20',start_time:'10:00:00',duration_minutes:90,room:'Aula QA 101'}]},
+  '/users':{data:[],meta:{current_page:1,per_page:10,total:0,last_page:1}},
   '/students/profile':{message:'OK',data:{profile_photo_url:null,personal_data:{first_names:'Estudiante',last_names:'QA con apellidos extensos',identity_number:'QA-123'},academic_data:{sis_code:'QA-STU-01',email:'estudiante.qa.con.correo.institucional.largo@example.edu',career_code:'QA-SIS',career_name:'Carrera QA Sistemas'}}},
   '/students/exams':{message:'OK',data:[{exam_id:5,subject:'Materia QA de programación con un nombre largo',exam_title:'Parcial QA de programación',scheduled_at:'2026-11-20T10:00:00-04:00',qr_status:'UPCOMING',is_qr_available:false,qr_code_base64:null,token:null}]},
   '/admin/audit-logs':page([{id:1,actor_id:1,action:'UPDATE',entity_type:'Room',entity_id:1,created_at:'2026-01-01T10:00:00Z',old_context:{},new_context:{}}]),
@@ -103,6 +110,7 @@ const fixtures={
 const qa=window.pageLayoutQa={calls:[],unexpected:[]};
 const respond=(method)=>async(url,body)=>{
   qa.calls.push({method,url});
+  if(method==='get'&&qa.overrides?.[url])return Promise.reject(Object.assign(new Error('QA: simulated override'),{isAxiosError:true,response:{status:qa.overrides[url],data:{}}}));
   if(method==='get'&&fixtures[url]?.__status)throw Object.assign(new Error('QA: simulated '+fixtures[url].__status),{isAxiosError:true,response:{status:fixtures[url].__status,data:{}}});
   if(method==='get'&&fixtures[url])return {data:structuredClone(fixtures[url])};
   qa.unexpected.push(method+' '+url);
@@ -141,10 +149,12 @@ const routes=[
   {path:'/teacher/students',element:e(TeacherStudentsPage)},
   {path:'/teacher/exams',element:e(TeacherExamsPage)},
   {path:'/teacher/exams/:examId',element:e(TeacherExamDetailPage)},
+  {path:'/teacher/exams/:examId/collaborators',element:e(CollaborationsProvider,null,e(ExamCollaboratorsPage))},
+  {path:'/collaborator',element:e(CollaborationsProvider,null,e(CollaboratorPage))},
   {path:'/students',element:e(StudentLayout),children:[{path:'profile',element:e(StudentProfilePage)},{path:'qr',element:e(StudentQrPage)}]},
 ]).map(route=>({...route,element:e(React.Fragment,null,e(Header,{user:route.path.startsWith('/admin')?{name:'Administradora QA con nombre y apellidos extraordinariamente largos',role:'admin'}:null}),route.element)}));
 const root=createRoot(document.getElementById('root'));
-qa.show=(path)=>{qa.calls=[];qa.unexpected=[];root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
+qa.show=(path)=>{qa.calls=[];qa.unexpected=[];qa.overrides=qa.nextOverrides??{};qa.authUser=qa.nextAuthUser;qa.nextOverrides=undefined;qa.nextAuthUser=undefined;root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
 `
 
 const screens = [
@@ -203,12 +213,21 @@ const screens = [
     description: 'Materia QA de programación con un nombre largo · QA-111', rows: ['Preparación del ingreso', 'Normas y restricciones', 'Edición del examen'] },
   { path: '/teacher/exams/99', title: 'Detalle del examen', crumbs: ['Inicio', 'Mis exámenes', 'Detalle del examen'], structural: true, examDetail: 'error',
     description: 'Consulta la información de tu evaluación.', rows: ['No se pudo consultar el examen'] },
+  // U3.2: collaborators keep their breadcrumbs exactly (no «Inicio»); the collaborator page has none.
+  { path: '/teacher/exams/5/collaborators', title: 'Colaboradores temporales', crumbs: ['Mis exámenes', 'Colaboradores'], structural: true, card: true, collab: 'assign',
+    description: 'Gestiona a los usuarios autorizados para colaborar en este examen.', rows: ['Colaboradores asignados', 'Colaborador QA con nombre extenso'] },
+  { path: '/teacher/exams/99/collaborators', title: 'Colaboradores temporales', crumbs: ['Mis exámenes', 'Colaboradores'], structural: true, card: true, collab: 'error',
+    description: 'Gestiona a los usuarios autorizados para colaborar en este examen.', rows: ['Reintentar'] },
+  { path: '/collaborator', title: 'Apartado de colaborador', crumbs: [], structural: true, card: true, collab: 'own', authUser: { id: 21, must_change_password: false },
+    description: 'Consulta los exámenes en los que tienes una autorización temporal y accede a las herramientas de control de ingreso.', rows: ['Parcial QA de programación', 'Control de ingreso'] },
+  { path: '/collaborator#error', title: 'Apartado de colaborador', crumbs: [], structural: true, card: true, collab: 'error', authUser: { id: 21, must_change_password: false }, overrides: { '/me/collaborations': 500 },
+    description: 'Consulta los exámenes en los que tienes una autorización temporal y accede a las herramientas de control de ingreso.', rows: ['Reintentar'] },
   // U2: student pages inside StudentLayout's main (no breadcrumbs: none existed; accent kept pending Figma).
   { path: '/students/profile', title: 'Mi perfil', crumbs: [], structural: true, student: true,
     description: 'Consulta tu información personal y académica registrada en el sistema.', rows: ['QA-STU-01'] },
   { path: '/students/qr', title: 'Mis exámenes', crumbs: [], structural: true, student: true,
     description: 'Consulta tus exámenes programados y accede a tu código QR cuando esté disponible.', rows: ['Parcial QA de programación'] },
-].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'u3f1' ? screen.examDetail : process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
+].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'u3f2' ? screen.collab : process.env.EIDA_LAYOUT_SCOPE === 'u3f1' ? screen.examDetail : process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
 // Collected in the page: structure, visibility and overflow of the key elements.
 const inspect = `(()=>{
@@ -268,7 +287,8 @@ try {
         const normalized = id.replaceAll('\\', '/')
         if (normalized.endsWith('/src/shared/api/httpClient.ts'))
           return 'export const httpClient={get:(...a)=>window.pageLayoutQa.client.get(...a),post:(...a)=>window.pageLayoutQa.client.post(...a),put:(...a)=>window.pageLayoutQa.client.put(...a),patch:(...a)=>window.pageLayoutQa.client.patch(...a),delete:(...a)=>window.pageLayoutQa.client.delete(...a)};'
-        if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts')) return 'export const useAuth=()=>({notify(){}});'
+        // authUser is only set by screens that need a signed-in user (U3.2 collaborations provider).
+        if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts')) return 'export const useAuth=()=>({notify(){},user:window.pageLayoutQa?.authUser});'
         if (baseline && /\/src\/.*\.(tsx|css)$/.test(normalized)) {
           const path = normalized.slice(normalized.indexOf('/src/') + 1)
           try { return execFileSync('git', ['show', (process.env.EIDA_LAYOUT_BASE_REF ?? 'f56e082') + ':' + path], { encoding: 'utf8' }) } catch { /* virtual modules use the current source */ }
@@ -345,7 +365,7 @@ try {
     for (const screen of screens) {
       const label = `${width}px ${screen.title}`
       const before = { exceptions: exceptions.length, console: consoleErrors.length }
-      await evaluate(`window.__qaActions=${JSON.stringify(screen.actions ?? [])};pageLayoutQa.show(${JSON.stringify(screen.path)})`)
+      await evaluate(`window.__qaActions=${JSON.stringify(screen.actions ?? [])};pageLayoutQa.nextOverrides=${JSON.stringify(screen.overrides ?? {})};pageLayoutQa.nextAuthUser=${JSON.stringify(screen.authUser ?? null) === 'null' ? 'undefined' : JSON.stringify(screen.authUser)};pageLayoutQa.show(${JSON.stringify(screen.path)})`)
       await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(screen.title)}`, `${label}: título`)
       if (screen.rows) await wait(`${JSON.stringify(screen.rows)}.every((t)=>document.body.innerText.includes(t))`, `${label}: filas`)
       if (screen.csv) await wait(`!!document.querySelector('input[type=file]')`, `${label}: formulario CSV`)
@@ -402,6 +422,21 @@ try {
         check(!detail.wrapped, 'la cabecera sigue dentro de una tarjeta')
         if (screen.examDetail === 'loaded') check(detail.cards >= 3 && ['Distribución de listas', 'Control sin conexión', 'Editar examen'].every(n => detail.names.includes(n)), 'secciones/acciones del detalle: ' + JSON.stringify(detail))
         else check(detail.alert && detail.names.includes('Reintentar'), 'estado de error: ' + JSON.stringify(detail))
+      }
+      if (!baseline && screen.collab === 'error') check(await evaluate(`!!document.querySelector('main [role=alert]')`), 'estado de error sin alerta')
+      if (!baseline && screen.collab === 'assign') {
+        // The assign dialog (CollaborationModal, top layer) opens above the page and Escape returns focus.
+        await evaluate(`(()=>{const b=[...document.querySelectorAll('main button')].find(b=>b.textContent.trim()==='+ Asignar colaborador');b.focus();b.click()})()`)
+        await wait(`!!document.querySelector('[role=dialog][aria-modal=true]')`, `${label}: abrir asignar colaborador`)
+        await pause(100)
+        const dialog = await evaluate(`(()=>{const d=document.querySelector('[role=dialog][aria-modal=true]'),c=d.querySelector('[aria-label="Cerrar modal"]').getBoundingClientRect(),hit=document.elementFromPoint(c.left+c.width/2,c.top+c.height/2);
+          return {title:d.querySelector('h2')?.textContent,closeOnTop:!!hit&&d.contains(hit),focusInside:d.contains(document.activeElement),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1}})()`)
+        check(dialog.title === 'Asignar colaborador' && dialog.closeOnTop && dialog.focusInside && !dialog.overflow, 'diálogo de asignar: ' + JSON.stringify(dialog))
+        await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+        await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+        await wait(`!document.querySelector('[role=dialog][aria-modal=true]')`, `${label}: Escape cierra asignar colaborador`)
+        check(await evaluate(`document.activeElement?.textContent.trim()==='+ Asignar colaborador'`), 'foco no devuelto a «+ Asignar colaborador»')
+        check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`), 'escritura inesperada en colaboradores')
       }
       if (!baseline && screen.student) {
         // Accent underline kept provisionally (no Figma reference to verify); the content panels stay as cards.
