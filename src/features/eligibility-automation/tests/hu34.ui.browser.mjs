@@ -90,7 +90,8 @@ try {
           if (path.endsWith('/src/features/auth/hooks/useAuth.ts'))
             return 'export const useAuth=()=>({notify(){}});'
           if (path.endsWith('/src/features/exams/hooks/useExamDetail.ts'))
-            return 'export const useExamDetail=()=>({exam:null,detail:{course_offering_id:hu34Ui.offeringId},isLoading:false,errorMessage:null,reload:async()=>{}});'
+            // U3.3: hu34Ui.examError (unset by default) simulates a failed exam request for the page contract checks.
+            return 'export const useExamDetail=()=>(hu34Ui.examError?{exam:null,detail:null,isLoading:false,errorMessage:hu34Ui.examError,reload:async()=>{}}:{exam:null,detail:{course_offering_id:hu34Ui.offeringId},isLoading:false,errorMessage:null,reload:async()=>{}});'
         },
         configureServer(s) {
           s.middlewares.use(async (req, res, next) => {
@@ -595,6 +596,55 @@ try {
       `PASS ${width}px: catálogo de criterios, adaptación responsive; sin desborde`,
     )
   }
+  // U3.3: shared page contract (PageContainer + PageHeader) for both eligibility pages in their loaded,
+  // error and invalid-id states: one main and one h1 (32/24px, bold), 1280px container, header outside
+  // any card, breadcrumbs kept exactly, header actions inside the header, no horizontal overflow.
+  const contractStates = [
+    { name: 'habilitaciones cargada', path: '/teacher/exams/17/eligibilities?view=past&search=QA&page=2', title: 'Habilitaciones del examen',
+      crumbs: ['Mis exámenes', 'Habilitaciones'], actions: ['Habilitación automática', 'Volver al examen'], ready: "document.body.innerText.includes('Condiciones de revisión manual')" },
+    { name: 'habilitaciones error', path: '/teacher/exams/17/eligibilities', examError: 'No se pudo consultar el examen.', title: 'Habilitaciones del examen',
+      crumbs: ['Mis exámenes', 'Habilitaciones'], actions: ['Habilitación automática', 'Volver al examen'], ready: "!!document.querySelector('main [role=alert]')" },
+    { name: 'habilitaciones id no válido', path: '/teacher/exams/abc/eligibilities', title: 'Habilitaciones del examen', crumbs: [], actions: [],
+      ready: "document.body.innerText.includes('El identificador del examen no es válido.')" },
+    { name: 'automática cargada', path: auto, title: 'Habilitación automática', crumbs: ['Mis exámenes', 'Habilitaciones', 'Habilitación automática'],
+      actions: ['Volver a Habilitaciones'], ready: "!!document.getElementById('configuration-title')" },
+    { name: 'automática error', path: auto, examError: 'No se pudo consultar el examen.', title: 'Habilitación automática',
+      crumbs: ['Mis exámenes', 'Habilitaciones', 'Habilitación automática'], actions: ['Volver a Habilitaciones'], ready: "document.body.innerText.includes('No se pudo consultar el examen.')" },
+    { name: 'automática id no válido', path: '/teacher/exams/abc/eligibilities/automatic', title: 'Habilitación automática', crumbs: [], actions: [],
+      ready: "document.body.innerText.includes('El identificador del examen no es válido.')" },
+  ]
+  const contractFailures = []
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false })
+    for (const state of contractStates) {
+      await evaluate(`hu34Ui.examError=${JSON.stringify(state.examError ?? null)}`)
+      await reset(state.path)
+      await wait(state.ready)
+      await pause(120)
+      const page = await evaluate(`(()=>{const h=[...document.querySelectorAll('h1')],h1=h[0],s=getComputedStyle(h1),header=h1.closest('header'),container=h1.closest('section[aria-labelledby]');
+        let wrapped=false;for(let el=h1.parentElement;el&&el.tagName!=='MAIN';el=el.parentElement){const c=getComputedStyle(el);if(c.boxShadow!=='none'||c.backgroundColor==='rgb(255, 255, 255)')wrapped=true}
+        const nav=document.querySelector('nav[aria-label="Ruta de navegación"]');
+        return {mains:document.querySelectorAll('main').length,h1s:h.length,title:h1.textContent.trim(),size:s.fontSize,weight:s.fontWeight,
+          maxWidth:container?getComputedStyle(container).maxWidth:null,labelled:container?.getAttribute('aria-labelledby')===h1.id,wrapped,
+          crumbs:nav?[...nav.querySelectorAll('li')].map(li=>li.textContent.trim()):[],
+          actions:${JSON.stringify(state.actions)}.map(t=>{const a=[...document.querySelectorAll('a')].find(a=>a.textContent.trim()===t);return a&&header?.contains(a)?t:null}),
+          overflow:document.documentElement.scrollWidth>innerWidth+1}})()`)
+      const problems = []
+      if (page.mains !== 1 || page.h1s !== 1 || page.title !== state.title) problems.push(`main/h1 ${page.mains}/${page.h1s} «${page.title}»`)
+      if (page.size !== (width <= 640 ? '24px' : '32px') || page.weight !== '700') problems.push(`h1 ${page.size}/${page.weight}`)
+      if (page.maxWidth !== '1280px' || !page.labelled) problems.push(`contenedor ${page.maxWidth} etiquetado=${page.labelled}`)
+      if (page.wrapped) problems.push('cabecera dentro de una tarjeta')
+      if (JSON.stringify(page.crumbs) !== JSON.stringify(state.crumbs)) problems.push('migas ' + JSON.stringify(page.crumbs))
+      if (page.actions.some((action) => action === null)) problems.push('acciones fuera de la cabecera ' + JSON.stringify(page.actions))
+      if (page.overflow) problems.push('desbordamiento horizontal')
+      if (width === 390 || width === 1440) await shot(`u33-${state.name.replaceAll(' ', '-')}-${width}`)
+      if (problems.length) contractFailures.push(`${width}px ${state.name}: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} ${width}px contrato de página: ${state.name}${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
+  }
+  await evaluate('hu34Ui.examError=null')
+  result.contract = contractFailures
+  assert.deepEqual(contractFailures, [], 'contrato de página de habilitaciones')
   const arrayGroup = `document.querySelector('fieldset.'+hu34Ui.styles.assessmentOptions)`
   const remountKeepingConfiguration = async () => {
     await evaluate(

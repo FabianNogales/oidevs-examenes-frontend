@@ -127,7 +127,9 @@ const authorizedConsumers = [
   'features/collaborations/pages/ExamCollaboratorsPage.tsx',
   'features/course-offerings/pages/AdminCourseOfferingsPage.tsx',
   'features/course-offerings/pages/ImportCourseOfferingsPage.tsx',
+  'features/eligibilities/pages/ExamEligibilitiesPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
+  'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
   'features/exams/pages/TeacherExamsPage.tsx',
   'features/portal-calendar/pages/AdminCalendarPage.tsx',
@@ -164,6 +166,8 @@ const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/porta
 const ownsMain = [
   'features/collaborations/pages/CollaboratorPage.tsx',
   'features/collaborations/pages/ExamCollaboratorsPage.tsx',
+  'features/eligibilities/pages/ExamEligibilitiesPage.tsx',
+  'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
   'features/exams/pages/TeacherExamsPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',
@@ -175,6 +179,12 @@ const ownsMain = [
   'features/students/pages/TeacherSubjectStudentsPage.tsx',
   'features/subjects/pages/TeacherSubjectsPage.tsx',
 ]
+// Pages whose invalid-id branch returns early with its own <main> and PageHeader: the branches are mutually
+// exclusive, so one <main> and one h1 are rendered at runtime (checked in hu34.ui.browser for every state and width).
+const exclusiveMainBranches = {
+  'features/eligibilities/pages/ExamEligibilitiesPage.tsx': 2,
+  'features/eligibility-automation/pages/EligibilityAutomationPage.tsx': 2,
+}
 // Portal administration pages get their PageHeader through PortalAdminCollection headerVariant="page".
 const portalAdmin = [
   'features/portal-information/pages/AdminInformationPage.tsx',
@@ -192,12 +202,12 @@ test('PageHeader and PageContainer are consumed only by the authorized DS2.1 scr
   assert.deepEqual(consumers, authorizedConsumers)
   for (const file of consumers) {
     const source = readFileSync(resolve(srcRoot, file), 'utf8')
-    assert.equal((source.match(/<main\b/g) ?? []).length, ownsMain.includes(file) ? 1 : 0, `${file}: <main> landmarks`)
+    assert.equal((source.match(/<main\b/g) ?? []).length, ownsMain.includes(file) ? (exclusiveMainBranches[file] ?? 1) : 0, `${file}: <main> landmarks`)
     const headers = (source.match(/<PageHeader\b/g) ?? []).length
     if (portalAdmin.includes(file)) {
       assert.equal(headers, 0, `${file}: header comes from PortalAdminCollection`)
       assert.equal((source.match(/headerVariant="page"/g) ?? []).length, 1, `${file}: headerVariant="page"`)
-    } else assert.equal(headers, 1, `${file}: one PageHeader`)
+    } else assert.equal(headers, exclusiveMainBranches[file] ?? 1, `${file}: one PageHeader per exclusive branch`)
     if (!legacyHeading.includes(file)) assert.doesNotMatch(source, /<h1\b/, `${file}: the h1 comes from PageHeader`)
   }
 })
