@@ -141,6 +141,8 @@ const authorizedConsumers = [
   'features/students/pages/AdminManageStudentsPage.tsx',
   'features/students/pages/ImportStudentsPage.tsx',
   'features/students/pages/ImportSubjectStudentsPage.tsx',
+  'features/students/pages/StudentProfilePage.tsx',
+  'features/students/pages/StudentQrPage.tsx',
   'features/students/pages/TeacherStudentsPage.tsx',
   'features/students/pages/TeacherSubjectStudentsPage.tsx',
   'features/subjects/pages/AdminSubjectsPage.tsx',

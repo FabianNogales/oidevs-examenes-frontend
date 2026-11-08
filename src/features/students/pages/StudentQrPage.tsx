@@ -6,7 +6,11 @@ import { useStudentExams } from '@/features/students/hooks/useStudentExams'
 import { useStudentQr } from '@/features/students/hooks/useStudentQr'
 import type { StudentQrStatus } from '@/features/students/types/studentQr'
 import entryControlStyles from '@/features/exams/pages/EntryControlPage.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import styles from './StudentQrPage.module.css'
+
+const titleId = 'student-exams-title'
 
 const statusOrder: Record<StudentQrStatus, number> = {
   AVAILABLE: 0,
@@ -71,16 +75,12 @@ export function StudentQrPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <h1>Mis exámenes</h1>
-          <p>
-            Consulta tus exámenes programados y accede a tu código QR cuando
-            esté disponible.
-          </p>
-        </div>
-      </header>
+    <PageContainer labelledBy={titleId} className={styles.page}>
+      <PageHeader
+        title="Mis exámenes"
+        titleId={titleId}
+        description="Consulta tus exámenes programados y accede a tu código QR cuando esté disponible."
+      />
 
       <div className={styles.notice}>
         <StudentQrIcon name="info" />
@@ -263,6 +263,6 @@ export function StudentQrPage() {
           </>
         )}
       </section>
-    </div>
+    </PageContainer>
   )
 }

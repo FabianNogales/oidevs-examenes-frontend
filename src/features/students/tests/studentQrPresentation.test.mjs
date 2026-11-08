@@ -87,7 +87,10 @@ test('student exams: switching tabs only changes the rendered group and keeps th
     ),
     [3],
   )
-  assert.match(textContent(nodes(page.tree(), (node) => node.type === 'h1')[0]), /Mis exámenes/)
+  // U2: the page heading comes from PageHeader (not expanded by this shallow harness).
+  const header = nodes(page.tree(), (node) => node.props?.titleId === 'student-exams-title')
+  assert.equal(header.length, 1)
+  assert.equal(header[0].props.title, 'Mis exámenes')
   assert.equal(page.retryCount(), 0, 'Switching tabs does not request fresh data')
 
   page.selectTab('Vigentes')
