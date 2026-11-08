@@ -73,7 +73,7 @@ su `.headerActions` original).
 
 Medido en DS0:
 
-- **Modales y diálogos propios:** 18 `*Modal` y 13 `*Dialog` en features. 6 usan `<dialog>` nativo, 8 un overlay con Escape gestionado a mano y 7 PortalDialog o derivados.
+- **Modales y diálogos propios:** 18 `*Modal` y 13 `*Dialog` en features. 6 usan `<dialog>` nativo, 8 un overlay con Escape gestionado a mano y 7 PortalDialog o derivados. Desde DS4.2c.2, `CollaborationModal` (overlay compartido, 17 consumidores) se pinta en la top layer como popover manual, con el mismo DOM y API.
 - **Tablas:** 16 implementaciones con `<table>` propio frente a 9 consumidores de DataTable.
 - **Paginación:** reimplementada en unos 18 archivos.
 - **Botones:** 64 clases distintas (`.primaryButton`, `.secondaryButton`, `.cancelButton`…) en 28 archivos CSS.

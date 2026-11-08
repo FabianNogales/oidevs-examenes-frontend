@@ -324,3 +324,29 @@ Bloqueos pendientes:
   4. Con los contratos ya cubiertos, unificar `StudentDialog` con `CollaborationModal`/`PortalDialog` y retirar `AddStudentsModal.tsx` (muerto).
   5. Validar el control de ingreso en vivo (`EntryControlPage`) aparte, por su riesgo.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## DS4.2c.2 - CollaborationModal en la top layer (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base 8a7af8c, inicio limpio. Solo frontend; backend no tocado; 0 escrituras reales (HTTP solo contra un fixture en proceso).
+- D0:
+  - `CollaborationModal` es un overlay `div` (`z-index: 30`, CSS de `AddStudentsModal.module.css`) bajo la cabecera sticky (`z-index: 50`). 17 consumidores en 6 familias: colaboraciones (3), elegibilidad (2), exámenes y control de ingreso (5), incidencias (1), offline (4) y usuarios (2).
+  - El CSS de varios consumidores depende del DOM actual (`.layer > div`, `.modalScope > div`, `[role='dialog'] > div:first-child`, `[aria-label='Cerrar modal']`) y `EntryControlStudentModal` hace scroll con `dialog.parentElement`. Migrar a `<dialog>` obligaba a reescribir ese CSS (control de ingreso).
+  - `ConfirmDialog` es no nativo por defecto (`z-index: 200`); ningún consumidor lo abre como hermano mientras el modal está abierto (en `AdminManageUsersPage` son excluyentes). Snackbar (`z-index: 20`) ya quedaba bajo el overlay. Ningún consumidor envía portales al `body` desde dentro del modal.
+- Decisión aprobada: `popover="manual"` en el overlay existente en lugar de `<dialog>` (cambia el paso 3 del plan de DS4.2c.1).
+- Reproducción (nueva `features/collaborations/tests/collaborationModal.browser.mjs`): **5/5 FAIL en 8a7af8c**. La cabecera tapa «Cerrar modal», recibe clics a través del overlay y por eso el clic fuera no cierra.
+- Commit `5b9ee55` (3 archivos):
+  - El overlay recibe `popover="manual"` y se abre con `showPopover()` en `useLayoutEffect`: top layer sin `z-index`. Mismo DOM, API y consumidores. Sin soporte de Popover API se conserva el apilamiento anterior.
+  - Un popover manual **no es modal**: foco inicial en el contenedor, trampa de Tab, Escape (con `stopPropagation` para anidados), clic fuera y `busy` siguen con sus manejadores. Nuevo: `mousedown` sobre el overlay ya no lleva el foco a `<body>` (antes, Tab desde ahí alcanzaba la página; la prueba lo detectó con `busy`).
+  - Un modal montado abierto dentro de otro se vuelve a mostrar para quedar encima (sin ello, 5/5 FAIL en el caso de montaje simultáneo).
+  - `.overlay` neutraliza la caja del `[popover]` del navegador (ancho/alto, margen, borde, `overflow`, color).
+- Validación:
+  - `collaborationModal.browser` **antes 5/5 FAIL; ahora 5/5 PASS** a 320/390/768/1024/1440px: cabecera no alcanzable ni encima; foco inicial; Tab/Shift+Tab sin salir; clic en la cabecera o en la página no las alcanza; Escape y × devuelven el foco; Snackbar usable tras cerrar; `busy` bloquea Escape, fondo y × y mantiene el foco; `ConfirmDialog` div y nativo encima con Escape solo para él; modal anidado (y montado a la vez) encima; `EntryControlPage` real: detalle de estudiante, confirmación manual (`busy` durante el POST simulado) e «Ingreso registrado».
+  - Regresiones: `entryAnnulment` (historial y anulación en control de ingreso), `incidents`, `portalDialog` 5/5, `confirmDialogEscape`, `studentDialogs` 10/10 y `pageLayout` 140/140 PASS. Node focal 458/459 y completo 874/875 (0 fallos, 1 `todo` de D3); build OK; ESLint 36 = línea base; `git diff --check` OK.
+- Limitaciones:
+  - No es modal nativo: el fondo no es `inert`. La protección es la misma que antes (overlay a pantalla completa, `aria-modal`, trampa de Tab, bloqueo de scroll), ahora además sobre la cabecera.
+  - Si un `CollaborationModal` se abriera sobre un `<dialog>` modal ya abierto, quedaría inerte; hoy ningún flujo lo hace.
+  - Previo y ajeno al popover: con montaje simultáneo de modal y anidado, el foco queda en el exterior (Escape cerraría el exterior). Ningún consumidor monta así.
+  - Elegibilidad, offline y usuarios sin prueba de navegador propia: cubiertos por el componente común y sus pruebas Node.
+- Proceso Node abierto: las pruebas de esta etapa no dejan procesos (comparado antes/después). Hallazgos: (1) un `npm run dev`/Vite huérfano en el puerto 5173 (padre ya inexistente), no lanzado por las pruebas, que no se detuvo; (2) los scripts antiguos con `browserHarness.mjs` (7) o `mkdtemp` propio (3, p. ej. `incidents`) solo hacen `chrome.kill()` y no borran el perfil: quedan `hu28-browser-*` y `eida-hu27-*` en `%TEMP%`. Propuesta: migrarlos a `browserProfile.mjs` en una subetapa aparte.
+- Siguiente: unificación visual docente/estudiante, revisión de «Crear examen», componentes pendientes (`StudentDialog` sobre la familia común, retirar `AddStudentsModal.tsx`) y DS5.
+- Sin revisión humana; revisión técnica asistida por IA.
