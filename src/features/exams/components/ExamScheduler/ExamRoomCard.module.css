@@ -229,10 +229,11 @@
   border: 1px solid var(--color-primary);
   color: var(--color-primary);
 }
-/* Approved design (PROGRESS › Decisiones 9). Authorized fix for 320px phones only: the card header may
-   wrap so "Ver días libres" no longer covers the room name and the recommendation badge is not cut.
-   Scoped below 390px: the approved rendering stays identical from 390px up. */
-@media (max-width: 389px) {
+/* Approved design (PROGRESS › Decisiones 9). Authorized phone fix: the card header may wrap so
+   "Ver días libres" no longer covers the room name, capacity or recommendation badge, and nothing is cut.
+   The overlap existed from 320px up to 430px; scoped below the canonical 480px breakpoint, so the
+   approved rendering stays identical from 480px up. */
+@media (max-width: 479px) {
   .roomCardHeader,
   .roomIdentityGroup {
     flex-wrap: wrap;
