@@ -229,3 +229,12 @@
   border: 1px solid var(--color-primary);
   color: var(--color-primary);
 }
+/* Approved design (PROGRESS › Decisiones 9). Authorized fix for 320px phones only: the card header may
+   wrap so "Ver días libres" no longer covers the room name and the recommendation badge is not cut.
+   Scoped below 390px: the approved rendering stays identical from 390px up. */
+@media (max-width: 389px) {
+  .roomCardHeader,
+  .roomIdentityGroup {
+    flex-wrap: wrap;
+  }
+}

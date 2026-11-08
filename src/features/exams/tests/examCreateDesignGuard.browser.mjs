@@ -87,6 +87,16 @@ const signature = `(()=>{
     time:!!document.querySelector('input[type=time], select'),
     footer:!!footer&&fb.width>0&&fb.bottom<=innerHeight+1,
     overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1,
+    // Room cards: overlapping header items (name, capacity, recommendation, status) or items cut by the card.
+    roomIssues:[...document.querySelectorAll('button[class*="roomCard"]')].flatMap((card,i)=>{
+      const pick=(n)=>card.querySelector('[class*="'+n+'"]');
+      const items=['roomNameText','roomCapacityTag','recommendedBadge','roomStatusBadge'].map(n=>[n,pick(n)]).filter(([,el])=>el&&el.getBoundingClientRect().width>0);
+      const c=card.getBoundingClientRect(), out=[];
+      items.forEach(([n,el],j)=>{const r=el.getBoundingClientRect();
+        if(r.left<c.left-1||r.right>c.right+1)out.push(i+':'+n+' fuera de la tarjeta');
+        items.slice(j+1).forEach(([m,other])=>{const o=other.getBoundingClientRect();
+          if(Math.min(r.right,o.right)-Math.max(r.left,o.left)>1&&Math.min(r.bottom,o.bottom)-Math.max(r.top,o.top)>1)out.push(i+':'+n+'×'+m)})});
+      return out}),
     // Diagnostic: elements that reach beyond the viewport (cause of a horizontal overflow).
     overflowing:[...document.querySelectorAll('#root *')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.right>document.documentElement.clientWidth+1&&getComputedStyle(el).position!=='fixed'}).slice(0,12).map(el=>el.tagName+'.'+String(el.className).slice(0,50)+'@'+Math.round(el.getBoundingClientRect().left)+'-'+Math.round(el.getBoundingClientRect().right))}};
 })()`
@@ -196,7 +206,10 @@ for (const width of widths) {
   const problems = []
   const fixing = fix320 && width === 320
   if (diff.length && !fixing) problems.push(`${diff.length} elementos distintos de ${baseRef}`)
-  const comparable = ({ overflowing, overflow, ...rest }) => (void overflowing, JSON.stringify(fixing ? rest : { ...rest, overflow }))
+  const comparable = ({ overflowing, overflow, roomIssues, ...rest }) => (void overflowing, JSON.stringify(fixing ? rest : { ...rest, overflow, roomIssues }))
+  // Regression (authorized 320px fix): below 390px room card headers never overlap or get cut. From 390px up
+  // the approved rendering must stay as in the base (a known overlap at 390px is pending a design decision).
+  if (width < 390 && marks.roomIssues.length) problems.push('tarjetas de aula superpuestas o recortadas: ' + marks.roomIssues.join(', '))
   if (fixing && marks.overflow) problems.push('sigue el desbordamiento a 320px: ' + marks.overflowing.join(', '))
   if (comparable(a.landmarks) !== comparable(marks)) problems.push('referencias distintas: ' + JSON.stringify({ base: a.landmarks, current: marks }))
   if (marks.h1 !== target.title) problems.push('h1 inesperado: ' + marks.h1)
