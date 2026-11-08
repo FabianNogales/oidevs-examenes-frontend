@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { trapDialogFocus } from '@/shared/utils/trapDialogFocus'
 import modalStyles from '@/features/students/components/AddStudentsModal.module.css'
@@ -17,7 +17,28 @@ export function CollaborationModal({
   busy = false,
 }: Props) {
   const titleId = useId()
+  const overlay = useRef<HTMLDivElement>(null)
   const dialog = useRef<HTMLDivElement>(null)
+  // DS4.2c.2: the overlay is a manual popover so it is painted in the browser's top layer, above the
+  // sticky Header, without z-index. Same DOM, API and behaviour: focus, Tab trap, Escape, backdrop and
+  // busy are still handled below (a manual popover is not modal and never closes by itself).
+  // Without Popover API support the overlay keeps its previous z-index stacking.
+  useLayoutEffect(() => {
+    const element = overlay.current
+    if (!element || typeof element.showPopover !== 'function') return
+    try {
+      element.showPopover()
+    } catch {
+      return
+    }
+    // A modal rendered open inside this one was promoted first; keep it on top.
+    element
+      .querySelectorAll<HTMLElement>('[popover]:popover-open')
+      .forEach((nested) => {
+        nested.hidePopover()
+        nested.showPopover()
+      })
+  }, [])
   useEffect(() => {
     const previousFocus =
       document.activeElement instanceof HTMLElement
@@ -37,7 +58,13 @@ export function CollaborationModal({
 
   return (
     <div
+      ref={overlay}
+      popover="manual"
       className={modalStyles.overlay}
+      // The overlay is not focusable: a press on it would move focus to <body>, outside the Tab trap.
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) event.preventDefault()
+      }}
       onClick={(event) => {
         if (event.target === event.currentTarget && !busy) onClose()
       }}

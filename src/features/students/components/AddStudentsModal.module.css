@@ -6,6 +6,13 @@
   place-items: center;
   background: rgb(15 23 42 / 45%);
   padding: var(--space-4);
+  /* DS4.2c.2: neutralise the user-agent [popover] box (CollaborationModal); no effect elsewhere. */
+  width: auto;
+  height: auto;
+  margin: 0;
+  border: 0;
+  overflow: visible;
+  color: inherit;
 }
 
 .modal {
