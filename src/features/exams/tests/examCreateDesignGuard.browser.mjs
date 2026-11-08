@@ -15,6 +15,9 @@ import { cleanupBrowserProfile, createBrowserProfile } from '../../../shared/tes
 
 const baseRef = process.env.EIDA_EXAM_CREATE_BASE ?? 'HEAD'
 const screen = process.env.EIDA_EXAM_GUARD_SCREEN === 'edit' ? 'edit' : 'create'
+// Validates the authorized 320px overflow fix against a base taken before it: at 320px the signature may
+// change but there must be no overflow and the approved landmarks must stay; other widths stay identical.
+const fix320 = process.env.EIDA_EXAM_GUARD_FIX320 === '1'
 const target = {
   create: { path: '/teacher/subjects/7/exams/create?period=Periodo%20QA%202026', title: 'Programar Evaluación', submit: 'Confirmar Programación' },
   edit: { path: '/teacher/exams/5/edit', title: 'Editar examen', submit: 'Guardar cambios' },
@@ -83,7 +86,9 @@ const signature = `(()=>{
     rooms:text('Aula QA 101')||text('QA-101'),
     time:!!document.querySelector('input[type=time], select'),
     footer:!!footer&&fb.width>0&&fb.bottom<=innerHeight+1,
-    overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1}};
+    overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1,
+    // Diagnostic: elements that reach beyond the viewport (cause of a horizontal overflow).
+    overflowing:[...document.querySelectorAll('#root *')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.right>document.documentElement.clientWidth+1&&getComputedStyle(el).position!=='fixed'}).slice(0,12).map(el=>el.tagName+'.'+String(el.className).slice(0,50)+'@'+Math.round(el.getBoundingClientRect().left)+'-'+Math.round(el.getBoundingClientRect().right))}};
 })()`
 
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
@@ -189,8 +194,11 @@ for (const width of widths) {
   // Approved layout: two workspace columns above the 1080px breakpoint, one below.
   const expectedColumns = width > 1080 ? 2 : 1
   const problems = []
-  if (diff.length) problems.push(`${diff.length} elementos distintos de ${baseRef}`)
-  if (JSON.stringify(a.landmarks) !== JSON.stringify(marks)) problems.push('referencias distintas: ' + JSON.stringify({ base: a.landmarks, current: marks }))
+  const fixing = fix320 && width === 320
+  if (diff.length && !fixing) problems.push(`${diff.length} elementos distintos de ${baseRef}`)
+  const comparable = ({ overflowing, overflow, ...rest }) => (void overflowing, JSON.stringify(fixing ? rest : { ...rest, overflow }))
+  if (fixing && marks.overflow) problems.push('sigue el desbordamiento a 320px: ' + marks.overflowing.join(', '))
+  if (comparable(a.landmarks) !== comparable(marks)) problems.push('referencias distintas: ' + JSON.stringify({ base: a.landmarks, current: marks }))
   if (marks.h1 !== target.title) problems.push('h1 inesperado: ' + marks.h1)
   if (marks.columns !== expectedColumns) problems.push(`columnas del área de trabajo ${marks.columns} (se esperaban ${expectedColumns})`)
   if (!marks.calendar || !marks.rooms || !marks.time || !marks.footer) problems.push('falta calendario, aulas, horario o barra inferior: ' + JSON.stringify(marks))
@@ -199,7 +207,7 @@ for (const width of widths) {
   if (b.unexpected.length || b.writes.length) problems.push('peticiones inesperadas o de escritura: ' + [...b.unexpected, ...b.writes].join(', '))
   await writeFile(join(evidence, `diff-${width}.json`), JSON.stringify(diff.slice(0, 40), null, 2))
   if (problems.length) failures.push(`${width}px: ${problems.join(' · ')}`)
-  console.log(`${problems.length ? 'FAIL' : 'PASS'} ${width}px ${target.title} (${b.rows.length} elementos, h1 «${marks.h1}», ${marks.columns} columnas${marks.overflow ? ', desbordamiento previo' : ''})${problems.length ? ': ' + problems.join(' · ') : ''}`)
+  console.log(`${problems.length ? 'FAIL' : 'PASS'} ${width}px ${target.title} (${b.rows.length} elementos, h1 «${marks.h1}», ${marks.columns} columnas${marks.overflow ? ', desbordamiento previo' : ''}${fix320 && width === 320 ? `, corrección 320px: ${diff.length} elementos ajustados` : ''})${problems.length ? ': ' + problems.join(' · ') : ''}`)
 }
 if (current.exceptions.length || base.exceptions.length) failures.push('excepciones JS: ' + [...base.exceptions, ...current.exceptions].join(' | '))
 await writeFile(join(evidence, 'result.json'), JSON.stringify({ baseRef, fixtureOnly: true, failures, landmarks: Object.fromEntries(widths.map((w) => [w, current[w].landmarks])) }, null, 2))

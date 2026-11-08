@@ -213,6 +213,15 @@
   cursor: pointer;
 }
 
+/* Approved design (PROGRESS › Decisiones 9). Minimal fix for 320px phones: the validation pill may
+   wrap its text within the banner width instead of overflowing the page. Scoped below 390px so the
+   approved rendering stays identical from 390px up (the smallest validated phone width). */
+@media (max-width: 389px) {
+  .statusPill {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 1080px) {
   .schedulerPage {
     width: calc(100vw - 32px);
