@@ -54,6 +54,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | shared/components (Header, DataTable, DataCardGrid) | Alto | DS4 | ⏳ | Pendiente | Unos 217 literales; usados por muchas features |
 | layouts | Bajo | DS4 | ⏳ | Pendiente | |
 | auth, health, infractions, reports, entries, eligibility, collaborators | — | Por auditar | ⏳ | Pendiente | Sin CSS propio significativo en DS0 |
+| incidents, infractions, expulsions, exam-reports, attendance | Medio | DS3 | 🔄 (U3.4 páginas ✅ `b34c998`, `cdca260` y U3.4c) | Erick | `Incidents.module.css` compartido sin tocar (control de ingreso y administración). Pendiente: id no válido sin layout en 4 listas |
 
 ## Criterios de aceptación
 
@@ -442,3 +443,10 @@ Bloqueos pendientes:
   - Pruebas: bloques de contrato al final de cada prueba (sin alterar los flujos existentes); las rutas de administración de `incidentConsultation.browser` se envuelven en `main` como `AdminLayout`. `incidentConsultationView.test` comprueba que la raíz de administración es `PageContainer` y no hay `main`. `pageLayout.test` separa recuentos exactos de `main` y `PageHeader` por archivo con ramas excluyentes.
   - Incidencias: una primera ejecución de `incidents.browser` agotó la espera inicial mientras Vite reoptimizaba dependencias en frío (metadatos regenerados en ese momento); las tres ejecuciones siguientes, PASS. Un primer intento con un hook que devolvía `'div' | 'main'` introdujo 2 errores ESLint (`react-hooks/static-components`); se sustituyó por `PageLandmark` antes del commit.
   - Validación: `incidentConsultation.browser` 35/35 y `incidents.browser` 25/25 con todas sus comprobaciones funcionales; Node de incidencias + `pageLayout.test` 65/65; Node 874/875; `tsc` + build OK; guardas 5/5 frente a b34c998; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+- U3.4c — `ExamReportsPage` (docente: catálogo y examen; administración: catálogo) y `AttendancePage`:
+  - Antes: `examReports.browser` 20/20 y `attendance.browser` 10/10 FAIL en el contrato (catálogo y examen del docente, error 403, catálogo de administración; asistencia y error 403).
+  - Ahora: `PageContainer labelledBy` + `PageHeader` con títulos, descripciones y migas exactos. Reportes conserva sus dos contextos: el docente tiene su `<main>`; administración renderiza solo el `PageContainer` dentro del `main` de `AdminLayout` (sin `main` anidado; la ruta de administración de la prueba se envuelve en `main` como `AdminLayout`). Navegación del examen, catálogo, área de trabajo, filtros, actualización automática y tablas sin cambios.
+  - `mainLandmarks.test` (D6) comprobaba que la raíz de administración fuera `div`; ahora es la `section` etiquetada de `PageContainer` y sigue exigiendo 0 `main` en administración y 1 en el docente.
+  - Validación: `examReports.browser` 20/20 y `attendance.browser` 10/10 con todas sus comprobaciones funcionales; Node de ambas features + `pageLayout.test` 33/33; Node 874/875; `tsc` + build OK; guardas 5/5 frente a cdca260; `pageLayout.browser` completo 195/195; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+  - Pendiente (decisión): como en U3.4a, con un identificador no válido, reportes del docente y asistencia muestran solo un `<p role="alert">` sin `main` ni `h1`.
+- Resultado de U3.4: 14 pantallas (docente, colaborador y administración) en el contrato común, sin modificar `Incidents.module.css`; 155 combinaciones de estado × ancho validadas con el contrato compartido; 1 defecto previo corregido (main anidado en el detalle de incidencia de administración).

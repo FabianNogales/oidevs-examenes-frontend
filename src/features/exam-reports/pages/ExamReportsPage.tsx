@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { ExamIncidentNavigation } from '@/features/incidents/components/ExamIncidentNavigation'
 import { useInfractionResource } from '@/features/infractions/hooks/useInfractionResource'
 import { positiveId } from '@/features/infractions/utils/infractionValidation'
@@ -8,8 +9,10 @@ import { getReportCatalog } from '../api/examReportsApi'
 import { ReportExamCatalog } from '../components/ReportExamCatalog'
 import { ReportWorkspace } from '../components/ReportWorkspace'
 import type { ReportExam } from '../types/report.types'
-import shared from '@/features/incidents/pages/Incidents.module.css'
 import type { ReactNode } from 'react'
+
+// U3.4c: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
+const titleId = 'exam-reports-title'
 function Layout({
   role,
   examId,
@@ -19,34 +22,28 @@ function Layout({
   examId?: number
   children: ReactNode
 }) {
-  // AdminLayout already renders the page's <main>; teacher routes (AppLayout) need their own.
-  const Root = role === 'admin' ? 'div' : 'main'
-  return (
-    <Root className={shared.page}>
-      <section className={shared.content}>
-        <Breadcrumbs
-          items={[
-            {
-              label: role === 'admin' ? 'Administración' : 'Mis exámenes',
-              to: role === 'admin' ? '/admin' : '/teacher/exams',
-            },
-            { label: 'Reportes de exámenes' },
-          ]}
-        />
-        <header className={shared.heading}>
-          <h1>Reportes de exámenes</h1>
-          <p>
-            Consulta y descarga información oficial con el alcance autorizado de
-            tu cuenta.
-          </p>
-        </header>
-        {role === 'teacher' && examId && (
-          <ExamIncidentNavigation examId={examId} />
-        )}
-        {children}
-      </section>
-    </Root>
+  // AdminLayout already renders the page's main landmark; teacher routes (AppLayout) need their own.
+  const content = (
+    <PageContainer labelledBy={titleId}>
+      <PageHeader
+        title="Reportes de exámenes"
+        titleId={titleId}
+        description="Consulta y descarga información oficial con el alcance autorizado de tu cuenta."
+        breadcrumbs={[
+          {
+            label: role === 'admin' ? 'Administración' : 'Mis exámenes',
+            to: role === 'admin' ? '/admin' : '/teacher/exams',
+          },
+          { label: 'Reportes de exámenes' },
+        ]}
+      />
+      {role === 'teacher' && examId && (
+        <ExamIncidentNavigation examId={examId} />
+      )}
+      {children}
+    </PageContainer>
   )
+  return role === 'admin' ? content : <main>{content}</main>
 }
 function Fixed({ examId }: { examId: number }) {
   const navigate = useNavigate(),

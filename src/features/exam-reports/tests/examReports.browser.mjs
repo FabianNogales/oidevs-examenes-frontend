@@ -1,6 +1,7 @@
 // Browser UI with controlled HTTP only. No backend/database changes.
 import assert from 'node:assert/strict'
 import { browserFixture, pause } from '../../../shared/tests/browserHarness.mjs'
+import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
 import {
   exam,
   catalog,
@@ -27,7 +28,7 @@ const other = {
   subject: { id: 5, code: 'BD-01', name: 'Bases de Datos' },
   academic_term: { id: 6, name: '1/2026' },
 }
-const moduleSource = `import React from'react';import{createRoot}from'react-dom/client';import{createMemoryRouter,RouterProvider,Outlet,useLocation}from'react-router';import'/src/assets/styles/global.css';import'@fontsource/poppins/400.css';import'@fontsource/poppins/500.css';import'@fontsource/poppins/600.css';import'@fontsource/poppins/700.css';import{Header}from'/src/shared/components/Header/Header.tsx';import{Footer}from'/src/shared/components/Footer/Footer.tsx';import{httpClient}from'/src/shared/api/httpClient.ts';import{TeacherExamReportsPage,AdminExamReportsPage}from'/src/features/exam-reports/pages/ExamReportsPage.tsx';httpClient.defaults.baseURL='/__browser-api';window.__downloads=[];const createURL=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{window.__downloads.push({type:blob.type,size:blob.size});return createURL(blob)};const click=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){if(this.download){window.__lastDownloadName=this.download;return}return click.call(this)};function Layout(){const location=useLocation();const admin=location.pathname.startsWith('/admin');return React.createElement(React.Fragment,null,React.createElement(Header,{user:{name:admin?'Administrador de prueba':'Docente de prueba',role:admin?'admin':'teacher'}}),React.createElement(Outlet),React.createElement(Footer))}const router=createMemoryRouter([{Component:Layout,children:[{path:'/teacher/exam-reports',Component:TeacherExamReportsPage},{path:'/teacher/exams/:examId/reports',Component:TeacherExamReportsPage},{path:'/admin/exam-reports',Component:AdminExamReportsPage},{path:'/other',element:React.createElement('p',null,'Otra página')}]}],{initialEntries:['/teacher/exam-reports']});window.__router=router;createRoot(document.getElementById('root')).render(React.createElement(RouterProvider,{router}));`
+const moduleSource = `import React from'react';import{createRoot}from'react-dom/client';import{createMemoryRouter,RouterProvider,Outlet,useLocation}from'react-router';import'/src/assets/styles/global.css';import'@fontsource/poppins/400.css';import'@fontsource/poppins/500.css';import'@fontsource/poppins/600.css';import'@fontsource/poppins/700.css';import{Header}from'/src/shared/components/Header/Header.tsx';import{Footer}from'/src/shared/components/Footer/Footer.tsx';import{httpClient}from'/src/shared/api/httpClient.ts';import{TeacherExamReportsPage,AdminExamReportsPage}from'/src/features/exam-reports/pages/ExamReportsPage.tsx';httpClient.defaults.baseURL='/__browser-api';window.__downloads=[];const createURL=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{window.__downloads.push({type:blob.type,size:blob.size});return createURL(blob)};const click=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){if(this.download){window.__lastDownloadName=this.download;return}return click.call(this)};function Layout(){const location=useLocation();const admin=location.pathname.startsWith('/admin');return React.createElement(React.Fragment,null,React.createElement(Header,{user:{name:admin?'Administrador de prueba':'Docente de prueba',role:admin?'admin':'teacher'}}),React.createElement(Outlet),React.createElement(Footer))}const router=createMemoryRouter([{Component:Layout,children:[{path:'/teacher/exam-reports',Component:TeacherExamReportsPage},{path:'/teacher/exams/:examId/reports',Component:TeacherExamReportsPage},{path:'/admin/exam-reports',element:React.createElement('main',null,React.createElement(AdminExamReportsPage))},{path:'/other',element:React.createElement('p',null,'Otra página')}]}],{initialEntries:['/teacher/exam-reports']});window.__router=router;createRoot(document.getElementById('root')).render(React.createElement(RouterProvider,{router}));`
 const b = await browserFixture({
   name: 'hu33-browser',
   moduleSource,
@@ -378,6 +379,30 @@ try {
   checks.push(
     'Admin filters authorized exams by subject/period without teacher actions; other exam/denied catalog never show previous data or a fake empty result; no overflow320-1440px',
   )
+  const contractStates = [
+    { name: 'docente catálogo', mode: 'teacher', path: '/teacher/exam-reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'] },
+    { name: 'docente examen', mode: 'teacher', path: '/teacher/exams/4/reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'], ready: "!document.body.innerText.includes('Consultando el examen')" },
+    { name: 'docente error', mode: 'teacher', path: '/teacher/exams/99/reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'], ready: "!!document.querySelector('main [role=alert]')" },
+    { name: 'admin catálogo', mode: 'admin', path: '/admin/exam-reports', title: 'Reportes de exámenes', crumbs: ['Administración', 'Reportes de exámenes'] },
+  ]
+  // U3.4c: shared page contract (PageContainer + PageHeader) for every state at 320-1440px.
+  const contractFailures = []
+  for (const state of contractStates) {
+    mode = state.mode
+    denied = false
+    await nav(state.path)
+    await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(state.title)} && (${state.ready ?? 'true'})`)
+    await new Promise((done) => setTimeout(done, 250))
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await b.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
+      await new Promise((done) => setTimeout(done, 120))
+      const problems = pageContractProblems(await evaluate(pageContractScript), { width, ...state })
+      if (problems.length) contractFailures.push(`${state.name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} contrato ${state.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+  }
+  assert.deepEqual(contractFailures, [], 'contrato de página')
   assert.deepEqual(b.errors, [])
   assert.ok(requests.every((r) => r.method === 'GET'))
   await b.report({ checks, requests })

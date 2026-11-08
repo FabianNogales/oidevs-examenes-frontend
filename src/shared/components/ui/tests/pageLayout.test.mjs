@@ -123,6 +123,7 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
 // Only screens explicitly migrated in DS2.1 may consume the layout primitives.
 const authorizedConsumers = [
   'features/academic-terms/pages/AdminAcademicTermsPage.tsx',
+  'features/attendance/pages/AttendancePage.tsx',
   'features/collaborations/pages/CollaboratorPage.tsx',
   'features/collaborations/pages/ExamCollaboratorsPage.tsx',
   'features/course-offerings/pages/AdminCourseOfferingsPage.tsx',
@@ -130,6 +131,7 @@ const authorizedConsumers = [
   'features/eligibilities/pages/ExamEligibilitiesPage.tsx',
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
   'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
+  'features/exam-reports/pages/ExamReportsPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
   'features/exams/pages/TeacherExamsPage.tsx',
   'features/expulsions/components/ExpulsionLayout.tsx',
@@ -171,10 +173,12 @@ const authorizedConsumers = [
 const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']
 // Public and teacher pages render the page's only <main> landmark themselves (AppLayout has none).
 const ownsMain = [
+  'features/attendance/pages/AttendancePage.tsx',
   'features/collaborations/pages/CollaboratorPage.tsx',
   'features/collaborations/pages/ExamCollaboratorsPage.tsx',
   'features/eligibilities/pages/ExamEligibilitiesPage.tsx',
   'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
+  'features/exam-reports/pages/ExamReportsPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
   'features/exams/pages/TeacherExamsPage.tsx',
   'features/expulsions/components/ExpulsionLayout.tsx',

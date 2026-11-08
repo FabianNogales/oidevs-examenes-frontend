@@ -56,7 +56,9 @@ test('exam reports own <main> for teachers only; the admin variant relies on Adm
   const { AdminExamReportsPage, TeacherExamReportsPage } = h.load('features/exam-reports/pages/ExamReportsPage.tsx')
   const admin = h.render(() => expand(AdminExamReportsPage()))
   assert.equal(mains(admin).length, 0)
-  assert.equal(admin.type, 'div')
+  // U3.4c: the admin root is PageContainer's labelled <section> (never a <main> inside AdminLayout).
+  assert.equal(admin.type, 'section')
+  assert.equal(admin.props['aria-labelledby'], 'exam-reports-title')
   assert.equal(nodes(admin, (node) => node.type === 'h1').length, 1)
   const teacher = h.render(() => expand(TeacherExamReportsPage()))
   assert.equal(mains(teacher).length, 1)
