@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router'
 import type { ReactNode } from 'react'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { ExamIncidentNavigation } from '../components/ExamIncidentNavigation'
 import { IncidentConsultationFilters } from '../components/IncidentConsultationFilters'
 import { IncidentConsultationSummary } from '../components/IncidentConsultationSummary'
@@ -10,6 +11,9 @@ import { incidentConsultationSearch } from '../utils/incidentConsultationNavigat
 import styles from './Incidents.module.css'
 import { IncidentExportActions } from '../components/IncidentExportActions'
 import type { IncidentsPage } from '../types/incident.types'
+
+// U3.4b: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
+const titleId = 'incident-consultation-title'
 
 export function ExamIncidentConsultation({
   examId,
@@ -37,81 +41,79 @@ export function ExamIncidentConsultation({
   }
   const response = list.response
   const filtered = Object.values(filters).some((value) => value.trim())
-  const Container = mode === 'admin' ? 'section' : 'main'
-  return (
-    <Container className={styles.page}>
-      <section className={styles.content}>
-        <Breadcrumbs
-          items={[
-            {
-              label: mode === 'admin' ? 'Administración' : 'Mis exámenes',
-              to: mode === 'admin' ? '/admin' : '/teacher/exams',
-            },
-            { label: 'Incidencias' },
-          ]}
-        />
-        <header className={styles.heading}>
-          <h1>Incidencias e ingresos irregulares</h1>
-          <p>
-            {response
-              ? `${response.exam.name} · ${response.exam.subject_name}`
-              : 'Consulta los acontecimientos registrados para este examen.'}
-          </p>
-        </header>
-        {mode === 'teacher' && <ExamIncidentNavigation examId={examId} />}
-        {renderExamPicker?.(response?.exam)}
-        <div className={styles.access}>
-          {mode === 'teacher' && response?.permissions.can_create && (
-            <Link
-              className={styles.primaryAction}
-              to={`/exams/${examId}/incidents/create${search}`}
-            >
-              Registrar incidencia
-            </Link>
-          )}
-          {mode === 'teacher' && (
-            <Link to={`/exams/${examId}/entry-control?from=teacher`}>
-              Control de ingreso
-            </Link>
-          )}
-        </div>
-        <IncidentConsultationFilters
-          key={JSON.stringify(filters)}
-          initial={filters}
-          statuses={response?.filters.statuses ?? []}
-          onApply={list.apply}
-        />
-        <div className={styles.resultsHeading}>
-          <h2>Incidencias registradas</h2>
-          {response?.permissions.can_export === true && (
-            <IncidentExportActions
-              key={search}
-              examId={examId}
-              query={list.query}
-            />
-          )}
-        </div>
-        {response && <IncidentConsultationSummary summary={response.summary} />}
-        <IncidentRecordsTable
-          data={response?.data ?? []}
-          meta={response?.meta}
-          loading={list.loading}
-          error={list.error}
-          retry={list.retry}
-          setPage={list.setPage}
-          statuses={response?.filters.statuses}
-          filtered={filtered}
-          detailPath={(item) =>
-            mode === 'admin'
-              ? `/admin/incidents/${examId}/${item.id}${search}`
-              : `/exams/${examId}/incidents/${item.id}${search}`
-          }
-        />
-        <p className={styles.note}>
-          Una incidencia documenta lo ocurrido; no confirma una infracción ni
-          aplica una sanción.
-        </p>
-      </section>
-    </Container>
+  // AdminLayout already renders the admin page's main landmark; the teacher route needs its own.
+  const content = (
+    <PageContainer labelledBy={titleId}>
+      <PageHeader
+        title="Incidencias e ingresos irregulares"
+        titleId={titleId}
+        description={
+          response
+            ? `${response.exam.name} · ${response.exam.subject_name}`
+            : 'Consulta los acontecimientos registrados para este examen.'
+        }
+        breadcrumbs={[
+          {
+            label: mode === 'admin' ? 'Administración' : 'Mis exámenes',
+            to: mode === 'admin' ? '/admin' : '/teacher/exams',
+          },
+          { label: 'Incidencias' },
+        ]}
+      />
+      {mode === 'teacher' && <ExamIncidentNavigation examId={examId} />}
+      {renderExamPicker?.(response?.exam)}
+      <div className={styles.access}>
+        {mode === 'teacher' && response?.permissions.can_create && (
+          <Link
+            className={styles.primaryAction}
+            to={`/exams/${examId}/incidents/create${search}`}
+          >
+            Registrar incidencia
+          </Link>
+        )}
+        {mode === 'teacher' && (
+          <Link to={`/exams/${examId}/entry-control?from=teacher`}>
+            Control de ingreso
+          </Link>
+        )}
+      </div>
+      <IncidentConsultationFilters
+        key={JSON.stringify(filters)}
+        initial={filters}
+        statuses={response?.filters.statuses ?? []}
+        onApply={list.apply}
+      />
+      <div className={styles.resultsHeading}>
+        <h2>Incidencias registradas</h2>
+        {response?.permissions.can_export === true && (
+          <IncidentExportActions
+            key={search}
+            examId={examId}
+            query={list.query}
+          />
+        )}
+      </div>
+      {response && <IncidentConsultationSummary summary={response.summary} />}
+      <IncidentRecordsTable
+        data={response?.data ?? []}
+        meta={response?.meta}
+        loading={list.loading}
+        error={list.error}
+        retry={list.retry}
+        setPage={list.setPage}
+        statuses={response?.filters.statuses}
+        filtered={filtered}
+        detailPath={(item) =>
+          mode === 'admin'
+            ? `/admin/incidents/${examId}/${item.id}${search}`
+            : `/exams/${examId}/incidents/${item.id}${search}`
+        }
+      />
+      <p className={styles.note}>
+        Una incidencia documenta lo ocurrido; no confirma una infracción ni
+        aplica una sanción.
+      </p>
+    </PageContainer>
   )
+  return mode === 'admin' ? content : <main>{content}</main>
 }

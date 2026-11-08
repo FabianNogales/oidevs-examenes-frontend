@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawn } from 'node:child_process'
 import { createServer } from 'vite'
+import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
 
 const profile = await mkdtemp(join(tmpdir(), 'eida-hu27-'))
 const output = resolve('../tmp/hu27-browser')
@@ -385,6 +386,29 @@ try {
         'document.querySelector(\'[aria-label="Cerrar modal"]\').click()',
       )
   }
+  const contractStates = [
+    { name: 'colaborador lista', path: '/exams/4/incidents', title: 'Incidencias del examen', crumbs: ['Colaborador', 'Incidencias'], ready: "!!document.querySelector('table') || document.body.innerText.includes('No hay incidencias')" },
+    { name: 'colaborador error', path: '/exams/5/incidents', title: 'Incidencias del examen', crumbs: ['Colaborador', 'Incidencias'], ready: "!!document.querySelector('main [role=alert]')" },
+    { name: 'colaborador detalle', path: '/exams/4/incidents/9', title: 'Detalle de incidencia', crumbs: ['Incidencias', 'Incidencia #9'], ready: "!document.body.innerText.includes('Consultando incidencia')" },
+    { name: 'alta id no válido', path: '/exams/abc/incidents/create', title: 'Registrar incidencia', crumbs: [] },
+    { name: 'alta', path: '/exams/4/incidents/create', title: 'Registrar incidencia', crumbs: ['Incidencias', 'Registrar incidencia'], ready: "!!document.querySelector('form')" },
+  ]
+  // U3.4b: shared page contract (PageContainer + PageHeader) for every incident state at 320-1440px.
+  const contractFailures = []
+  for (const state of contractStates) {
+    await navigate(state.path)
+    await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(state.title)} && (${state.ready ?? 'true'})`)
+    await pause(200)
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
+      await pause(120)
+      const problems = pageContractProblems(await evaluate(pageContractScript), { width, ...state })
+      if (problems.length) contractFailures.push(`${state.name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} contrato ${state.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+  }
+  assert.deepEqual(contractFailures, [], 'contrato de página de incidencias')
   assert.deepEqual(errors, [])
   await writeFile(
     join(output, 'resultados.json'),

@@ -1,10 +1,14 @@
 import { useParams, useSearchParams } from 'react-router'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { IncidentForm } from '../components/IncidentForm'
 import { useIncidents } from '../hooks/useIncidents'
 import { isPositiveId } from '../utils/incidentValidation'
 import styles from './Incidents.module.css'
 import { incidentConsultationSearch } from '../utils/incidentConsultationNavigation'
+
+// U3.4b: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
+const titleId = 'create-incident-title'
 
 function CreateContent({ examId }: { examId: number }) {
   const [params] = useSearchParams()
@@ -12,18 +16,17 @@ function CreateContent({ examId }: { examId: number }) {
   const context = list.response
   const backTo = `/exams/${examId}/incidents${incidentConsultationSearch(params)}`
   return (
-    <main className={styles.page}>
-      <section className={styles.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Registrar incidencia"
+          titleId={titleId}
+          description="Documenta una situación durante el control de ingreso."
+          breadcrumbs={[
             { label: 'Incidencias', to: backTo },
             { label: 'Registrar incidencia' },
           ]}
         />
-        <header className={styles.heading}>
-          <h1>Registrar incidencia</h1>
-          <p>Documenta una situación durante el control de ingreso.</p>
-        </header>
         {list.loading ? (
           <p role="status">Consultando el examen y la autorización vigente…</p>
         ) : list.error ? (
@@ -54,7 +57,7 @@ function CreateContent({ examId }: { examId: number }) {
             )}
           </>
         ) : null}
-      </section>
+      </PageContainer>
     </main>
   )
 }
@@ -64,9 +67,11 @@ export function CreateIncidentPage() {
   const id = Number(examId)
   if (!isPositiveId(id))
     return (
-      <main className={styles.page}>
-        <h1>Registrar incidencia</h1>
-        <p role="alert">El identificador del examen no es válido.</p>
+      <main>
+        <PageContainer labelledBy={titleId}>
+          <PageHeader title="Registrar incidencia" titleId={titleId} />
+          <p role="alert">El identificador del examen no es válido.</p>
+        </PageContainer>
       </main>
     )
   return <CreateContent key={id} examId={id} />

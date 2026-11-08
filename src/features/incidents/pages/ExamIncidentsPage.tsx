@@ -1,32 +1,35 @@
 import { Link, useParams, useSearchParams } from 'react-router'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { IncidentRecordsTable } from '../components/IncidentRecordsTable'
 import { useIncidents } from '../hooks/useIncidents'
 import { isPositiveId } from '../utils/incidentValidation'
 import { ExamIncidentConsultation } from './ExamIncidentConsultation'
 import styles from './Incidents.module.css'
 
+// U3.4b: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
+const titleId = 'exam-incidents-title'
+
 // Keep the existing HU27 collaborator consultation independent of HU29 metadata.
 function IncidentsContent({ examId }: { examId: number }) {
   const list = useIncidents(examId)
   const response = list.response
   return (
-    <main className={styles.page}>
-      <section className={styles.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Incidencias del examen"
+          titleId={titleId}
+          description={
+            response
+              ? `${response.exam.name} · ${response.exam.subject_name}`
+              : undefined
+          }
+          breadcrumbs={[
             { label: 'Colaborador', to: '/collaborator' },
             { label: 'Incidencias' },
           ]}
         />
-        <header className={styles.heading}>
-          <h1>Incidencias del examen</h1>
-          {response && (
-            <p>
-              {response.exam.name} · {response.exam.subject_name}
-            </p>
-          )}
-        </header>
         <div className={styles.access}>
           {response?.permissions.can_create && (
             <Link to={'/exams/' + examId + '/incidents/create'}>
@@ -50,7 +53,7 @@ function IncidentsContent({ examId }: { examId: number }) {
           Una incidencia documenta lo ocurrido; no confirma una infracción ni
           aplica una sanción.
         </p>
-      </section>
+      </PageContainer>
     </main>
   )
 }
@@ -61,9 +64,11 @@ export function ExamIncidentsPage() {
   const id = Number(examId)
   if (!isPositiveId(id))
     return (
-      <main className={styles.page}>
-        <h1>Incidencias</h1>
-        <p role="alert">El identificador del examen no es válido.</p>
+      <main>
+        <PageContainer labelledBy={titleId}>
+          <PageHeader title="Incidencias" titleId={titleId} />
+          <p role="alert">El identificador del examen no es válido.</p>
+        </PageContainer>
       </main>
     )
   // Origin changes presentation only; every request is authorized by the server.
