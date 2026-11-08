@@ -423,3 +423,15 @@ Bloqueos pendientes:
 - Validación: `hu34.ui.browser` PASS (contrato 30/30, antes 0/30, y todas las comprobaciones previas de HU34); integraciones de habilitaciones y habilitación automática con `pageLayout.test` 83/83; guardas Programar Evaluación y Editar examen 5/5 idénticas a ffbb8bc tras U3.3 y 8/8 a 320/390/412/430/480/768/1024/1440px frente a f90c9c0 tras la corrección; Node 874/875; `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
 - Pendiente: Programar Evaluación queda sin solapamientos conocidos a 320–1440px. U3.4 (reportes, incidencias, infracciones, expulsiones y asistencia) y U3.5 (reparto offline).
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## U3.4 - Reportes, incidencias, infracciones, expulsiones y asistencia (2026-11-08)
+
+- Rama ds/sync-arqmoc-erick, base c8c7916. Solo frontend; backend no tocado; 0 escrituras reales (fixtures HTTP de cada prueba). `Incidents.module.css` (`.page/.content/.heading`) **no se modifica**: lo usan también control de ingreso (excluido) y la administración de incidencias; cada página deja de usar esas clases en su JSX.
+- Patrón: sin tarjeta envolvente (como el detalle del examen); antes, contenedor de 1280px con el padding fuera del máximo (`h1` ~32px más a la izquierda que el resto) y cabecera con márgenes de 24px arriba y abajo.
+- Contrato reutilizable `src/shared/tests/pageContract.mjs` (un `main` y un `h1`, 32/40 y 24/30px bold, `section` etiquetada de 1280px, `h1` alineado con el contenido, cabecera sin tarjeta, migas exactas con 24px, cabecera 24px, acciones en la cabecera, sin desbordamiento), usado por las pruebas de navegador de cada feature.
+- U3.4a — `InfractionLayout` y `ExpulsionLayout` (lista, alta y detalle de infracciones y de expulsiones):
+  - Antes: `infractions.browser` 25/25 y `expulsions.browser` 30/30 FAIL en el contrato (lista, error 403 de otro examen, alta, detalle y seguimiento).
+  - Ahora: `PageContainer labelledBy` + `PageHeader` con el mismo título, descripción (examen · materia o texto de reserva) y migas dinámicas; navegación del examen e hijos sin cambios.
+  - Ahora PASS 25/25 y 30/30 con todas las comprobaciones funcionales previas. Las pruebas vuelven a 1440px antes de las navegaciones nuevas; el aviso de `ResizeObserver` que provocaba redimensionar la lista con el layout anterior ya no aparece.
+  - Validación: `pageLayout.test` + pruebas Node de ambas features 42/42; Node 874/875; `tsc` + build OK; guardas Programar Evaluación y Editar examen 5/5 frente a c8c7916; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+  - Pendiente (decisión): con un identificador de examen no válido, las listas de infracciones y expulsiones muestran solo un `<p role="alert">` sin `main` ni `h1` (comportamiento previo); unificarlo añadiría título y migas.

@@ -2,6 +2,7 @@
 // Real UI, isolated HTTP fixture. No real backend/database mutations.
 import assert from 'node:assert/strict'
 import { browserFixture, pause } from '../../../shared/tests/browserHarness.mjs'
+import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
 import { exam, student, record, created, meta } from './infractionFixtures.mjs'
 
 let saved = null,
@@ -165,7 +166,8 @@ async function navigate(path) {
   await evaluate(`window.__router.navigate(${JSON.stringify(path)})`)
   await pause(100)
 }
-async function viewport(name) {
+const contractFailures = []
+async function viewport(name, contract) {
   for (const width of [1440, 1024, 768, 390, 320]) {
     await resize(width)
     await evaluate('window.scrollTo(0,0)')
@@ -173,6 +175,12 @@ async function viewport(name) {
       await evaluate('document.documentElement.scrollWidth<=innerWidth'),
       true,
     )
+    // U3.4: shared page contract (PageContainer + PageHeader) for this state.
+    if (contract) {
+      const problems = pageContractProblems(await evaluate(pageContractScript), { width, ...contract })
+      if (problems.length) contractFailures.push(`${name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} contrato ${name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
     await shot(name + '-' + width)
   }
 }
@@ -188,9 +196,20 @@ try {
   await wait(
     "document.body.innerText.includes('No hay infracciones registradas')",
   )
+  // U3.4a: list and error states (another exam answers 403) under the shared page contract.
+  await viewport('listado', { title: 'Infracciones del examen', crumbs: ['Mis exámenes', 'Infracciones del examen'] })
+  await resize(1440)
+  await navigate('/teacher/exams/5/infractions')
+  await wait("!!document.querySelector('main [role=alert]')")
+  await viewport('error', { title: 'Infracciones del examen', crumbs: ['Mis exámenes', 'Infracciones del examen'] })
+  await resize(1440)
+  await navigate('/teacher/exams/4/infractions')
+  await wait(
+    "document.body.innerText.includes('No hay infracciones registradas')",
+  )
   await link('Registrar infracción')
   await wait("document.querySelector('form')")
-  await viewport('registro')
+  await viewport('registro', { title: 'Registrar infracción', crumbs: ['Mis exámenes', 'Infracciones', 'Registrar infracción'] })
   await click('Registrar infracción')
   assert.equal(writes().length, 0)
   assert.equal(await evaluate('document.activeElement.tagName'), 'FIELDSET')
@@ -239,7 +258,7 @@ try {
     ),
     true,
   )
-  await viewport('detalle')
+  await viewport('detalle', { title: 'Detalle de infracción', crumbs: ['Mis exámenes', 'Infracciones', 'Detalle de infracción'] })
   await click('Consultar antecedentes')
   await wait("document.querySelector('table')")
   assert.equal(
@@ -253,7 +272,7 @@ try {
   )
   await click('Actualizar estado')
   await wait("document.querySelector('form')")
-  await viewport('seguimiento')
+  await viewport('seguimiento', { title: 'Detalle de infracción', crumbs: ['Mis exámenes', 'Infracciones', 'Detalle de infracción'] })
   assert.deepEqual(
     await evaluate(
       "(()=>{const r=document.querySelector('input[type=checkbox]').getBoundingClientRect();return[r.width,r.height]})()",
@@ -359,6 +378,7 @@ try {
     'Permissions: no unauthorized creation/state controls; denied history is not empty; another exam never shows previous evidence; 1440/1024/768/390/320px have no horizontal overflow',
   )
   assert.deepEqual(browser.errors, [])
+  assert.deepEqual(contractFailures, [], 'contrato de página de infracciones')
   await browser.report({ checks, requests })
   console.log(
     JSON.stringify(
