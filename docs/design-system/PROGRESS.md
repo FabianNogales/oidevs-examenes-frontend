@@ -45,11 +45,11 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | rooms | Bajo | DS3 | ⏳ | Pendiente | 3 modales, 2 tablas |
 | subjects | Bajo | DS3 | 🔄 (botones ✅ DS2.2d `b750e55`) | Erick | 3 modales, 2 tablas. Pendientes: acciones de fila, cerrar ×, campos (`Field`) e importación CSV |
 | course-offerings | Bajo | DS3 | ⏳ | Pendiente | 3 paginaciones propias |
-| collaborations | Bajo | DS3 | ⏳ | Pendiente | 4 modales |
+| collaborations | Bajo | DS3 | 🔄 (U3.2 páginas ✅ `7dc7d53`; modal en top layer ✅ DS4.2c.2) | Erick | 4 modales |
 | eligibilities / eligibility-automation | Medio | DS3 | ⏳ | Pendiente | 4 tablas |
 | admin | Alto | DS4 | ⏳ | Pendiente | 330 colores literales; `EntityProfileLayout` duplicado; 22 clases de botón |
 | students | Alto | DS4 | 🔄 (DS4.1a ✅ `54988fb`; DS4.2a ✅ `3bdfcab`; U1 Estudiantes ✅ `04ce3aa`; U2 Mi perfil y Mis exámenes ✅ `a08bdfc`) | Erick | Docente: alumnos de la materia e importación migrados; paneles CSV unificados. Pendientes: `StudentProfilePage`, `StudentQrPage`, modales; QR |
-| exams | Alto | DS4 | 🔄 (U1 Mis exámenes ✅ `04ce3aa`; U3.1 Detalle ✅ `dd7cdfe`; 320px Programar Evaluación ✅ `f9348a8`) | Erick | Control de ingreso en vivo: validación manual. Programar Evaluación: diseño aprobado, no rediseñar (decisión 9). Subpáginas: U3 |
+| exams | Alto | DS4 | 🔄 (U1 Mis exámenes ✅ `04ce3aa`; U3.1 Detalle ✅ `dd7cdfe`; 320px Programar Evaluación ✅ `f9348a8` y `81671d7`) | Erick | Control de ingreso en vivo: validación manual. Programar Evaluación: diseño aprobado, no rediseñar (decisión 9). Subpáginas: U3 |
 | home | Medio | DS4 | ⏳ | Pendiente | 59 `font-size` en px |
 | shared/components (Header, DataTable, DataCardGrid) | Alto | DS4 | ⏳ | Pendiente | Unos 217 literales; usados por muchas features |
 | layouts | Bajo | DS4 | ⏳ | Pendiente | |
@@ -75,7 +75,7 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 
 7. `Button` (DS2.2a): el hover/active de `danger` mezcla `--color-error` con `--color-text` (`color-mix`); en tema claro oscurece, **revisar antes de activar el tema oscuro**. El estado deshabilitado mantiene `opacity: 1`. `ButtonLink` usa `Link` de `react-router` (el proyecto no tiene `react-router-dom`).
 8. `Field` (DS2.2b): el error de campo no es región viva (sin `role="alert"`); se anuncia con el control por `aria-describedby`. Los controles usan los tokens `--input-*` existentes.
-9. **Programar Evaluación (`/teacher/subjects/:id/exams/create`): diseño APROBADO (decisión del 2026-11-08, captura local).** No se rediseña en U1, U2, U3 ni en migraciones posteriores. Se conservan distribución (dos columnas por encima de 1080px), tarjetas, calendario, selector de aulas, horarios, colores, tipografía, espaciados y barra inferior. Solo se admiten correcciones puntuales de errores demostrados, sin alterar el diseño ni los contratos funcionales. Guarda automática: `features/exams/tests/examCreateDesignGuard.browser.mjs` (firma idéntica DOM/estilos/geometría frente a un commit base a 320–1440px). Mismo criterio para Editar examen, que comparte `ExamSchedulerPageShell` (guarda con `EIDA_EXAM_GUARD_SCREEN=edit`). El desbordamiento previo a 320px se corrigió en `f9348a8` (único ajuste autorizado, solo por debajo de 390px).
+9. **Programar Evaluación (`/teacher/subjects/:id/exams/create`): diseño APROBADO (decisión del 2026-11-08, captura local).** No se rediseña en U1, U2, U3 ni en migraciones posteriores. Se conservan distribución (dos columnas por encima de 1080px), tarjetas, calendario, selector de aulas, horarios, colores, tipografía, espaciados y barra inferior. Solo se admiten correcciones puntuales de errores demostrados, sin alterar el diseño ni los contratos funcionales. Guarda automática: `features/exams/tests/examCreateDesignGuard.browser.mjs` (firma idéntica DOM/estilos/geometría frente a un commit base a 320–1440px). Mismo criterio para Editar examen, que comparte `ExamSchedulerPageShell` (guarda con `EIDA_EXAM_GUARD_SCREEN=edit`). El desbordamiento previo a 320px se corrigió en `f9348a8` y las tarjetas de aula a 320px en `81671d7` (ajustes autorizados, solo por debajo de 390px).
 10. Subrayado rojo bajo el `h1` de las páginas de estudiante: **decisión de diseño pendiente**. No hay referencia de Figma en el repositorio que lo exija o lo descarte; se conserva provisionalmente (U2) como `.page h1::after` en sus módulos.
 
 ## Hallazgos visuales reservados para DS2
@@ -388,4 +388,21 @@ Bloqueos pendientes:
 - Pendientes:
   - Programar Evaluación a 320px (previo, sin desbordar la página): en las tarjetas de aula, «Ver días libres» se superpone al nombre y la insignia verde queda recortada. No se corrige (diseño aprobado; requiere autorización).
   - Familias 2–5 de U3 (colaboradores, habilitaciones, reportes/incidencias/infracciones/expulsiones/asistencia, reparto offline).
+- Sin revisión humana; revisión técnica asistida por IA.
+
+## U3.2 - Colaboradores y tarjetas de aula a 320px (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base fe9b780, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (HTTP simulado, solo GET).
+- U3.2 `7dc7d53` — `ExamCollaboratorsPage` (`/teacher/exams/:id/collaborators`) y `CollaboratorPage` (`/collaborator`):
+  - Antes (reproducido, `pageLayout.browser` 20/20 FAIL): migas y `h1` dentro de la tarjeta blanca de 1120px de `TeacherExamsPage.module.css`.
+  - Ahora: conservan su `<main>` con `PageContainer labelledBy` + `PageHeader`; mismos títulos y descripciones. **Migas exactamente iguales** («Mis exámenes › Colaboradores»; la página del colaborador sigue sin migas). El contenido sigue en su tarjeta al ancho del contenedor con el modificador existente `.contentFull`: **ningún CSS modificado**. Tarjeta del examen, búsqueda, tabla, estados y diálogos de asignar/detalle/revocar sin cambios.
+  - Pruebas: `pageLayout.browser` añade ambas páginas cargadas y en error (500 simulado y anulación por pantalla de `/me/collaborations`) y abre/cierra «Asignar colaborador» (top layer, foco dentro, Escape devuelve el foco, solo GET). El stub de `useAuth` puede exponer un usuario por pantalla (para `CollaborationsProvider`) sin afectar a las demás.
+- Corrección autorizada `81671d7` — tarjetas de aula de Programar Evaluación a 320px:
+  - Causa: la cabecera de la tarjeta es una fila sin salto; «Ver días libres» (`nowrap`, sin encoger) tapaba nombre y capacidad y la insignia «★ Adecuada a tu cupo» quedaba recortada.
+  - Ajuste: `flex-wrap: wrap` en `.roomCardHeader` y `.roomIdentityGroup` **solo por debajo de 390px**.
+  - Regresión nueva en `examCreateDesignGuard`: en cada tarjeta, superposición entre nombre/capacidad/recomendación/estado o elementos fuera de la tarjeta. Falla antes a 320px; debe ser vacía por debajo de 390px y, desde 390px, igual a la base.
+- Validación: `pageLayout.browser` **195/195** (colaboradores 20/20, antes 0/20); `assignCollaborator.integration` 21/21 sin cambios; guardas Programar Evaluación y Editar examen 5/5 idénticas a fe9b780 tras U3.2 y, con `EIDA_EXAM_GUARD_FIX320=1` frente a 7dc7d53, 5/5 tras la corrección (320px corregido; 390/768/1024/1440px idénticos); Node 874/875; `tsc` + build OK; **lista de errores ESLint idéntica a la base de 36** (0 nuevos); `git diff --check` OK.
+- Pendientes:
+  - **A 390px el diseño aprobado aún muestra la insignia de recomendación y la capacidad tocando «Ver días libres»** (detectado por la regresión). No se cambia: la autorización exigía 390px o más intactos. Requiere decisión.
+  - Migas de colaboradores sin «Inicio» ni «Detalle del examen» y página del colaborador sin migas: se conservan por decisión; alinearlas requiere autorización (añade texto).
 - Sin revisión humana; revisión técnica asistida por IA.
