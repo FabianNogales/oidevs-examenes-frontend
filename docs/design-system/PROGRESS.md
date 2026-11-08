@@ -48,8 +48,8 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 | collaborations | Bajo | DS3 | ⏳ | Pendiente | 4 modales |
 | eligibilities / eligibility-automation | Medio | DS3 | ⏳ | Pendiente | 4 tablas |
 | admin | Alto | DS4 | ⏳ | Pendiente | 330 colores literales; `EntityProfileLayout` duplicado; 22 clases de botón |
-| students | Alto | DS4 | 🔄 (DS4.1a ✅ `54988fb`; DS4.2a ✅ `3bdfcab`) | Erick | Docente: alumnos de la materia e importación migrados; paneles CSV unificados. Pendientes: `StudentProfilePage`, `StudentQrPage`, modales; QR |
-| exams | Alto | DS4 | ⏳ | Pendiente | Control de ingreso en vivo: validación manual |
+| students | Alto | DS4 | 🔄 (DS4.1a ✅ `54988fb`; DS4.2a ✅ `3bdfcab`; U1 Estudiantes ✅ `04ce3aa`; U2 Mi perfil y Mis exámenes ✅ `a08bdfc`) | Erick | Docente: alumnos de la materia e importación migrados; paneles CSV unificados. Pendientes: `StudentProfilePage`, `StudentQrPage`, modales; QR |
+| exams | Alto | DS4 | 🔄 (U1 Mis exámenes ✅ `04ce3aa`) | Erick | Control de ingreso en vivo: validación manual. Programar Evaluación: diseño aprobado, no rediseñar (decisión 9). Subpáginas: U3 |
 | home | Medio | DS4 | ⏳ | Pendiente | 59 `font-size` en px |
 | shared/components (Header, DataTable, DataCardGrid) | Alto | DS4 | ⏳ | Pendiente | Unos 217 literales; usados por muchas features |
 | layouts | Bajo | DS4 | ⏳ | Pendiente | |
@@ -75,6 +75,8 @@ Responsable: `Pendiente` hasta que el equipo lo asigne.
 
 7. `Button` (DS2.2a): el hover/active de `danger` mezcla `--color-error` con `--color-text` (`color-mix`); en tema claro oscurece, **revisar antes de activar el tema oscuro**. El estado deshabilitado mantiene `opacity: 1`. `ButtonLink` usa `Link` de `react-router` (el proyecto no tiene `react-router-dom`).
 8. `Field` (DS2.2b): el error de campo no es región viva (sin `role="alert"`); se anuncia con el control por `aria-describedby`. Los controles usan los tokens `--input-*` existentes.
+9. **Programar Evaluación (`/teacher/subjects/:id/exams/create`): diseño APROBADO (decisión del 2026-11-08, captura local).** No se rediseña en U1, U2, U3 ni en migraciones posteriores. Se conservan distribución (dos columnas por encima de 1080px), tarjetas, calendario, selector de aulas, horarios, colores, tipografía, espaciados y barra inferior. Solo se admiten correcciones puntuales de errores demostrados, sin alterar el diseño ni los contratos funcionales. Guarda automática: `features/exams/tests/examCreateDesignGuard.browser.mjs` (firma idéntica DOM/estilos/geometría frente a un commit base a 320–1440px). Mismo criterio para Editar examen, que comparte `ExamSchedulerPageShell`.
+10. Subrayado rojo bajo el `h1` de las páginas de estudiante: **decisión de diseño pendiente**. No hay referencia de Figma en el repositorio que lo exija o lo descarte; se conserva provisionalmente (U2) como `.page h1::after` en sus módulos.
 
 ## Hallazgos visuales reservados para DS2
 
@@ -349,4 +351,23 @@ Bloqueos pendientes:
   - Elegibilidad, offline y usuarios sin prueba de navegador propia: cubiertos por el componente común y sus pruebas Node.
 - Proceso Node abierto: las pruebas de esta etapa no dejan procesos (comparado antes/después). Hallazgos: (1) un `npm run dev`/Vite huérfano en el puerto 5173 (padre ya inexistente), no lanzado por las pruebas, que no se detuvo; (2) los scripts antiguos con `browserHarness.mjs` (7) o `mkdtemp` propio (3, p. ej. `incidents`) solo hacen `chrome.kill()` y no borran el perfil: quedan `hu28-browser-*` y `eida-hu27-*` en `%TEMP%`. Propuesta: migrarlos a `browserProfile.mjs` en una subetapa aparte.
 - Siguiente: unificación visual docente/estudiante, revisión de «Crear examen», componentes pendientes (`StudentDialog` sobre la familia común, retirar `AddStudentsModal.tsx`) y DS5.
+- Sin revisión humana; revisión técnica asistida por IA.
+
+## U1/U2 - Unificación visual docente/estudiante (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base dcc36f9, inicio limpio. Solo frontend; backend no tocado; 0 escrituras (HTTP simulado, solo GET).
+- D0 (inventario): las listas docentes (Mis materias, Estudiantes, Mis exámenes) metían migas y un `h1` propio dentro de una tarjeta blanca de 1120px; las páginas de estudiante (Mi perfil, Mis exámenes) usaban `h1` `clamp(32px, 4vw, 40px)` con subrayado de acento y padding propio. Fondos ya idénticos (`#eaf3ff` = `--color-background` = `--color-surface-soft`). Crear examen ya seguía el patrón objetivo (cabecera sobre el fondo, contenido en tarjetas).
+- Reproducción (`pageLayout.browser`, 5 pantallas nuevas): **25/25 FAIL antes** (docentes: `h1` sobre la tarjeta, sin 1280px, desalineado; estudiante: `h1` 32/40px, separaciones 32/12px, sin 1280px).
+- U1 `04ce3aa` — listas docentes: conservan su `<main>` y usan `PageContainer labelledBy` + `PageHeader` (mismos título, descripción y migas). El contenido sigue en su tarjeta (filtros, listas, estados y paginación sin cambios), ahora alineada con la cabecera al ancho del contenedor. Mis exámenes usa el modificador aditivo `.contentFull`: `TeacherExamsPage.module.css` es compartido y conserva 1120px para sus otros consumidores. Eliminadas las reglas `.page`/`.pageHeader` sin uso de los dos módulos propios.
+- U2 `a08bdfc` — estudiante: `PageContainer` + `PageHeader` dentro del `<main>` de `StudentLayout` (sin cambios). `h1` 32/24px. Subrayado conservado provisionalmente (decisión 10). Paneles, aviso, pestañas, tarjetas y foto sin cambios. No se añadieron migas (nunca las tuvieron).
+- Diferencias resueltas: `h1` 32px escritorio / 24px móvil, bold, línea 40/30px en las cinco; cabecera y migas fuera de la tarjeta; ancho 1280px con el mismo padding y alineación que administración; separaciones de cabecera 24px y descripción 8px; un solo `<main>`; sin desbordamiento.
+- Validación:
+  - `pageLayout.browser` **165/165** (las 5 nuevas 25/25 a 320/390/768/1024/1440, más las 28 anteriores); comprobación de tarjeta de contenido (docente) y de acento, paneles y `main` de `StudentLayout` (estudiante).
+  - Programar Evaluación: `examCreateDesignGuard.browser` **5/5 idéntica a dcc36f9** tras U1 y tras U2 (250 elementos; dos columnas a 1440px, una por debajo de 1080px; calendario, aulas, horario y barra inferior). Sensibilidad comprobada: un cambio temporal del tamaño de su `h1` da 5/5 FAIL.
+  - Node 874/875 (0 fallos, 1 `todo` de D3); `pageLayout.test` amplía su lista cerrada; `studentQrPresentation` comprueba la cabecera a través de `PageHeader`. Build OK; ESLint 36 = línea base; `git diff --check` OK.
+- Pendientes:
+  - Programar Evaluación ya **desborda horizontalmente a 320px en la base** (defecto previo, no corregido por la decisión 9; la guarda exige que no cambie). Corregirlo solo como arreglo puntual autorizado.
+  - Decisión 10 (subrayado de estudiante) y migas en las páginas de estudiante: requieren decisión de diseño.
+  - Sin cuenta de estudiante: U2 validada solo con transporte simulado.
+  - **U3** (sin ejecutar): subpáginas de examen, una familia por vez — detalle (`TeacherExamDetailPage`), colaboradores (`ExamCollaboratorsPage`, `CollaboratorPage`), habilitaciones (`ExamEligibilitiesPage`, `EligibilityAutomationPage`), reportes/incidencias/infracciones/expulsiones (`Incidents.module.css`, cabecera `.heading`) y reparto offline (`OfflineShared.module.css`, `h1` `clamp` y 1300px). Comparten `TeacherExamsPage.module.css` `.page/.content` (9 consumidores). Control de ingreso, en etapa propia. Crear/Editar examen excluidas (decisión 9).
 - Sin revisión humana; revisión técnica asistida por IA.
