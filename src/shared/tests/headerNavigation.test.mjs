@@ -289,7 +289,7 @@ test('header: HU33 report navigation preserves incident access and has a teacher
 })
 
 const ADMIN_GROUPS = {
-  Contenidos: ['/admin/portal/news', '/admin/portal/events', '/admin/portal/information', '/admin/portal/services', '/news'],
+  Contenidos: ['/news', '/admin/portal/news', '/admin/portal/events', '/admin/portal/information', '/admin/portal/services'],
   Usuarios: ['/admin/users/manage', '/admin/users/roles', '/admin/users/history', '/admin/teachers', '/admin/teachers/assignments', '/admin/teachers/assignments/import', '/admin/students/manage', '/admin/students/import'],
   Académico: ['/admin/rooms', '/admin/rooms/import', '/admin/subjects', '/admin/subjects/import', '/admin/careers', '/admin/eligibility-policies', '/admin/incidents', '/admin/exam-reports'],
 }
@@ -302,6 +302,18 @@ test('admin header: seven primary entries and every existing destination retaine
   for (const [label, paths] of Object.entries(ADMIN_GROUPS)) {
     assert.deepEqual(items.find(item => item.label === label).children.map(child => child.to), paths)
   }
+  assert.deepEqual(
+    items
+      .find((item) => item.label === 'Contenidos')
+      .children.map((child) => child.label),
+    [
+      'Noticias',
+      'Gestionar noticias',
+      'Gestionar calendario',
+      'Gestionar información',
+      'Gestionar servicios',
+    ],
+  )
   assert.equal(items.find(item => item.label === 'Información').to, '/information')
   assert.equal(items.find(item => item.label === 'Servicios').to, '/services')
   assert.equal(items.find(item => item.label === 'Auditoría').to, '/admin/audit-logs')
@@ -316,6 +328,7 @@ test('admin header: multi-role accounts retain all routes without duplicating pu
 })
 
 for (const [path, group] of [
+  ['/news', 'Contenidos'],
   ['/admin/portal/news', 'Contenidos'], ['/admin/portal/events', 'Contenidos'],
   ['/admin/portal/information', 'Contenidos'], ['/admin/portal/services', 'Contenidos'],
   ['/admin/eligibility-policies', 'Académico'], ['/admin/eligibility-policies/12', 'Académico'],

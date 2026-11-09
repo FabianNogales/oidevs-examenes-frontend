@@ -54,6 +54,7 @@ export function component(c, path, name, props = {}) {
         if (Array.isArray(node)) return node.map(expand)
         if (!node || typeof node !== 'object' || !node.props) return node
         const pure = [
+          'AdminStatusBadge',
           'EditorFeedback',
           'PortalField',
           'PortalPageLayout',

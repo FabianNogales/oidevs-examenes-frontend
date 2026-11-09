@@ -16,7 +16,28 @@ const news = {
   content: 'Texto completo\n<script>texto</script>',
   image_url: null,
   published_at: '2026-11-05T02:00:00Z',
+  category: { id: 1, name: 'Académico' },
 }
+// Active selector options (GET /admin/portal/news-categories, backend 9172f18).
+const activeCategories = [
+  { id: 1, name: 'Académico' },
+  { id: 4, name: 'Convocatorias' },
+]
+const categoryOptions = (data = activeCategories, extra = {}) => ({
+  data,
+  loading: false,
+  error: null,
+  reload() {},
+  ...extra,
+})
+// Public list loads its category selector first; route it to a fixture.
+const publicClient = (get, categories = activeCategories) =>
+  client({
+    get: (url, ...rest) =>
+      url === '/portal/news-categories'
+        ? { data: { data: categories } }
+        : get(url, ...rest),
+  })
 const admin = {
   ...news,
   status: 'DRAFT',
@@ -25,13 +46,19 @@ const admin = {
   updated_by: 1,
   published_by: null,
 }
-function editor(handlers = {}, initial = admin) {
+function editor(handlers = {}, initial = admin, props = {}) {
   const c = client(handlers)
   const saved = []
+  const dirtyStates = []
+  const stateChanges = []
   const ui = component(c, 'features/portal-news/NewsEditor.tsx', 'NewsEditor', {
     initial,
+    categories: categoryOptions(),
     onSaved: () => saved.push(true),
     onBusy() {},
+    onDirty: (value) => dirtyStates.push(value),
+    onStateChange: (value) => stateChanges.push(value),
+    ...props,
   })
   return {
     ...ui,
@@ -39,18 +66,39 @@ function editor(handlers = {}, initial = admin) {
       return ui.tree
     },
     saved,
+    dirtyStates,
+    stateChanges,
   }
+}
+
+async function confirmUnpublish(ui) {
+  const confirmation = nodes(
+    ui.tree,
+    (node) =>
+      node.type === 'section' &&
+      node.props['aria-labelledby'] === 'news-action-confirmation-title',
+  )[0]
+  const action = nodes(
+    confirmation,
+    (node) =>
+      node.type === 'button' && textContent(node).trim() === 'Despublicar',
+  )[0]
+  assert.ok(action)
+  action.props.onClick()
+  ui.render()
+  await ui.ready()
 }
 
 test('HU40 public list consumes backend news and pagination without search controls', async () => {
   const ui = component(
-    client({ get: () => ({ data: page([news], 1, 2, 16) }) }),
+    publicClient(() => ({ data: page([news], 1, 2, 16) })),
     'features/portal-news/NewsPage.tsx',
     'NewsList',
   )
   await ui.ready()
-  assert.equal(ui.calls[0].args[0], '/portal/news')
-  assert.equal(ui.calls[0].args[1].params.status, undefined)
+  const newsCall = ui.calls.find((call) => call.args[0] === '/portal/news')
+  assert.ok(newsCall)
+  assert.equal(newsCall.args[1].params.status, undefined)
   assert.match(textContent(ui.tree), /Noticia del servidor/)
   assert.match(textContent(ui.tree), /Más recientes primero/)
   assert.equal(nodes(ui.tree, (node) => node.type === 'form').length, 0)
@@ -144,7 +192,7 @@ test('HU41 administrative preview fetches authenticated blob and revokes Object 
   await assert.rejects(fetch(second))
 })
 
-test('HU41 creating news sends only text fields and retains backend DRAFT', async () => {
+test('HU41 creating news sends text fields with the required category and retains backend DRAFT', async () => {
   const ui = editor(
     { post: () => ({ data: { data: { ...admin, revision: 1 } } }) },
     null,
@@ -152,10 +200,16 @@ test('HU41 creating news sends only text fields and retains backend DRAFT', asyn
   ui.edit('title', 'Nuevo título')
   ui.edit('summary', 'Resumen')
   ui.edit('content', 'Texto')
+  ui.edit('category_id', '4')
   await ui.submit()
   assert.deepEqual(ui.calls[0].args, [
     '/admin/portal/news',
-    { title: 'Nuevo título', summary: 'Resumen', content: 'Texto' },
+    {
+      title: 'Nuevo título',
+      summary: 'Resumen',
+      content: 'Texto',
+      category_id: 4,
+    },
   ])
   assert.match(textContent(ui.tree), /Borrador/)
   assert.equal(ui.saved.length, 1)
@@ -187,24 +241,62 @@ for (const [state, action, next] of [
   ['ARCHIVED', 'Publicar', 'PUBLISHED'],
 ]) {
   test(`HU41 ${action} ${state} uses status endpoint and revision after confirmation`, async () => {
+    const updated = { ...admin, status: next, revision: 8 }
     const ui = editor(
       {
-        patch: () => ({
-          data: { data: { ...admin, status: next, revision: 8 } },
-        }),
+        patch: () => ({ data: { data: updated } }),
       },
       { ...admin, status: state },
     )
     await ui.click(action)
     assert.equal(ui.calls.length, 0)
-    await ui.click('Confirmar operación')
+    const confirmationAction =
+      action === 'Despublicar' ? 'Despublicar' : 'Confirmar operación'
+    if (action === 'Despublicar') {
+      const text = textContent(ui.tree)
+      assert.match(text, /¿Cambiar la noticia a borrador\?/)
+      assert.match(text, /La noticia dejará de mostrarse públicamente\./)
+      assert.equal(ui.button('Cancelar')?.type, 'button')
+      assert.doesNotMatch(text, /Confirmar operación|Volver/)
+    }
+    if (action === 'Despublicar') await confirmUnpublish(ui)
+    else await ui.click(confirmationAction)
     assert.deepEqual(ui.calls[0].args, [
       '/admin/portal/news/42/status',
       { status: next, revision: 7 },
     ])
+    const updatedLabel =
+      next === 'DRAFT'
+        ? 'Borrador'
+        : next === 'PUBLISHED'
+          ? 'Publicado'
+          : 'Archivado'
+    assert.ok(textContent(ui.tree).includes(`Estado: ${updatedLabel}`))
     ui.h.unmount()
   })
 }
+
+test('HU41 unpublish confirmation can be canceled without changing state or calling the API', async () => {
+  const ui = editor({}, { ...admin, status: 'PUBLISHED' })
+  await ui.click('Despublicar')
+  assert.match(
+    textContent(ui.tree),
+    /La noticia dejará de mostrarse públicamente\./,
+  )
+  await ui.click('Cancelar')
+  assert.equal(ui.calls.length, 0)
+  assert.match(textContent(ui.tree), /Estado: Publicado/)
+  assert.equal(
+    nodes(
+      ui.tree,
+      (node) =>
+        node.type === 'section' &&
+        node.props['aria-labelledby'] === 'news-action-confirmation-title',
+    ).length,
+    0,
+  )
+  ui.h.unmount()
+})
 
 test('HU41 upload and image deletion send current revision without deleting the news', async () => {
   const c = client({
@@ -291,5 +383,123 @@ test('HU41 422 shows field errors while preserving draft', async () => {
   assert.ok(textContent(ui.tree).includes('Título inválido.'))
   assert.ok(textContent(ui.tree).includes('Revisa el contenido.'))
   assert.equal(ui.saved.length, 0)
+  ui.h.unmount()
+})
+
+test('HU41 dirty state detects text, selected images and pending actions without false positives', async () => {
+  const ui = editor({}, admin)
+  await ui.ready()
+  assert.equal(ui.dirtyStates.at(-1), false, 'initial snapshot is clean')
+  ui.edit('title', 'Cambio local')
+  assert.equal(ui.dirtyStates.at(-1), true)
+  ui.edit('title', admin.title)
+  assert.equal(ui.dirtyStates.at(-1), false, 'restoring the baseline is clean')
+  ui.field('image').props.onChange({
+    target: { files: [new File(['png'], 'foto.png', { type: 'image/png' })] },
+  })
+  ui.render()
+  assert.equal(ui.dirtyStates.at(-1), true, 'selected image is unsaved')
+  ui.field('image').props.onChange({ target: { files: [] } })
+  ui.render()
+  assert.equal(ui.dirtyStates.at(-1), false, 'clearing the file is clean')
+  await ui.click('Publicar')
+  assert.equal(ui.dirtyStates.at(-1), true, 'pending status change is unsaved')
+  await ui.click('Cancelar')
+  assert.equal(ui.dirtyStates.at(-1), false, 'canceling the action is clean')
+  ui.h.unmount()
+})
+
+test('HU41 dirty state clears only after text or persisted image/status operations', async () => {
+  const ui = editor(
+    {
+      patch: () => ({ data: { data: { ...admin, revision: 8 } } }),
+      post: () => ({
+        data: { data: { ...admin, revision: 8, image_url: 'image-url' } },
+      }),
+    },
+    admin,
+  )
+  await ui.ready()
+  ui.edit('summary', 'Resumen modificado')
+  assert.equal(ui.dirtyStates.at(-1), true)
+  await ui.submit()
+  assert.equal(ui.dirtyStates.at(-1), false, 'save resets the text baseline')
+  await ui.click('Publicar')
+  await ui.click('Confirmar operación')
+  assert.equal(ui.dirtyStates.at(-1), false, 'persisted status is not dirty')
+  ui.field('image').props.onChange({
+    target: { files: [new File(['png'], 'foto.png', { type: 'image/png' })] },
+  })
+  ui.render()
+  assert.equal(ui.dirtyStates.at(-1), true)
+  await ui.click('Subir imagen')
+  assert.equal(ui.dirtyStates.at(-1), false, 'persisted image is not dirty')
+  ui.h.unmount()
+})
+
+for (const operation of ['text', 'status']) {
+  test(`HU41 saving ${operation} preserves a selected image until upload`, async () => {
+    let persisted = { ...admin }
+    const ui = editor({
+      patch: (_url, body) => {
+        persisted = { ...persisted, ...body, revision: 8 }
+        return { data: { data: persisted } }
+      },
+      post: () => ({
+        data: { data: { ...persisted, revision: 9, image_url: 'image-url' } },
+      }),
+    })
+    const file = new File(['png'], 'pendiente.png', { type: 'image/png' })
+    const inputKey = ui.field('image').key
+    ui.field('image').props.onChange({ target: { files: [file] } })
+    ui.render()
+    if (operation === 'text') {
+      ui.edit('title', 'Título guardado')
+      await ui.submit()
+    } else {
+      await ui.click('Publicar')
+      await ui.click('Confirmar operación')
+    }
+    assert.equal(ui.dirtyStates.at(-1), true, 'selected image is still unsaved')
+    assert.equal(ui.field('image').key, inputKey, 'persisting other data must not reset the file input')
+    assert.equal(ui.button('Subir imagen').props.disabled, false)
+    await ui.click('Subir imagen')
+    assert.equal(ui.calls.at(-1).args[1].get('image').name, file.name)
+    assert.equal(ui.calls.at(-1).args[1].get('revision'), '8')
+    assert.equal(ui.dirtyStates.at(-1), false)
+    assert.notEqual(ui.field('image').key, inputKey, 'successful upload clears the file input')
+    ui.h.unmount()
+  })
+}
+
+test('HU41 footer state exposes safe labels and disables submission while an action is pending', async () => {
+  const create = editor({}, null)
+  await create.ready()
+  assert.deepEqual(create.stateChanges.at(-1), {
+    label: 'Crear borrador',
+    disabled: false,
+  })
+  create.h.unmount()
+  const ui = editor({}, admin)
+  await ui.ready()
+  assert.deepEqual(ui.stateChanges.at(-1), {
+    label: 'Guardar noticia',
+    disabled: false,
+  })
+  await ui.click('Publicar')
+  assert.equal(ui.stateChanges.at(-1).disabled, true)
+  await ui.click('Cancelar')
+  assert.equal(ui.stateChanges.at(-1).disabled, false)
+  ui.h.unmount()
+})
+
+test('HU41 external drawer footer keeps the form submit contract without duplicating actions', async () => {
+  const ui = editor({}, admin, { formId: 'news-editor-form' })
+  await ui.ready()
+  assert.equal(
+    nodes(ui.tree, (node) => node.type === 'form')[0].props.id,
+    'news-editor-form',
+  )
+  assert.equal(ui.button('Guardar noticia'), undefined)
   ui.h.unmount()
 })

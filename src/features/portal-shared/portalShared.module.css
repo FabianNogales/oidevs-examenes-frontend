@@ -1,4 +1,4 @@
-@import '../portal-calendar/portalCalendar.module.css';
+@import '../../shared/styles/portalBase.module.css';
 
 .cards {
   display: grid;
@@ -356,6 +356,12 @@
 
 .editorActions .unpublishAction {
   color: var(--color-error);
+}
+
+.drawerEditorActions {
+  position: static;
+  margin: 0;
+  padding: 12px 0 0;
 }
 
 .serviceActions {

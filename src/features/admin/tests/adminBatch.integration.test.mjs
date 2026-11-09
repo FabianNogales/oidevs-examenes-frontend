@@ -199,10 +199,14 @@ test('account history has its own persisted-event screen', () => {
 
 test('024/022: new navigation links belong only to the administrator menu', () => {
   const h = harness(); const { navigationByRole } = h.load('shared/components/Header/headerNavigation.config.ts')
+  // Links may live in the first level or inside a dropdown (children).
+  const flatten = (items) => items.flatMap((item) => [item, ...(item.children ?? [])])
   for (const path of ['/admin/careers', '/admin/audit-logs']) {
-    assert.ok(navigationByRole.admin.some((item) => item.to === path))
-    assert.ok(![...navigationByRole.teacher, ...navigationByRole.student].some((item) => item.to === path))
+    assert.ok(flatten(navigationByRole.admin).some((item) => item.to === path), path)
+    assert.ok(![...flatten(navigationByRole.teacher), ...flatten(navigationByRole.student)].some((item) => item.to === path), path)
   }
+  // Carreras is reached through an administrator submenu.
+  assert.ok(navigationByRole.admin.some((item) => item.children?.some((child) => child.to === '/admin/careers')))
 })
 
 test('shared table: Ver detalle is optional and Ver perfil remains the default for existing consumers', () => {

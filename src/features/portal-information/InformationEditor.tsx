@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react'
+import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
 import { useRevisionEditor } from '@/features/portal-shared/useRevisionEditor'
 import { EditorFeedback, PortalField } from '@/features/portal-shared/PortalUi'
 import {
@@ -34,20 +35,36 @@ export function InformationEditor({
   initial,
   onSaved,
   onBusy,
+  onDirty,
+  onStateChange,
+  formId,
 }: {
   kind: InformationKind
   initial: AdminInformation | null
-  onSaved: () => void
+  onSaved: (item: AdminInformation) => void
   onBusy: (busy: boolean) => void
+  onDirty?: (dirty: boolean) => void
+  onStateChange?: (state: { label: string; disabled: boolean }) => void
+  formId?: string
 }) {
   const editor = useRevisionEditor(initial)
   const [form, setForm] = useState(() => formOf(initial))
   const [pending, setPending] = useState<'publish' | 'unpublish' | null>(null)
   const item = editor.snapshot
-  const formId = useId()
+  const generatedId = useId()
+  const editorFormId = formId ?? generatedId
+  const dirty = JSON.stringify(form) !== JSON.stringify(formOf(item)) || pending !== null
+  const submitLabel = item ? 'Guardar borrador' : 'Crear FAQ'
+  const submitDisabled = editor.locked || pending !== null
   useEffect(() => {
     onBusy(editor.busy)
   }, [editor.busy, onBusy])
+  useEffect(() => {
+    onDirty?.(dirty)
+  }, [dirty, onDirty])
+  useEffect(() => {
+    onStateChange?.({ label: submitLabel, disabled: submitDisabled })
+  }, [onStateChange, submitDisabled, submitLabel])
   const fields = editor.error?.fields ?? {}
   async function save() {
     const input: SectionDraft | FaqDraft =
@@ -71,7 +88,7 @@ export function InformationEditor({
     )
     if (result) {
       setForm(formOf(result))
-      onSaved()
+      onSaved(result)
     }
   }
   async function publish() {
@@ -81,7 +98,7 @@ export function InformationEditor({
     )
     if (result) {
       setPending(null)
-      onSaved()
+      onSaved(result)
     }
   }
   async function refresh() {
@@ -99,8 +116,13 @@ export function InformationEditor({
       {item ? (
         <>
           <p className={styles.informationMetadata}>
-            Visibilidad: {item.is_published ? 'Publicado' : 'Despublicado'} ·
-            Revisión: {item.revision}
+            Visibilidad:{' '}
+            <AdminStatusBadge
+              status={item.is_published ? 'PUBLISHED' : 'UNPUBLISHED'}
+            >
+              {item.is_published ? 'Publicado' : 'Despublicado'}
+            </AdminStatusBadge>{' '}
+            · Revisión: {item.revision}
           </p>
           <p className={styles.informationChanges} role="status">
             {item.has_unpublished_changes
@@ -127,7 +149,7 @@ export function InformationEditor({
         <p>La FAQ se creará como borrador, sin publicar.</p>
       )}
       <form
-        id={formId}
+        id={editorFormId}
         onSubmit={(event) => {
           event.preventDefault()
           void save()
@@ -287,38 +309,46 @@ export function InformationEditor({
           </button>
         </section>
       ) : null}
-      <div className={styles.editorActions}>
-        <button
-          type="submit"
-          form={formId}
-          className={`${styles.primary} ${styles.saveDraft}`}
-          disabled={editor.locked || pending !== null}
+      {!formId || item ? (
+        <div
+          className={`${styles.editorActions} ${
+            formId ? styles.drawerEditorActions : ''
+          }`}
         >
-          {item ? 'Guardar borrador' : 'Crear FAQ'}
-        </button>
-        {item ? (
-          <>
+          {!formId ? (
             <button
-              type="button"
-              className={styles.publishAction}
-              disabled={editor.locked || pending !== null}
-              onClick={() => setPending('publish')}
+              type="submit"
+              form={editorFormId}
+              className={`${styles.primary} ${styles.saveDraft}`}
+              disabled={submitDisabled}
             >
-              {item.is_published ? 'Publicar cambios' : 'Publicar'}
+              {submitLabel}
             </button>
-            {item.is_published ? (
+          ) : null}
+          {item ? (
+            <>
               <button
                 type="button"
-                className={styles.unpublishAction}
+                className={styles.publishAction}
                 disabled={editor.locked || pending !== null}
-                onClick={() => setPending('unpublish')}
+                onClick={() => setPending('publish')}
               >
-                Despublicar
+                {item.is_published ? 'Publicar cambios' : 'Publicar'}
               </button>
-            ) : null}
-          </>
-        ) : null}
-      </div>
+              {item.is_published ? (
+                <button
+                  type="button"
+                  className={styles.unpublishAction}
+                  disabled={editor.locked || pending !== null}
+                  onClick={() => setPending('unpublish')}
+                >
+                  Despublicar
+                </button>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
       <EditorFeedback {...editor} onRefresh={() => void refresh()} />
     </div>
   )

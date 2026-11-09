@@ -1,0 +1,48 @@
+/* Same content width as the News and Information administration pages. */
+.servicesAdminPage {
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+}
+
+/* Inline "Estado" filter aligned with the search row (same pattern as News). */
+.servicesAdminPage .statusFilter {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.servicesAdminPage .statusFilter select {
+  flex: 1 1 auto;
+  width: auto;
+  /* Short options ("Todos", "Activos") would otherwise make it very narrow
+     once the group takes its natural width; keep it close to the News select. */
+  min-width: 168px;
+  min-height: 44px;
+}
+
+.servicesAdminPage .clearFilters {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+/* DataTable caps the inline filter group at 260px (flex: 0 1 260px), so
+   "Limpiar filtros" wrapped below Estado and pushed the search row out of line.
+   Same fix as News (F2.5): natural width and Estado + Limpiar on one row. */
+.servicesAdminPage [role='group'][aria-label='Filtros'] {
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 600px) {
+  /* Narrow screens: the group takes its own full row; Limpiar may wrap below. */
+  .servicesAdminPage [role='group'][aria-label='Filtros'] {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .servicesAdminPage [role='group'][aria-label='Filtros'] > .statusFilter {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}

@@ -94,7 +94,7 @@ async function connect(url) {
     )
     assert.ok(
       await evaluate(
-        `(()=>{const el=[...document.querySelectorAll('button')].find(n=>n.textContent.trim()===${JSON.stringify(label)});if(!el||el.disabled)return false;el.focus();el.click();return true})()`,
+        `(()=>{const el=[...document.querySelectorAll('button')].find(n=>n.textContent.trim()===${JSON.stringify(label)}&&!n.disabled);if(!el)return false;el.focus();el.click();return true})()`,
       ),
       label,
     )
@@ -166,7 +166,49 @@ async function closeEditor(page) {
 }
 async function state(page, action, expected) {
   await page.button(action)
-  await page.button('Confirmar operación')
+  if (action === 'Despublicar') {
+    const confirmation = await page.evaluate(
+      `(()=>{const section=document.querySelector('dialog section[aria-labelledby="news-action-confirmation-title"]');const buttons=[...section.querySelectorAll('button')];const primary=buttons.find(button=>button.textContent.trim()==='Despublicar');const cancel=buttons.find(button=>button.textContent.trim()==='Cancelar');return {heading:section.querySelector('h3')?.textContent.trim(),message:section.querySelector('p')?.textContent.trim(),primaryBackground:getComputedStyle(primary).backgroundColor,cancelBackground:getComputedStyle(cancel).backgroundColor}})()`,
+    )
+    assert.equal(confirmation.heading, '¿Cambiar la noticia a borrador?')
+    assert.equal(
+      confirmation.message,
+      'La noticia dejará de mostrarse públicamente.',
+    )
+    assert.notEqual(
+      confirmation.primaryBackground,
+      confirmation.cancelBackground,
+    )
+    const responseCount = results.responses.length
+    await page.button('Cancelar')
+    await page.wait(
+      `!document.querySelector('dialog section[aria-labelledby="news-action-confirmation-title"]')`,
+    )
+    assert.equal(results.responses.length, responseCount)
+    await page.button(action)
+    const originalWidth = await page.evaluate('innerWidth')
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await page.send('Emulation.setDeviceMetricsOverride', {
+        width,
+        height: 1000,
+        deviceScaleFactor: 1,
+        mobile: false,
+      })
+      const layout = await page.evaluate(
+        `(()=>{const section=document.querySelector('dialog section[aria-labelledby="news-action-confirmation-title"]');const rect=section.getBoundingClientRect();const actions=section.lastElementChild.getBoundingClientRect();return {fits:document.documentElement.scrollWidth<=innerWidth+1&&rect.left>=0&&rect.right<=innerWidth+1&&actions.right<=rect.right+1}})()`,
+      )
+      assert.equal(layout.fits, true, `confirmation fits at ${width}px`)
+    }
+    await page.send('Emulation.setDeviceMetricsOverride', {
+      width: originalWidth,
+      height: 1000,
+      deviceScaleFactor: 1,
+      mobile: false,
+    })
+    await page.button('Despublicar')
+  } else {
+    await page.button('Confirmar operación')
+  }
   await page.wait(
     `document.querySelector('dialog')?.innerText.includes(${JSON.stringify('Estado: ' + expected)}) && document.querySelector('dialog')?.getAttribute('aria-busy')==='false'`,
   )

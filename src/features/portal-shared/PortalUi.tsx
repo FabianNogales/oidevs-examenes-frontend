@@ -3,8 +3,22 @@ import { Link } from 'react-router'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import type { PortalPage, portalError } from './portalApi'
 import styles from './portalShared.module.css'
+import {
+  PortalDialog,
+  type PortalDialogProps,
+} from '@/shared/components/PortalDialog/PortalDialog'
 
-export { CalendarModal as PortalModal } from '@/features/portal-calendar/components/CalendarModal'
+/** Compatibility adapter preserving the portal's existing style hooks. */
+export function PortalModal(props: PortalDialogProps) {
+  return (
+    <PortalDialog
+      {...props}
+      className={`${styles.dialog} ${props.drawer ? styles.drawer : ''} ${props.className ?? ''}`}
+      headerClassName={`${styles.dialogHeader} ${props.headerClassName ?? ''}`}
+      bodyClassName={`${props.drawer ? styles.drawerBody : ''} ${props.bodyClassName ?? ''}`}
+    />
+  )
+}
 
 export function PortalPageLayout({
   title,

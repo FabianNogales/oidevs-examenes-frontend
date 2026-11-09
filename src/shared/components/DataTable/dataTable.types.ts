@@ -34,6 +34,10 @@ export interface DataTableRowProps<T extends BaseTableEntity> {
 }
 
 export interface DataTableProps<T extends BaseTableEntity> {
+  /** Controls grouped with search; omitted by legacy consumers. */
+  filters?: ReactNode
+  /** Keeps filters below the search by default; opt-in to a compact bar. */
+  filterLayout?: 'below' | 'inline'
   viewActionLabel?: string
   columns: readonly TableColumnDef<T>[]
   data: readonly T[]

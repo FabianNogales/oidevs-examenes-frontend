@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { sourceHarness } from '../../../shared/tests/sourceHarness.mjs'
 import {
   client,
   component,
@@ -21,8 +22,120 @@ const draft = {
   created_by: 11,
   updated_by: 12,
   published_by: null,
+  category: { id: 1, name: 'Académico' },
 }
-function editor(handlers, initial = draft) {
+// Active selector options (GET /admin/portal/news-categories, backend 9172f18).
+const activeCategories = [
+  { id: 1, name: 'Académico' },
+  { id: 4, name: 'Convocatorias' },
+]
+const categoryOptions = (data = activeCategories, extra = {}) => ({
+  data,
+  loading: false,
+  error: null,
+  reload() {},
+  ...extra,
+})
+test('HU41 news Escape confirmation uses the native top layer and preserves the editor until discard', () => {
+  const h = sourceHarness({
+    '@/shared/api/httpClient': { httpClient: {} },
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
+    '@/features/portal-shared/usePortalResource': {
+      usePortalResource: (load) =>
+        load.name === 'loadAdminNewsCategories'
+          ? categoryOptions()
+          : { data: draft, loading: false, error: null },
+    },
+  })
+  const { AdminNewsPage } = h.load('features/portal-news/AdminNewsPage.tsx')
+  let pageTree, drawerTree
+  const render = () => h.render(() => {
+    pageTree = AdminNewsPage()
+    const news = nodes(pageTree, (node) => node.type?.name === 'NewsDialog')[0]
+    drawerTree = news ? news.type(news.props) : null
+    return pageTree
+  })
+  render()
+  nodes(pageTree, (node) => node.type?.name === 'PortalAdminCollection')[0]
+    .props.onSelect(draft.id)
+  render()
+  const drawer = () => nodes(drawerTree, (node) => node.type?.name === 'PortalModal')[0]
+  const editorNode = () => nodes(drawerTree, (node) => node.type?.name === 'NewsEditor')[0]
+  const confirmation = () => {
+    const node = nodes(drawerTree, (node) => node.type?.name === 'UnsavedNewsDialog')[0]
+    return node.type(node.props)
+  }
+  const ui = component(client(), 'features/portal-news/NewsEditor.tsx', 'NewsEditor', editorNode().props)
+  ui.edit('title', 'Cambio sin guardar')
+  render()
+  const formId = editorNode().props.formId
+  const portal = sourceHarness()
+  const { PortalDialog } = portal.load('shared/components/PortalDialog/PortalDialog.tsx')
+  const escapeDrawer = () => {
+    portal.render(() => PortalDialog(drawer().props)).props.onCancel({
+      preventDefault() {}, stopPropagation() {},
+    })
+    render()
+  }
+  const confirmHarness = sourceHarness()
+  const { ConfirmDialog } = confirmHarness.load('shared/components/ConfirmDialog/ConfirmDialog.tsx')
+  const confirmModal = new confirmHarness.Element({
+    showModal() { this.open = true },
+    close() { this.open = false },
+  })
+  const confirmationTree = () => confirmHarness.render(
+    () => ConfirmDialog(confirmation().props),
+    (tree) => { if (tree?.props.ref) tree.props.ref.current = confirmModal },
+  )
+  escapeDrawer()
+  assert.equal(confirmation().props.isOpen, true)
+  assert.equal(drawer().props.closeBlocked, true)
+  const alert = confirmationTree()
+  assert.equal(alert.type, 'dialog', 'confirmation must own the native Escape cancel event')
+  assert.equal(alert.props.role, 'alertdialog')
+  assert.equal(confirmModal.open, true)
+  assert.equal(confirmHarness.listenerCount(), 0, 'native confirmation needs no global Escape listener')
+  let prevented = false, stopped = false
+  alert.props.onCancel({
+    preventDefault() { prevented = true },
+    stopPropagation() { stopped = true },
+  })
+  assert.ok(prevented && stopped, 'cancel must neither close natively nor propagate to the Drawer')
+  render()
+  confirmationTree()
+  assert.equal(confirmModal.open, false)
+  assert.equal(confirmation().props.isOpen, false)
+  assert.equal(drawer().props.closeBlocked, false)
+  assert.equal(editorNode().props.formId, formId)
+  assert.equal(ui.field('title').props.value, 'Cambio sin guardar')
+  escapeDrawer()
+  const continueButton = nodes(confirmationTree(), (node) => node.type === 'button' && textContent(node) === 'Seguir editando')[0]
+  continueButton.props.onClick()
+  render()
+  confirmationTree()
+  assert.equal(confirmation().props.isOpen, false)
+  assert.equal(editorNode().props.formId, formId)
+  assert.equal(ui.field('title').props.value, 'Cambio sin guardar')
+  editorNode().props.onDirty(false)
+  render()
+  escapeDrawer()
+  assert.equal(drawerTree, null, 'clean Drawer closes directly')
+  nodes(pageTree, (node) => node.type?.name === 'PortalAdminCollection')[0].props.onSelect(draft.id)
+  render()
+  editorNode().props.onDirty(true)
+  render()
+  escapeDrawer()
+  const discardButton = nodes(confirmationTree(), (node) => node.type === 'button' && textContent(node) === 'Descartar cambios')[0]
+  discardButton.props.onClick()
+  render()
+  assert.equal(drawerTree, null, 'discard unmounts the Drawer and its confirmation')
+  confirmHarness.unmount()
+  portal.unmount()
+  ui.h.unmount()
+  h.unmount()
+})
+
+function editor(handlers, initial = draft, categories = categoryOptions()) {
   const saved = []
   const ui = component(
     client(handlers),
@@ -30,6 +143,7 @@ function editor(handlers, initial = draft) {
     'NewsEditor',
     {
       initial,
+      categories,
       onSaved: (value) => saved.push(value),
       onBusy() {},
     },
@@ -45,6 +159,7 @@ test('HU41 editor reports the saved backend resource so the new draft can open i
   ui.edit('title', draft.title)
   ui.edit('summary', draft.summary)
   ui.edit('content', draft.content)
+  ui.edit('category_id', '1')
   await ui.submit()
   assert.equal(saved.length, 1)
   assert.equal(saved[0].id, 42)
@@ -176,6 +291,7 @@ test('HU41 double submit while creating only creates one draft', async () => {
     },
     null,
   )
+  ui.edit('category_id', '4')
   await ui.submit()
   await ui.submit()
   assert.equal(ui.calls.length, 1)
@@ -197,7 +313,12 @@ test('HU41 state filter no longer remounts the collection or drops the search', 
   const collection = () =>
     nodes(ui.tree, (node) => node.props?.load && node.props?.onSelect)[0]
   const initialKey = collection().key
-  nodes(ui.tree, (node) => node.type === 'select')[0].props.onChange({
+  const stateFilter = nodes(
+    collection().props.filters,
+    (node) => node.type === 'select',
+  )[0]
+  assert.ok(stateFilter, 'news status filter')
+  stateFilter.props.onChange({
     target: { value: 'ARCHIVED' },
   })
   ui.render()
@@ -337,3 +458,21 @@ for (const [role, collaborations] of [
     c.h.unmount()
   })
 }
+
+test('F2.5 News inline filter group keeps Estado and "Limpiar filtros" on one row (local CSS)', async () => {
+  const { readFileSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+  const { sourceRoot } = await import('../../../shared/tests/sourceHarness.mjs')
+  const css = readFileSync(
+    resolve(sourceRoot, 'features/portal-news/adminNews.module.css'),
+    'utf8',
+  )
+  const group = String.raw`\.newsAdminPage \[role='group'\]\[aria-label='Filtros'\]`
+  const mobileStart = css.indexOf('@media (max-width: 600px)')
+  assert.ok(mobileStart > 0, 'mobile rules exist')
+  const desktop = css.slice(0, mobileStart)
+  const mobile = css.slice(mobileStart)
+  assert.match(desktop, new RegExp(group + String.raw`\s*\{[^}]*flex:\s*0 1 auto;[^}]*flex-wrap:\s*nowrap`), 'desktop: natural width, no wrap')
+  assert.match(mobile, new RegExp(group + String.raw`\s*\{[^}]*flex:\s*1 1 100%;[^}]*flex-wrap:\s*wrap`), 'mobile: own row, may wrap')
+  assert.match(mobile, new RegExp(group + String.raw` > \.statusFilter\s*\{[^}]*max-width:\s*none`))
+})

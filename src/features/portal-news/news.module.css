@@ -8,6 +8,16 @@
   margin: 0;
 }
 
+.categoryFilter {
+  max-width: 320px;
+}
+
+@media (max-width: 480px) {
+  .categoryFilter {
+    max-width: none;
+  }
+}
+
 .list > .cards {
   margin-top: 8px;
 }

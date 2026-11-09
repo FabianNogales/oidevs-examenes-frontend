@@ -96,8 +96,10 @@ for (const visibility of ['PUBLIC', 'PRIVATE']) {
     ui.edit('visibility', visibility)
     ui.edit('title', 'Actividad')
     ui.edit('description', 'Descripción')
-    ui.edit('starts_at', '2026-11-05T09:00')
-    ui.edit('ends_at', '2026-11-05T11:00')
+    ui.edit('starts_at', '2026-11-05')
+    ui.edit('starts_at_time', '09:00')
+    ui.edit('ends_at', '2026-11-05')
+    ui.edit('ends_at_time', '11:00')
     ui.edit('category_id', '73')
     await ui.submit()
     assert.equal(ui.calls.length, 1)
@@ -146,11 +148,12 @@ for (const visibility of ['PUBLIC', 'PRIVATE']) {
     )
     assert.equal(visibilityColumn.header, 'Visibilidad')
     assert.equal(
-      visibilityColumn.cell(data[0]),
+      visibilityColumn.cell(data[0]).props.children,
       visibility === 'PUBLIC' ? 'Público' : 'Privado',
     )
     assert.equal(
-      columns.find((column) => column.id === 'status').cell(data[0]),
+      columns.find((column) => column.id === 'status').cell(data[0]).props
+        .children,
       'Publicado',
     )
     ui.h.unmount()
@@ -159,7 +162,10 @@ for (const visibility of ['PUBLIC', 'PRIVATE']) {
   test(`HU39 filtro ${visibility}: server-side, reinicia página y conserva búsqueda/estado/categoría`, async () => {
     const ui = adminList()
     await ui.ready()
-    table(ui).props.onSearch('Jornada')
+    ui.edit('search', 'Jornada')
+    nodes(ui.tree, (node) => node.type === 'form')[0].props.onSubmit({
+      preventDefault() {},
+    })
     ui.render()
     await ui.ready()
     ui.edit('status', 'PUBLISHED')

@@ -1,0 +1,32 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.badge[data-status='PUBLISHED'],
+.badge[data-status='ACTIVE'] {
+  background: var(--brand-blue-light);
+  color: var(--color-primary);
+}
+
+.badge[data-status='DRAFT'] {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.badge[data-status='PENDING_CHANGES'] {
+  background: var(--brand-pink-light);
+  color: var(--brand-crimson);
+}
+
+.badge[data-status='CANCELLED'] {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}

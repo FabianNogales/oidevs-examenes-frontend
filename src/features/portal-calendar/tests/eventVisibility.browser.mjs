@@ -15,6 +15,12 @@ import {MemoryRouter} from 'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
 import {AdminCalendarPage} from '/src/features/portal-calendar/pages/AdminCalendarPage.tsx';
+import {PortalDialog} from '/src/shared/components/PortalDialog/PortalDialog.tsx';
+import {ConfirmDialog} from '/src/shared/components/ConfirmDialog/ConfirmDialog.tsx';
+import {DataTable} from '/src/shared/components/DataTable/DataTable.tsx';
+import {PortalField} from '/src/features/portal-shared/PortalUi.tsx';
+import {AdminStatusBadge} from '/src/features/portal-shared/AdminStatusBadge.tsx';
+import sharedStyles from '/src/features/portal-shared/portalShared.module.css';
 const e=React.createElement, root=createRoot(document.getElementById('root'));
 const category={id:73,name:'Institucional'};
 const initial={id:47,title:'Jornada institucional',description:'Actividad de prueba de visibilidad.',
@@ -37,6 +43,23 @@ const qa=window.visibilityQa={calls:[],reset(values={}){
     qa.calls.push({method:'patch',url,input});record={...record,...input,revision:record.revision+1};return {data:{data:{...record}}};
   }
 }};
+function SharedUiQa(){
+  const [drawer,setDrawer]=React.useState(false),[confirm,setConfirm]=React.useState(false),[legacy,setLegacy]=React.useState(false);
+  return e('main',{className:sharedStyles.page},
+    e('h1',null,'Infraestructura compartida'),
+    e(AdminStatusBadge,{status:'PENDING_CHANGES'}),
+    e('button',{onClick:()=>setDrawer(true)},'Abrir Drawer compartido'),
+    e('button',{onClick:()=>setLegacy(true)},'Abrir confirmación compatible'),
+    e(DataTable,{columns:[{id:'title',header:'Título',accessorKey:'title'}],data:[{id:1,title:'Contenido real de la prueba'}],loading:false,onSearch(){},
+      filters:e(PortalField,{label:'Estado'},e('select',{name:'qa-state'},e('option',null,'Todos')))}),
+    drawer?e(PortalDialog,{drawer:true,title:'Editor compartido',closeBlocked:confirm,onClose:()=>setDrawer(false),
+      footer:e('button',{onClick:()=>setConfirm(true)},'Cerrar editor compartido')},
+      e(PortalField,{label:'Título'},e('input',{name:'qa-title',defaultValue:'Datos conservados'})),
+      ...Array.from({length:35},(_,index)=>e('p',{key:index},'Contenido desplazable '+index))):null,
+    e(ConfirmDialog,{native:true,isOpen:confirm,title:'¿Descartar los cambios?',message:'Se perderán los cambios sin guardar.',cancelLabel:'Seguir editando',confirmLabel:'Descartar cambios',variant:'danger',onCancel:()=>setConfirm(false),onConfirm:()=>{setConfirm(false);setDrawer(false)}}),
+    e(ConfirmDialog,{isOpen:legacy,title:'Confirmación compatible',message:'Conserva el modo anterior.',onCancel:()=>setLegacy(false),onConfirm:()=>setLegacy(false)}));
+}
+qa.showShared=()=>root.render(e(MemoryRouter,{key:++key},e(SharedUiQa)));
 qa.reset();
 `
 
@@ -224,7 +247,80 @@ try {
       `${width}: page overflow`,
     )
     await screenshot(`${width}-list`)
-    await click('Gestionar evento')
+    await click('Gestionar')
+    await wait('document.querySelector("dialog[open] input[name=title]")')
+    await click('×')
+    await wait('!document.querySelector("dialog[open]")')
+    assert.equal(
+      await evaluate(
+        '[...document.querySelectorAll("dialog")].some(dialog=>dialog.innerText.includes("¿Descartar los cambios?"))',
+      ),
+      false,
+      `${width}: unmodified form closes without confirmation`,
+    )
+
+    await click('Gestionar')
+    await wait('document.querySelector("dialog[open] input[name=title]")')
+    await evaluate(
+      `(()=>{const input=document.querySelector('dialog[open] input[name=title]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Cambio sin guardar');input.dispatchEvent(new Event('input',{bubbles:true}))})()`,
+    )
+    await pause(50)
+    await click('×')
+    await wait(
+      '[...document.querySelectorAll("dialog[open]")].some(dialog=>dialog.innerText.includes("¿Descartar los cambios?"))',
+    )
+    assert.equal(
+      await evaluate(
+        'document.querySelector("dialog input[name=title]").value',
+      ),
+      'Cambio sin guardar',
+    )
+    assert.ok(
+      await evaluate(
+        `(()=>{const dialog=[...document.querySelectorAll('dialog[open]')].find(item=>item.innerText.includes('¿Descartar los cambios?'));const rect=dialog.getBoundingClientRect();return Math.abs((rect.left+rect.width/2)-innerWidth/2)<2&&Math.abs((rect.top+rect.height/2)-innerHeight/2)<2&&document.activeElement?.textContent.trim()==='Seguir editando'})()`,
+      ),
+      `${width}: confirmation is centered and focused`,
+    )
+    await screenshot(`${width}-unsaved-confirmation`)
+    await send('Input.dispatchKeyEvent', {
+      type: 'rawKeyDown',
+      key: 'Escape',
+      code: 'Escape',
+      windowsVirtualKeyCode: 27,
+      nativeVirtualKeyCode: 27,
+    })
+    await send('Input.dispatchKeyEvent', {
+      type: 'keyUp',
+      key: 'Escape',
+      code: 'Escape',
+    })
+    await wait('document.querySelectorAll("dialog[open]").length===1')
+    assert.equal(
+      await evaluate(
+        'document.querySelector("dialog input[name=title]").value',
+      ),
+      'Cambio sin guardar',
+    )
+    await click('Cancelar')
+    await wait(
+      '[...document.querySelectorAll("dialog[open]")].some(dialog=>dialog.innerText.includes("¿Descartar los cambios?"))',
+    )
+    await click('Seguir editando')
+    await wait('document.querySelectorAll("dialog[open]").length===1')
+    assert.equal(
+      await evaluate(
+        'document.querySelector("dialog input[name=title]").value',
+      ),
+      'Cambio sin guardar',
+    )
+    await click('Cancelar')
+    await wait(
+      '[...document.querySelectorAll("dialog[open]")].some(dialog=>dialog.innerText.includes("¿Descartar los cambios?"))',
+    )
+    await click('Descartar cambios')
+    await wait('!document.querySelector("dialog[open]")')
+
+    await click('Gestionar')
     await wait('document.querySelector("dialog[open] select[name=visibility]")')
     assert.equal(
       await evaluate(
@@ -252,6 +348,9 @@ try {
       0,
     )
     await evaluate(`${visibilityConfirmation}.scrollIntoView({block:"center"})`)
+    await evaluate(
+      'Promise.all(document.getAnimations().map(animation => animation.finished))',
+    )
     assert.ok(
       await evaluate(
         '(()=>{const d=document.querySelector("dialog"),r=d.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&d.scrollWidth<=d.clientWidth+1})()',
@@ -275,7 +374,7 @@ try {
       ),
       'PUBLIC',
     )
-    await click('Gestionar evento')
+    await click('Gestionar')
     await wait('document.querySelector("dialog[open] select[name=visibility]")')
     await select('dialog select[name=visibility]', 'PRIVATE')
     await click('Guardar cambios')
@@ -296,7 +395,67 @@ try {
       'PRIVATE',
     )
     console.log(
-      `PASS ${width}px: listado, selector, detalle, ambas advertencias y confirmación; sin desborde horizontal`,
+      `PASS ${width}px: cambios sin guardar, selector, advertencias y confirmaciones; sin desborde horizontal`,
+    )
+  }
+  for (const width of [1440, 768, 390]) {
+    await send('Emulation.setDeviceMetricsOverride', {
+      width,
+      height: 1000,
+      deviceScaleFactor: 1,
+      mobile: false,
+    })
+    await evaluate('window.visibilityQa.showShared()')
+    await wait('document.querySelector("select[name=qa-state]")')
+    assert.ok(
+      await evaluate('document.documentElement.scrollWidth<=innerWidth+1'),
+    )
+    assert.ok(
+      await evaluate(
+        'Boolean(document.querySelector("select[name=qa-state]").closest("[role=group]"))',
+      ),
+    )
+    await click('Abrir Drawer compartido')
+    await wait('document.querySelector("dialog[open] footer")')
+    await evaluate(
+      'Promise.all(document.getAnimations().map(animation=>animation.finished))',
+    )
+    assert.ok(
+      await evaluate(
+        `(()=>{const d=document.querySelector('dialog[open]'),body=d.querySelector('header').nextElementSibling,footer=d.querySelector('footer'),r=footer.getBoundingClientRect();body.scrollTop=body.scrollHeight;return body.scrollHeight>body.clientHeight&&r.bottom<=innerHeight+1&&r.top>=0&&d.scrollWidth<=d.clientWidth+1&&document.body.style.overflow==='hidden'})()`,
+      ),
+      `${width}: shared footer and body scroll`,
+    )
+    await evaluate('document.querySelector("dialog footer button").focus()')
+    await click('Cerrar editor compartido')
+    await wait('document.querySelector("dialog[open][role=alertdialog]")')
+    assert.ok(
+      await evaluate(
+        `(()=>{const confirmation=document.querySelector('dialog[role=alertdialog]'),input=document.querySelector('input[name=qa-title]');input.focus();return confirmation.contains(document.activeElement)&&document.body.style.overflow==='hidden'})()`,
+      ),
+      `${width}: background is inert`,
+    )
+    await screenshot(`${width}-shared-drawer`)
+    await click('Seguir editando')
+    await wait('!document.querySelector("dialog[role=alertdialog]")')
+    assert.ok(
+      await evaluate(
+        `document.activeElement.textContent==='Cerrar editor compartido'&&document.body.style.overflow==='hidden'&&document.querySelector('input[name=qa-title]').value==='Datos conservados'`,
+      ),
+      `${width}: focus, values and scroll lock survive nested confirmation`,
+    )
+    await click('Cerrar editor compartido')
+    await wait('document.querySelector("dialog[open][role=alertdialog]")')
+    await click('Descartar cambios')
+    await wait('!document.querySelector("dialog[open]")')
+    assert.equal(await evaluate('document.body.style.overflow'), '')
+    await click('Abrir confirmación compatible')
+    await wait('document.querySelector("div[role=alertdialog]")')
+    await click('Cancelar')
+    await wait('!document.querySelector("[role=alertdialog]")')
+    assert.equal(await evaluate('document.body.style.overflow'), '')
+    console.log(
+      `PASS ${width}px: componentes compartidos, filtros, badge, footer fijo, scroll, foco y compatibilidad de confirmaciones`,
     )
   }
   assert.deepEqual(errors, [])

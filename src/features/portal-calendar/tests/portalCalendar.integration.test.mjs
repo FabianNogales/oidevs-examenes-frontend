@@ -112,6 +112,8 @@ function editor(handlers = {}, initial = adminEvent, categories = [category]) {
   const c = client(handlers)
   const saved = []
   const busyStates = []
+  const dirtyStates = []
+  const handleDirty = (value) => dirtyStates.push(value)
   const { EventForm } = c.h.load(
     'features/portal-calendar/components/EventForm.tsx',
   )
@@ -123,6 +125,7 @@ function editor(handlers = {}, initial = adminEvent, categories = [category]) {
         categories,
         onSaved: (value) => saved.push(value),
         onBusy: (value) => busyStates.push(value),
+        onDirty: handleDirty,
       }),
     )
     return tree
@@ -134,6 +137,7 @@ function editor(handlers = {}, initial = adminEvent, categories = [category]) {
     render,
     saved,
     busyStates,
+    dirtyStates,
     field,
     get tree() {
       return tree
@@ -469,7 +473,7 @@ test('administration lists backend events, renders calendar status, paginates an
   assert.equal(
     table.props.columns
       .find((column) => column.id === 'status')
-      .cell(table.props.data[0]),
+      .cell(table.props.data[0]).props.children,
     'Borrador',
   )
   assert.equal(table.props.onToggleStatus, undefined)
@@ -480,7 +484,11 @@ test('administration lists backend events, renders calendar status, paginates an
   table = byType(ui.tree, 'table')[0]
   assert.equal(table.props.pagination.from, 16)
   assert.equal(table.props.pagination.to, 16)
-  table.props.onSearch('Auditorio')
+  byType(ui.tree, 'input')
+    .find((node) => node.props.name === 'search')
+    .props.onChange({ target: { value: 'Auditorio' } })
+  ui.render()
+  byType(ui.tree, 'form')[0].props.onSubmit({ preventDefault() {} })
   ui.render()
   await ui.ready()
   assert.equal(ui.calls.at(-1).args[1].params.page, 1)
@@ -491,7 +499,7 @@ test('administration lists backend events, renders calendar status, paginates an
   ui.h.unmount()
 })
 
-test('successful management refreshes page one while retaining the active filters', async () => {
+test('successful management preserves the page while retaining the active filters', async () => {
   const ui = adminPage()
   await ui.ready()
   let table = byType(ui.tree, 'table')[0]
@@ -505,9 +513,335 @@ test('successful management refreshes page one while retaining the active filter
   dialog.props.onSaved(adminEvent)
   ui.render()
   await ui.ready()
-  assert.equal(ui.calls.at(-1).args[1].params.page, 1)
+  assert.equal(ui.calls.at(-1).args[1].params.page, 2)
   assert.equal(nodes(ui.tree, (node) => node.props?.eventId === 47).length, 0)
   ui.h.unmount()
+})
+
+test('E1.1 the reload after saving keeps the same query rows mounted with aria-busy; other queries do not', async () => {
+  const ui = adminPage()
+  await ui.ready()
+  const table = () => byType(ui.tree, 'table')[0]
+  const busy = () =>
+    nodes(ui.tree, (node) => node.props?.['aria-busy'] !== undefined)[0].props[
+      'aria-busy'
+    ]
+  table().props.onPageChange(2)
+  ui.render()
+  await ui.ready()
+  const before = table().props.data
+  assert.equal(before.length, 1)
+  assert.equal(busy(), false)
+  table().props.onViewProfile(before[0])
+  ui.render()
+  nodes(ui.tree, (node) => node.props?.eventId === 47)[0].props.onSaved(
+    adminEvent,
+  )
+  ui.render()
+  assert.equal(table().props.loading, false, 'no destructive loader after saving')
+  assert.deepEqual(
+    table().props.data.map((row) => row.id),
+    before.map((row) => row.id),
+    'same rows (and keys) stay mounted during the reload',
+  )
+  assert.equal(table().props.pagination.currentPage, 2, 'pagination is unchanged')
+  assert.equal(busy(), true, 'the stale rows are announced as busy')
+  await ui.ready()
+  assert.equal(ui.calls.at(-1).args[1].params.page, 2)
+  assert.equal(table().props.loading, false)
+  assert.equal(busy(), false, 'fresh data clears aria-busy')
+
+  nodes(ui.tree, (node) => node.props?.name === 'status')[0].props.onChange({
+    target: { value: 'PUBLISHED' },
+  })
+  ui.render()
+  assert.equal(table().props.loading, true, 'a filter change shows the loader')
+  assert.deepEqual(table().props.data, [], 'no rows from the previous query')
+  assert.equal(busy(), false)
+  await ui.ready()
+  table().props.onRetry()
+  ui.render()
+  assert.equal(table().props.loading, true, 'a manual reload is not a save refresh')
+  assert.deepEqual(table().props.data, [])
+  await ui.ready()
+  ui.h.unmount()
+})
+
+test('E1.2 the status column uses the shared AdminStatusBadge for DRAFT, PUBLISHED and CANCELLED', async () => {
+  const ui = adminPage()
+  await ui.ready()
+  const table = byType(ui.tree, 'table')[0]
+  const statusColumn = table.props.columns.find((column) => column.id === 'status')
+  const visibilityColumn = table.props.columns.find(
+    (column) => column.id === 'visibility',
+  )
+  assert.equal(statusColumn.header, 'Estado')
+  assert.equal(visibilityColumn.header, 'Visibilidad', 'visibility stays a separate column')
+  const { AdminStatusBadge } = sourceHarness().load(
+    'features/portal-shared/AdminStatusBadge.tsx',
+  )
+  for (const [eventStatus, label] of [
+    ['DRAFT', 'Borrador'],
+    ['PUBLISHED', 'Publicado'],
+    ['CANCELLED', 'Cancelado'],
+  ]) {
+    const row = { ...table.props.data[0], eventStatus }
+    const cell = statusColumn.cell(row)
+    assert.equal(cell.type.name, 'AdminStatusBadge')
+    assert.equal(cell.props.status, eventStatus)
+    assert.equal(cell.props.children, label, 'calendar keeps its Spanish domain label')
+    const rendered = AdminStatusBadge(cell.props)
+    assert.equal(rendered.type, 'span', 'plain text badge, not an interactive control')
+    assert.equal(rendered.props['data-status'], eventStatus)
+    assert.equal(rendered.props.role, undefined, 'no live region per row')
+    assert.equal(textContent(rendered), label)
+    assert.notEqual(visibilityColumn.cell(row).type?.name, 'AdminStatusBadge')
+  }
+  ui.h.unmount()
+})
+
+test('E1.3 Escape with a pending status confirmation cancels only it, keeps the draft and sends nothing', async () => {
+  const ui = editor({}, { ...adminEvent, status: 'DRAFT' })
+  const escape = (extra = {}) => {
+    const event = {
+      key: 'Escape',
+      defaultPrevented: false,
+      nativeEvent: { isComposing: false },
+      prevented: 0,
+      stopped: 0,
+      preventDefault() {
+        this.prevented++
+      },
+      stopPropagation() {
+        this.stopped++
+      },
+      ...extra,
+    }
+    ui.tree.props.onKeyDown(event)
+    ui.render()
+    return event
+  }
+  const confirmation = () =>
+    nodes(
+      ui.tree,
+      (node) => node.props?.['aria-label'] === 'Confirmar cambio de estado',
+    )[0]
+  let event = escape()
+  assert.equal(event.prevented, 0, 'without a pending confirmation Escape reaches the Drawer')
+  assert.equal(event.stopped, 0)
+  await ui.click('Publicar')
+  assert.ok(confirmation(), 'confirmation opened')
+  escape({ key: 'Enter' })
+  escape({ nativeEvent: { isComposing: true } })
+  assert.ok(confirmation(), 'other keys and IME composition do not cancel it')
+  event = escape()
+  assert.equal(event.prevented, 1, 'Escape never becomes a Drawer close request')
+  assert.equal(event.stopped, 1)
+  assert.equal(confirmation(), undefined, 'only the confirmation is cancelled')
+  assert.equal(ui.field('title').props.value, adminEvent.title, 'form kept')
+  assert.equal(ui.calls.filter((call) => call.method === 'patch').length, 0)
+  assert.equal(ui.dirtyStates.at(-1), false, 'a pending confirmation does not make the form dirty')
+  ui.h.unmount()
+})
+
+test('E1.6 unsaved changes disable status actions with an accessible explanation; saving still works', async () => {
+  for (const [state, labels] of [
+    ['DRAFT', ['Publicar', 'Cancelar evento']],
+    ['PUBLISHED', ['Despublicar', 'Cancelar evento']],
+    ['CANCELLED', ['Volver a borrador', 'Publicar']],
+  ]) {
+    const ui = editor(
+      {
+        patch: (_url, input) => ({
+          data: { data: { ...adminEvent, ...input, status: state, revision: 8 } },
+        }),
+      },
+      { ...adminEvent, status: state },
+    )
+    const actions = () => labels.map((label) => find(ui.tree, 'button', label))
+    const hint = () =>
+      nodes(
+        ui.tree,
+        (node) =>
+          textContent(node) ===
+          'Guarda o descarta los cambios antes de cambiar el estado',
+      ).at(-1)
+    assert.ok(actions().every((button) => !button.props.disabled), `${state}: enabled when clean`)
+    assert.equal(hint(), undefined)
+    assert.ok(actions().every((button) => button.props['aria-describedby'] === undefined))
+
+    ui.edit('title', 'Título en edición')
+    assert.equal(ui.dirtyStates.at(-1), true)
+    const message = hint()
+    assert.ok(message?.props.id, `${state}: explanation rendered with an id`)
+    for (const button of actions()) {
+      assert.equal(button.props.disabled, true, `${state}: ${textContent(button)} disabled while dirty`)
+      assert.equal(button.props['aria-describedby'], message.props.id)
+    }
+    const submit = byType(ui.tree, 'button').find((node) => node.props.type === 'submit')
+    assert.equal(submit.props.disabled, false, `${state}: Guardar cambios stays available`)
+
+    ui.edit('title', adminEvent.title)
+    assert.equal(ui.dirtyStates.at(-1), false)
+    assert.ok(actions().every((button) => !button.props.disabled), `${state}: enabled again when clean`)
+    assert.equal(hint(), undefined)
+
+    ui.edit('title', 'Título guardado')
+    await ui.submit()
+    const patches = ui.calls.filter((call) => call.method === 'patch')
+    assert.equal(patches.length, 1)
+    assert.equal(patches[0].args[0], `/admin/portal/events/${adminEvent.id}`, 'content save, never /status')
+    assert.equal(patches[0].args[1].title, 'Título guardado')
+    assert.equal(ui.saved.length, 1)
+    ui.h.unmount()
+  }
+})
+
+test('F1.1 Drawer status uses AdminStatusBadge and visibility is a separate, outlined/neutral pill in Drawer and table', async () => {
+  const statusBadges = (tree) =>
+    nodes(tree, (node) => node.type?.name === 'AdminStatusBadge')
+  const visibilityPills = (tree) =>
+    nodes(tree, (node) => node.props?.['data-visibility'] !== undefined)
+  for (const [status, label] of [
+    ['DRAFT', 'Borrador'],
+    ['PUBLISHED', 'Publicado'],
+    ['CANCELLED', 'Cancelado'],
+  ]) {
+    for (const [visibility, visibilityLabel] of [
+      ['PUBLIC', 'Público'],
+      ['PRIVATE', 'Privado'],
+    ]) {
+      const ui = editor({}, { ...adminEvent, status, visibility })
+      const [badge] = statusBadges(ui.tree)
+      assert.equal(badge.props.status, status)
+      assert.equal(badge.props.children, label)
+      assert.equal(
+        nodes(ui.tree, (node) => node.props?.['data-status'] !== undefined).length,
+        0,
+        'no calendar-local status badge remains',
+      )
+      const pills = visibilityPills(ui.tree)
+      assert.equal(pills.length, 1)
+      assert.equal(pills[0].props['data-visibility'], visibility)
+      assert.equal(textContent(pills[0]), visibilityLabel)
+      assert.match(
+        textContent(ui.tree),
+        new RegExp(`Estado: ${label} · Revisión: ${adminEvent.revision}.*Visibilidad: ${visibilityLabel}`, 's'),
+      )
+      ui.h.unmount()
+    }
+  }
+  const created = editor({}, null)
+  assert.deepEqual(
+    statusBadges(created.tree).map((node) => [node.props.status, node.props.children]),
+    [['DRAFT', 'Borrador']],
+  )
+  created.h.unmount()
+
+  const page = adminPage()
+  await page.ready()
+  const table = byType(page.tree, 'table')[0]
+  const visibilityColumn = table.props.columns.find((column) => column.id === 'visibility')
+  for (const [visibility, visibilityLabel] of [
+    ['PUBLIC', 'Público'],
+    ['PRIVATE', 'Privado'],
+  ]) {
+    const cell = visibilityColumn.cell({ ...table.props.data[0], visibility })
+    assert.equal(cell.props['data-visibility'], visibility, 'table and Drawer share the marker')
+    assert.equal(cell.props.children, visibilityLabel)
+    assert.equal(cell.props['data-status'], undefined)
+  }
+  page.h.unmount()
+
+  const css = readFileSync(
+    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    'utf8',
+  )
+  assert.doesNotMatch(css, /\.badge\[data-status/, 'unused local status rules removed')
+  const publicRule = css.match(/\.badge\[data-visibility='PUBLIC'\]\s*\{([^}]*)\}/)?.[1]
+  assert.ok(publicRule, 'Público has its own rule')
+  assert.match(publicRule, /box-shadow:\s*inset 0 0 0 1px/, 'outline: a non-color cue')
+  assert.doesNotMatch(publicRule, /success|error/, 'no success/error colors for visibility')
+  assert.doesNotMatch(css, /data-visibility='PRIVATE'/, 'Privado keeps the neutral base badge')
+})
+
+test('F2.2 admin breadcrumb matches the page title and keeps the home link', async () => {
+  const ui = adminPage()
+  await ui.ready()
+  const crumbs = byType(ui.tree, 'breadcrumbs')[0]
+  assert.deepEqual(crumbs.props.items, [
+    { label: 'Inicio', to: '/' },
+    { label: 'Gestión del calendario' },
+  ])
+  assert.equal(textContent(byType(ui.tree, 'h1')[0]), 'Gestión del calendario')
+  ui.h.unmount()
+})
+
+test('F2.1 admin calendar page uses the shared content width; the public page is unaffected', () => {
+  const css = readFileSync(
+    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    'utf8',
+  )
+  const rule = css.match(/(?:^|\n)\.page\s*\{([^}]*)\}/)?.[1]
+  assert.ok(rule, 'local .page rule')
+  assert.match(rule, /max-width:\s*var\(--content-max-width\)/)
+  assert.match(rule, /margin-inline:\s*auto/)
+  assert.doesNotMatch(rule, /padding/, 'no duplicated padding')
+  const admin = readFileSync(
+    resolve(sourceRoot, 'features/portal-calendar/pages/AdminCalendarPage.tsx'),
+    'utf8',
+  )
+  const publicPage = readFileSync(
+    resolve(sourceRoot, 'features/portal-calendar/pages/CalendarPage.tsx'),
+    'utf8',
+  )
+  assert.match(admin, /className=\{styles\.page\}/)
+  assert.doesNotMatch(publicPage, /styles\.page\b/, 'public calendar keeps publicPage')
+})
+
+test('E1.4 date cell has one container and the mobile action button may wrap inside the card', async () => {
+  const ui = adminPage()
+  await ui.ready()
+  const table = byType(ui.tree, 'table')[0]
+  assert.equal(table.props.viewActionLabel, 'Gestionar', 'accessible label unchanged')
+  const dateColumn = table.props.columns.find((column) => column.id === 'date')
+  const sameDay = {
+    ...table.props.data[0],
+    all_day: false,
+    starts_at: '2026-11-05T09:00:00-04:00',
+    ends_at: '2026-11-05T11:00:00-04:00',
+  }
+  const cell = dateColumn.cell(sameDay)
+  assert.equal(cell.type, 'div', 'a single element child keeps date and time together')
+  const [time, hours] = [cell.props.children].flat().filter(Boolean)
+  assert.equal(time.type, 'time')
+  assert.equal(time.props.dateTime, sameDay.starts_at)
+  assert.equal(textContent(hours), '09:00 – 11:00')
+  const multiDay = dateColumn.cell({
+    ...sameDay,
+    ends_at: '2026-11-07T11:00:00-04:00',
+  })
+  assert.equal(typeof multiDay, 'string', 'multi-day label stays plain text')
+  ui.h.unmount()
+
+  const css = readFileSync(
+    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    'utf8',
+  )
+  const mobile = css.slice(css.lastIndexOf('@media (max-width: 600px)'))
+  assert.match(
+    mobile,
+    /\.adminTable td\[data-label='Acciones'\]\s*\{[^}]*white-space:\s*normal/,
+  )
+  assert.match(
+    mobile,
+    /\.adminTable td\[data-label='Acciones'\] button\s*\{[^}]*max-width:\s*100%;[^}]*height:\s*auto;[^}]*white-space:\s*normal/,
+  )
+  assert.doesNotMatch(
+    css.slice(0, css.lastIndexOf('@media (max-width: 600px)')),
+    /td\[data-label='Acciones'\]/,
+    'desktop styles are unchanged',
+  )
 })
 
 test('server pagination remains readable when concurrent changes shorten the result set', async () => {
@@ -554,10 +888,14 @@ test('creation sends documented fields, offset and seconds without a state; back
     { post: () => ({ data: { data: { ...adminEvent, revision: 1 } } }) },
     null,
   )
+  assert.equal(ui.dirtyStates[0], false)
   ui.edit('title', '  Nuevo evento  ')
+  assert.equal(ui.dirtyStates.at(-1), true)
   ui.edit('description', 'Contenido institucional')
-  ui.edit('starts_at', '2026-11-05T09:00')
-  ui.edit('ends_at', '2026-11-05T11:00')
+  ui.edit('starts_at', '2026-11-05')
+  ui.edit('starts_at_time', '09:00')
+  ui.edit('ends_at', '2026-11-05')
+  ui.edit('ends_at_time', '11:00')
   ui.edit('category_id', '73')
   await ui.submit()
   assert.deepEqual(ui.calls[0].args, [
@@ -575,13 +913,14 @@ test('creation sends documented fields, offset and seconds without a state; back
   ])
   assert.equal(ui.saved[0].status, 'DRAFT')
   assert.equal(ui.saved[0].revision, 1)
+  assert.equal(ui.dirtyStates.at(-1), false)
   ui.h.unmount()
 })
 
 test('empty categories and manipulated category IDs cannot create an event', async () => {
   const empty = editor({}, null, [])
   assert.equal(
-    find(empty.tree, 'button', 'Crear borrador').props.disabled,
+    find(empty.tree, 'button', 'Guardar borrador').props.disabled,
     true,
   )
   assert.equal(byType(empty.tree, 'fieldset')[0].props.disabled, true)
@@ -630,6 +969,68 @@ test('editing fetches current admin detail and saves its revision without changi
   assert.equal(ui.saved[0].revision, 8)
   ui.h.unmount()
 })
+
+for (const eventId of [null, 47]) {
+  test(`${eventId === null ? 'creation' : 'editing'} confirms only real unsaved changes and preserves the form when continuing`, async () => {
+    let closed = 0
+    const c = client(
+      eventId === null ? {} : { get: () => ({ data: { data: adminEvent } }) },
+    )
+    const { AdminEventDialog } = c.h.load(
+      'features/portal-calendar/components/AdminEventDialog.tsx',
+    )
+    let tree
+    const render = () => {
+      tree = c.h.render(() =>
+        AdminEventDialog({
+          eventId,
+          categories: [category],
+          onClose: () => closed++,
+          onSaved() {},
+        }),
+      )
+      return tree
+    }
+    const form = () => nodes(tree, (node) => node.type?.name === 'EventForm')[0]
+    const confirmation = () =>
+      nodes(tree, (node) => node.type?.name === 'UnsavedChangesDialog')[0]
+
+    render()
+    await settle()
+    render()
+    assert.equal(confirmation().props.open, false)
+
+    nodes(
+      tree,
+      (node) => node.type?.name === 'CalendarModal',
+    )[0].props.onClose()
+    render()
+    assert.equal(closed, 1, 'closing an untouched form is immediate')
+
+    form().props.onDirty(true)
+    render()
+    const sameInitial = form().props.initial
+    nodes(
+      tree,
+      (node) => node.type?.name === 'CalendarModal',
+    )[0].props.onClose()
+    render()
+    assert.equal(closed, 1)
+    assert.equal(confirmation().props.open, true)
+
+    confirmation().props.onContinue()
+    render()
+    assert.equal(confirmation().props.open, false)
+    assert.equal(form().props.initial, sameInitial)
+
+    form().props.onCancel()
+    render()
+    assert.equal(confirmation().props.open, true)
+    confirmation().props.onDiscard()
+    assert.equal(closed, 2)
+    c.h.unmount()
+  })
+}
 
 test('409 keeps draft/revision, blocks writes, and only explicit reload discards draft before a new submission', async () => {
   let fail = true
@@ -845,7 +1246,7 @@ test('all-day form submits midnight endpoints and the explicit exclusive end dat
   ui.edit('starts_at', '2026-11-05')
   ui.edit('ends_at', '2026-11-06')
   assert.equal(ui.field('starts_at').props.type, 'date')
-  assert.match(textContent(ui.tree), /Fin exclusivo/)
+  assert.match(textContent(ui.tree), /fin exclusivo/)
   await ui.submit()
   assert.equal(ui.calls[0].args[1].starts_at, '2026-11-05T00:00:00-04:00')
   assert.equal(ui.calls[0].args[1].ends_at, '2026-11-06T00:00:00-04:00')
@@ -867,10 +1268,18 @@ test('calendar UI/API contain no physical deletion or raw HTML injection', () =>
 })
 
 test('responsive contract uses seven shrinkable calendar columns, bounded dialogs and single-column mobile forms', () => {
-  const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
-    'utf8',
-  )
+  const css =
+    readFileSync(
+      resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+      'utf8',
+    ) +
+    readFileSync(
+      resolve(
+        sourceRoot,
+        'shared/components/PortalDialog/PortalDialog.module.css',
+      ),
+      'utf8',
+    )
   assert.match(css, /repeat\(7, minmax\(0, 1fr\)\)/)
   assert.match(css, /max-width: calc\(100vw - 32px\)/)
   assert.match(css, /max-height: calc\(100dvh - 32px\)/)
@@ -932,4 +1341,16 @@ test('public route and admin route integrate without changing the existing autho
       parent.includes("allowedRoles={['ADMINISTRADOR']}"),
     ),
   )
+})
+
+test('client validation rejects equal and reversed event times without sending a request', async () => {
+  for (const end of ['09:00', '08:00']) {
+    const ui = editor({}, adminEvent)
+    ui.edit('ends_at_time', end)
+    await ui.submit()
+    assert.equal(ui.calls.length, 0)
+    assert.equal(ui.field('ends_at').props['aria-invalid'], true)
+    assert.match(textContent(ui.tree), /El fin debe ser posterior al inicio/)
+    ui.h.unmount()
+  }
 })

@@ -293,7 +293,7 @@ try {
     `(()=>{const select=document.querySelector('select');Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(select,'faqs');select.dispatchEvent(new Event('change',{bubbles:true}))})()`,
   )
   await wait(
-    `document.querySelector('[class*="tableCard"]') && [...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='Crear')`,
+    `document.querySelector('[class*="tableCard"]') && [...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='Crear pregunta frecuente')`,
   )
   for (const width of [320, 390, 768, 1024, 1440]) {
     await send('Emulation.setDeviceMetricsOverride', {
@@ -304,7 +304,7 @@ try {
     })
     await pause(100)
     const layout = await evaluate(
-      `(()=>{const header=document.querySelector('header'),button=[...header.querySelectorAll('button')].find(item=>item.textContent.trim()==='Crear'),filters=[...document.querySelectorAll('select')].map(item=>item.closest('label').getBoundingClientRect()),search=document.querySelector('form[class*="searchBar"]'),input=search.querySelector('input[type="search"]').getBoundingClientRect(),submit=[...search.querySelectorAll('button')].find(item=>item.textContent.trim()==='Buscar').getBoundingClientRect();return{width:innerWidth,documentWidth:document.documentElement.scrollWidth,headerButton:!!button,buttonInHeader:header.contains(button),filterPositions:filters.map(rect=>({x:rect.x,y:rect.y,width:rect.width,height:rect.height})),searchInput:{x:input.x,y:input.y,width:input.width,height:input.height},searchButton:{x:submit.x,y:submit.y,width:submit.width,height:submit.height}}})()`,
+      `(()=>{const header=document.querySelector('header'),button=[...header.querySelectorAll('button')].find(item=>item.textContent.trim()==='Crear pregunta frecuente'),filters=[...document.querySelectorAll('select')].map(item=>item.closest('label').getBoundingClientRect()),search=document.querySelector('form[class*="searchBar"]'),input=search.querySelector('input[type="search"]').getBoundingClientRect(),submit=[...search.querySelectorAll('button')].find(item=>item.textContent.trim()==='Buscar').getBoundingClientRect();return{width:innerWidth,documentWidth:document.documentElement.scrollWidth,headerButton:!!button,buttonInHeader:header.contains(button),filterPositions:filters.map(rect=>({x:rect.x,y:rect.y,width:rect.width,height:rect.height})),searchInput:{x:input.x,y:input.y,width:input.width,height:input.height},searchButton:{x:submit.x,y:submit.y,width:submit.width,height:submit.height}}})()`,
     )
     assert.ok(
       layout.documentWidth <= width + 1,

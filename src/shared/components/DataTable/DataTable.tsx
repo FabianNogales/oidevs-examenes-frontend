@@ -5,6 +5,8 @@ import styles from './DataTable.module.css'
 
 export function DataTable<T extends BaseTableEntity>({
   columns,
+  filters,
+  filterLayout = 'below',
   viewActionLabel,
   data,
   loading,
@@ -60,55 +62,69 @@ export function DataTable<T extends BaseTableEntity>({
     pagination?.to ??
     (pagination && data.length > 0 ? fromRecord + data.length - 1 : 0)
 
+  const filterBar =
+    filters != null ? (
+      <div className={styles.filterBar} role="group" aria-label="Filtros">
+        {filters}
+      </div>
+    ) : null
+
+  const searchForm = onSearch ? (
+    <form
+      className={`${styles.searchBar} ${
+        searchLayout === 'wide' ? styles.searchBarWide : ''
+      }`}
+      onSubmit={handleSearchSubmit}
+    >
+      <label className={styles.searchInputWrapper}>
+        <span className={styles.visuallyHidden}>{searchPlaceholder}</span>
+        <svg
+          className={styles.searchIcon}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <input
+          type="search"
+          className={styles.searchInput}
+          placeholder={searchPlaceholder}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+      </label>
+
+      <button type="submit" className={styles.searchButton} disabled={loading}>
+        Buscar
+      </button>
+
+      {(activeSearch || searchInput) && (
+        <button
+          type="button"
+          className={styles.clearButton}
+          onClick={handleClearSearch}
+          disabled={loading}
+        >
+          Limpiar
+        </button>
+      )}
+    </form>
+  ) : null
+
   return (
     <div className={styles.tableCard}>
       {/* BARRA DE BÚSQUEDA UNIVERSAL */}
       {onSearch && (
         <>
-          <form
-            className={`${styles.searchBar} ${
-              searchLayout === 'wide' ? styles.searchBarWide : ''
-            }`}
-            onSubmit={handleSearchSubmit}
-          >
-            <label className={styles.searchInputWrapper}>
-              <span className={styles.visuallyHidden}>{searchPlaceholder}</span>
-              <svg
-                className={styles.searchIcon}
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
-              <input
-                type="search"
-                className={styles.searchInput}
-                placeholder={searchPlaceholder}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-            </label>
-
-            <button
-              type="submit"
-              className={styles.searchButton}
-              disabled={loading}
-            >
-              Buscar
-            </button>
-
-            {(activeSearch || searchInput) && (
-              <button
-                type="button"
-                className={styles.clearButton}
-                onClick={handleClearSearch}
-                disabled={loading}
-              >
-                Limpiar
-              </button>
-            )}
-          </form>
+          {filterLayout === 'inline' ? (
+            <div className={styles.searchToolbar}>
+              {searchForm}
+              {filterBar}
+            </div>
+          ) : (
+            searchForm
+          )}
 
           {activeSearch && (
             <div className={styles.searchResultBanner}>
@@ -117,6 +133,8 @@ export function DataTable<T extends BaseTableEntity>({
           )}
         </>
       )}
+
+      {filterBar && (filterLayout !== 'inline' || !onSearch) ? filterBar : null}
 
       {/* ESTADO DE CARGA */}
       {loading && (
