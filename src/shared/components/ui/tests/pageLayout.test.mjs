@@ -132,6 +132,7 @@ const authorizedConsumers = [
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
   'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
   'features/exam-reports/pages/ExamReportsPage.tsx',
+  'features/exams/pages/EntryControlPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
   'features/exams/pages/TeacherExamsPage.tsx',
   'features/expulsions/components/ExpulsionLayout.tsx',
@@ -180,6 +181,7 @@ const ownsMain = [
   'features/eligibilities/pages/ExamEligibilitiesPage.tsx',
   'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
   'features/exam-reports/pages/ExamReportsPage.tsx',
+  'features/exams/pages/EntryControlPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
   'features/exams/pages/TeacherExamsPage.tsx',
   'features/expulsions/components/ExpulsionLayout.tsx',
@@ -201,6 +203,7 @@ const ownsMain = [
 // Pages whose invalid-id branch returns early with its own PageHeader (and <main>): the branches are mutually
 // exclusive, so one main landmark and one h1 are rendered at runtime (checked by the feature browser scripts).
 const exclusiveBranches = {
+  'features/exams/pages/EntryControlPage.tsx': { main: 2, headers: 2 },
   'features/eligibilities/pages/ExamEligibilitiesPage.tsx': { main: 2, headers: 2 },
   'features/eligibility-automation/pages/EligibilityAutomationPage.tsx': { main: 2, headers: 2 },
   'features/incidents/pages/CreateIncidentPage.tsx': { main: 2, headers: 2 },

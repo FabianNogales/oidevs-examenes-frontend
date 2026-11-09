@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import { EntryControlStudentModal } from '../components/EntryControlStudentModal'
@@ -101,31 +102,30 @@ function EntryControlContent({
   }
 
   return (
-    <main className={`${pageStyles.page} ${styles.page}`}>
-      <section className={`${pageStyles.content} ${styles.content}`}>
-        <Breadcrumbs
-          items={[
+    <main className={styles.page}>
+      <PageContainer className={styles.container}>
+        <PageHeader
+          title="Control de ingreso"
+          breadcrumbs={[
             { label: backLabel, to: backPath },
             { label: 'Control de ingreso' },
           ]}
-        />
-        <header className={`${pageStyles.pageHeader} ${styles.pageHeading}`}>
-          <h1>Control de ingreso</h1>
-          <p>
+          actions={
             <Link
               className={sharedStyles.secondaryButton}
               to={`/exams/${examId}/offline`}
             >
               Control sin conexión
             </Link>
-          </p>
-          {!fromTeacher ? (
-            <p>
+          }
+          description={!fromTeacher ? (
+            <>
               Colaborador temporal · Apoyo en examen · Autorización temporal
               para este examen.
-            </p>
-          ) : null}
-        </header>
+            </>
+          ) : undefined}
+        />
+        <section className={`${pageStyles.content} ${styles.content}`}>
         {exam ? <EntryControlExamHeader exam={exam} /> : null}
         {exam ? <div className={incidentStyles.access}>
           {list.response?.permissions?.can_annul_entries === true ? <button type="button" disabled={qrProcessing} onClick={() => setHistoryOpen(true)}>Gestionar ingresos</button> : null}
@@ -359,7 +359,8 @@ function EntryControlContent({
         ) : null}
         {incidentMode ? <IncidentControlDialog examId={examId} mode={incidentMode} onClose={() => setIncidentMode(null)} /> : null}
         {historyOpen ? <EntryHistoryModal examId={examId} onClose={() => setHistoryOpen(false)} onEntriesChanged={list.reload} /> : null}
-      </section>
+        </section>
+      </PageContainer>
     </main>
   )
 }
@@ -370,12 +371,14 @@ export function EntryControlPage() {
   const id = Number(examId)
   if (!Number.isSafeInteger(id) || id <= 0) {
     return (
-      <main className={pageStyles.page}>
+      <main className={styles.page}>
+        <PageContainer className={styles.container}>
+          <PageHeader title="Control de ingreso" />
         <section className={pageStyles.state} role="alert">
-          <h1>Control de ingreso</h1>
           <p>El identificador del examen no es válido.</p>
           <Link to="/">Volver al inicio</Link>
         </section>
+        </PageContainer>
       </main>
     )
   }
