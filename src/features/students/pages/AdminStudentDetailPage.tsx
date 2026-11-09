@@ -9,6 +9,7 @@ import {
 
 import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
 import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
+import { EntityProfileError } from '@/features/users/profile/components/EntityProfileError'
 import {
   getProfileTabs,
   getBackRouteByContext,
@@ -167,19 +168,12 @@ export function AdminStudentDetailPage({
 
   if (error || !student) {
     return (
-      <div className={layoutStyles.mainArea}>
-        <div className={layoutStyles.sectionCard} role="alert">
-          <h2>Error al cargar estudiante</h2>
-          <p>{error ?? 'No se encontró el registro solicitado.'}</p>
-          <button
-            type="button"
-            className={layoutStyles.cancelBtn}
-            onClick={() => navigate(backRoute)}
-          >
-            Regresar
-          </button>
-        </div>
-      </div>
+      <EntityProfileError
+        title="Error al cargar estudiante"
+        message={error ?? 'No se encontró el registro solicitado.'}
+        backLabel="Regresar"
+        onBack={() => navigate(backRoute)}
+      />
     )
   }
 

@@ -172,6 +172,7 @@ const authorizedConsumers = [
   'features/users/pages/AdminReadPage.tsx',
   'features/users/pages/AdminUserHistoryPage.tsx',
   'features/users/pages/AdminUserRolesPage.tsx',
+  'features/users/profile/components/EntityProfileError.tsx',
 ]
 // Files that keep a legacy <h1> path for consumers not yet migrated.
 const legacyHeading = ['features/users/pages/AdminReadPage.tsx', 'features/portal-shared/components/PortalAdminCollection.tsx']

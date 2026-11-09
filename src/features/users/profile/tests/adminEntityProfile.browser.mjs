@@ -1,7 +1,8 @@
 // R1 browser QA for the admin entity profiles (/admin/students/:id and /admin/teachers/:id): inside a <main>
 // that models AdminLayout, the profile renders one main landmark, one h1 (the entity name) labelling the
 // profile region, working sidebar tabs and "Regresar", with no horizontal overflow at
-// 320/390/768/1024/1440px. Simulated GET-only HTTP; nothing is edited or saved.
+// 320/390/768/1024/1440px. DS5-F2: the load-error state has one h1 (shared PageHeader) and keeps its exact
+// alert message and back button. Simulated GET-only HTTP; nothing is edited or saved.
 // Requires local Chrome (EIDA_QA_CHROME overrides the path).
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
@@ -27,10 +28,14 @@ const e=React.createElement;
 const fixtures={
   '/admin/students/8':{data:{id:8,sis_code:'QA-008',identity_number:'QA-123',first_names:'Estudiante',last_names:'QA con apellidos extensos',email:'estudiante.qa.con.correo.largo@example.edu',status:'ACTIVE',career_id:1,historical_photo_url:null,historical_photo_revision:0,profile_photo_url:null}},
   '/admin/teachers/3':{data:{id:3,institutional_code:'QA-DOC-3',identity_number:'QA-456',first_names:'Docente',last_names:'QA con nombre extenso',email:'docente.qa@example.edu',status:'ACTIVE'}},
+  // DS5-F2: load failures (simulated server error).
+  '/admin/students/99':{__status:500},
+  '/admin/teachers/99':{__status:500},
 };
 const qa=window.profileQa={calls:[],unexpected:[]};
 const respond=(method)=>async(url)=>{
   qa.calls.push(method+' '+url);
+  if(method==='get'&&fixtures[url]?.__status)throw Object.assign(new Error('QA: simulated '+fixtures[url].__status),{isAxiosError:true,response:{status:fixtures[url].__status,data:{}}});
   if(method==='get'&&fixtures[url])return {data:structuredClone(fixtures[url])};
   qa.unexpected.push(method+' '+url);
   throw Object.assign(new Error('QA: unexpected request '+method+' '+url),{isAxiosError:true,response:{status:404,data:{}}});
@@ -54,6 +59,21 @@ const profiles = [
   { name: 'estudiante', path: '/admin/students/8', fullName: 'Estudiante QA con apellidos extensos', back: '/admin/students/manage' },
   { name: 'docente', path: '/admin/teachers/3', fullName: 'Docente QA con nombre extenso', back: '/admin/teachers' },
 ]
+
+// DS5-F2: error states (title, back button label and destination as rendered by each page).
+const errorStates = [
+  { name: 'estudiante error', path: '/admin/students/99', title: 'Error al cargar estudiante', backLabel: 'Regresar', back: '/admin/students/manage' },
+  { name: 'docente error', path: '/admin/teachers/99', title: 'Error al cargar docente', backLabel: 'Regresar a gestión de docentes', back: '/admin/teachers' },
+]
+const inspectError = `(()=>{
+  const vw=document.documentElement.clientWidth,h1s=[...document.querySelectorAll('h1')],alert=document.querySelector('main [role=alert]');
+  const button=alert?.querySelector('button'),b=button?.getBoundingClientRect();
+  return {mains:document.querySelectorAll('main').length,h1s:h1s.length,title:h1s[0]?.textContent.trim(),
+    labelled:!!(h1s[0]?.id&&document.querySelector('section[aria-labelledby="'+h1s[0].id+'"]')?.contains(alert)),
+    message:alert?.querySelector('p')?.textContent.trim()??null,alertHeadings:alert?alert.querySelectorAll('h1,h2,h3').length:-1,
+    button:button?.textContent.trim()??null,buttonVisible:!!b&&b.width>0&&b.left>=-1&&b.right<=vw+1&&button.scrollWidth<=button.clientWidth+1,
+    overflow:document.documentElement.scrollWidth>vw+1}
+})()`
 
 const inspect = `(()=>{
   const h1s=[...document.querySelectorAll('h1')], h1=h1s[0];
@@ -175,14 +195,40 @@ try {
       console.log(`${problems.length ? 'FAIL' : 'PASS'} perfil ${profile.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
     }
   }
+  const errorMessages = {}
+  for (const state of errorStates) {
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
+      await evaluate(`window.__router.navigate(${JSON.stringify(state.path)})`)
+      await wait(`!!document.querySelector('main [role=alert] button')`, `${state.name}: estado de error`)
+      await pause(150)
+      const page = await evaluate(inspectError)
+      const problems = []
+      if (page.mains !== 1) problems.push(`${page.mains} main`)
+      if (page.h1s !== 1 || page.title !== state.title) problems.push(`h1 ${page.h1s} «${page.title}»`)
+      if (!page.labelled) problems.push('región sin etiquetar por el h1 o alerta fuera de ella')
+      if (!page.message || page.alertHeadings !== 0) problems.push('alerta: ' + JSON.stringify({ message: page.message, headings: page.alertHeadings }))
+      if (page.button !== state.backLabel || !page.buttonVisible) problems.push(`botón «${page.button}» visible=${page.buttonVisible}`)
+      if (page.overflow) problems.push('desbordamiento horizontal')
+      errorMessages[state.name] = page.message
+      if (width === 320 || width === 1440) {
+        const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+        await writeFile(join(evidence, `${state.name.replace(' ', '-')}-${width}.png`), Buffer.from(shot.data, 'base64'))
+      }
+      await clickText(state.backLabel)
+      await wait(`window.__router.state.location.pathname===${JSON.stringify(state.back)}`, `${state.name}: volver`)
+      if (problems.length) failures.push(`${state.name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} ${state.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
+  }
   const calls = await evaluate('window.profileQa.calls')
   const unexpected = await evaluate('window.profileQa.unexpected')
   if (calls.some((call) => !call.startsWith('get '))) failures.push('escrituras: ' + calls.filter((call) => !call.startsWith('get ')).join(', '))
   if (unexpected.length) console.log('Peticiones GET sin fixture (respondidas 404, no bloquean el contrato): ' + [...new Set(unexpected)].join(', '))
   if (exceptions.length) failures.push('excepciones JS: ' + exceptions.join(' | '))
-  await writeFile(join(evidence, 'result.json'), JSON.stringify({ fixtureOnly: true, failures, calls, unexpected }, null, 2))
+  await writeFile(join(evidence, 'result.json'), JSON.stringify({ fixtureOnly: true, failures, errorMessages, calls, unexpected }, null, 2))
   assert.deepEqual(failures, [], 'perfiles administrativos')
-  console.log(`QA perfiles administrativos PASS ${profiles.length * 5}/${profiles.length * 5} · evidencia en ${evidence}`)
+  console.log(`QA perfiles administrativos PASS ${(profiles.length + errorStates.length) * 5}/${(profiles.length + errorStates.length) * 5} · evidencia en ${evidence}`)
 } finally {
   ws?.close()
   await cleanupBrowserProfile(browserProfile, chrome)

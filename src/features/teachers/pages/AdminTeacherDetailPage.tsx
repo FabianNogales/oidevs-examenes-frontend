@@ -4,6 +4,7 @@ import { useParams, useNavigate, useSearchParams, useLocation } from 'react-rout
 
 import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
 import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
+import { EntityProfileError } from '@/features/users/profile/components/EntityProfileError'
 import {
   getProfileTabs,
   getBackRouteByContext,
@@ -139,19 +140,12 @@ export function AdminTeacherDetailPage({
 
   if (error || !teacher) {
     return (
-      <div className={layoutStyles.mainArea}>
-        <div className={layoutStyles.sectionCard} role="alert">
-          <h2>Error al cargar docente</h2>
-          <p>{error ?? 'No se encontró el registro solicitado.'}</p>
-          <button
-            type="button"
-            className={layoutStyles.cancelBtn}
-            onClick={() => navigate(backRoute)}
-          >
-            Regresar a gestión de docentes
-          </button>
-        </div>
-      </div>
+      <EntityProfileError
+        title="Error al cargar docente"
+        message={error ?? 'No se encontró el registro solicitado.'}
+        backLabel="Regresar a gestión de docentes"
+        onBack={() => navigate(backRoute)}
+      />
     )
   }
 
