@@ -18,6 +18,7 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 | `Footer` | `shared/components/Footer/` | Pie de página |
 | `DataCardGrid` (+ `DataCardItem`) | `shared/components/DataCardGrid/` | Rejilla de tarjetas con campos y acciones según el rol |
 | `AuthenticatedImage` | `shared/components/AuthenticatedImage/` | Imagen que requiere sesión (usa `useAuthenticatedImage`) |
+| `DataTable` (error) | `shared/components/DataTable/` | DS5-F3: el banner de error se reorganiza por debajo de 480px («Reintentar» bajo el mensaje). Prueba `DataTable/tests/dataTableError.browser.mjs` |
 | `Snackbar` | `shared/components/Snackbar.tsx` | Notificación temporal (clases `.snackbar*` de `assets/styles/snackbar.css`) |
 
 ### `src/shared/components/ui` (primitivas del Design System, DS2)
@@ -71,14 +72,15 @@ su `.headerActions` original).
 
 ## ⚠️ Componentes locales que duplican patrones (no copiar; migrar en DS3–DS4)
 
-Medido en DS0:
+Medido en DS0; actualizado en DS5 (2026-11-08, `6cf5a53`) entre corchetes:
 
-- **Modales y diálogos propios:** 18 `*Modal` y 13 `*Dialog` en features. 6 usan `<dialog>` nativo, 8 un overlay con Escape gestionado a mano y 7 PortalDialog o derivados. Desde DS4.2c.2, `CollaborationModal` (overlay compartido, 17 consumidores) se pinta en la top layer como popover manual, con el mismo DOM y API.
-- **Tablas:** 16 implementaciones con `<table>` propio frente a 9 consumidores de DataTable.
-- **Paginación:** reimplementada en unos 18 archivos.
-- **Botones:** 64 clases distintas (`.primaryButton`, `.secondaryButton`, `.cancelButton`…) en 28 archivos CSS.
+- **Modales y diálogos propios:** 18 `*Modal` y 13 `*Dialog` en features [DS5: 11 diálogos propios fuera de las familias compartidas]. 6 usan `<dialog>` nativo, 8 un overlay con Escape gestionado a mano y 7 PortalDialog o derivados. Desde DS4.2c.2, `CollaborationModal` (overlay compartido, 17 consumidores) se pinta en la top layer como popover manual, con el mismo DOM y API.
+- **Tablas:** 16 implementaciones con `<table>` propio frente a 9 consumidores de DataTable [DS5: 13 propias].
+- **Paginación:** reimplementada en unos 18 archivos [DS5: 19 paginadores propios; candidata a `Pagination` (R4c)].
+- **Botones:** 64 clases distintas (`.primaryButton`, `.secondaryButton`, `.cancelButton`…) en 28 archivos CSS [DS5: 60 clases en 33 módulos; `Button` en 33 archivos].
 - **Badges de dominio:** `AcademicTermStatusBadge`, `EntryConditionBadge`, `AcademicResultBadge`, `ProfileActiveTermBadge`.
-- **Duplicado literal:** `EntityProfileLayout` existe en `features/admin/components/` y en `features/admin/profile/components/`.
+- ~~**Duplicado literal:** `EntityProfileLayout`~~ resuelto: solo queda `features/users/profile/components/EntityProfileLayout.tsx`.
+- **Contrato de página (DS5):** `PageHeader` en 48 archivos y `PageContainer` en 50 (tras DS5-F2: `users/profile/components/EntityProfileError`, error de carga de los perfiles administrativos); quedan 11 H1 propios y 5 migas manuales (inventario en PROGRESS.md › DS5).
 
 ## 🕒 Planificados en `src/shared/components/ui/` (ubicación aprobada; aún no existen, se crean a lo largo de DS2)
 
@@ -89,6 +91,8 @@ Medido en DS0:
 | `Pagination` | Paginación interna de DataTable y `PortalPager` | Extraída sin cambiar la API de DataTable |
 | `EmptyState`, `LoadingState`, `Notice` | Estados de DataTable y `PortalFeedback` | |
 | `Dialog` | `PortalDialog` y `ConfirmDialog` nativo | Una sola familia; conservar el Escape robusto |
+
+Contraste (DS5-F4): `--color-border-strong` (1.68:1 claro / 2.05:1 oscuro) es para bordes decorativos; no usarlo como único borde de un campo (WCAG 1.4.11). Para campos: `--color-input-border` o `Field`.
 
 Regla: un componente planificado no se usa hasta que exista en el código y esta
 tabla lo mueva a "Existentes".
