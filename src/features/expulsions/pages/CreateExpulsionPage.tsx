@@ -3,6 +3,7 @@ import { positiveId } from '@/features/infractions/utils/infractionValidation'
 import { useExpulsions } from '../hooks/useExpulsionQuery'
 import { ExpulsionLayout } from '../components/ExpulsionLayout'
 import { ExpulsionForm } from '../components/ExpulsionForm'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 function Create({ examId }: { examId: number }) {
   const query = useExpulsions(examId)
   return (
@@ -39,6 +40,9 @@ export function CreateExpulsionPage() {
   return positiveId(id) ? (
     <Create key={id} examId={id} />
   ) : (
-    <p role="alert">El identificador del examen no es válido.</p>
+    <InvalidExamPage
+      title="Registrar expulsión"
+      message="El identificador del examen no es válido."
+    />
   )
 }

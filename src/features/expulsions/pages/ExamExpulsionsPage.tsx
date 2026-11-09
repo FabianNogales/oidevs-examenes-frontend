@@ -7,6 +7,7 @@ import { ExpulsionLayout } from '../components/ExpulsionLayout'
 import { useExpulsions } from '../hooks/useExpulsionQuery'
 import type { Expulsion } from '../types/expulsion.types'
 import styles from '@/features/incidents/pages/Incidents.module.css'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 type Row = Omit<Expulsion, 'status'> & { expulsion_status: Expulsion['status'] }
 const columns: TableColumnDef<Row>[] = [
   {
@@ -89,6 +90,9 @@ export function ExamExpulsionsPage() {
   return positiveId(id) ? (
     <List key={id} examId={id} />
   ) : (
-    <p role="alert">El identificador del examen no es válido.</p>
+    <InvalidExamPage
+      title="Expulsiones del examen"
+      message="El identificador del examen no es válido."
+    />
   )
 }

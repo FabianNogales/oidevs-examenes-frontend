@@ -384,6 +384,8 @@ try {
     { name: 'docente examen', mode: 'teacher', path: '/teacher/exams/4/reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'], ready: "!document.body.innerText.includes('Consultando el examen')" },
     { name: 'docente error', mode: 'teacher', path: '/teacher/exams/99/reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'], ready: "!!document.querySelector('main [role=alert]')" },
     { name: 'admin catálogo', mode: 'admin', path: '/admin/exam-reports', title: 'Reportes de exámenes', crumbs: ['Administración', 'Reportes de exámenes'] },
+    // R2: invalid id keeps its exact message, one main and one h1, no breadcrumbs.
+    { name: 'docente id no válido', mode: 'teacher', path: '/teacher/exams/abc/reports', title: 'Reportes de exámenes', crumbs: [], alertText: 'El identificador del examen no es válido.', ready: "!!document.querySelector('[role=alert]')" },
   ]
   // U3.4c: shared page contract (PageContainer + PageHeader) for every state at 320-1440px.
   const contractFailures = []

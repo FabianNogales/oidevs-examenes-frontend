@@ -12,6 +12,7 @@ import {
   INFRACTION_STATUS_LABELS,
 } from '../utils/infractionValidation'
 import styles from '../components/InfractionManagement.module.css'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 
 function Detail({ examId, id }: { examId: number; id: number }) {
   const { state } = useLocation()
@@ -124,6 +125,9 @@ export function InfractionDetailPage() {
   return positiveId(exam) && positiveId(id) ? (
     <Detail key={`${exam}:${id}`} examId={exam} id={id} />
   ) : (
-    <p role="alert">El examen o la infracción solicitados no son válidos.</p>
+    <InvalidExamPage
+      title="Detalle de infracción"
+      message="El examen o la infracción solicitados no son válidos."
+    />
   )
 }

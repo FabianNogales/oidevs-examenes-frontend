@@ -12,6 +12,7 @@ import { AttendanceStudents } from '../components/AttendanceStudents'
 import { AttendanceActivity } from '../components/AttendanceActivity'
 import type { AttendanceQuery } from '../types/attendance.types'
 import styles from './Attendance.module.css'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 
 // U3.4c: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
 const titleId = 'attendance-title'
@@ -169,6 +170,9 @@ export function AttendancePage() {
   return positiveId(id) ? (
     <Followup key={id} examId={id} />
   ) : (
-    <p role="alert">El identificador del examen no es válido.</p>
+    <InvalidExamPage
+      title="Asistencia del examen"
+      message="El identificador del examen no es válido."
+    />
   )
 }

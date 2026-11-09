@@ -3,6 +3,7 @@ import { InfractionLayout } from '../components/InfractionLayout'
 import { InfractionForm } from '../components/InfractionForm'
 import { useInfractions } from '../hooks/useInfractions'
 import { positiveId } from '../utils/infractionValidation'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 
 function Create({ examId }: { examId: number }) {
   const context = useInfractions(examId)
@@ -44,6 +45,9 @@ export function CreateInfractionPage() {
   return positiveId(id) ? (
     <Create key={id} examId={id} />
   ) : (
-    <p role="alert">El identificador del examen no es válido.</p>
+    <InvalidExamPage
+      title="Registrar infracción"
+      message="El identificador del examen no es válido."
+    />
   )
 }

@@ -10,6 +10,7 @@ import { ReportExamCatalog } from '../components/ReportExamCatalog'
 import { ReportWorkspace } from '../components/ReportWorkspace'
 import type { ReportExam } from '../types/report.types'
 import type { ReactNode } from 'react'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 
 // U3.4c: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
 const titleId = 'exam-reports-title'
@@ -100,7 +101,10 @@ export function TeacherExamReportsPage() {
     return positiveId(Number(examId)) ? (
       <Fixed key={examId} examId={Number(examId)} />
     ) : (
-      <p role="alert">El identificador del examen no es válido.</p>
+      <InvalidExamPage
+        title="Reportes de exámenes"
+        message="El identificador del examen no es válido."
+      />
     )
   return <Catalog role="teacher" />
 }

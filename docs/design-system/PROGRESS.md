@@ -514,3 +514,19 @@ Bloqueos pendientes:
 - **Defecto previo conocido, no corregido (CSS fuera de R1)**: a 320px la rejilla de una columna toma el ancho mínimo de la barra lateral (`min-width: auto` y su opción más larga) y el perfil llega a 391px (estudiante) / 361px (docente). La prueba lo admite solo a 320px y solo si todo el desbordamiento queda dentro de la rejilla y no supera el borde de la barra lateral; cualquier otro desbordamiento falla. Corrección propuesta: `min-width: 0` en `.sidebar` (requiere autorización sobre el CSS).
 - Validación: focalizadas (frontendBatch, cssContracts, mainLandmarks, users/students/teachers) 194/194; `historicalPhoto.browser` PASS; guardas Programar Evaluación y Editar examen 5/5 frente a d9a4dbb; Node 883/884 (0 fallos, 1 `todo` de D3); `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK; 0 Chrome headless restantes.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## R1b — Desbordamiento a 320px de los perfiles administrativos (2026-11-08) ⏸ detenido
+
+- Autorizado probar `min-width: 0` en `.sidebar` (`EntityProfileLayout.module.css`). Reproducido con la prueba endurecida (sin excepción a 320px y con comprobación de recorte/solape de las opciones de la barra lateral): estudiante y docente FAIL a 320px.
+- `min-width: 0` en `.sidebar` **no corrige**: por debajo de 900px la rejilla usa `1fr` (= `minmax(auto, 1fr)`), cuyo mínimo es el contenido mínimo de la barra lateral **y** del área del perfil. Probado además `grid-template-columns: minmax(0, 1fr)` en ese `@media` (equivalente a la pista de escritorio): docente 5/5 PASS, pero el estudiante sigue desbordando 2px por la cabecera del perfil (padding 32px, avatar fijo de 96px y separación de 24px dejan ~64px para nombre e insignias).
+- Detenido según la autorización (requiere rediseñar la cabecera del perfil en móvil). Ningún cambio confirmado; trabajo conservado en el scratchpad de la sesión (`r1b/`). Alternativas presentadas al usuario.
+
+## R2 — Identificadores de examen no válidos (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base 238f5ec. Solo frontend; backend no tocado; 0 escrituras (fixtures).
+- Antes (reproducido): las 8 ramas de identificador no válido pintaban solo `<p role="alert">` en rutas docentes bajo `AppLayout` (sin `main` propio): página sin `main` ni `h1`. Infracciones y expulsiones 15/15 FAIL cada una («sin h1, 0 main»); asistencia y reportes no encontraban el `h1`.
+- Nuevo `features/exams/components/InvalidExamPage.tsx`: un `main` con `PageContainer labelledBy` + `PageHeader` (título de la pantalla) y el mensaje exacto con `role="alert"`; sin migas y sin navegación del examen (no hay examen válido al que enlazar).
+- Aplicado solo a las 8 ramas: lista, alta y detalle de infracciones y de expulsiones, asistencia y reportes del docente, con su título y mensaje exactos. Sin cambios de lógica, rutas, permisos ni API; los layouts del examen no se reutilizan.
+- `pageContract.mjs` añade `alertText` (texto exacto de la alerta dentro del `main`). Las pruebas de infracciones, expulsiones, asistencia y reportes añaden los 8 estados.
+- Validación: estados no válidos **40/40** (8 × 320/390/768/1024/1440) y todos los estados previos de contrato (125 en total) con sus flujos funcionales; `pageLayout.test` + `mainLandmarks` + Node de las 4 features 70/70; Node 883/884; `tsc` + build OK; guardas Programar Evaluación y Editar examen 5/5 frente a 238f5ec; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+- Sin revisión humana; revisión técnica asistida por IA.

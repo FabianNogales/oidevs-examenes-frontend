@@ -9,6 +9,7 @@ import { useExpulsion } from '../hooks/useExpulsionQuery'
 import { ExpulsionLayout } from '../components/ExpulsionLayout'
 import { StudentExpulsionHistory } from '../components/StudentExpulsionHistory'
 import styles from '@/features/infractions/components/InfractionManagement.module.css'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 function Detail({ examId, id }: { examId: number; id: number }) {
   const query = useExpulsion(examId, id),
     location = useLocation()
@@ -100,6 +101,9 @@ export function ExpulsionDetailPage() {
   return positiveId(exam) && positiveId(id) ? (
     <Detail key={`${exam}:${id}`} examId={exam} id={id} />
   ) : (
-    <p role="alert">El identificador solicitado no es válido.</p>
+    <InvalidExamPage
+      title="Detalle de expulsión"
+      message="El identificador solicitado no es válido."
+    />
   )
 }

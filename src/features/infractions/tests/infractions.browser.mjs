@@ -378,6 +378,18 @@ try {
     'Permissions: no unauthorized creation/state controls; denied history is not empty; another exam never shows previous evidence; 1440/1024/768/390/320px have no horizontal overflow',
   )
   assert.deepEqual(browser.errors, [])
+  // R2: invalid-id states render one main and one h1 (PageContainer + PageHeader), no breadcrumbs,
+  // and keep their exact role="alert" message.
+  for (const state of [
+    { name: 'id no válido lista', path: '/teacher/exams/abc/infractions', title: 'Infracciones del examen', alertText: 'El identificador del examen no es válido.' },
+    { name: 'id no válido alta', path: '/teacher/exams/abc/infractions/create', title: 'Registrar infracción', alertText: 'El identificador del examen no es válido.' },
+    { name: 'id no válido detalle', path: '/teacher/exams/4/infractions/abc', title: 'Detalle de infracción', alertText: 'El examen o la infracción solicitados no son válidos.' },
+  ]) {
+    await resize(1440)
+    await navigate(state.path)
+    await wait("!!document.querySelector('[role=alert]')")
+    await viewport(state.name, { title: state.title, crumbs: [], alertText: state.alertText })
+  }
   assert.deepEqual(contractFailures, [], 'contrato de página de infracciones')
   await browser.report({ checks, requests })
   console.log(

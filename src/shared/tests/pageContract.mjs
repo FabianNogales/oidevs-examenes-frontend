@@ -26,12 +26,13 @@ export const pageContractScript = `(()=>{
     outerWidth:(()=>{for(let el=h1.parentElement;el&&el!==document.body;el=el.parentElement)if(getComputedStyle(el).maxWidth==='1280px')return Math.round(el.getBoundingClientRect().width);return null})(),
     crumbs:nav?[...nav.querySelectorAll('li')].map(li=>li.textContent.trim()):[],
     breadcrumbGap:nav?getComputedStyle(nav).marginBottom:null,headerGap:header?getComputedStyle(header).marginBottom:null,
-    actionTexts,overflow:document.documentElement.scrollWidth>client+1};
+    actionTexts,alerts:[...document.querySelectorAll('main [role=alert]')].map(el=>el.textContent.trim()),overflow:document.documentElement.scrollWidth>client+1};
 })()`
 
 // containerOnly: the h1 belongs to the page content, not to PageHeader (U3.5 selected-list view); only the
 // container, landmarks, breadcrumbs, actions and overflow are checked.
-export function pageContractProblems(page, { width, title, crumbs = [], actions = [], containerOnly = false }) {
+// alertText: exact text of an expected role="alert" inside the main landmark (R2 invalid-id states).
+export function pageContractProblems(page, { width, title, crumbs = [], actions = [], containerOnly = false, alertText }) {
   if (!page.h1s) return [`sin h1 (${page.mains} main)`]
   const problems = []
   if (page.mains !== 1 || page.h1s !== 1) problems.push(`main/h1 ${page.mains}/${page.h1s}`)
@@ -55,6 +56,7 @@ export function pageContractProblems(page, { width, title, crumbs = [], actions 
   if (!containerOnly && page.headerGap !== '24px') problems.push('separación de cabecera ' + page.headerGap)
   const missing = actions.filter((action) => !page.actionTexts.includes(action))
   if (missing.length) problems.push('acciones fuera de la cabecera ' + JSON.stringify(missing))
+  if (alertText !== undefined && !page.alerts?.includes(alertText)) problems.push('alerta ' + JSON.stringify(page.alerts))
   if (page.overflow) problems.push('desbordamiento horizontal')
   return problems
 }

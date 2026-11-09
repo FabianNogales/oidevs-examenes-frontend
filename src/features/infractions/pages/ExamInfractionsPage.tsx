@@ -11,6 +11,7 @@ import {
 } from '../utils/infractionValidation'
 import type { Infraction } from '../types/infraction.types'
 import styles from '@/features/incidents/pages/Incidents.module.css'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 
 type Row = Omit<Infraction, 'status'> & {
   infraction_status: Infraction['status']
@@ -108,6 +109,9 @@ export function ExamInfractionsPage() {
   return positiveId(id) ? (
     <List key={id} examId={id} />
   ) : (
-    <p role="alert">El identificador del examen no es válido.</p>
+    <InvalidExamPage
+      title="Infracciones del examen"
+      message="El identificador del examen no es válido."
+    />
   )
 }

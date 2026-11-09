@@ -266,6 +266,8 @@ try {
   const contractStates = [
     { name: 'asistencia', path: '/teacher/exams/4/attendance', title: 'Asistencia del examen', crumbs: ['Mis exámenes', 'Asistencia'], ready: "!!document.querySelector('table')" },
     { name: 'asistencia error', path: '/teacher/exams/5/attendance', title: 'Asistencia del examen', crumbs: ['Mis exámenes', 'Asistencia'], ready: "!!document.querySelector('main [role=alert]')" },
+    // R2: invalid id keeps its exact message, one main and one h1, no breadcrumbs.
+    { name: 'asistencia id no válido', path: '/teacher/exams/abc/attendance', title: 'Asistencia del examen', crumbs: [], alertText: 'El identificador del examen no es válido.', ready: "!!document.querySelector('[role=alert]')" },
   ]
   // U3.4c: shared page contract (PageContainer + PageHeader) for every state at 320-1440px.
   const contractFailures = []

@@ -309,6 +309,18 @@ try {
     'Required student/reason/confirmation; related infraction remains reported; 422 keeps draft; serialized POST and navigation guard; validated detail and server actor/time; EXPELLED table; scoped history; duplicate409 blocks retries; denied create/history and cross-exam reads; no overflow 1440/1024/768/390/320; checkbox18px',
   )
   assert.deepEqual(b.errors, [])
+  // R2: invalid-id states render one main and one h1 (PageContainer + PageHeader), no breadcrumbs,
+  // and keep their exact role="alert" message.
+  for (const state of [
+    { name: 'id no válido lista', path: '/teacher/exams/abc/expulsions', title: 'Expulsiones del examen', alertText: 'El identificador del examen no es válido.' },
+    { name: 'id no válido alta', path: '/teacher/exams/abc/expulsions/create', title: 'Registrar expulsión', alertText: 'El identificador del examen no es válido.' },
+    { name: 'id no válido detalle', path: '/teacher/exams/4/expulsions/abc', title: 'Detalle de expulsión', alertText: 'El identificador solicitado no es válido.' },
+  ]) {
+    await resize(1440)
+    await nav(state.path)
+    await wait("!!document.querySelector('[role=alert]')")
+    await view(state.name, { title: state.title, crumbs: [], alertText: state.alertText })
+  }
   assert.deepEqual(contractFailures, [], 'contrato de página de expulsiones')
   await b.report({ checks, requests })
   console.log(JSON.stringify({ checks, errors: b.errors, output: b.output }))
