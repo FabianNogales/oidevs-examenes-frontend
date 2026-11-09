@@ -127,10 +127,24 @@ export const router = createBrowserRouter([
                     },
                   },
                   {
+                    path: 'portal/events/categories',
+                    lazy: async () => {
+                      const { AdminEventCategoriesPage } = await import('@/features/portal-categories/AdminCategoriesPage')
+                      return { Component: AdminEventCategoriesPage }
+                    },
+                  },
+                  {
                     path: 'portal/news',
                     lazy: async () => {
                       const { AdminNewsPage } = await import('@/features/portal-news/AdminNewsPage')
                       return { Component: AdminNewsPage }
+                    },
+                  },
+                  {
+                    path: 'portal/news/categories',
+                    lazy: async () => {
+                      const { AdminNewsCategoriesPage } = await import('@/features/portal-categories/AdminCategoriesPage')
+                      return { Component: AdminNewsCategoriesPage }
                     },
                   },
                   {

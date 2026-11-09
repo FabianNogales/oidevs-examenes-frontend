@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
 import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
@@ -154,6 +155,9 @@ export function AdminCalendarPage() {
           Crear evento
         </button>
       </header>
+      <p className={styles.categoriesLink}>
+        <Link to="/admin/portal/events/categories">Gestionar categorías</Link>
+      </p>
       {categories.loading ? (
         <p role="status">Cargando categorías…</p>
       ) : categories.error ? (

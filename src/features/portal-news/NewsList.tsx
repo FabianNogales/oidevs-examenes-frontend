@@ -3,17 +3,37 @@ import { Link } from 'react-router'
 import { usePortalResource } from '@/features/portal-shared/usePortalResource'
 import { PortalFeedback, PortalPager } from '@/features/portal-shared/PortalUi'
 import { publicationDate } from '@/features/portal-shared/portalApi'
-import { listNews } from './newsApi'
+import { getNewsCategories, listNews } from './newsApi'
 import { NewsImage } from './NewsImage'
+import type { NewsCategory } from './types'
 import styles from '@/features/portal-shared/portalShared.module.css'
 import newsStyles from './news.module.css'
 
+// Home (compact) keeps its previous behaviour: no category request or filter.
+const noCategories = (): Promise<NewsCategory[]> => Promise.resolve([])
+function loadPublicNewsCategories(signal: AbortSignal) {
+  return getNewsCategories(false, signal)
+}
+
 export function NewsList({ compact = false }: { compact?: boolean }) {
   const [page, setPage] = useState(1)
+  const [category, setCategory] = useState('')
+  const categories = usePortalResource(
+    compact ? noCategories : loadPublicNewsCategories,
+  )
   const load = useCallback(
     (signal: AbortSignal) =>
-      listNews({ page, search: '', per_page: compact ? 6 : 12 }, signal),
-    [page, compact],
+      listNews(
+        {
+          page,
+          search: '',
+          per_page: compact ? 6 : 12,
+          // Applied by the backend before paginating.
+          ...(!compact && category ? { category_id: Number(category) } : {}),
+        },
+        signal,
+      ),
+    [page, compact, category],
   )
   const result = usePortalResource(load)
   return (
@@ -29,6 +49,32 @@ export function NewsList({ compact = false }: { compact?: boolean }) {
             Ver todas
           </Link>
         </header>
+      ) : categories.error ? (
+        <div role="alert" className={styles.error}>
+          <p>{categories.error.message}</p>
+          <button type="button" onClick={categories.reload}>
+            Reintentar
+          </button>
+        </div>
+      ) : categories.data?.length ? (
+        <label className={`${styles.field} ${newsStyles.categoryFilter}`}>
+          Categoría
+          <select
+            name="category_id"
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value)
+              setPage(1)
+            }}
+          >
+            <option value="">Todas las categorías</option>
+            {categories.data.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        </label>
       ) : null}
       <p className={`${styles.muted} ${newsStyles.sortOrder}`}>
         Más recientes primero
@@ -47,6 +93,9 @@ export function NewsList({ compact = false }: { compact?: boolean }) {
             <time dateTime={news.published_at ?? undefined}>
               {publicationDate(news.published_at)}
             </time>
+            {!compact && news.category ? (
+              <p className={styles.muted}>{news.category.name}</p>
+            ) : null}
             <p className={styles.description}>{news.summary}</p>
           </article>
         ))}

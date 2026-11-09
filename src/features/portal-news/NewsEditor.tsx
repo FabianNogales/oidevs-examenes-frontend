@@ -12,20 +12,39 @@ import {
 } from './newsApi'
 import { AuthenticatedNewsImage } from './NewsImage'
 import { publicationDate } from '@/features/portal-shared/portalApi'
-import { NEWS_STATUS_LABELS, type AdminNews, type NewsStatus } from './types'
+import {
+  NEWS_STATUS_LABELS,
+  type AdminNews,
+  type NewsCategory,
+  type NewsEditInput,
+  type NewsStatus,
+} from './types'
 import styles from '@/features/portal-shared/portalShared.module.css'
 import adminStyles from './adminNews.module.css'
+
+const categoryValue = (news: AdminNews | null) =>
+  news?.category ? String(news.category.id) : ''
 
 const draftOf = (news: AdminNews | null) => ({
   title: news?.title ?? '',
   summary: news?.summary ?? '',
   content: news?.content ?? '',
+  category_id: categoryValue(news),
 })
 
 type EditorState = { label: string; disabled: boolean }
 
+// Active categories from GET /admin/portal/news-categories (loaded by the caller).
+export type NewsCategoryOptions = {
+  data: NewsCategory[] | null
+  loading: boolean
+  error: { message: string } | null
+  reload: () => void
+}
+
 export function NewsEditor({
   initial,
+  categories,
   onSaved,
   onBusy,
   onDirty,
@@ -33,6 +52,7 @@ export function NewsEditor({
   formId,
 }: {
   initial: AdminNews | null
+  categories: NewsCategoryOptions
   onSaved: (news: AdminNews) => void
   onBusy: (busy: boolean) => void
   onDirty?: (dirty: boolean) => void
@@ -47,8 +67,18 @@ export function NewsEditor({
   const [imageInputVersion, setImageInputVersion] = useState(0)
   const [pending, setPending] = useState<NewsStatus | null>(null)
   const [removing, setRemoving] = useState(false)
+  const [categoryError, setCategoryError] = useState<string | null>(null)
   const feedback = useRef<HTMLDivElement>(null)
   const news = editor.snapshot
+  const activeCategories = categories.data ?? []
+  // The current category is kept as a historical, non-selectable value when it
+  // is no longer active (or is null for news created before categories).
+  const currentCategory = news?.category ?? null
+  const currentInactive =
+    !!currentCategory &&
+    !activeCategories.some((category) => category.id === currentCategory.id)
+  // Creating requires an active category; block it while none can be offered.
+  const categoriesUnavailable = !news && activeCategories.length === 0
   const isUnpublishing =
     !!news && !removing && pending === 'DRAFT' && news.status === 'PUBLISHED'
   const dirtyText = JSON.stringify(draft) !== JSON.stringify(draftOf(news))
@@ -56,6 +86,7 @@ export function NewsEditor({
     dirtyText || file !== null || pending !== null || removing
   const locked = editor.locked || pending !== null || removing
   const submitLabel = news ? 'Guardar noticia' : 'Crear borrador'
+  const submitDisabled = locked || categoriesUnavailable
   useEffect(() => {
     onBusy(editor.busy)
   }, [editor.busy, onBusy])
@@ -66,8 +97,8 @@ export function NewsEditor({
     onDirty?.(dirty)
   }, [dirty, onDirty])
   useEffect(() => {
-    onStateChange?.({ label: submitLabel, disabled: locked })
-  }, [locked, submitLabel, onStateChange])
+    onStateChange?.({ label: submitLabel, disabled: submitDisabled })
+  }, [submitDisabled, submitLabel, onStateChange])
   async function apply(
     action: () => Promise<AdminNews>,
     reset = false,
@@ -92,11 +123,37 @@ export function NewsEditor({
     )
     if (current) {
       setDraft(draftOf(current))
+      setCategoryError(null)
       setPending(null)
       setRemoving(false)
       setFile(null)
       setImageInputVersion((version) => version + 1)
     }
+  }
+  function save() {
+    if (submitDisabled) return
+    const { category_id: selected, ...text } = draft
+    const categoryId = Number(selected)
+    const changed = selected !== categoryValue(news)
+    // Only a newly chosen category must be active; an unchanged one is omitted.
+    if (
+      (!news || changed) &&
+      !activeCategories.some((category) => category.id === categoryId)
+    ) {
+      setCategoryError('Selecciona una categoría activa.')
+      return
+    }
+    setCategoryError(null)
+    const input: NewsEditInput = changed
+      ? { ...text, category_id: categoryId }
+      : text
+    void apply(
+      () =>
+        news
+          ? editNews(news.id, input, news.revision)
+          : createNews({ ...text, category_id: categoryId }),
+      true,
+    )
   }
   const fields = editor.error?.fields ?? {}
   return (
@@ -117,6 +174,14 @@ export function NewsEditor({
             <div>
               <dt>Fecha de publicación</dt>
               <dd>{publicationDate(news.published_at)}</dd>
+            </div>
+            <div>
+              <dt>Categoría</dt>
+              <dd>
+                {currentCategory
+                  ? `${currentCategory.name}${currentInactive && !categories.loading ? ' (no disponible para nuevas asignaciones)' : ''}`
+                  : 'Sin categoría'}
+              </dd>
             </div>
             {news.created_by != null ? (
               <div>
@@ -167,13 +232,7 @@ export function NewsEditor({
         id={editorFormId}
         onSubmit={(event) => {
           event.preventDefault()
-          void apply(
-            () =>
-              news
-                ? editNews(news.id, draft, news.revision)
-                : createNews(draft),
-            true,
-          )
+          save()
         }}
       >
         <section className={adminStyles.editorSection}>
@@ -221,6 +280,58 @@ export function NewsEditor({
                 )}
               </PortalField>
             ))}
+            <PortalField
+              label="Categoría"
+              error={fields.category_id ?? categoryError ?? undefined}
+            >
+              <select
+                name="category_id"
+                value={draft.category_id}
+                // Only creation requires a category. Legacy news keep "Sin
+                // categoría" (value ""), which native validation would block.
+                required={!news}
+                aria-invalid={!!(fields.category_id ?? categoryError)}
+                onChange={(event) => {
+                  setDraft({ ...draft, category_id: event.target.value })
+                  setCategoryError(null)
+                  editor.clearError()
+                }}
+              >
+                {currentCategory ? null : (
+                  <option value="" disabled>
+                    {news ? 'Sin categoría' : 'Selecciona una categoría'}
+                  </option>
+                )}
+                {currentInactive && currentCategory ? (
+                  <option value={currentCategory.id} disabled>
+                    {currentCategory.name} (categoría actual)
+                  </option>
+                ) : null}
+                {activeCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </PortalField>
+            {categories.loading ? (
+              <p role="status" className={styles.muted}>
+                Cargando categorías…
+              </p>
+            ) : categories.error ? (
+              <div role="alert" className={styles.error}>
+                <p>{categories.error.message}</p>
+                <button type="button" onClick={categories.reload}>
+                  Reintentar
+                </button>
+              </div>
+            ) : activeCategories.length === 0 ? (
+              <p role="status" className={styles.notice}>
+                {news
+                  ? 'No hay categorías activas. Se conservará la categoría actual.'
+                  : 'No hay categorías activas. Activa o crea una categoría antes de crear noticias.'}
+              </p>
+            ) : null}
           </fieldset>
         </section>
         {news ? (
@@ -368,7 +479,7 @@ export function NewsEditor({
             <button
               type="submit"
               className={styles.primary}
-              disabled={locked}
+              disabled={submitDisabled}
             >
               {submitLabel}
             </button>

@@ -1,16 +1,38 @@
 import { httpClient } from '@/shared/api/httpClient'
-import type {
-  PortalPage,
-  PortalQuery,
-} from '@/features/portal-shared/portalApi'
+import type { PortalPage } from '@/features/portal-shared/portalApi'
 import type {
   AdminNews,
   AdminNewsSummary,
+  NewsCategory,
   NewsDetail,
+  NewsEditInput,
   NewsInput,
+  NewsListQuery,
   NewsStatus,
   NewsSummary,
 } from './types'
+
+const isCategory = (category: unknown): category is NewsCategory =>
+  !!category &&
+  typeof category === 'object' &&
+  Number.isSafeInteger((category as NewsCategory).id) &&
+  (category as NewsCategory).id > 0 &&
+  typeof (category as NewsCategory).name === 'string'
+
+// Contract: backend 9172f18, docs/PORTAL_CATEGORIES_API.md. Selectors return
+// only active categories, unpaginated, ordered by the backend.
+export async function getNewsCategories(
+  admin = false,
+  signal?: AbortSignal,
+): Promise<NewsCategory[]> {
+  const { data } = await httpClient.get<{ data: unknown }>(
+    `${admin ? '/admin' : ''}/portal/news-categories`,
+    { signal },
+  )
+  if (!Array.isArray(data?.data) || !data.data.every(isCategory))
+    throw new Error('Formato de categorías no válido.')
+  return data.data
+}
 
 // The public resource omits status. Reject explicitly non-public or malformed
 // records rather than rendering content from an unexpected administrative response.
@@ -24,14 +46,16 @@ function requirePublicNews(news: NewsSummary): void {
     (news.image_url !== null && typeof news.image_url !== 'string') ||
     typeof news.published_at !== 'string' ||
     Number.isNaN(Date.parse(news.published_at)) ||
-    ('status' in news && news.status !== 'PUBLISHED')
+    ('status' in news && news.status !== 'PUBLISHED') ||
+    // null (historical news) is valid; a present category must be well formed.
+    (news.category != null && !isCategory(news.category))
   ) {
     throw new Error('Respuesta de noticia pública no válida.')
   }
 }
 
 export async function listNews(
-  query: PortalQuery,
+  query: NewsListQuery,
   signal?: AbortSignal,
 ): Promise<PortalPage<NewsSummary>> {
   const { data } = await httpClient.get('/portal/news', {
@@ -67,7 +91,7 @@ export async function getNews(
   return data.data
 }
 export async function listAdminNews(
-  query: PortalQuery & { status?: NewsStatus },
+  query: NewsListQuery & { status?: NewsStatus },
   signal?: AbortSignal,
 ): Promise<PortalPage<AdminNewsSummary>> {
   const { data } = await httpClient.get('/admin/portal/news', {
@@ -89,7 +113,7 @@ export async function createNews(input: NewsInput): Promise<AdminNews> {
 }
 export async function editNews(
   id: number,
-  input: Partial<NewsInput>,
+  input: NewsEditInput,
   revision: number,
 ): Promise<AdminNews> {
   const { data } = await httpClient.patch(`/admin/portal/news/${id}`, {

@@ -1,0 +1,55 @@
+.stateFilter {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.stateFilter select {
+  flex: 1 1 auto;
+  width: auto;
+  min-height: 44px;
+}
+
+.backLink {
+  margin: 0 0 12px;
+}
+
+.editor {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.statusPanel {
+  display: grid;
+  gap: 8px;
+}
+
+.statusPanel p {
+  margin: 0;
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actions button {
+  min-height: 44px;
+}
+
+@media (max-width: 600px) {
+  .stateFilter {
+    flex: 1 1 100%;
+  }
+}

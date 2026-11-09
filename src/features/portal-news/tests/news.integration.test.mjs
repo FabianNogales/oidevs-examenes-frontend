@@ -16,7 +16,28 @@ const news = {
   content: 'Texto completo\n<script>texto</script>',
   image_url: null,
   published_at: '2026-11-05T02:00:00Z',
+  category: { id: 1, name: 'Académico' },
 }
+// Active selector options (GET /admin/portal/news-categories, backend 9172f18).
+const activeCategories = [
+  { id: 1, name: 'Académico' },
+  { id: 4, name: 'Convocatorias' },
+]
+const categoryOptions = (data = activeCategories, extra = {}) => ({
+  data,
+  loading: false,
+  error: null,
+  reload() {},
+  ...extra,
+})
+// Public list loads its category selector first; route it to a fixture.
+const publicClient = (get, categories = activeCategories) =>
+  client({
+    get: (url, ...rest) =>
+      url === '/portal/news-categories'
+        ? { data: { data: categories } }
+        : get(url, ...rest),
+  })
 const admin = {
   ...news,
   status: 'DRAFT',
@@ -32,6 +53,7 @@ function editor(handlers = {}, initial = admin, props = {}) {
   const stateChanges = []
   const ui = component(c, 'features/portal-news/NewsEditor.tsx', 'NewsEditor', {
     initial,
+    categories: categoryOptions(),
     onSaved: () => saved.push(true),
     onBusy() {},
     onDirty: (value) => dirtyStates.push(value),
@@ -69,13 +91,14 @@ async function confirmUnpublish(ui) {
 
 test('HU40 public list consumes backend news and pagination without search controls', async () => {
   const ui = component(
-    client({ get: () => ({ data: page([news], 1, 2, 16) }) }),
+    publicClient(() => ({ data: page([news], 1, 2, 16) })),
     'features/portal-news/NewsPage.tsx',
     'NewsList',
   )
   await ui.ready()
-  assert.equal(ui.calls[0].args[0], '/portal/news')
-  assert.equal(ui.calls[0].args[1].params.status, undefined)
+  const newsCall = ui.calls.find((call) => call.args[0] === '/portal/news')
+  assert.ok(newsCall)
+  assert.equal(newsCall.args[1].params.status, undefined)
   assert.match(textContent(ui.tree), /Noticia del servidor/)
   assert.match(textContent(ui.tree), /Más recientes primero/)
   assert.equal(nodes(ui.tree, (node) => node.type === 'form').length, 0)
@@ -169,7 +192,7 @@ test('HU41 administrative preview fetches authenticated blob and revokes Object 
   await assert.rejects(fetch(second))
 })
 
-test('HU41 creating news sends only text fields and retains backend DRAFT', async () => {
+test('HU41 creating news sends text fields with the required category and retains backend DRAFT', async () => {
   const ui = editor(
     { post: () => ({ data: { data: { ...admin, revision: 1 } } }) },
     null,
@@ -177,10 +200,16 @@ test('HU41 creating news sends only text fields and retains backend DRAFT', asyn
   ui.edit('title', 'Nuevo título')
   ui.edit('summary', 'Resumen')
   ui.edit('content', 'Texto')
+  ui.edit('category_id', '4')
   await ui.submit()
   assert.deepEqual(ui.calls[0].args, [
     '/admin/portal/news',
-    { title: 'Nuevo título', summary: 'Resumen', content: 'Texto' },
+    {
+      title: 'Nuevo título',
+      summary: 'Resumen',
+      content: 'Texto',
+      category_id: 4,
+    },
   ])
   assert.match(textContent(ui.tree), /Borrador/)
   assert.equal(ui.saved.length, 1)

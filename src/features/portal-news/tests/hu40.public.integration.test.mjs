@@ -23,10 +23,20 @@ const older = {
   image_url: null,
   published_at: '2026-10-30T09:00:00-04:00',
 }
+// The full list also loads the public category selector (backend 9172f18);
+// these HU40 cases only exercise the news resource, so it answers empty.
 const setupList = (get, compact = false) =>
-  component(client({ get }), 'features/portal-news/NewsList.tsx', 'NewsList', {
-    compact,
-  })
+  component(
+    client({
+      get: (url, ...rest) =>
+        url === '/portal/news-categories'
+          ? { data: { data: [] } }
+          : get(url, ...rest),
+    }),
+    'features/portal-news/NewsList.tsx',
+    'NewsList',
+    { compact },
+  )
 const articles = (tree) => nodes(tree, (node) => node.type === 'article')
 const detail = (get) =>
   component(
@@ -182,7 +192,7 @@ test('HU40 public list error retries without navigating to administrative routes
   fail = false
   await ui.click('Reintentar')
   assert.equal(articles(ui.tree).length, 1)
-  assert.ok(ui.calls.every((call) => call.args[0] === '/portal/news'))
+  assert.ok(ui.calls.every((call) => call.args[0].startsWith('/portal/news')))
   ui.h.unmount()
 })
 

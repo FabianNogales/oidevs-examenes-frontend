@@ -21,6 +21,10 @@
   min-height: 44px;
 }
 
+.categoriesLink {
+  margin: 0 0 12px;
+}
+
 .newsAdminPage .clearFilters {
   min-height: 44px;
   white-space: nowrap;

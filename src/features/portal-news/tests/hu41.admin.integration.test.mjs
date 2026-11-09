@@ -22,13 +22,29 @@ const draft = {
   created_by: 11,
   updated_by: 12,
   published_by: null,
+  category: { id: 1, name: 'Académico' },
 }
+// Active selector options (GET /admin/portal/news-categories, backend 9172f18).
+const activeCategories = [
+  { id: 1, name: 'Académico' },
+  { id: 4, name: 'Convocatorias' },
+]
+const categoryOptions = (data = activeCategories, extra = {}) => ({
+  data,
+  loading: false,
+  error: null,
+  reload() {},
+  ...extra,
+})
 test('HU41 news Escape confirmation uses the native top layer and preserves the editor until discard', () => {
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
     '@/features/portal-shared/usePortalResource': {
-      usePortalResource: () => ({ data: draft, loading: false, error: null }),
+      usePortalResource: (load) =>
+        load.name === 'loadAdminNewsCategories'
+          ? categoryOptions()
+          : { data: draft, loading: false, error: null },
     },
   })
   const { AdminNewsPage } = h.load('features/portal-news/AdminNewsPage.tsx')
@@ -119,7 +135,7 @@ test('HU41 news Escape confirmation uses the native top layer and preserves the 
   h.unmount()
 })
 
-function editor(handlers, initial = draft) {
+function editor(handlers, initial = draft, categories = categoryOptions()) {
   const saved = []
   const ui = component(
     client(handlers),
@@ -127,6 +143,7 @@ function editor(handlers, initial = draft) {
     'NewsEditor',
     {
       initial,
+      categories,
       onSaved: (value) => saved.push(value),
       onBusy() {},
     },
@@ -142,6 +159,7 @@ test('HU41 editor reports the saved backend resource so the new draft can open i
   ui.edit('title', draft.title)
   ui.edit('summary', draft.summary)
   ui.edit('content', draft.content)
+  ui.edit('category_id', '1')
   await ui.submit()
   assert.equal(saved.length, 1)
   assert.equal(saved[0].id, 42)
@@ -273,6 +291,7 @@ test('HU41 double submit while creating only creates one draft', async () => {
     },
     null,
   )
+  ui.edit('category_id', '4')
   await ui.submit()
   await ui.submit()
   assert.equal(ui.calls.length, 1)

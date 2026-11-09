@@ -238,6 +238,10 @@
   }
 }
 
+.categoriesLink {
+  margin: 0 0 12px;
+}
+
 .filterPanel {
   padding: 16px;
   margin-bottom: 16px;
