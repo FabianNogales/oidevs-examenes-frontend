@@ -64,3 +64,26 @@ test('exam reports own <main> for teachers only; the admin variant relies on Adm
   assert.equal(mains(teacher).length, 1)
   assert.equal(teacher.type, 'main')
 })
+
+test('admin entity profiles (students, teachers) rely on AdminLayout for <main>: the profile area is a labelled section (R1)', () => {
+  const h = sourceHarness({})
+  const { EntityProfileLayout } = h.load('features/users/profile/components/EntityProfileLayout.tsx')
+  const tree = expand(EntityProfileLayout({
+    initials: 'QA',
+    fullName: 'Estudiante QA',
+    role: 'STUDENT',
+    isActive: true,
+    options: [{ id: 'overview', label: 'Resumen', icon: 'user' }],
+    activeOptionId: 'overview',
+    onOptionChange: () => {},
+    onBack: () => {},
+    children: 'contenido',
+  }))
+  assert.equal(mains(tree).length, 0, 'AdminLayout already renders the page <main>')
+  const headings = nodes(tree, (node) => node.type === 'h1')
+  assert.equal(headings.length, 1)
+  assert.ok(headings[0].props.id, 'the entity name h1 has an id')
+  const regions = nodes(tree, (node) => node.type === 'section' && node.props['aria-labelledby'] === headings[0].props.id)
+  assert.equal(regions.length, 1, 'the profile area is labelled by the entity name')
+  assert.match(String(regions[0].props.className), /mainArea/)
+})

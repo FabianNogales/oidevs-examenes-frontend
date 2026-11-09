@@ -160,6 +160,10 @@ export function EntityInfoGrid({ cards }: { cards: readonly EntityInfoCard[] }) 
   )
 }
 
+// R1: the admin profile pages render inside AdminLayout, which already provides the page's main landmark;
+// the profile area is a section labelled by the entity name (one profile per page, so the id is stable).
+const ENTITY_NAME_ID = 'entity-profile-name'
+
 export function EntityProfileLayout({
   initials,
   fullName,
@@ -207,7 +211,7 @@ export function EntityProfileLayout({
       </aside>
 
       {/* ÁREA PRINCIPAL */}
-      <main className={styles.mainArea}>
+      <section className={styles.mainArea} aria-labelledby={ENTITY_NAME_ID}>
         {/* BANNER SUPERIOR CON COLOR DE ROL DINÁMICO */}
         <header
           className={`${styles.banner} ${
@@ -219,7 +223,9 @@ export function EntityProfileLayout({
           </div>
 
           <div className={styles.bannerIdentity}>
-            <h1 className={styles.entityName}>{fullName}</h1>
+            <h1 id={ENTITY_NAME_ID} className={styles.entityName}>
+              {fullName}
+            </h1>
             <div className={styles.bannerBadges}>
               <span className={`${styles.roleBadge} ${roleTheme.badgeClass}`}>
                 {roleTheme.label}
@@ -242,7 +248,7 @@ export function EntityProfileLayout({
 
         {/* CONTENIDO DE LA SUBPÁGINA ACTIVA */}
         <div>{children}</div>
-      </main>
+      </section>
     </div>
   )
 }
