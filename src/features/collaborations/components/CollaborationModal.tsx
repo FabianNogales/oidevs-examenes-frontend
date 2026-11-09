@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { trapDialogFocus } from '@/shared/utils/trapDialogFocus'
-import modalStyles from '@/features/students/components/AddStudentsModal.module.css'
+import modalStyles from '@/shared/styles/dialogBase.module.css'
 
 type Props = {
   title: string

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
-import styles from './AddStudentsModal.module.css'
+import styles from '@/shared/styles/dialogBase.module.css'
 import local from './StudentDialog.module.css'
 
 // Native modal <dialog> shared by the student dialogs (DS4.2b). It lives in the browser's top layer,

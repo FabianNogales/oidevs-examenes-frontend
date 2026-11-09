@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button/Button'
-import styles from './AddStudentsModal.module.css'
+import styles from '@/shared/styles/dialogBase.module.css'
 import { StudentDialog } from './StudentDialog'
 
 export function ManualStudentEnrollmentDialog({

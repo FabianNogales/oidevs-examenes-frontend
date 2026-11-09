@@ -560,3 +560,11 @@ Bloqueos pendientes:
 - Validación: Node de students/course-offerings/auth + cssContracts + pageLayout.test 151/151; Node 883/884; `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
 - R4c (paginación) **pospuesto**: 19 paginadores propios (Periodos, Aulas, Materias, ofertas ×3, importaciones CSV ×4, colaboradores, habilitaciones, habilitación automática, control de ingreso ×2, infracciones relacionadas, incidencias, historial del portal) y solo `DataTable`/`PortalPager` como paginación compartida: oportunidad de un `Pagination` común tras la estabilización. También pospuestas las migraciones masivas de botones (60 clases propias en 33 módulos; `Button` en 33 archivos), campos (`Field` en 1 archivo; 66 con controles propios), 13 tablas propias y 11 diálogos propios. Control de ingreso y Programar Evaluación, excluidos salvo defecto demostrado.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## R4b — CSS de diálogo compartido con nombre neutro (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base bbb5437. `features/students/components/AddStudentsModal.module.css` → **`shared/styles/dialogBase.module.css`** (bytes idénticos; mismo contenido, clases y reglas). Ubicación compartida porque lo usan dos features.
+- Importadores actualizados (los 4 reales): `CollaborationModal`, `CreateStudentModal`, `ManualStudentEnrollmentDialog` y `StudentDialog`. Sin referencias al nombre anterior en `src` (las menciones de PROGRESS son históricas).
+- Sin cambios de DOM, comportamiento ni apariencia: el CSS compilado antes y después es idéntico (411 885 bytes; 3569 reglas normalizadas por hash de CSS Modules, 0 diferencias).
+- Validación: `collaborationModal.browser` 5/5, `studentDialogs.browser` 10/10, `pageLayout.browser` 215/215; Node de students/collaborations + frontendBatch + cssContracts + pageLayout.test 177/177; guardas 5/5 frente a bbb5437; Node 883/884; build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+- Sin revisión humana; revisión técnica asistida por IA.

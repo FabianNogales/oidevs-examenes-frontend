@@ -3,7 +3,7 @@ import { createAdminStudent, StudentApiError } from '@/features/students/api/adm
 import { getSubjectCareers } from '@/features/subjects/api/adminSubjectsApi'
 import type { SubjectCareer } from '@/features/subjects/types/adminSubject.types'
 import type { CreateStudentPayload, Student, StudentFieldErrors } from '@/features/students/types/adminStudent.types'
-import styles from '@/features/students/components/AddStudentsModal.module.css'
+import styles from '@/shared/styles/dialogBase.module.css'
 import { Button } from '@/shared/components/ui/Button/Button'
 import { StudentDialog } from './StudentDialog'
 
