@@ -39,6 +39,9 @@ git diff --check
 - Para no sobrescribir evidencia anterior: `HU34_QA_OUTPUT=<dir>` y `HU42_QA_OUTPUT=<dir>`.
 - Al terminar, comprobar que no quedan perfiles `eida-*` nuevos en `%TEMP%` (comparar por nombre antes y después). No borrar perfiles de otras ejecuciones.
 - **`hu40.browser.mjs` y `hu41.browser.mjs` usan la app y el backend reales** (hu41 crea datos): no ejecutarlas sin autorización expresa. Sin ella, validarlas solo con `node --check`.
+- **Pruebas en vivo con puerta explícita (DS5-F1).** Inventario cerrado en [`liveQa.test.mjs`](../../src/shared/tests/liveQa.test.mjs): `hu41` (app Vite 5173, backend 8000, login real y creación de datos), `sprint3.integration` (Laravel real con PostgreSQL desechable) y la parte en vivo de `hu40` (solo GET; su parte simulada sí se ejecuta por defecto). Sin `EIDA_LIVE_QA=<nombre>` (`hu40`, `hu41` o `sprint3`; valores genéricos como `1` no sirven) imprimen `SKIP` y salen con 0 antes de abrir perfiles, red o ficheros. Una batería general trata `SKIP` como omitida, nunca como PASS. Para activarlas hace falta: autorización expresa para ese entorno, backend local y datos desechables (nunca de desarrollo ni de terceros) y credenciales de prueba propias por variables de entorno (las de `hu41` por defecto son de demo y ya están publicadas).
+- Todo script nuevo que use hosts reales, credenciales o datos persistentes debe usar `requireLiveQa` y entrar en ese inventario; si no, `liveQa.test.mjs` falla.
+- Incidente DS5 (2026-11-08): una batería general ejecutó `hu40` y `hu41` sin puerta. `hu41` hizo un login real de administración demo y 3 GET (0 noticias creadas o editadas) y `hu40` hizo 6 GET públicos. La sesión creada no se cerró por API.
 
 ## 4. Anchos y comprobaciones visuales
 

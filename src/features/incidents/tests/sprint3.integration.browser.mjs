@@ -2,6 +2,9 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { browserFixture, pause } from '../../../shared/tests/browserHarness.mjs'
+import { requireLiveQa } from '../../../shared/tests/liveQa.mjs'
+// DS5-F1: explicit opt-in in addition to the disposable database fixture.
+if (!requireLiveQa('sprint3', 'Laravel real con PostgreSQL desechable')) process.exit(0)
 const dir = new URL('../../../../../tmp/sprint3-integration/', import.meta.url)
 const f = JSON.parse(await readFile(new URL('fixture.json', dir), 'utf8'))
 const database = JSON.parse(

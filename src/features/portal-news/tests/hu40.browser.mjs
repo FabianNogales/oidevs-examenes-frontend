@@ -1,5 +1,7 @@
 // HU40 browser QA: simulated publications plus read-only checks of the local app/API.
 // No administrative news operations or backend fixtures are created.
+// DS5-F1: the simulated part always runs; the live part (Vite 5173 and backend 127.0.0.1:8000,
+// GET only) runs only with EIDA_LIVE_QA=hu40 (see shared/tests/liveQa.mjs).
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -8,8 +10,10 @@ import {
   cleanupBrowserProfile,
   createBrowserProfile,
 } from '../../../shared/tests/browserProfile.mjs'
+import { requireLiveQa } from '../../../shared/tests/liveQa.mjs'
 import { createServer } from 'vite'
 
+const liveQa = requireLiveQa('hu40', 'parte en vivo: app Vite y backend locales reales, solo GET')
 const output = '.validation.local/hu40'
 await mkdir(output, { recursive: true })
 const results = {
@@ -398,88 +402,92 @@ try {
   )
   results.simulated.push({ authenticatedHomeUsesPublicEndpoint: true })
 
-  for (const path of [
-    '/portal/news',
-    '/portal/news?search=HU40_QA_sin_resultados',
-    '/portal/news?status=DRAFT',
-    '/portal/news?status=ARCHIVED',
-    '/portal/news/2147483647',
-    '/portal/news/2147483647/image',
-  ]) {
-    const r = await fetch('http://127.0.0.1:8000/api/v1' + path, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(5000),
-    })
-    const body = await r.json()
-    results.api.push({
-      path,
-      status: r.status,
-      total: body.meta?.total,
-      records: body.data?.length,
-    })
-  }
-  assert.equal(results.api[0].status, 200)
-  const empty = results.api[0].total === 0
-  if (empty)
-    results.gaps.push(
-      'No real published news: visibility with published/non-published fixtures, content detail, images and real pagination remain unverified. No backend fixtures were created.',
-    )
-  await send('Page.navigate', { url: 'http://127.0.0.1:5173/' })
-  await wait(`${section}?.getAttribute('aria-busy')==='false'`)
-  assert.ok(
-    await evaluate(`${section}.querySelector('a[href="/news"]')!==null`),
-  )
-  await click('section[aria-label="Noticias institucionales"] a[href="/news"]')
-  await wait(
-    `location.pathname==='/news' && ${section}?.getAttribute('aria-busy')==='false'`,
-  )
-  for (const width of [320, 390, 768, 1024, 1440]) {
-    await send('Emulation.setDeviceMetricsOverride', {
-      width,
-      height: 1000,
-      deviceScaleFactor: 1,
-      mobile: false,
-    })
-    await noOverflow(`live ${width}px list`)
+  if (liveQa) {
+    for (const path of [
+      '/portal/news',
+      '/portal/news?search=HU40_QA_sin_resultados',
+      '/portal/news?status=DRAFT',
+      '/portal/news?status=ARCHIVED',
+      '/portal/news/2147483647',
+      '/portal/news/2147483647/image',
+    ]) {
+      const r = await fetch('http://127.0.0.1:8000/api/v1' + path, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(5000),
+      })
+      const body = await r.json()
+      results.api.push({
+        path,
+        status: r.status,
+        total: body.meta?.total,
+        records: body.data?.length,
+      })
+    }
+    assert.equal(results.api[0].status, 200)
+    const empty = results.api[0].total === 0
     if (empty)
-      assert.ok(
-        await evaluate(
-          `document.body.innerText.includes('No hay noticias publicadas')`,
-        ),
+      results.gaps.push(
+        'No real published news: visibility with published/non-published fixtures, content detail, images and real pagination remain unverified. No backend fixtures were created.',
       )
-    await shot(`real-list-${width}`)
+    await send('Page.navigate', { url: 'http://127.0.0.1:5173/' })
+    await wait(`${section}?.getAttribute('aria-busy')==='false'`)
+    assert.ok(
+      await evaluate(`${section}.querySelector('a[href="/news"]')!==null`),
+    )
+    await click('section[aria-label="Noticias institucionales"] a[href="/news"]')
+    await wait(
+      `location.pathname==='/news' && ${section}?.getAttribute('aria-busy')==='false'`,
+    )
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await send('Emulation.setDeviceMetricsOverride', {
+        width,
+        height: 1000,
+        deviceScaleFactor: 1,
+        mobile: false,
+      })
+      await noOverflow(`live ${width}px list`)
+      if (empty)
+        assert.ok(
+          await evaluate(
+            `document.body.innerText.includes('No hay noticias publicadas')`,
+          ),
+        )
+      await shot(`real-list-${width}`)
+      assert.equal(
+        await evaluate(`!document.querySelector('input[type=search]') && ![...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='Buscar')`),
+        true,
+      )
+      await noOverflow(`live ${width}px without search`)
+      results.live.push({
+        width,
+        passed: [
+          'Home navigation and Ver todas',
+          'list',
+          'search controls omitted',
+          'empty state',
+          'no horizontal overflow',
+        ],
+      })
+      console.log(
+        `PASS real ${width}px: Home navigation, list/empty state, no overflow`,
+      )
+    }
+    await send('Page.navigate', { url: 'http://127.0.0.1:5173/news/2147483647' })
+    await wait(
+      `document.querySelector('[role=alert]') && document.body.innerText.includes('no existe o ya no está disponible')`,
+    )
     assert.equal(
-      await evaluate(`!document.querySelector('input[type=search]') && ![...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='Buscar')`),
-      true,
+      await evaluate(`document.querySelector('main article')!==null`),
+      false,
     )
-    await noOverflow(`live ${width}px without search`)
-    results.live.push({
-      width,
-      passed: [
-        'Home navigation and Ver todas',
-        'list',
-        'search controls omitted',
-        'empty state',
-        'no horizontal overflow',
-      ],
-    })
-    console.log(
-      `PASS real ${width}px: Home navigation, list/empty state, no overflow`,
-    )
-  }
-  await send('Page.navigate', { url: 'http://127.0.0.1:5173/news/2147483647' })
-  await wait(
-    `document.querySelector('[role=alert]') && document.body.innerText.includes('no existe o ya no está disponible')`,
-  )
-  assert.equal(
-    await evaluate(`document.querySelector('main article')!==null`),
-    false,
-  )
-  await shot('real-detail-404')
-  results.live.push({ detail404: true, exposedContent: false })
+    await shot('real-detail-404')
+    results.live.push({ detail404: true, exposedContent: false })
+  } // end live QA (hu40)
   assert.deepEqual(results.errors, [])
   console.log(
-    'PASS controlled 404, simulated empty/error/retry/non-public/image failure and authenticated Home',
+    liveQa
+      ? 'PASS controlled 404, simulated empty/error/retry/non-public/image failure and authenticated Home'
+      : 'PASS simulated empty/error/retry/non-public/image failure and authenticated Home (live part skipped)',
   )
   console.log('Evidence:', output)
 } catch (error) {
