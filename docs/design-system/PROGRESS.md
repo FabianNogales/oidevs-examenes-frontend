@@ -598,3 +598,22 @@ Bloqueos pendientes:
 - **Validación final**: barrido 74 rutas × 5 anchos con 0 hallazgos (antes 4), 0 escrituras, 0 peticiones fuera del Vite aislado, 0 excepciones. Batería simulada 34/34 (32 pruebas + 2 guardas) PASS (incluye las guardas Crear/Editar frente a `ddce9c8`; `hu40`, `hu41` y `sprint3` excluidas). Node 890/891 (0 fallos, 1 TODO D3), `tsc -b` y build OK, ESLint idéntico a la base de 36. Bloqueadas o no ejecutadas: `sprint3.integration` (entorno, opt-in), `hu41` (en vivo, opt-in) y `hu40` (parte simulada sin ejecutar por permiso; en vivo opt-in).
 - Métricas actualizadas (`8a7af8c`→`eb53317`): `PageHeader` en 48 archivos y `PageContainer` en 50. Producción TS/TSX +1896/−2000 (−104 netas) y CSS +279/−324 (−45 netas); pruebas +2670/−158 aparte.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## DS5 — Cierre previo a publicar (2026-11-09)
+
+- **hu40 — aislamiento** (`ecf873e`). Causa del bloqueo: el clasificador de permisos de la herramienta del agente trata la ejecución de `hu40.browser.mjs` como lectura de producción, porque el script contiene llamadas a la app y al backend reales, aunque estén tras la puerta. No se intentó eludirlo ni se cambiaron permisos. Verificación sin ejecutarlo: `liveQa.test` (7) analiza su árbol sintáctico. La puerta es un `const` de nivel superior que nunca se reasigna; los 3 hosts reales están dentro del único `if (liveQa)`; fuera solo hay URL `http://127.0.0.1:${port}` del Vite o Chrome propios. Una mutación (navegar a 5173 fuera del bloque) hace fallar 2 pruebas. Además, las imágenes de los fixtures son del mismo origen. **Limitación vigente**: la parte simulada de `hu40` sigue sin ejecutarse en esta rama; no se declara PASS.
+- **Contraste de campos — D0, sin aplicar** (el cambio es más amplio de lo autorizado). Campos cuyo único borde visible es `--color-border-strong` (1.68:1 sobre blanco), fuera de Crear y Editar examen:
+
+| Módulo CSS | Selectores | Consumidores |
+|---|---|---|
+| `Collaborations.module.css` | `.search input` | `ExamCollaboratorsPage`, `AssignCollaboratorModal` |
+| `Eligibilities.module.css` | `.field input/select/textarea` | `ExamEligibilitiesPage`, `BulkEligibilitiesModal`, `ManageEligibilityModal` |
+| `EligibilityAutomation.module.css` | `.manualReviewConditions textarea`, `.criterionEditForm input/textarea`, `.parameter input/select`, `.formGrid input`, `.correction input/textarea`, `.panel input[type=search]` (`.policyFormFields`/`.policyThreshold` sin consumidores) | `EligibilityAutomationPage`, `AdminEligibilityPoliciesPage`, `AcademicCsvImportPanel` |
+| `EntryControlPage.module.css` | `.field input` | `EntryControlStudentsList`, `EntryHistoryModal` (control de ingreso) |
+| `ExamManagement.module.css` | `.filters input/select` | `TeacherExamsPage` |
+| `OfflineCapturePanel.module.css` | `.searchInputBox input`, `.searchField select` | `OfflineStudentList`, `OfflineQrScanner` |
+| `StudentDetailModal.module.css` | `.input` (foco azul, error rojo y deshabilitado propios) | `StudentDetailModal` |
+| `StudentHistoricalPhotoSection.module.css` | `.form textarea` | `StudentHistoricalPhotoSection` |
+| `EntityProfileLayout.module.css` | `.formInput` (deshabilitado propio) | `ProfileEditTab` |
+
+  17 selectores en 9 módulos, 16 componentes de 8 features. El cambio `--color-border-strong` → `--color-input-border` (#5b6a80, 5.50:1 en claro; #8c9bb2, 5.84:1 en oscuro) oscurece visiblemente el borde en reposo. Los estados foco, error y deshabilitado que fijan su propio color se conservan; el resto usa el `:focus-visible` global. Cobertura browser para capturas antes y después: `collaborationModal`, `hu34.ui`, `entryControlLayout`, `studentDialogs`, `historicalPhoto`, `adminEntityProfile`, `pageLayout` (filtros de Mis exámenes). Sin cobertura: modales de habilitaciones (`ExamEligibilitiesPage`) y captura offline. **Propuesta por fases**: (a) administración y docente (perfil, foto histórica, modal de estudiante, filtros de Mis exámenes, colaboradores); (b) habilitaciones y habilitación automática, con prueba nueva para sus modales; (c) control de ingreso y captura offline, módulos estables, con su responsable. Cada fase con instantáneas de estilo y capturas a 320–1440px.
