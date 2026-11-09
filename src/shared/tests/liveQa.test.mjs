@@ -146,3 +146,66 @@ test('requireLiveQa reports the opt-in variable', (t) => {
   assert.equal(requireLiveQa('hu41', 'motivo', {}), false)
   assert.match(messages[0], /EIDA_LIVE_QA=hu41/)
 })
+
+// Syntax-tree check of hu40 (the tool that runs the agents refuses to execute this script, so its isolation is
+// proven statically): the gate is a top-level const, every real host is inside `if (liveQa)`, and every URL
+// outside that block targets the script's own Vite/Chrome through a dynamic port.
+test('hu40 AST: real hosts only inside the gated block, other URLs use a dynamic local port', async () => {
+  const { ts } = await import('./sourceHarness.mjs')
+  const file = 'features/portal-news/tests/hu40.browser.mjs'
+  const source = ts.createSourceFile(
+    file,
+    read(file),
+    ts.ScriptTarget.Latest,
+    true,
+  )
+  const gate = source.statements.find(
+    (node) =>
+      ts.isVariableStatement(node) &&
+      node.declarationList.flags & ts.NodeFlags.Const &&
+      node.declarationList.declarations[0].name.getText() === 'liveQa',
+  )
+  assert.ok(gate, 'top-level const liveQa')
+  assert.match(
+    gate.declarationList.declarations[0].initializer.getText(),
+    /^requireLiveQa\('hu40',/,
+  )
+  const gatedBlocks = []
+  const urls = []
+  const visit = (node) => {
+    if (ts.isIfStatement(node) && node.expression.getText() === 'liveQa')
+      gatedBlocks.push(node.thenStatement)
+    if (ts.isStringLiteralLike(node) || ts.isTemplateExpression(node)) {
+      const text = node.getText()
+      if (/https?:\/\//.test(text)) urls.push(node)
+    }
+    if (ts.isBinaryExpression(node) && node.left.getText() === 'liveQa')
+      assert.fail('liveQa is never reassigned')
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+  assert.equal(gatedBlocks.length, 1, 'one gated live block')
+  const inside = (node) =>
+    node.getStart() >= gatedBlocks[0].getStart() &&
+    node.getEnd() <= gatedBlocks[0].getEnd()
+  const outside = urls.filter((node) => !inside(node))
+  assert.deepEqual(
+    outside
+      .filter((node) => liveMarker.test(node.getText()))
+      .map((node) => node.getText()),
+    [],
+  )
+  // Outside the block: only 127.0.0.1 with a port taken from the running Vite/Chrome (never a fixed port).
+  for (const node of outside) {
+    assert.ok(ts.isTemplateExpression(node), `URL dinámica: ${node.getText()}`)
+    assert.match(
+      node.getText(),
+      /^`http:\/\/127\.0\.0\.1:\$\{(port|vite\.httpServer\.address\(\)\.port)\}\//,
+      node.getText(),
+    )
+  }
+  assert.ok(
+    urls.filter(inside).length >= 3,
+    'the live calls are still present inside the gated block',
+  )
+})
