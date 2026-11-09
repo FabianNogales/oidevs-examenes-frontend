@@ -2,17 +2,19 @@
 import {
   readFileSync,
   writeFileSync,
-  mkdtempSync,
   mkdirSync,
   existsSync,
   realpathSync,
-  rmSync,
 } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { resolve, dirname, join, basename, sep } from 'node:path'
+import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+  trackBrowser,
+} from '../../../shared/tests/browserProfile.mjs'
 
 const require = createRequire(import.meta.url)
 const ts = require('typescript')
@@ -24,9 +26,10 @@ if (!existsSync(browser) || typeof WebSocket === 'undefined')
   throw new Error(
     'Requires Edge and node --experimental-websocket. No browser was installed.',
   )
-const temporary = realpathSync(
-  mkdtempSync(join(tmpdir(), 'eida-offline-indexeddb-')),
-)
+// Marked temporary directory (browser profile + test page) from browserProfile.mjs: removed in `finally`
+// and, through the shared handlers, on SIGINT/SIGTERM or 'exit'.
+const temporaryProfile = await createBrowserProfile('offline-indexeddb')
+const temporary = realpathSync(temporaryProfile.dir)
 const profile = join(temporary, 'profile')
 mkdirSync(profile)
 const modules = new Map()
@@ -80,6 +83,7 @@ const processHandle = spawn(
   ],
   { windowsHide: true, stdio: 'ignore' },
 )
+trackBrowser(temporaryProfile, processHandle)
 const sleep = (delay) => new Promise((done) => setTimeout(done, delay))
 async function until(action, message) {
   const deadline = Date.now() + 20000
@@ -209,21 +213,7 @@ try {
   await until(
     () => processHandle.exitCode !== null,
     'Isolated browser did not close.',
-  ).catch(() => processHandle.kill())
-  // Only the brand-new, explicitly named test directory can be removed; never an existing browser profile.
-  const resolved = resolve(temporary)
-  if (
-    existsSync(resolved) &&
-    realpathSync(resolved) === temporary &&
-    dirname(resolved) === realpathSync(tmpdir()) &&
-    basename(resolved).startsWith('eida-offline-indexeddb-') &&
-    resolved.startsWith(realpathSync(tmpdir()) + sep)
-  ) {
-    rmSync(resolved, {
-      recursive: true,
-      force: true,
-      maxRetries: 10,
-      retryDelay: 200,
-    })
-  }
+  ).catch(() => {})
+  // Stops this run's browser tree if it is still running and removes only its marked directory.
+  await cleanupBrowserProfile(temporaryProfile, processHandle)
 }

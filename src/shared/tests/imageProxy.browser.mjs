@@ -2,14 +2,15 @@
 // The upstream is an HTTP fixture; no application data or credentials are used.
 import assert from 'node:assert/strict'
 import { createServer as httpServer } from 'node:http'
-import { mkdtemp, readFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { spawn } from 'node:child_process'
 import { createServer } from 'vite'
+import { cleanupBrowserProfile, createBrowserProfile, trackBrowser } from './browserProfile.mjs'
 
 const png = await readFile('src/assets/images/logo-home.png')
-const profile = await mkdtemp(join(tmpdir(), 'eida-image-proxy-'))
+// Marked temporary profile removed in `finally` (and on SIGINT/SIGTERM/exit by browserProfile.mjs).
+const profile = await createBrowserProfile('image-proxy')
 const requests = []
 let version = 1,
   vite,
@@ -62,6 +63,8 @@ try {
   await new Promise((resolve) => upstream.listen(0, '127.0.0.1', resolve))
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
+  process.env.VITE_API_URL = '/backend/api/v1'
+  process.env.VITE_BACKEND_URL = '/backend'
   const moduleSource = `
 import React,{StrictMode,useState} from 'react';import {createRoot} from 'react-dom/client';
 import {getStudentProfile,updateStudentProfilePhoto} from '/src/features/students/api/studentProfileApi.ts';
@@ -133,16 +136,17 @@ getStudentProfile().then(({data})=>root.render(React.createElement(StrictMode,nu
       '--no-first-run',
       '--no-default-browser-check',
       '--remote-debugging-port=0',
-      `--user-data-dir=${profile}`,
+      `--user-data-dir=${profile.dir}`,
       'about:blank',
     ],
     { windowsHide: true, stdio: 'ignore' },
   )
+  trackBrowser(profile, browser)
   let port
   for (let i = 0; i < 100 && !port; i++) {
     try {
       port = Number(
-        (await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split(
+        (await readFile(join(profile.dir, 'DevToolsActivePort'), 'utf8')).split(
           '\n',
         )[0],
       )
@@ -248,7 +252,7 @@ getStudentProfile().then(({data})=>root.render(React.createElement(StrictMode,nu
   )
 } finally {
   ws?.close()
-  browser?.kill()
+  await cleanupBrowserProfile(profile, browser)
   await vite?.close()
   await new Promise((resolve) => upstream.close(resolve))
 }

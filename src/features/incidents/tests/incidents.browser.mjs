@@ -1,15 +1,17 @@
 // Real components and HTTP fixture in headless Chrome; never contacts the backend.
 // Node20: node --experimental-websocket src/features/incidents/tests/incidents.browser.mjs
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, writeFile, mkdir } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { createServer } from 'vite'
 import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
+import { cleanupBrowserProfile, createBrowserProfile, trackBrowser } from '../../../shared/tests/browserProfile.mjs'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-hu27-'))
-const output = resolve('../tmp/hu27-browser')
+// Marked temporary profile removed in `finally` (and on SIGINT/SIGTERM/exit by browserProfile.mjs).
+const profile = await createBrowserProfile('hu27-incidents')
+const output = join(process.cwd(), '.validation.local', `hu27-browser-${randomUUID()}`)
 await mkdir(output, { recursive: true })
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const requests = [],
@@ -147,16 +149,17 @@ try {
       '--no-first-run',
       '--no-default-browser-check',
       '--remote-debugging-port=0',
-      `--user-data-dir=${profile}`,
+      `--user-data-dir=${profile.dir}`,
       'about:blank',
     ],
     { windowsHide: true, stdio: 'ignore' },
   )
+  trackBrowser(profile, chrome)
   let port
   for (let i = 0; i < 100; i++) {
     try {
       port = Number(
-        (await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split(
+        (await readFile(join(profile.dir, 'DevToolsActivePort'), 'utf8')).split(
           '\n',
         )[0],
       )
@@ -417,6 +420,6 @@ try {
   console.log(JSON.stringify({ checks, errors, output }, null, 2))
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(profile, chrome)
   await vite?.close()
 }

@@ -1,11 +1,11 @@
 // Node20: node --experimental-websocket src/features/incidents/tests/incidentConsultation.browser.mjs
 // Actual pages/header/table/downloads, local HTTP only; no backend mutations.
 import assert from 'node:assert/strict'
-import { mkdtemp, readdir, readFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { tmpdir } from 'node:os'
 import { browserFixture, pause } from '../../../shared/tests/browserHarness.mjs'
 import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
+import { cleanupBrowserProfile, createBrowserProfile } from '../../../shared/tests/browserProfile.mjs'
 
 const types = [
   'IDENTIFICATION',
@@ -44,7 +44,11 @@ let role = 'teacher',
   listFailure = false,
   exportFailure = '',
   delay = 0
-const downloadDir = await mkdtemp(join(tmpdir(), 'eida-hu29-downloads-'))
+// Marked temporary directory (removed in `finally`); downloads go to a sub-folder so the marker
+// file never counts as a download.
+const downloads = await createBrowserProfile('hu29-downloads')
+const downloadDir = join(downloads.dir, 'files')
+await mkdir(downloadDir)
 const moduleSource = `import React from 'react';import {createRoot} from 'react-dom/client';import {createMemoryRouter,RouterProvider,Outlet} from 'react-router';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';import '@fontsource/poppins/500.css';import '@fontsource/poppins/600.css';import '@fontsource/poppins/700.css';
 
@@ -516,4 +520,5 @@ try {
   )
 } finally {
   await browser.close()
+  await cleanupBrowserProfile(downloads)
 }

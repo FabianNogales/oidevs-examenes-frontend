@@ -1,24 +1,28 @@
 // Isolated Vite + headless Chrome for actual UI tests with a local HTTP fixture.
-import { mkdtemp, readFile, writeFile, mkdir } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+// The Chrome profile comes from browserProfile.mjs: close() stops this run's Chrome and removes its
+// profile (also on setup failure and, through the shared handlers, on SIGINT/SIGTERM or 'exit').
+// Evidence is written to .validation.local/<name> inside the project.
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { createServer } from 'vite'
+import { cleanupBrowserProfile, createBrowserProfile, trackBrowser } from './browserProfile.mjs'
 
 export const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 
 export async function browserFixture({ name, moduleSource, handleRequest }) {
-  const output = resolve('../tmp', name)
+  const output = join(process.cwd(), '.validation.local', `${name}-${randomUUID()}`)
   await mkdir(output, { recursive: true })
-  const profile = await mkdtemp(join(tmpdir(), name + '-'))
-  let vite, chrome, ws
+  let vite, chrome, ws, profile
   const errors = []
   async function close() {
     ws?.close()
-    chrome?.kill()
+    await cleanupBrowserProfile(profile, chrome)
     await vite?.close()
   }
   try {
+    profile = await createBrowserProfile(name)
     process.env.EIDA_DEV_HTTPS_KEY = ''
     process.env.EIDA_DEV_HTTPS_CERT = ''
     vite = await createServer({
@@ -67,16 +71,17 @@ export async function browserFixture({ name, moduleSource, handleRequest }) {
         '--no-first-run',
         '--no-default-browser-check',
         '--remote-debugging-port=0',
-        `--user-data-dir=${profile}`,
+        `--user-data-dir=${profile.dir}`,
         'about:blank',
       ],
       { windowsHide: true, stdio: 'ignore' },
     )
+    trackBrowser(profile, chrome)
     let port
     for (let attempt = 0; attempt < 100; attempt++) {
       try {
         port = Number(
-          (await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split(
+          (await readFile(join(profile.dir, 'DevToolsActivePort'), 'utf8')).split(
             '\n',
           )[0],
         )
