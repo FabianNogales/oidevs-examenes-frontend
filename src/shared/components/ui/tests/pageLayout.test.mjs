@@ -141,6 +141,7 @@ const authorizedConsumers = [
   'features/incidents/pages/ExamIncidentsPage.tsx',
   'features/incidents/pages/IncidentDetailPage.tsx',
   'features/infractions/components/InfractionLayout.tsx',
+  'features/offline-entry/pages/TeacherDistributionPage.tsx',
   'features/portal-calendar/pages/AdminCalendarPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/AdminInformationPage.tsx',
@@ -187,6 +188,7 @@ const ownsMain = [
   'features/incidents/pages/ExamIncidentsPage.tsx',
   'features/incidents/pages/IncidentDetailPage.tsx',
   'features/infractions/components/InfractionLayout.tsx',
+  'features/offline-entry/pages/TeacherDistributionPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/InformationPage.tsx',
   'features/portal-news/pages/NewsPage.tsx',
@@ -205,6 +207,8 @@ const exclusiveBranches = {
   'features/incidents/pages/ExamIncidentsPage.tsx': { main: 2, headers: 2 },
   // One PageLandmark wraps both branches with <main>, except under AdminLayout.
   'features/incidents/pages/IncidentDetailPage.tsx': { main: 1, headers: 2 },
+  // Selected-list view (h1 from AssignedListStudentsView), main view and invalid id.
+  'features/offline-entry/pages/TeacherDistributionPage.tsx': { main: 3, headers: 2 },
 }
 // Portal administration pages get their PageHeader through PortalAdminCollection headerVariant="page".
 const portalAdmin = [

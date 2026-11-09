@@ -23,27 +23,36 @@ export const pageContractScript = `(()=>{
     maxWidth:cs?.maxWidth??null,labelled:container?.getAttribute('aria-labelledby')===h1.id&&!!h1.id,
     alignment:cr?Math.abs(h1.getBoundingClientRect().left-(cr.left+parseFloat(cs.paddingLeft))):null,
     containerWidth:cr?Math.round(cr.width):null,client,wrapped,
+    outerWidth:(()=>{for(let el=h1.parentElement;el&&el!==document.body;el=el.parentElement)if(getComputedStyle(el).maxWidth==='1280px')return Math.round(el.getBoundingClientRect().width);return null})(),
     crumbs:nav?[...nav.querySelectorAll('li')].map(li=>li.textContent.trim()):[],
     breadcrumbGap:nav?getComputedStyle(nav).marginBottom:null,headerGap:header?getComputedStyle(header).marginBottom:null,
     actionTexts,overflow:document.documentElement.scrollWidth>client+1};
 })()`
 
-export function pageContractProblems(page, { width, title, crumbs = [], actions = [] }) {
+// containerOnly: the h1 belongs to the page content, not to PageHeader (U3.5 selected-list view); only the
+// container, landmarks, breadcrumbs, actions and overflow are checked.
+export function pageContractProblems(page, { width, title, crumbs = [], actions = [], containerOnly = false }) {
   if (!page.h1s) return [`sin h1 (${page.mains} main)`]
   const problems = []
   if (page.mains !== 1 || page.h1s !== 1) problems.push(`main/h1 ${page.mains}/${page.h1s}`)
   if (title !== undefined && page.title !== title) problems.push(`título «${page.title}»`)
   const phone = width <= 640
-  if (page.size !== (phone ? '24px' : '32px') || page.weight !== '700' || page.lineHeight !== (phone ? '30px' : '40px'))
+  if (!containerOnly && (page.size !== (phone ? '24px' : '32px') || page.weight !== '700' || page.lineHeight !== (phone ? '30px' : '40px')))
     problems.push(`h1 ${page.size}/${page.weight}/${page.lineHeight}`)
-  if (page.maxWidth !== '1280px' || !page.labelled) problems.push(`contenedor ${page.maxWidth} etiquetado=${page.labelled}`)
-  if (page.containerWidth !== null && Math.abs(page.containerWidth - Math.min(page.client, 1280)) > 1)
-    problems.push(`ancho del contenedor ${page.containerWidth}/${Math.min(page.client, 1280)}`)
-  if (page.alignment === null || page.alignment > 1) problems.push(`h1 desalineado ${page.alignment}`)
-  if (page.wrapped) problems.push('cabecera dentro de una tarjeta')
+  if (containerOnly) {
+    // The content's own labelled section holds the h1: check the nearest 1280px page container instead.
+    if (page.outerWidth === null || Math.abs(page.outerWidth - Math.min(page.client, 1280)) > 1)
+      problems.push(`contenedor de página ${page.outerWidth}/${Math.min(page.client, 1280)}`)
+  } else {
+    if (page.maxWidth !== '1280px' || !page.labelled) problems.push(`contenedor ${page.maxWidth} etiquetado=${page.labelled}`)
+    if (page.containerWidth !== null && Math.abs(page.containerWidth - Math.min(page.client, 1280)) > 1)
+      problems.push(`ancho del contenedor ${page.containerWidth}/${Math.min(page.client, 1280)}`)
+  }
+  if (!containerOnly && (page.alignment === null || page.alignment > 1)) problems.push(`h1 desalineado ${page.alignment}`)
+  if (!containerOnly && page.wrapped) problems.push('cabecera dentro de una tarjeta')
   if (JSON.stringify(page.crumbs) !== JSON.stringify(crumbs)) problems.push('migas ' + JSON.stringify(page.crumbs))
-  if (crumbs.length && page.breadcrumbGap !== '24px') problems.push('separación de migas ' + page.breadcrumbGap)
-  if (page.headerGap !== '24px') problems.push('separación de cabecera ' + page.headerGap)
+  if (!containerOnly && crumbs.length && page.breadcrumbGap !== '24px') problems.push('separación de migas ' + page.breadcrumbGap)
+  if (!containerOnly && page.headerGap !== '24px') problems.push('separación de cabecera ' + page.headerGap)
   const missing = actions.filter((action) => !page.actionTexts.includes(action))
   if (missing.length) problems.push('acciones fuera de la cabecera ' + JSON.stringify(missing))
   if (page.overflow) problems.push('desbordamiento horizontal')
