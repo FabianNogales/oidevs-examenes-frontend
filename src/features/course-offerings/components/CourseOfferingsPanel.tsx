@@ -197,7 +197,9 @@ function OfferingCatalog({
           />
         ) : (
           <div className={styles.state} role="status">
-            <h3>No hay asignaciones para esta consulta</h3>
+            <h2 className={styles.stateTitle}>
+              No hay asignaciones para esta consulta
+            </h2>
             <p>Revisa el periodo, el estado o la búsqueda seleccionados.</p>
           </div>
         ))}

@@ -87,3 +87,12 @@ test('admin entity profiles (students, teachers) rely on AdminLayout for <main>:
   assert.equal(regions.length, 1, 'the profile area is labelled by the entity name')
   assert.match(String(regions[0].props.className), /mainArea/)
 })
+
+test('DS5-F4: the assignments empty state follows the page h1 with an h2 that keeps the former h3 look', () => {
+  const panel = readFileSync(`${sourceRoot}/features/course-offerings/components/CourseOfferingsPanel.tsx`, 'utf8')
+  assert.doesNotMatch(panel, /<h3\b/, 'no h1→h3 jump under the page h1')
+  assert.match(panel, /<h2 className=\{styles\.stateTitle\}>\s*No hay asignaciones para esta consulta\s*<\/h2>/)
+  const css = readFileSync(`${sourceRoot}/features/course-offerings/pages/AdminCourseOfferingsPage.module.css`, 'utf8')
+  // Must beat the imported `.state h2` (lg, margin 0) and match the old h3: xl size and 20px block margins.
+  assert.match(css, /\.state \.stateTitle \{\s*margin: var\(--space-5\) 0;\s*font-size: var\(--font-size-xl\);\s*\}/)
+})

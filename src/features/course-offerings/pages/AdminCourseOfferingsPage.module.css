@@ -34,6 +34,12 @@
   min-width: 0;
   color: var(--color-text);
 }
+/* DS5-F4: the empty-state title is an h2 (it follows the page h1) that keeps the look of the former h3
+   (xl size and 1em block margins); it must win over the imported `.state h2` rule. */
+.state .stateTitle {
+  margin: var(--space-5) 0;
+  font-size: var(--font-size-xl);
+}
 .teacherSection h3 {
   margin-bottom: var(--space-3);
   font-size: var(--font-size-md);
