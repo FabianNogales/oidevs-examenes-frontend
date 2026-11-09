@@ -548,3 +548,15 @@ Bloqueos pendientes:
 - Prueba: `pageLayout.browser` añade los dos detalles cargados y con error (500) a 320–1440px (960px, separaciones y escala de `PageHeader`, alineación, migas exactas, un `main` y un `h1`, sin desbordamiento) y compara los estilos calculados de «Volver a…» y «Reintentar» con una instantánea tomada antes del cambio: **idénticos en las 20 combinaciones**.
 - Validación: detalles 20/20 (antes 0/20); `pageLayout.browser` completo 215/215; `adminEntityProfile.browser` 10/10; Node del portal (incluye news/services integration) + `pageLayout.test` + cssContracts 152/152; guardas 5/5 frente a ff2f2c0; Node 883/884; `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## R4a — Código muerto (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base bad718d. Verificación por símbolo en todo el repositorio (código, importaciones dinámicas y por ruta, *barrels* —no existen—, router, registros, pruebas `.mjs` y documentación).
+- **Eliminado** (sin ninguna referencia fuera de su archivo): `students/components/AddStudentsModal.tsx` (292 líneas; su `AddStudentsModal.module.css` se conserva para sus 4 consumidores), `course-offerings/components/TeacherCourseOfferings.tsx`, y los iconos `HomeIcon` y `ServicesIcon` de `auth/components/AuthIcons.tsx` (las pruebas que simulan `AuthIcons` solo usan `UserIcon`). −334 líneas.
+- **Conservado por incertidumbre** (sin uso actual):
+  - `auth/components/RoleRoute.tsx`: guarda de rutas por rol; pertenece a autenticación/permisos (fuera de alcance según AGENTS.md) y puede ser API prevista por backend u otro desarrollador.
+  - `health/components/BackendHealthStatus.tsx`: único consumidor de `healthApi` y de la clase global `.backend-status`, documentada en el README y `components.md` del Design System como parte del shell; retirarlo dejaría huérfanas una API y estilos documentados.
+- Sin cambios de funcionalidad, interfaces activas, rutas, permisos ni API.
+- Validación: Node de students/course-offerings/auth + cssContracts + pageLayout.test 151/151; Node 883/884; `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+- R4c (paginación) **pospuesto**: 19 paginadores propios (Periodos, Aulas, Materias, ofertas ×3, importaciones CSV ×4, colaboradores, habilitaciones, habilitación automática, control de ingreso ×2, infracciones relacionadas, incidencias, historial del portal) y solo `DataTable`/`PortalPager` como paginación compartida: oportunidad de un `Pagination` común tras la estabilización. También pospuestas las migraciones masivas de botones (60 clases propias en 33 módulos; `Button` en 33 archivos), campos (`Field` en 1 archivo; 66 con controles propios), 13 tablas propias y 11 diálogos propios. Control de ingreso y Programar Evaluación, excluidos salvo defecto demostrado.
+- Sin revisión humana; revisión técnica asistida por IA.
