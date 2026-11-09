@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import type { PortalPage, portalError } from '../api/portalApi'
 import styles from './portalShared.module.css'
 import {
@@ -27,11 +28,19 @@ export function PortalPageLayout({
   title: string
   children: ReactNode
 }) {
+  // R3: public details share the reading width (960px) and header of the public lists. The body keeps
+  // portalBase .page for its descendant styles (buttons, focus); PageContainer owns the padding.
   return (
-    <main className={`${styles.publicPage} ${styles.page}`}>
-      <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: title }]} />
-      <h1>{title}</h1>
-      {children}
+    <main>
+      <PageContainer width="narrow">
+        <PageHeader
+          title={title}
+          breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: title }]}
+        />
+        <div className={`${styles.page} ${styles.portalPageBody}`}>
+          {children}
+        </div>
+      </PageContainer>
     </main>
   )
 }

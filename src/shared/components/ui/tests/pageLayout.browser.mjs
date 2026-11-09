@@ -33,9 +33,9 @@ import {AdminAcademicTermsPage} from '/src/features/academic-terms/pages/AdminAc
 import {AdminNotFoundPage} from '/src/features/users/pages/AdminNotFoundPage.tsx';
 import {AdminReadPage} from '/src/features/users/pages/AdminReadPage.tsx';
 import {AdminNewsPage} from '/src/features/portal-news/pages/AdminNewsPage.tsx';
-import {NewsPage} from '/src/features/portal-news/pages/NewsPage.tsx';
+import {NewsPage,NewsDetailPage} from '/src/features/portal-news/pages/NewsPage.tsx';
 import {AdminServicesPage} from '/src/features/portal-services/pages/AdminServicesPage.tsx';
-import {ServicesPage} from '/src/features/portal-services/pages/ServicesPage.tsx';
+import {ServicesPage,ServiceDetailPage} from '/src/features/portal-services/pages/ServicesPage.tsx';
 import {AdminInformationPage} from '/src/features/portal-information/pages/AdminInformationPage.tsx';
 import {InformationPage} from '/src/features/portal-information/pages/InformationPage.tsx';
 import {AdminCalendarPage} from '/src/features/portal-calendar/pages/AdminCalendarPage.tsx';
@@ -99,6 +99,11 @@ const fixtures={
   // U3.1: exam detail (loaded) and a server failure (error state, simulated 500).
   '/teacher/exams/5':{data:{id:5,name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',subject_code:'QA-111',exam_date:'2026-11-20',start_time:'10:00:00',duration_minutes:90,status:'SCHEDULED',course_offering_id:7,rules:'Sin material de consulta.',updated_at:'2026-11-08T10:00:00-04:00',can_edit:true,can_cancel:true,academic_term_name:'Periodo QA 2026',evaluation_type:'partial',room:{id:1,code:'QA-101',name:'Aula QA 101'}}},
   '/teacher/exams/99':{__status:500},
+  // R3: public news/service details (loaded and server failure).
+  '/portal/news/41':{data:{id:41,title:'Noticia QA publicada',summary:'Resumen QA.',content:'Contenido QA de la noticia publicada.',image_url:null,published_at:'2026-11-04T10:00:00-04:00'}},
+  '/portal/news/99':{__status:500},
+  '/portal/services/42':{data:{id:42,name:'Servicio QA activo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/activo',display_order:1}},
+  '/portal/services/99':{__status:500},
   // U3.2: collaborators of exam 5, the collaborator's own exams and the assign dialog's user search.
   '/exams/5/collaborators':{data:[{id:1,user_id:21,display_name:'Colaborador QA con nombre extenso',email:'colaborador.qa@example.edu',identity_number:'QA-21',profile_photo_url:null,assigned_at:'2026-11-08T10:00:00-04:00',assigned_by:1,assigned_by_name:'Docente QA'}]},
   '/me/collaborations':{data:[{exam_id:5,exam_name:'Parcial QA de programación',subject_name:'Materia QA de programación con un nombre largo',exam_date:'2026-11-20',start_time:'10:00:00',duration_minutes:90,room:'Aula QA 101'}]},
@@ -139,8 +144,10 @@ const routes=[
 ].map((route)=>({...route,element:e('main',{'data-qa':'layout-main'},route.element)})).concat([
   {path:'/admin/portal/news',element:e('main',{'data-qa':'layout-main'},e(AdminNewsPage))},
   {path:'/news',element:e(NewsPage)},
+  {path:'/news/:newsId',element:e(NewsDetailPage)},
   {path:'/admin/portal/services',element:e('main',{'data-qa':'layout-main'},e(AdminServicesPage))},
   {path:'/services',element:e(ServicesPage)},
+  {path:'/services/:serviceId',element:e(ServiceDetailPage)},
   {path:'/admin/portal/information',element:e('main',{'data-qa':'layout-main'},e(AdminInformationPage))},
   {path:'/information',element:e(InformationPage)},
   {path:'/teacher/students/:courseOfferingId',element:e(TeacherSubjectStudentsPage)},
@@ -225,12 +232,17 @@ const screens = [
     description: 'Consulta los exámenes en los que tienes una autorización temporal y accede a las herramientas de control de ingreso.', rows: ['Parcial QA de programación', 'Control de ingreso'] },
   { path: '/collaborator#error', title: 'Apartado de colaborador', crumbs: [], structural: true, card: true, collab: 'error', authUser: { id: 21, must_change_password: false }, overrides: { '/me/collaborations': 500 },
     description: 'Consulta los exámenes en los que tienes una autorización temporal y accede a las herramientas de control de ingreso.', rows: ['Reintentar'] },
+  // R3: public details keep their generic h1 and exact breadcrumbs; the item title stays in the content.
+  { path: '/news/41', title: 'Detalle de noticia', crumbs: ['Inicio', 'Detalle de noticia'], kind: 'portal-detail', back: 'Volver a noticias', rows: ['Noticia QA publicada', 'Contenido QA de la noticia publicada.'] },
+  { path: '/news/99', title: 'Detalle de noticia', crumbs: ['Inicio', 'Detalle de noticia'], kind: 'portal-detail', back: 'Volver a noticias', detailError: true, rows: ['Reintentar'] },
+  { path: '/services/42', title: 'Detalle de servicio', crumbs: ['Inicio', 'Detalle de servicio'], kind: 'portal-detail', back: 'Volver a servicios', rows: ['Servicio QA activo'] },
+  { path: '/services/99', title: 'Detalle de servicio', crumbs: ['Inicio', 'Detalle de servicio'], kind: 'portal-detail', back: 'Volver a servicios', detailError: true, rows: ['Reintentar'] },
   // StudentLayout owns main; shared breadcrumbs preserve the provisional title accent.
   { path: '/students/profile', title: 'Mi perfil', crumbs: ['Inicio', 'Mi perfil'], structural: true, student: true,
     description: 'Consulta tu información personal y académica registrada en el sistema.', rows: ['QA-STU-01'] },
   { path: '/students/qr', title: 'Mis exámenes', crumbs: ['Inicio', 'Mis exámenes'], structural: true, student: true,
     description: 'Consulta tus exámenes programados y accede a tu código QR cuando esté disponible.', rows: ['Parcial QA de programación'] },
-].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'u3f2' ? screen.collab : process.env.EIDA_LAYOUT_SCOPE === 'u3f1' ? screen.examDetail : process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
+].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'r3' ? screen.kind === 'portal-detail' : process.env.EIDA_LAYOUT_SCOPE === 'u3f2' ? screen.collab : process.env.EIDA_LAYOUT_SCOPE === 'u3f1' ? screen.examDetail : process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
 // Collected in the page: structure, visibility and overflow of the key elements.
 const inspect = `(()=>{
@@ -273,6 +285,7 @@ const inspect = `(()=>{
 let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const results = []
+const detailLooks = {}
 const widths = process.env.EIDA_LAYOUT_WIDTHS?.split(',').map(Number) ?? [320,390,768,1024,1440]
 // Run only the requested screens without repeating unrelated migrations.
 const selectedPaths = process.env.EIDA_LAYOUT_PATHS?.split(',')
@@ -447,6 +460,23 @@ try {
         check(await evaluate(`document.activeElement?.textContent.trim()==='+ Asignar colaborador'`), 'foco no devuelto a «+ Asignar colaborador»')
         check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`), 'escritura inesperada en colaboradores')
       }
+      if (screen.kind === 'portal-detail') {
+        // R3 contract: 960px reading width like the public lists, PageHeader spacing and h1 scale.
+        if (!baseline && !page.layout) check(false, 'detalle público sin cabecera/contenedor comunes')
+        if (!baseline && page.layout) {
+          check(page.layout?.maxWidth === '960px' && page.layout?.headerGap === '24px' && page.layout?.breadcrumbGap === '24px', 'contrato de detalle público: ' + JSON.stringify(page.layout))
+          check(page.h1[0]?.lineHeight === (width <= 640 ? '30px' : '40px'), 'altura de línea H1 ' + page.h1[0]?.lineHeight)
+          const expectedWidth = Math.min(page.client, 960), padding = page.layout.padding.split(' '), gutter = parseFloat(padding[1] ?? padding[0])
+          check(Math.abs(page.layout.width - expectedWidth) <= 1 && Math.abs(page.layout.x - ((page.client - expectedWidth) / 2 + gutter)) <= 1, 'alineación del detalle: ' + JSON.stringify(page.layout))
+        }
+        // Styles of "Volver a…" and of the error "Reintentar" button (portalBase .page button) must not change.
+        const look = await evaluate(`(()=>{const pick=(el)=>{if(!el)return null;const s=getComputedStyle(el);return [s.minHeight,s.paddingTop,s.paddingLeft,s.borderTopWidth,s.borderTopStyle,s.borderTopColor,s.borderTopLeftRadius,s.backgroundColor,s.color,s.fontSize,s.fontWeight,s.textDecorationLine].join('|')};
+          const back=[...document.querySelectorAll('main a')].find(a=>a.textContent.trim()===${JSON.stringify(screen.back)}),retry=[...document.querySelectorAll('main button')].find(b=>b.textContent.trim()==='Reintentar');
+          return {back:pick(back),retry:pick(retry),alert:!!document.querySelector('main [role=alert]'),article:!!document.querySelector('main article')}})()`)
+        check(look.back, 'falta «' + screen.back + '»')
+        if (screen.detailError) check(look.alert && look.retry, 'estado de error sin alerta o sin Reintentar')
+        detailLooks[`${screen.path}@${width}`] = look
+      }
       if (!baseline && screen.student) {
         // Accent underline kept provisionally (no Figma reference to verify); the content panels stay as cards.
         const student = await evaluate(`(()=>{const h=document.querySelector('h1'),a=getComputedStyle(h,'::after');
@@ -608,6 +638,16 @@ try {
     }
   }
   await writeFile(join(evidence, 'result.json'), JSON.stringify(results, null, 2))
+  // R3: compare the "Volver a…"/"Reintentar" styles with a snapshot taken before the change.
+  if (Object.keys(detailLooks).length) {
+    await writeFile(join(evidence, 'portal-detail-styles.json'), JSON.stringify(detailLooks, null, 2))
+    if (process.env.EIDA_PORTAL_DETAIL_BASELINE) {
+      const before = JSON.parse(await readFile(process.env.EIDA_PORTAL_DETAIL_BASELINE, 'utf8'))
+      const changed = Object.keys(detailLooks).filter((key) => before[key] && (before[key].back !== detailLooks[key].back || before[key].retry !== detailLooks[key].retry))
+      assert.deepEqual(changed, [], 'estilos de «Volver a…»/«Reintentar» distintos de la instantánea previa')
+      console.log(`R3: estilos de «Volver a…» y «Reintentar» idénticos a la instantánea previa (${Object.keys(before).length} combinaciones)`)
+    }
+  }
   if (!baseline) for (const width of widths) {
     const admin=results.filter(result=>result.width===width && ['/admin/students/manage','/admin/teachers','/admin/users/manage','/admin/users/roles','/admin/users/15/roles','/admin/users/history','/admin/students/import','/admin/teachers/assignments/import'].includes(result.path))
     // Tall CSV pages reserve the browser's vertical scrollbar: compare the shared contract,

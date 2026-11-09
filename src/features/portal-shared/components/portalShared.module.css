@@ -566,3 +566,8 @@
     justify-content: flex-start;
   }
 }
+
+/* R3: PortalPageLayout body keeps .page for descendant styles; PageContainer owns the padding. */
+.portalPageBody.portalPageBody {
+  padding: 0;
+}

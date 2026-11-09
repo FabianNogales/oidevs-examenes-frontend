@@ -539,3 +539,12 @@ Bloqueos pendientes:
 - `adminEntityProfile.browser` comprueba también que las opciones de la barra lateral y la cabecera (avatar, nombre, insignias) estén dentro del viewport y sin recortes, y que la cabecera vaya en columna solo por debajo de 480px.
 - Validación: **10/10** (estudiante y docente a 320/390/768/1024/1440px; antes 6/10); focalizadas 194/194; `historicalPhoto.browser` PASS; guardas 5/5 frente a f3e4a3c; Node 883/884; `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## R3 — Detalles públicos de noticias y servicios (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base ff2f2c0. Solo frontend; 0 escrituras (fixtures).
+- Antes (reproducido, `pageLayout.browser` 20/20 FAIL): `NewsDetailPage` y `ServiceDetailPage` usaban `PortalPageLayout` (`main.publicPage.page` de 960px con padding propio, migas y un `h1` sin estilo de 40px), distinto de sus listas, que ya usan `PageContainer narrow` + `PageHeader`.
+- `PortalPageLayout` (solo estos dos consumidores): `main` + `PageContainer width="narrow"` + `PageHeader` con el mismo título genérico y las **mismas migas** («Inicio › Detalle de noticia/servicio»). El contenido va en un `div` con `.page` (estilos de descendientes de portalBase: botones y foco) y la nueva clase local `.portalPageBody` sin padding (mismo patrón que las listas). El título de la noticia/servicio sigue en su `h2`/tarjeta; «Volver a…», `PortalFeedback`, artículo y tarjeta sin cambios.
+- Prueba: `pageLayout.browser` añade los dos detalles cargados y con error (500) a 320–1440px (960px, separaciones y escala de `PageHeader`, alineación, migas exactas, un `main` y un `h1`, sin desbordamiento) y compara los estilos calculados de «Volver a…» y «Reintentar» con una instantánea tomada antes del cambio: **idénticos en las 20 combinaciones**.
+- Validación: detalles 20/20 (antes 0/20); `pageLayout.browser` completo 215/215; `adminEntityProfile.browser` 10/10; Node del portal (incluye news/services integration) + `pageLayout.test` + cssContracts 152/152; guardas 5/5 frente a ff2f2c0; Node 883/884; `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+- Sin revisión humana; revisión técnica asistida por IA.
