@@ -530,3 +530,12 @@ Bloqueos pendientes:
 - `pageContract.mjs` añade `alertText` (texto exacto de la alerta dentro del `main`). Las pruebas de infracciones, expulsiones, asistencia y reportes añaden los 8 estados.
 - Validación: estados no válidos **40/40** (8 × 320/390/768/1024/1440) y todos los estados previos de contrato (125 en total) con sus flujos funcionales; `pageLayout.test` + `mainLandmarks` + Node de las 4 features 70/70; Node 883/884; `tsc` + build OK; guardas Programar Evaluación y Editar examen 5/5 frente a 238f5ec; lista ESLint idéntica a la base de 36; `git diff --check` OK.
 - Sin revisión humana; revisión técnica asistida por IA.
+
+## R1 responsive — Perfiles administrativos a 320–479px (2026-11-08) ✅
+
+- Rama ds/sync-arqmoc-erick, base f3e4a3c. Alternativa 1 autorizada (continúa R1b, que se había detenido).
+- Antes (prueba endurecida, sin excepción a 320px): 6/10. A 320px desbordamiento (la rejilla de una columna tomaba el ancho mínimo de la barra lateral y del perfil: 391/361px), opciones de la barra lateral fuera del viewport y cabecera del perfil sin espacio (~64px para nombre e insignias junto al avatar de 96px); a 390px la cabecera seguía en fila.
+- `EntityProfileLayout.module.css`: en `@media (max-width: 900px)` la rejilla pasa de `1fr` a `minmax(0, 1fr)` (como la pista de escritorio); nuevo `@media (max-width: 479px)` con `.banner` en columna (avatar encima del nombre). Avatar, nombre, insignias, pestañas, barra lateral y «Regresar» se conservan; sin cambios de lógica, rutas, permisos ni datos.
+- `adminEntityProfile.browser` comprueba también que las opciones de la barra lateral y la cabecera (avatar, nombre, insignias) estén dentro del viewport y sin recortes, y que la cabecera vaya en columna solo por debajo de 480px.
+- Validación: **10/10** (estudiante y docente a 320/390/768/1024/1440px; antes 6/10); focalizadas 194/194; `historicalPhoto.browser` PASS; guardas 5/5 frente a f3e4a3c; Node 883/884; `tsc` + build OK; lista ESLint idéntica a la base de 36; `git diff --check` OK.
+- Sin revisión humana; revisión técnica asistida por IA.

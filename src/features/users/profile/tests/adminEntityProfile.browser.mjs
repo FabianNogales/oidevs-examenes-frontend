@@ -61,14 +61,27 @@ const inspect = `(()=>{
   const active=[...document.querySelectorAll('nav[aria-label="Opciones del perfil"] button')].find(b=>/Active/.test(b.className));
   return {mains:document.querySelectorAll('main').length,h1s:h1s.length,title:h1?.textContent.trim(),regionContainsH1:!!region&&region.contains(h1),
     activeTab:active?.textContent.trim(),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1,
-    // Elements reaching beyond the viewport, split between the profile sidebar and everything else.
-    overflowing:[...document.querySelectorAll('#root *')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.right>document.documentElement.clientWidth+1}).map(el=>({inSidebar:(()=>{const grid=document.querySelector('aside')?.parentElement;const asideRight=document.querySelector('aside')?.getBoundingClientRect().right??0;return !!grid&&(grid.contains(el)||el.contains(grid))&&el.getBoundingClientRect().right<=asideRight+1})(),label:el.tagName+'.'+String(el.className).slice(0,40)+' '+Math.round(el.getBoundingClientRect().left)+'-'+Math.round(el.getBoundingClientRect().right)}))}
+    overflowing:[...document.querySelectorAll('#root *')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.right>document.documentElement.clientWidth+1}).slice(0,6).map(el=>el.tagName+'.'+String(el.className).slice(0,40)+' '+Math.round(el.getBoundingClientRect().left)+'-'+Math.round(el.getBoundingClientRect().right)),
+    // Sidebar options and "Regresar": fully visible, not clipped, not overlapping each other.
+    sidebar:(()=>{const items=[...document.querySelectorAll('aside button')],vw=document.documentElement.clientWidth,out=[];
+      items.forEach((b,i)=>{const r=b.getBoundingClientRect();const label=b.textContent.trim().replace(/^‹\\s*/,'');
+        if(r.left<-1||r.right>vw+1)out.push(label+' fuera del viewport');
+        if(b.scrollWidth>b.clientWidth+1)out.push(label+' recortado');
+        const next=items[i+1]?.getBoundingClientRect();if(next&&Math.min(r.bottom,next.bottom)-Math.max(r.top,next.top)>1&&Math.min(r.right,next.right)-Math.max(r.left,next.left)>1)out.push(label+' se solapa')});
+      return {count:items.length,problems:out}})(),
+    // Profile header: avatar, name and badges present, inside the viewport and not clipped; avatar above the
+    // name below 480px (R1 responsive), beside it from 480px up.
+    banner:(()=>{const h=document.querySelector('section[aria-labelledby] header');if(!h)return {problems:['sin cabecera']};
+      const vw=document.documentElement.clientWidth,avatar=h.firstElementChild,name=h.querySelector('h1'),badges=[...h.querySelectorAll('span')].filter(el=>/Badge/.test(el.className));
+      const out=[];for(const el of [avatar,name,...badges]){if(!el){out.push('falta elemento');continue}const r=el.getBoundingClientRect();
+        if(r.width===0||r.left<-1||r.right>vw+1)out.push((el.textContent||el.tagName).trim().slice(0,20)+' fuera');if(el.scrollWidth>el.clientWidth+1)out.push((el.textContent||'').trim().slice(0,20)+' recortado')}
+      const a=avatar.getBoundingClientRect(),n=name.getBoundingClientRect();
+      return {problems:out,badges:badges.length,stacked:a.bottom<=n.top+1}})()}
 })()`
 
 let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const failures = []
-const knownOverflow = new Set()
 try {
   browserProfile = await createBrowserProfile('r1-entity-profile')
   process.env.EIDA_DEV_HTTPS_KEY = ''
@@ -141,12 +154,9 @@ try {
       if (page.h1s !== 1 || page.title !== profile.fullName) problems.push(`h1 ${page.h1s} «${page.title}»`)
       if (!page.regionContainsH1) problems.push('región del perfil sin etiquetar por el h1')
       if (page.activeTab !== 'Perfil') problems.push('pestaña inicial ' + page.activeTab)
-      // Known pre-existing defect (outside R1, CSS not authorised): at 320px the single-column profile grid
-      // takes the sidebar's min-content width (min-width:auto), so the sidebar and the profile area beside it
-      // reach beyond the viewport, never past the sidebar's right edge. Any other overflow fails.
-      const foreign = page.overflowing.filter((item) => !item.inSidebar)
-      if (page.overflow && (width !== 320 || foreign.length)) problems.push('desbordamiento horizontal: ' + (foreign.length ? foreign : page.overflowing).map((item) => item.label).slice(0, 6).join(', '))
-      if (page.overflow && width === 320 && !foreign.length) knownOverflow.add(profile.name)
+      if (page.overflow) problems.push('desbordamiento horizontal: ' + page.overflowing.join(', '))
+      if (page.sidebar.count < 3 || page.sidebar.problems.length) problems.push('barra lateral: ' + JSON.stringify(page.sidebar))
+      if (page.banner.problems.length || page.banner.badges < 2 || page.banner.stacked !== (width < 480)) problems.push('cabecera del perfil: ' + JSON.stringify(page.banner))
       if (width === 390 || width === 1440) {
         const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
         await writeFile(join(evidence, `${profile.name}-${width}.png`), Buffer.from(shot.data, 'base64'))
@@ -156,9 +166,8 @@ try {
       await wait(`[...document.querySelectorAll('nav[aria-label="Opciones del perfil"] button')].find(b=>/Active/.test(b.className))?.textContent.trim()==='Editar datos'`, `${profile.name}: pestaña Editar datos`)
       const edited = await evaluate(inspect)
       const editedForm = await evaluate(`!!document.querySelector('main form')`)
-      const editedForeign = edited.overflowing.filter((item) => !item.inSidebar)
-      if (edited.mains !== 1 || !editedForm || (edited.overflow && (width !== 320 || editedForeign.length)))
-        problems.push('pestaña Editar datos: ' + JSON.stringify({ mains: edited.mains, form: editedForm, overflow: editedForeign.map((item) => item.label).slice(0, 4) }))
+      if (edited.mains !== 1 || !editedForm || edited.overflow || edited.sidebar.problems.length)
+        problems.push('pestaña Editar datos: ' + JSON.stringify({ mains: edited.mains, form: editedForm, overflow: edited.overflowing.slice(0, 4), sidebar: edited.sidebar.problems }))
       // "Regresar" goes back to the module list.
       await clickText('Regresar')
       await wait(`window.__router.state.location.pathname===${JSON.stringify(profile.back)}`, `${profile.name}: Regresar`)
@@ -171,8 +180,7 @@ try {
   if (calls.some((call) => !call.startsWith('get '))) failures.push('escrituras: ' + calls.filter((call) => !call.startsWith('get ')).join(', '))
   if (unexpected.length) console.log('Peticiones GET sin fixture (respondidas 404, no bloquean el contrato): ' + [...new Set(unexpected)].join(', '))
   if (exceptions.length) failures.push('excepciones JS: ' + exceptions.join(' | '))
-  if (knownOverflow.size) console.log(`Defecto previo conocido (fuera de R1): desbordamiento de la barra lateral a 320px en ${[...knownOverflow].join(' y ')}`)
-  await writeFile(join(evidence, 'result.json'), JSON.stringify({ fixtureOnly: true, failures, knownOverflow: [...knownOverflow], calls, unexpected }, null, 2))
+  await writeFile(join(evidence, 'result.json'), JSON.stringify({ fixtureOnly: true, failures, calls, unexpected }, null, 2))
   assert.deepEqual(failures, [], 'perfiles administrativos')
   console.log(`QA perfiles administrativos PASS ${profiles.length * 5}/${profiles.length * 5} · evidencia en ${evidence}`)
 } finally {

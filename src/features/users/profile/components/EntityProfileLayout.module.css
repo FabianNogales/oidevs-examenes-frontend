@@ -706,11 +706,22 @@
 
 @media (max-width: 900px) {
   .layoutWrapper {
-    grid-template-columns: 1fr;
+    /* R1 responsive: like the desktop track, the single column never grows past the viewport to fit the
+       sidebar's longest option or long profile values. */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .infoGrid,
   .editForm {
     grid-template-columns: 1fr;
+  }
+}
+
+/* R1 responsive: below 480px the profile header stacks the avatar above the name and badges, so the
+   identity uses the full width instead of the ~64px left beside the 96px avatar at 320px. */
+@media (max-width: 479px) {
+  .banner {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
