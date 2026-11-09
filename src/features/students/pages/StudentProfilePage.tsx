@@ -23,6 +23,10 @@ export function StudentProfilePage() {
       <PageHeader
         title="Mi perfil"
         titleId={titleId}
+        breadcrumbs={[
+          { label: 'Inicio', to: '/' },
+          { label: 'Mi perfil', to: '/students/profile' },
+        ]}
         description="Consulta tu información personal y académica registrada en el sistema."
       />
 

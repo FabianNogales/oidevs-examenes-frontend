@@ -79,6 +79,10 @@ export function StudentQrPage() {
       <PageHeader
         title="Mis exámenes"
         titleId={titleId}
+        breadcrumbs={[
+          { label: 'Inicio', to: '/' },
+          { label: 'Mis exámenes', to: '/students/qr' },
+        ]}
         description="Consulta tus exámenes programados y accede a tu código QR cuando esté disponible."
       />
 

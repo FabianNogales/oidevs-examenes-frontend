@@ -19,7 +19,7 @@ await mkdir(evidence, { recursive: true })
 const demo = `
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-import {createMemoryRouter, RouterProvider} from 'react-router';
+import {createMemoryRouter, RouterProvider, Link} from 'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
 import '@fontsource/poppins/500.css';
@@ -153,6 +153,9 @@ const routes=[
   {path:'/collaborator',element:e(CollaborationsProvider,null,e(CollaboratorPage))},
   {path:'/students',element:e(StudentLayout),children:[{path:'profile',element:e(StudentProfilePage)},{path:'qr',element:e(StudentQrPage)}]},
 ]).map(route=>({...route,element:e(React.Fragment,null,e(Header,{user:route.path.startsWith('/admin')?{name:'Administradora QA con nombre y apellidos extraordinariamente largos',role:'admin'}:null}),route.element)}));
+// Navigation fixture for the real student breadcrumb. No backend or production home data involved.
+routes.push({path:'/',element:e('main',{'data-qa-home':true},e('h1',null,'Inicio QA'),
+  e(Link,{to:'/students/profile'},'Mi perfil'),e(Link,{to:'/students/qr'},'Mis exámenes'))});
 const root=createRoot(document.getElementById('root'));
 qa.show=(path)=>{qa.calls=[];qa.unexpected=[];qa.overrides=qa.nextOverrides??{};qa.authUser=qa.nextAuthUser;qa.nextOverrides=undefined;qa.nextAuthUser=undefined;root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
 `
@@ -222,10 +225,10 @@ const screens = [
     description: 'Consulta los exámenes en los que tienes una autorización temporal y accede a las herramientas de control de ingreso.', rows: ['Parcial QA de programación', 'Control de ingreso'] },
   { path: '/collaborator#error', title: 'Apartado de colaborador', crumbs: [], structural: true, card: true, collab: 'error', authUser: { id: 21, must_change_password: false }, overrides: { '/me/collaborations': 500 },
     description: 'Consulta los exámenes en los que tienes una autorización temporal y accede a las herramientas de control de ingreso.', rows: ['Reintentar'] },
-  // U2: student pages inside StudentLayout's main (no breadcrumbs: none existed; accent kept pending Figma).
-  { path: '/students/profile', title: 'Mi perfil', crumbs: [], structural: true, student: true,
+  // StudentLayout owns main; shared breadcrumbs preserve the provisional title accent.
+  { path: '/students/profile', title: 'Mi perfil', crumbs: ['Inicio', 'Mi perfil'], structural: true, student: true,
     description: 'Consulta tu información personal y académica registrada en el sistema.', rows: ['QA-STU-01'] },
-  { path: '/students/qr', title: 'Mis exámenes', crumbs: [], structural: true, student: true,
+  { path: '/students/qr', title: 'Mis exámenes', crumbs: ['Inicio', 'Mis exámenes'], structural: true, student: true,
     description: 'Consulta tus exámenes programados y accede a tu código QR cuando esté disponible.', rows: ['Parcial QA de programación'] },
 ].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'u3f2' ? screen.collab : process.env.EIDA_LAYOUT_SCOPE === 'u3f1' ? screen.examDetail : process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
@@ -246,6 +249,8 @@ const inspect = `(()=>{
     client:document.documentElement.clientWidth,
     layout:header&&container?{x:r(h1s[0]).left,width:r(container).width,maxWidth:getComputedStyle(container).maxWidth,padding:getComputedStyle(container).padding,breadcrumbGap:nav?getComputedStyle(nav).marginBottom:null,headerGap:getComputedStyle(header).marginBottom,descriptionGap:description?getComputedStyle(description).marginTop:null}:null,
     descriptionX:description?r(description).left:null,
+    vertical:header?{navTop:nav?r(nav).top:null,navBottom:nav?r(nav).bottom:null,headingTop:r(h1s[0]).top,
+      headerTop:r(header).top,headerBottom:r(header).bottom,contentTop:header.nextElementSibling?r(header.nextElementSibling).top:null}:null,
     escapedControls,
     headingSurface:(()=>{for(let el=h1s[0];el;el=el.parentElement){const bg=getComputedStyle(el).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')return bg}return getComputedStyle(document.body).backgroundColor})(),
     bodySurface:getComputedStyle(document.body).backgroundColor,
@@ -269,6 +274,10 @@ let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const results = []
 const widths = process.env.EIDA_LAYOUT_WIDTHS?.split(',').map(Number) ?? [320,390,768,1024,1440]
+// Run only the requested screens without repeating unrelated migrations.
+const selectedPaths = process.env.EIDA_LAYOUT_PATHS?.split(',')
+const selectedScreens = selectedPaths ? screens.filter(screen => selectedPaths.includes(screen.path)) : screens
+assert.ok(selectedScreens.length, 'No matching pageLayout screens')
 try {
   browserProfile = await createBrowserProfile('ds21-page-layout')
   const profile = browserProfile.dir
@@ -362,7 +371,7 @@ try {
   for (const width of widths) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
     await pause(150)
-    for (const screen of screens) {
+    for (const screen of selectedScreens) {
       const label = `${width}px ${screen.title}`
       const before = { exceptions: exceptions.length, console: consoleErrors.length }
       await evaluate(`window.__qaActions=${JSON.stringify(screen.actions ?? [])};pageLayoutQa.nextOverrides=${JSON.stringify(screen.overrides ?? {})};pageLayoutQa.nextAuthUser=${JSON.stringify(screen.authUser ?? null) === 'null' ? 'undefined' : JSON.stringify(screen.authUser)};pageLayoutQa.show(${JSON.stringify(screen.path)})`)
@@ -444,6 +453,10 @@ try {
           const panels=[...document.querySelectorAll('main section, main article, main div')].filter(el=>{const s=getComputedStyle(el);return s.backgroundColor==='rgb(255, 255, 255)'&&parseFloat(s.borderTopLeftRadius)>=12}).length;
           return {accent:a.content!=='none'&&a.backgroundColor!=='rgba(0, 0, 0, 0)',accentWidth:a.width,panels,mainId:document.querySelector('main')?.id}})()`)
         check(student.accent && student.panels >= 1 && student.mainId === 'student-content', 'contrato de estudiante: ' + JSON.stringify(student))
+        check(JSON.stringify(page.links) === JSON.stringify(['/']), 'Inicio debe enlazar a /')
+        const v=page.vertical;
+        check(v.navTop>=0 && v.navBottom<=v.headerTop && v.headerBottom<=v.contentTop && v.contentTop<900,
+          'espacio vertical/solapamiento: '+JSON.stringify(v))
       }
       if (screen.csv) check(page.fileInputs >= 1 && page.templateButton, 'archivo o plantilla CSV ausente')
       if (screen.description) check(page.text.includes(screen.description), 'descripción ausente')
@@ -579,7 +592,18 @@ try {
         const selectedShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:true})
         await writeFile(join(evidence,shotName.replace('.png','-selected.png')),Buffer.from(selectedShot.data,'base64'))
       }
-      results.push({ width, path:screen.path, screen: screen.title, pass: failures.length === 0, failures, layout:page.layout, heading:page.h1[0], surface:page.headingSurface, breadcrumbs:page.crumbs, visibleButtons: page.panelButtons.slice(0, 12) })
+      if (!baseline && screen.student) {
+        // Real pointer navigation to Inicio and back through the explicitly registered student routes.
+        const point=await evaluate(`(()=>{const a=document.querySelector('nav[aria-label="Ruta de navegación"] a');a.scrollIntoView({block:'center'});a.focus();const r=a.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}})()`)
+        await send('Input.dispatchMouseEvent',{type:'mousePressed',...point,button:'left',clickCount:1})
+        await send('Input.dispatchMouseEvent',{type:'mouseReleased',...point,button:'left',clickCount:1})
+        await wait(`!!document.querySelector('[data-qa-home]')`, `${label}: navegar a Inicio`)
+        await evaluate(`(()=>{const a=[...document.querySelectorAll('[data-qa-home] a')].find(a=>a.getAttribute('href')===${JSON.stringify(screen.path)});a.focus();a.click()})()`)
+        await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(screen.title)}`, `${label}: volver a ruta real`)
+        await wait(`${JSON.stringify(screen.rows)}.every((t)=>document.body.innerText.includes(t))`, `${label}: contenido al volver`)
+        check(await evaluate(`document.querySelectorAll('main').length===1 && document.querySelectorAll('h1').length===1`), 'landmarks tras navegar')
+      }
+      results.push({ width, path:screen.path, screen: screen.title, pass: failures.length === 0, failures, layout:page.layout, vertical:page.vertical, heading:page.h1[0], surface:page.headingSurface, breadcrumbs:page.crumbs, visibleButtons: page.panelButtons.slice(0, 12) })
       console.log(`${failures.length ? 'FAIL' : 'PASS'} ${label}${failures.length ? ': ' + failures.join(' · ') : ''}`)
     }
   }
