@@ -1,11 +1,12 @@
-import { useProfileRecords } from '../hooks/useProfileRecords'
-import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
+import { Badge, Card, Heading, Text } from '@/shared/components/ui/index'
+import { useProfileRecords } from '../hooks/useProfileRecords'
+import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
@@ -19,13 +20,23 @@ interface TeacherSubjectItem extends BaseTableEntity {
 }
 
 function getGroupTypeLabel(careersCount: number): string {
-  return careersCount > 1 ? 'Varias carreras asociadas' : careersCount === 1 ? 'Una carrera asociada' : 'Sin carreras asociadas'
+  return careersCount > 1
+    ? 'Varias carreras asociadas'
+    : careersCount === 1
+      ? 'Una carrera asociada'
+      : 'Sin carreras asociadas'
 }
 
-export function TeacherActiveSubjectsTab({ entity }: ProfileTabComponentProps) {
+export function TeacherActiveSubjectsTab({
+  entity,
+}: ProfileTabComponentProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const records = useProfileRecords<TeacherSubjectItem>(entity, 'subjects', searchQuery)
+  const records = useProfileRecords<TeacherSubjectItem>(
+    entity,
+    'subjects',
+    searchQuery,
+  )
   const filteredSubjects = records.items
 
   const cardFields = useMemo<readonly CardFieldDef<TeacherSubjectItem>[]>(
@@ -63,7 +74,9 @@ export function TeacherActiveSubjectsTab({ entity }: ProfileTabComponentProps) {
         cell: (item) => {
           const isMixed = item.careers.length > 1
           return (
-            <span
+            <Badge
+              tone={isMixed ? 'warning' : 'info'}
+              size="sm"
               className={`${layoutStyles.rolePill} ${
                 isMixed
                   ? layoutStyles.rolePillCollaborator
@@ -71,7 +84,7 @@ export function TeacherActiveSubjectsTab({ entity }: ProfileTabComponentProps) {
               }`}
             >
               {getGroupTypeLabel(item.careers.length)}
-            </span>
+            </Badge>
           )
         },
       },
@@ -89,19 +102,22 @@ export function TeacherActiveSubjectsTab({ entity }: ProfileTabComponentProps) {
   )
 
   return (
-    <section className={layoutStyles.sectionCard}>
+    <Card as="section" className={layoutStyles.sectionCard}>
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <h2>Materias que dicta</h2>
-          <p>
+          <Heading level={2}>Materias que dicta</Heading>
+          <Text variant="small" tone="secondary">
             Asignaturas y grupos asignados al docente{' '}
             <strong>
               {entity.first_names} {entity.last_names}
             </strong>{' '}
             durante la gestión académica activa.
-          </p>
+          </Text>
         </div>
-        <ProfileActiveTermBadge className={layoutStyles.termBadge} label="Gestión activa" />
+        <ProfileActiveTermBadge
+          className={layoutStyles.termBadge}
+          label="Gestión activa"
+        />
       </div>
 
       <DataCardGrid
@@ -120,6 +136,6 @@ export function TeacherActiveSubjectsTab({ entity }: ProfileTabComponentProps) {
         emptyTitle="Sin materias asignadas en la gestión actual"
         emptyDescription="El docente no registra grupos activos o no existen coincidencias con la búsqueda."
       />
-    </section>
+    </Card>
   )
 }

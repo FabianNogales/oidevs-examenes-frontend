@@ -157,11 +157,18 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 
+const BaseComponent = (Component ??
+  class {
+    props!: ErrorBoundaryProps
+    state!: ErrorBoundaryState
+    setState(_next: Partial<ErrorBoundaryState>) {}
+  }) as typeof Component
+
 /**
  * Global ErrorBoundary utility component:
  * Catches rendering errors in its subtree and displays a uniform `ErrorState` or custom fallback.
  */
-export class ErrorBoundary extends Component<
+export class ErrorBoundary extends BaseComponent<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {

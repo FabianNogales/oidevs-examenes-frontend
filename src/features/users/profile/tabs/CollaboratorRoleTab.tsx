@@ -1,10 +1,12 @@
-import { useProfileRecords } from '../hooks/useProfileRecords'
 import { useState, useMemo } from 'react'
+import { CheckCircle2, History } from 'lucide-react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
+import { Badge, Card, Heading, Icon, Text } from '@/shared/components/ui/index'
+import { useProfileRecords } from '../hooks/useProfileRecords'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
@@ -38,7 +40,12 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
     useState<CollaborationTabFilter>('ACTIVE')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const records = useProfileRecords<CollaboratorAssignmentItem>(entity, 'collaborations', searchQuery, selectedTab)
+  const records = useProfileRecords<CollaboratorAssignmentItem>(
+    entity,
+    'collaborations',
+    searchQuery,
+    selectedTab,
+  )
   const filteredCollaborations = records.items
   const totalActiveCount = records.summary?.active ?? 0
   const totalCompletedCount = records.summary?.completed ?? 0
@@ -95,7 +102,13 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
           <div className={cardStyles.inlinePairedRow}>
             <span className={tableStyles.primaryText}>{item.assignedAt}</span>
             <span className={cardStyles.inlineSecondaryLabel}>Examen</span>
-            <span className={layoutStyles.examTypeBadge}>{item.examType}</span>
+            <Badge
+              tone="accent"
+              size="sm"
+              className={layoutStyles.examTypeBadge}
+            >
+              {item.examType}
+            </Badge>
           </div>
         ),
       },
@@ -112,15 +125,15 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         : 'el estudiante'
 
   return (
-    <section className={layoutStyles.sectionCard}>
+    <Card as="section" className={layoutStyles.sectionCard}>
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <h2>Rol colaborador en control de exámenes</h2>
-          <p>
+          <Heading level={2}>Rol colaborador en control de exámenes</Heading>
+          <Text variant="small" tone="secondary">
             {isShowingActive
               ? `Designaciones vigentes donde ${entity.first_names} ${entity.last_names} es colaborador actualmente.`
               : `Ultima asignacion conservada por examen donde ${entity.first_names} ${entity.last_names} fue colaborador.`}
-          </p>
+          </Text>
         </div>
 
         <div
@@ -137,6 +150,7 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
             }`}
             onClick={() => setSelectedTab('ACTIVE')}
           >
+            <Icon icon={CheckCircle2} size="sm" />
             <span>Activas</span>
             <span className={layoutStyles.filterTabCounter}>
               {totalActiveCount}
@@ -152,6 +166,7 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
             }`}
             onClick={() => setSelectedTab('COMPLETED')}
           >
+            <Icon icon={History} size="sm" />
             <span>Concluidas</span>
             <span className={layoutStyles.filterTabCounter}>
               {totalCompletedCount}
@@ -160,7 +175,10 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         </div>
       </div>
 
-      <p>Última asignación conservada por examen. Los períodos anteriores con auditoría se consultan en Historial de roles y autorizaciones.</p>
+      <Text variant="small" tone="secondary">
+        Última asignación conservada por examen. Los períodos anteriores con
+        auditoría se consultan en Historial de roles y autorizaciones.
+      </Text>
       <DataCardGrid
         key={selectedTab}
         fields={cardFields}
@@ -191,6 +209,6 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
             : `No se encontraron registros históricos de colaboración para ${entityRoleLabel}.`
         }
       />
-    </section>
+    </Card>
   )
 }

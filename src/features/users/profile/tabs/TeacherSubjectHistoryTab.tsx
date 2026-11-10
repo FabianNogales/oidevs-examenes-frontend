@@ -1,10 +1,11 @@
-import { useProfileRecords } from '../hooks/useProfileRecords'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
+import { Badge, Card, Heading, Text } from '@/shared/components/ui/index'
+import { useProfileRecords } from '../hooks/useProfileRecords'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
@@ -18,13 +19,23 @@ interface TeacherSubjectHistoryItem extends BaseTableEntity {
 }
 
 function getGroupTypeLabel(careersCount: number): string {
-  return careersCount > 1 ? 'Varias carreras asociadas' : careersCount === 1 ? 'Una carrera asociada' : 'Sin carreras asociadas'
+  return careersCount > 1
+    ? 'Varias carreras asociadas'
+    : careersCount === 1
+      ? 'Una carrera asociada'
+      : 'Sin carreras asociadas'
 }
 
-export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
+export function TeacherSubjectHistoryTab({
+  entity,
+}: ProfileTabComponentProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const records = useProfileRecords<TeacherSubjectHistoryItem>(entity, 'subject-history', searchQuery)
+  const records = useProfileRecords<TeacherSubjectHistoryItem>(
+    entity,
+    'subject-history',
+    searchQuery,
+  )
   const filteredHistory = records.items
 
   const cardFields = useMemo<readonly CardFieldDef<TeacherSubjectHistoryItem>[]>(
@@ -62,7 +73,9 @@ export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
         cell: (item) => {
           const isMixed = item.careers.length > 1
           return (
-            <span
+            <Badge
+              tone={isMixed ? 'warning' : 'info'}
+              size="sm"
               className={`${layoutStyles.rolePill} ${
                 isMixed
                   ? layoutStyles.rolePillCollaborator
@@ -70,7 +83,7 @@ export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
               }`}
             >
               {getGroupTypeLabel(item.careers.length)}
-            </span>
+            </Badge>
           )
         },
       },
@@ -88,17 +101,17 @@ export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
   )
 
   return (
-    <section className={layoutStyles.sectionCard}>
+    <Card as="section" className={layoutStyles.sectionCard}>
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <h2>Historial de materias dictadas</h2>
-          <p>
+          <Heading level={2}>Historial de materias dictadas</Heading>
+          <Text variant="small" tone="secondary">
             Registro histórico de asignaturas impartidas por{' '}
             <strong>
               {entity.first_names} {entity.last_names}
             </strong>{' '}
             en gestiones académicas pasadas.
-          </p>
+          </Text>
         </div>
       </div>
 
@@ -118,6 +131,6 @@ export function TeacherSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
         emptyTitle="Sin historial de materias dictadas"
         emptyDescription="No se encontraron asignaturas impartidas en gestiones anteriores con ese criterio."
       />
-    </section>
+    </Card>
   )
 }

@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
   type ComponentProps,
+  type Context,
   type ReactNode,
 } from 'react'
 import {
@@ -178,11 +179,16 @@ export interface ToastContextValue {
   dismiss: (id?: string) => void
 }
 
-const ToastContext = createContext<ToastContextValue>({
-  toasts: [],
-  toast,
-  dismiss: dismissToast,
-})
+const ToastContext =
+  typeof createContext === 'function'
+    ? createContext<ToastContextValue>({
+        toasts: [],
+        toast,
+        dismiss: dismissToast,
+      })
+    : ({
+        Provider: ({ children }: { children: ReactNode }) => children,
+      } as unknown as Context<ToastContextValue>)
 
 export function useToast(): ToastContextValue {
   return useContext(ToastContext)

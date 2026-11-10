@@ -6,6 +6,12 @@ import {
   useSearchParams,
   useLocation,
 } from 'react-router'
+import {
+  Breadcrumb,
+  Card,
+  Heading,
+  LoadingState,
+} from '@/shared/components/ui/index'
 
 import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
 import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
@@ -159,9 +165,7 @@ export function AdminStudentDetailPage({
   if (loading) {
     return (
       <div className={layoutStyles.mainArea}>
-        <div className={layoutStyles.sectionCard}>
-          Cargando perfil del estudiante...
-        </div>
+        <LoadingState title="Cargando perfil del estudiante..." />
       </div>
     )
   }
@@ -199,6 +203,15 @@ export function AdminStudentDetailPage({
       onOptionChange={handleOptionChange}
       onBack={() => navigate(backRoute)}
     >
+      {moduleContext === 'students' && (
+        <Breadcrumb
+          items={[
+            { label: 'Inicio', to: '/admin' },
+            { label: 'Estudiantes', to: '/admin/students/manage' },
+            { label: currentTabConfig.label },
+          ]}
+        />
+      )}
       {currentTabConfig.render({
         entity: unifiedEntity,
         moduleContext,
@@ -207,11 +220,12 @@ export function AdminStudentDetailPage({
       })}
       {['perfil', 'editar'].includes(currentTabConfig.id) ? (
         <>
-          <section
+          <Card
+            as="section"
             className={layoutStyles.sectionCard}
             aria-label="Fotografía actual"
           >
-            <h2>Fotografía actual</h2>
+            <Heading level={2}>Fotografía actual</Heading>
             <div className={photoStyles.photo}>
               <AuthenticatedImage
                 url={student.profile_photo_url}
@@ -219,7 +233,7 @@ export function AdminStudentDetailPage({
                 placeholder="Sin fotografía actual"
               />
             </div>
-          </section>
+          </Card>
           <StudentHistoricalPhotoSection
             key={student.id}
             student={student}

@@ -1,13 +1,25 @@
-import { useProfileRecords } from '../hooks/useProfileRecords'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
+import {
+  Badge,
+  Card,
+  Heading,
+  Text,
+  type BadgeTone,
+} from '@/shared/components/ui/index'
+import { useProfileRecords } from '../hooks/useProfileRecords'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
-type SystemRoleCode = 'STUDENT' | 'COLLABORATOR' | 'TEACHER' | 'ADMIN' | 'UNKNOWN'
+type SystemRoleCode =
+  | 'STUDENT'
+  | 'COLLABORATOR'
+  | 'TEACHER'
+  | 'ADMIN'
+  | 'UNKNOWN'
 
 interface RoleHistoryAuditItem extends BaseTableEntity {
   id: number
@@ -27,10 +39,22 @@ const ROLE_BADGE_STYLE_MAP: Record<SystemRoleCode, string> = {
   UNKNOWN: '',
 }
 
+const ROLE_BADGE_TONE_MAP: Record<SystemRoleCode, BadgeTone> = {
+  STUDENT: 'info',
+  COLLABORATOR: 'warning',
+  TEACHER: 'accent',
+  ADMIN: 'info',
+  UNKNOWN: 'neutral',
+}
+
 export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const records = useProfileRecords<RoleHistoryAuditItem>(entity, 'roles', searchQuery)
+  const records = useProfileRecords<RoleHistoryAuditItem>(
+    entity,
+    'roles',
+    searchQuery,
+  )
   const filteredRoleLogs = records.items
 
   const cardFields = useMemo<readonly CardFieldDef<RoleHistoryAuditItem>[]>(
@@ -39,13 +63,15 @@ export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
         id: 'role',
         label: 'Rol asignado',
         cell: (item) => (
-          <span
+          <Badge
+            tone={ROLE_BADGE_TONE_MAP[item.roleCode]}
+            size="sm"
             className={`${layoutStyles.rolePill} ${
               ROLE_BADGE_STYLE_MAP[item.roleCode]
             }`}
           >
             {item.roleLabel}
-          </span>
+          </Badge>
         ),
       },
       {
@@ -77,22 +103,26 @@ export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
   )
 
   return (
-    <section className={layoutStyles.sectionCard}>
+    <Card as="section" className={layoutStyles.sectionCard}>
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <h2>Historial de roles</h2>
-          <p>
+          <Heading level={2}>Historial de roles</Heading>
+          <Text variant="small" tone="secondary">
             Bitácora de auditoría inmutable con los roles ejercidos por{' '}
             <strong>
               {entity.first_names} {entity.last_names}
             </strong>
             , detallando la fecha exacta y el administrador o docente que
             autorizó cada cambio.
-          </p>
+          </Text>
         </div>
       </div>
 
-      <p>Solo se muestran eventos persistidos; no se reconstruyen cambios anteriores. Los nombres de responsables y exámenes corresponden a sus registros actuales.</p>
+      <Text variant="small" tone="secondary">
+        Solo se muestran eventos persistidos; no se reconstruyen cambios
+        anteriores. Los nombres de responsables y exámenes corresponden a sus
+        registros actuales.
+      </Text>
       <DataCardGrid
         fields={cardFields}
         data={filteredRoleLogs}
@@ -109,6 +139,6 @@ export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
         emptyTitle="Sin cambios de rol registrados"
         emptyDescription="No hay eventos conservados para esta consulta. No se reconstruyen asignaciones anteriores sin auditoría."
       />
-    </section>
+    </Card>
   )
 }

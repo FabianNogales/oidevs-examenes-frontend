@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useMemo,
+  type Context,
   type ReactNode,
 } from 'react'
 import { useControllableState } from '@/shared/hooks/useControllableState'
@@ -19,11 +20,16 @@ export interface ThemeContextValue {
   setTheme: (nextTheme: ThemeMode) => void
 }
 
-const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'light',
-  resolvedTheme: 'light',
-  setTheme: () => {},
-})
+const ThemeContext =
+  typeof createContext === 'function'
+    ? createContext<ThemeContextValue>({
+        theme: 'light',
+        resolvedTheme: 'light',
+        setTheme: () => {},
+      })
+    : ({
+        Provider: ({ children }: { children: ReactNode }) => children,
+      } as unknown as Context<ThemeContextValue>)
 
 export interface ThemeProviderProps {
   /** Controlled theme mode. */

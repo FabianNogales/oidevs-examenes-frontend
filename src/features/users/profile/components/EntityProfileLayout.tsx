@@ -1,4 +1,34 @@
 import type { ReactNode } from 'react'
+import {
+  BookOpen,
+  Building2,
+  Check,
+  ChevronLeft,
+  FileText,
+  History,
+  IdCard,
+  Info,
+  Landmark,
+  Mail,
+  Share2,
+  SquarePen,
+  User,
+  UserCog,
+  X,
+} from 'lucide-react'
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Grid,
+  Heading,
+  Icon,
+  Stack,
+  Text,
+  type BadgeTone,
+  type IconComponentType,
+} from '@/shared/components/ui/index'
 import type {
   EntityInfoCard,
   EntityRole,
@@ -26,137 +56,94 @@ interface EntityProfileLayoutProps {
 
 const ROLE_DISPLAY_CONFIG: Record<
   EntityRole,
-  { label: string; avatarClass: string; badgeClass: string }
+  { label: string; tone: BadgeTone; avatarClass: string; badgeClass: string }
 > = {
   STUDENT: {
     label: 'Estudiante',
+    tone: 'info',
     avatarClass: styles.avatarStudent,
     badgeClass: styles.roleBadgeStudent,
   },
   TEACHER: {
     label: 'Docente',
+    tone: 'accent',
     avatarClass: styles.avatarCrimson,
     badgeClass: styles.roleBadgeCrimson,
   },
   ADMIN: {
     label: 'Admin',
+    tone: 'accent',
     avatarClass: styles.avatarCrimson,
     badgeClass: styles.roleBadgeCrimson,
   },
 }
 
-export function ProfileIcon({ name }: { name: ProfileIconName }) {
-  switch (name) {
-    case 'user':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" />
-        </svg>
-      )
-    case 'edit':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-          <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-        </svg>
-      )
-    case 'book':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        </svg>
-      )
-    case 'history':
-    case 'exam-history':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-          <path d="M3 3v5h5" />
-          <path d="M12 7v5l4 2" />
-        </svg>
-      )
-    case 'collaborator':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="3" />
-          <circle cx="19" cy="5" r="2" />
-          <circle cx="5" cy="5" r="2" />
-          <circle cx="19" cy="19" r="2" />
-          <path d="m14.2 9.8 3.3-3.3M9.8 9.8 6.5 6.5m7.7 7.7 3.3 3.3" />
-        </svg>
-      )
-    case 'role-history':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="9" cy="7" r="4" />
-          <path d="M3 21v-2a4 4 0 0 1 4-4h4" />
-          <circle cx="17" cy="17" r="4" />
-          <path d="M17 15v2l1.5 1.5" />
-        </svg>
-      )
-    case 'exam':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="4" y="2" width="16" height="20" rx="2" />
-          <path d="M8 6h8M8 10h8M8 14h5" />
-        </svg>
-      )
-    case 'institution':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="m3 9 9-6 9 6-9 6-9-6Z" />
-          <path d="M5 11v7M9 13v5M15 13v5M19 11v7M3 20h18" />
-        </svg>
-      )
-    case 'career':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="4" y="2" width="16" height="20" rx="2" />
-          <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
-        </svg>
-      )
-    case 'mail':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="2" y="4" width="20" height="16" rx="2" />
-          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-        </svg>
-      )
-    case 'info':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4M12 8h.01" />
-        </svg>
-      )
-    case 'id-card':
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="2" y="5" width="20" height="14" rx="2" />
-          <circle cx="8" cy="12" r="2" />
-          <path d="M14 10h4M14 14h4" />
-        </svg>
-      )
-  }
+const PROFILE_ICON_MAP: Record<ProfileIconName, IconComponentType> = {
+  user: User,
+  edit: SquarePen,
+  book: BookOpen,
+  history: History,
+  'exam-history': History,
+  collaborator: Share2,
+  'role-history': UserCog,
+  exam: FileText,
+  institution: Landmark,
+  career: Building2,
+  mail: Mail,
+  info: Info,
+  'id-card': IdCard,
 }
 
-export function EntityInfoGrid({ cards }: { cards: readonly EntityInfoCard[] }) {
+export function ProfileIcon({
+  name,
+  size = 'md',
+}: {
+  name: ProfileIconName
+  size?: 'sm' | 'md' | 'lg'
+}) {
+  const LucideIcon = PROFILE_ICON_MAP[name] ?? User
+  return <Icon icon={LucideIcon} size={size} />
+}
+
+export function EntityInfoGrid({
+  cards,
+}: {
+  cards: readonly EntityInfoCard[]
+}) {
   return (
-    <div className={styles.infoGrid}>
+    <Grid columns={2} gap="5" className={styles.infoGrid}>
       {cards.map((card) => (
-        <article key={card.id} className={styles.infoCard}>
+        <Card
+          key={card.id}
+          as="article"
+          padding="md"
+          className={styles.infoCard}
+        >
           <div className={styles.infoCardIcon}>
-            <ProfileIcon name={card.icon} />
+            <ProfileIcon name={card.icon} size="lg" />
           </div>
           <div className={styles.infoCardBody}>
-            <span className={styles.infoCardLabel}>{card.label}</span>
-            <div className={styles.infoCardValue}>{card.value}</div>
+            <Text
+              as="span"
+              variant="small"
+              tone="secondary"
+              className={styles.infoCardLabel}
+            >
+              {card.label}
+            </Text>
+            <Text
+              as="div"
+              variant="body"
+              weight="semibold"
+              tone="primary"
+              className={styles.infoCardValue}
+            >
+              {card.value}
+            </Text>
           </div>
-        </article>
+        </Card>
       ))}
-    </div>
+    </Grid>
   )
 }
 
@@ -182,7 +169,9 @@ export function EntityProfileLayout({
       {/* SIDEBAR DE OPCIONES */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarTop}>
-          <h2 className={styles.sidebarTitle}>Opciones</h2>
+          <Heading level={2} size="h3" className={styles.sidebarTitle}>
+            Opciones
+          </Heading>
           <nav aria-label="Opciones del perfil" className={styles.optionsNav}>
             {options.map((option) => {
               const isSelected = option.id === activeOptionId
@@ -196,7 +185,7 @@ export function EntityProfileLayout({
                   }`}
                 >
                   <span className={styles.optionIcon}>
-                    <ProfileIcon name={option.icon} />
+                    <ProfileIcon name={option.icon} size="md" />
                   </span>
                   <span>{option.label}</span>
                 </button>
@@ -205,9 +194,15 @@ export function EntityProfileLayout({
           </nav>
         </div>
 
-        <button type="button" className={styles.backBtn} onClick={onBack}>
-          <span aria-hidden="true">‹</span> Regresar
-        </button>
+        <Button
+          type="button"
+          variant="secondary"
+          className={styles.backBtn}
+          onClick={onBack}
+        >
+          <Icon icon={ChevronLeft} size="sm" />
+          <span>Regresar</span>
+        </Button>
       </aside>
 
       {/* ÁREA PRINCIPAL */}
@@ -218,36 +213,60 @@ export function EntityProfileLayout({
             isActive ? styles.bannerActive : styles.bannerInactive
           }`}
         >
-          <div className={`${styles.avatarCircle} ${roleTheme.avatarClass}`}>
-            {initials}
-          </div>
+          <Avatar
+            initials={initials}
+            size="lg"
+            className={`${styles.avatarCircle} ${roleTheme.avatarClass}`}
+          />
 
           <div className={styles.bannerIdentity}>
-            <h1 id={ENTITY_NAME_ID} className={styles.entityName}>
+            <Heading
+              level={1}
+              id={ENTITY_NAME_ID}
+              className={styles.entityName}
+            >
               {fullName}
-            </h1>
-            <div className={styles.bannerBadges}>
-              <span className={`${styles.roleBadge} ${roleTheme.badgeClass}`}>
+            </Heading>
+            <Stack
+              direction="horizontal"
+              gap="2"
+              align="center"
+              wrap
+              className={styles.bannerBadges}
+            >
+              <Badge
+                tone={roleTheme.tone}
+                className={`${styles.roleBadge} ${roleTheme.badgeClass}`}
+              >
                 {roleTheme.label}
-              </span>
-              <span
+              </Badge>
+              <Badge
+                tone={isActive ? 'success' : 'danger'}
                 className={`${styles.statusBannerBadge} ${
                   isActive
                     ? styles.statusBannerActive
                     : styles.statusBannerInactive
                 }`}
+                icon={
+                  <span className={styles.statusCheckIcon}>
+                    <Icon icon={isActive ? Check : X} size="sm" />
+                  </span>
+                }
               >
-                <span className={styles.statusCheckIcon} aria-hidden="true">
-                  {isActive ? '✓' : '✕'}
-                </span>
                 {isActive ? 'Activo' : 'Inactivo'}
-              </span>
-            </div>
+              </Badge>
+            </Stack>
           </div>
         </header>
 
         {/* CONTENIDO DE LA SUBPÁGINA ACTIVA */}
-        <div>{children}</div>
+        <Stack
+          direction="vertical"
+          gap="6"
+          className={styles.tabContentStack}
+        >
+          {children}
+        </Stack>
       </section>
     </div>
   )
