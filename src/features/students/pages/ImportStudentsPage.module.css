@@ -121,7 +121,7 @@
 .reviewMessage strong {
   font-size: var(--font-size-md);
   line-height: 24px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .reviewMessage[data-tone='ready'] { background: var(--color-success-soft); color: var(--color-success); }
@@ -140,7 +140,7 @@
 .fileObservations strong {
   font-size: var(--font-size-md);
   line-height: 24px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .fileObservations ul {
@@ -176,7 +176,7 @@
   color: var(--color-text);
   font-size: var(--font-size-md);
   line-height: 24px;
-  font-weight: 500;
+  font-weight: var(--font-weight-regular);
   overflow-wrap: anywhere;
 }
 

@@ -1,3 +1,6 @@
+/* ==========================================================================
+   Reset & base
+   ========================================================================== */
 *,
 *::before,
 *::after {
@@ -8,13 +11,10 @@ html {
   min-width: 320px;
   min-height: 100%;
   margin: 0;
-  font-family: var(--font-family);
-  font-size: 100%;
-  font-weight: var(--font-weight-regular);
-  line-height: var(--line-height-normal);
+  font: var(--type-body);
   color: var(--color-text);
   background: var(--color-background);
-  font-synthesis: none;
+  font-synthesis: none; /* only 400 / 600 / 800 are loaded: never fake weights */
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -32,38 +32,44 @@ body,
 }
 
 :where(h1, h2, h3, h4, h5, h6) {
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-tight);
+  margin: 0;
+  color: var(--color-text-primary);
   overflow-wrap: break-word;
 }
 
 :where(h1) {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
+  font: var(--type-h1);
 }
 
 :where(h2) {
-  font-size: var(--font-size-2xl);
+  font: var(--type-h2);
 }
 
 :where(h3) {
-  font-size: var(--font-size-xl);
+  font: var(--type-h3);
 }
 
+/* The system defines only three heading levels: h4–h6 reuse text tokens. */
 :where(h4) {
-  font-size: var(--font-size-lg);
+  font: var(--type-body);
+  font-weight: var(--font-weight-semibold);
 }
 
 :where(h5, h6) {
-  font-size: var(--font-size-md);
+  font: var(--type-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+:where(p) {
+  margin: 0;
 }
 
 :where(small) {
-  font-size: var(--font-size-sm);
+  font: var(--type-small);
 }
 
 :where(strong, b) {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 :where(img) {
@@ -76,14 +82,17 @@ body,
   transition:
     color var(--transition-fast),
     background-color var(--transition-normal),
-    border-color var(--transition-fast);
+    border-color var(--transition-fast),
+    box-shadow var(--transition-normal),
+    transform var(--transition-fast);
 }
 
+/* Interactive elements: Poppins SemiBold 14 / 16 */
 :where(button) {
   min-height: var(--button-height);
   border: 0;
   border-radius: var(--button-radius);
-  font-weight: var(--font-weight-semibold);
+  font: var(--type-interactive);
   cursor: pointer;
 }
 
@@ -95,6 +104,7 @@ body,
   opacity: 0.65;
 }
 
+/* Form fields inherit Body 16 / 24 (16px also prevents zoom on iOS) */
 :where(
   input:not(
     [type='checkbox'],
@@ -113,7 +123,7 @@ body,
 ) {
   max-width: 100%;
   min-height: var(--input-height);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--color-input-border);
   border-radius: var(--input-radius);
   color: var(--color-text);
@@ -125,7 +135,7 @@ body,
 }
 
 :where(input, textarea)::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   opacity: 1;
 }
 
@@ -144,6 +154,7 @@ body,
     border-color var(--transition-fast);
 }
 
+/* Focus ring: burgundy */
 :focus-visible {
   outline: var(--focus-width) solid var(--color-focus);
   outline-offset: var(--focus-offset);
@@ -163,4 +174,32 @@ svg {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
+}
+
+/* ==========================================================================
+   Shared Semi-Flat components
+   ========================================================================== */
+
+/* Small text (descriptions) */
+.text-small {
+  font: var(--type-small);
+  color: var(--color-text-secondary);
+}
+
+/* Card: lightest surface + soft tinted shadow */
+.flat2-card {
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.flat2-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg-hover);
 }

@@ -17,7 +17,7 @@
   gap: var(--space-4);
   padding: var(--space-4) max(var(--space-4), calc((100vw - 1300px) / 2));
   background: var(--color-surface);
-  border-bottom: 3px solid var(--brand-crimson);
+  border-bottom: 3px solid var(--color-accent);
 }
 
 .sticky {
@@ -55,7 +55,7 @@
 
 .onlineControlLink:hover {
   background: var(--color-surface-soft);
-  border-color: var(--brand-blue);
+  border-color: var(--color-primary);
 }
 
 /* Navegación de Pasos 01, 02, 03 */
@@ -81,7 +81,7 @@
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   text-decoration: none;
   transition:
     background-color var(--transition-fast),
@@ -90,7 +90,7 @@
 
 .tabItem:hover:not([aria-current='page']) {
   background: var(--color-surface-muted);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
 }
 
 .tabLeft {
@@ -111,7 +111,7 @@
   background: var(--color-surface-soft);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 .tabLabel {
@@ -126,13 +126,13 @@
 }
 
 .tabItem[aria-current='page'] {
-  background: var(--brand-blue);
+  background: var(--color-primary);
   color: var(--color-on-primary);
   font-weight: var(--font-weight-semibold);
 }
 
 .tabItem[aria-current='page'] .tabNumber {
-  background: rgb(255 255 255 / 20%);
+  background: color-mix(in srgb, var(--color-on-primary) 20%, transparent);
   color: var(--color-on-primary);
 }
 
@@ -144,7 +144,7 @@
 .summaryPanel {
   padding: var(--space-5) var(--space-6);
   border: 1px solid var(--color-border);
-  border-left: 4px solid var(--brand-blue);
+  border-left: 4px solid var(--color-primary);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
@@ -165,7 +165,7 @@
 }
 
 .summaryItemIcon {
-  color: var(--brand-blue);
+  color: var(--color-primary);
   margin-top: 2px;
   flex-shrink: 0;
 }
@@ -177,7 +177,7 @@
 
 .summaryItem dd {
   margin: 2px 0 0;
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
 }

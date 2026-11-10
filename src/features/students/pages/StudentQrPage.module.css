@@ -132,7 +132,7 @@
   margin: 0;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 .examSubject .subject {
   color: var(--color-text);
@@ -194,7 +194,7 @@
 .fieldLabel {
   display: block;
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 .statusBadge {
   display: grid;
@@ -208,7 +208,7 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
 }
 .statusBadge strong {
@@ -232,8 +232,9 @@
   background: var(--color-success-soft);
 }
 .unavailable {
-  color: var(--color-warning);
+  color: var(--color-text);
   background: var(--color-warning-soft);
+  border: 1px solid var(--color-warning);
 }
 .finished {
   color: var(--color-error);

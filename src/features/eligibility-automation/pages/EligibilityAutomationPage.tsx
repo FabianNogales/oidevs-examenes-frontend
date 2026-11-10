@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -222,22 +223,18 @@ function CriterionParameter({
         aria-describedby={`${id}-hint`}
       >
         <legend>{label}</legend>
-        {(schema.options ?? []).map((option) => (
-          <label className={styles.criterionHeading} key={option}>
-            <input
-              type="checkbox"
-              checked={selected.includes(option)}
-              onChange={(event) =>
-                onChange(
-                  event.currentTarget.checked
-                    ? [...selected, option]
-                    : selected.filter((item) => item !== option),
-                )
-              }
-            />
-            <span>{assessmentLabel(option, assessmentLabels[option])}</span>
-          </label>
-        ))}
+        <Dropdown
+          id={id}
+          multiple
+          value={selected}
+          placeholder="Selecciona las evaluaciones"
+          aria-describedby={`${id}-hint`}
+          options={(schema.options ?? []).map((option) => ({
+            value: option,
+            label: assessmentLabel(option, assessmentLabels[option]),
+          }))}
+          onChange={(nextValues) => onChange(nextValues)}
+        />
         <small id={`${id}-hint`}>
           Marca las evaluaciones que deseas incluir.
           {schema.min_items ? ` Selecciona al menos ${schema.min_items}.` : ''}
@@ -249,18 +246,19 @@ function CriterionParameter({
     return (
       <div className={styles.parameter}>
         <label htmlFor={id}>{label}</label>
-        <select
+        <Dropdown
           id={id}
           value={typeof value === 'string' ? value : ''}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        >
-          <option value="">Selecciona una opción</option>
-          {(schema.options ?? []).map((option) => (
-            <option key={option} value={option}>
-              {assessmentLabel(option, assessmentLabels[option])}
-            </option>
-          ))}
-        </select>
+          placeholder="Selecciona una opción"
+          options={[
+            { value: '', label: 'Selecciona una opción' },
+            ...(schema.options ?? []).map((option) => ({
+              value: option,
+              label: assessmentLabel(option, assessmentLabels[option]),
+            })),
+          ]}
+          onChange={(nextValue) => onChange(nextValue)}
+        />
       </div>
     )
   }
@@ -447,7 +445,7 @@ function CorrectionForm({
             <legend>{label}</legend>
             <label>
               Estado de la evaluación
-              <select
+              <Dropdown
                 value={
                   assessment
                     ? assessment.was_taken
@@ -455,8 +453,12 @@ function CorrectionForm({
                       : 'not_taken'
                     : ''
                 }
-                onChange={(event) => {
-                  const status = event.currentTarget.value
+                options={[
+                  { value: '', label: 'Sin dato' },
+                  { value: 'taken', label: 'Rindió' },
+                  { value: 'not_taken', label: 'No rindió' },
+                ]}
+                onChange={(status) => {
                   setValues((current) => {
                     const nextAssessments = { ...current.assessments }
                     if (!status) {
@@ -473,11 +475,7 @@ function CorrectionForm({
                     return { ...current, assessments: nextAssessments }
                   })
                 }}
-              >
-                <option value="">Sin dato</option>
-                <option value="taken">Rindió</option>
-                <option value="not_taken">No rindió</option>
-              </select>
+              />
             </label>
             <label>
               Nota

@@ -4,9 +4,10 @@
   overflow-wrap: anywhere;
 }
 
-/* U2: decorative accent under the page h1, kept provisionally: no Figma reference could confirm or
+/* U2: decorative accent under the page heading, kept provisionally: no Figma reference could confirm or
    remove it (pending design decision). Layout and heading scale come from PageContainer/PageHeader. */
-.page h1::after {
+.page h1::after,
+.page h2::after {
   content: '';
   display: block;
   width: var(--space-12);
@@ -14,6 +15,10 @@
   margin-top: var(--space-4);
   border-radius: var(--radius-pill);
   background: var(--color-accent);
+}
+
+.panel h2::after {
+  content: none;
 }
 
 .content,

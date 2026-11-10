@@ -16,6 +16,7 @@ import type {
 import styles from './AdminSubjectsPage.module.css'
 import { Button } from '@/shared/components/ui/Button/Button'
 import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 
 const INITIAL_QUERY: SubjectsQuery = {
   page: 1,
@@ -128,44 +129,49 @@ export function AdminSubjectsPage() {
           </div>
           <label className={styles.filter}>
             Carrera
-            <select
-              value={query.career_id}
+            <Dropdown
+              value={String(query.career_id ?? '')}
               disabled={!careers.loaded || Boolean(careers.error)}
-              onChange={(event) =>
+              options={[
+                {
+                  value: '',
+                  label: careers.loaded
+                    ? 'Todas las carreras'
+                    : 'Cargando carreras…',
+                },
+                ...careers.careers.map((career) => ({
+                  value: String(career.id),
+                  label: `${career.name}${
+                    career.status === 'INACTIVE' ? ' (inactiva)' : ''
+                  }`,
+                })),
+              ]}
+              onChange={(nextValue) =>
                 changeQuery({
                   ...query,
-                  career_id: event.target.value,
+                  career_id: nextValue,
                   page: 1,
                 })
               }
-            >
-              <option value="">
-                {careers.loaded ? 'Todas las carreras' : 'Cargando carreras…'}
-              </option>
-              {careers.careers.map((career) => (
-                <option value={career.id} key={career.id}>
-                  {career.name}
-                  {career.status === 'INACTIVE' ? ' (inactiva)' : ''}
-                </option>
-              ))}
-            </select>
+            />
           </label>
           <label className={styles.filter}>
             Estado
-            <select
+            <Dropdown
               value={query.status}
-              onChange={(event) =>
+              options={[
+                { value: '', label: 'Todos los estados' },
+                { value: 'ACTIVE', label: 'Activos' },
+                { value: 'INACTIVE', label: 'Inactivos' },
+              ]}
+              onChange={(nextValue) =>
                 changeQuery({
                   ...query,
-                  status: event.target.value as SubjectStatus | '',
+                  status: nextValue as SubjectStatus | '',
                   page: 1,
                 })
               }
-            >
-              <option value="">Todos los estados</option>
-              <option value="ACTIVE">Activos</option>
-              <option value="INACTIVE">Inactivos</option>
-            </select>
+            />
           </label>
           <Button type="submit">
             Buscar

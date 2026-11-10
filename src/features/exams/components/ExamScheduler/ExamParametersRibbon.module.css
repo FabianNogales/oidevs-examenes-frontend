@@ -46,18 +46,18 @@
 
 .parameterLabel {
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 
 .parameterHint {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--brand-crimson);
-  background: var(--brand-pink-light);
-  border: 1px solid var(--brand-pink);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-decorative);
   padding: 1px 8px;
   border-radius: var(--radius-pill);
   font-variant-numeric: tabular-nums;
@@ -111,11 +111,11 @@
 
 /* Color Rojo Carmesí de EIDA cuando está seleccionado */
 .segmentedBtnActive {
-  background: var(--brand-crimson);
+  background: var(--color-accent);
   color: var(--color-on-primary);
-  border-color: var(--brand-crimson);
-  font-weight: var(--font-weight-bold);
-  box-shadow: 0 2px 6px rgb(139 30 63 / 22%);
+  border-color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 
 /* Input numérico para colocar cualquier número de parcial */
@@ -135,20 +135,20 @@
   background: var(--color-surface) !important;
   color: var(--color-text) !important;
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
 .customPartialInput:focus {
-  border-color: var(--brand-crimson) !important;
+  border-color: var(--color-accent) !important;
   outline: none;
 }
 
 .customPartialInputActive {
-  background: var(--brand-pink-light) !important;
-  border-color: var(--brand-crimson) !important;
-  color: var(--brand-crimson) !important;
+  background: var(--color-accent-soft) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent) !important;
 }
 
 /* Duración del Examen: Sin flechas nativas duplicadas */
@@ -189,7 +189,7 @@
   color: var(--color-text) !important;
   text-align: center;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   appearance: textfield;
   -moz-appearance: textfield;
 }
@@ -202,13 +202,13 @@
 }
 
 .wheelNumberInput:focus {
-  border-color: var(--brand-crimson) !important;
+  border-color: var(--color-accent) !important;
   outline: none;
 }
 
 .wheelUnitLabel {
-  font-size: 11px;
-  font-weight: var(--font-weight-bold);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
 
@@ -228,7 +228,7 @@
   border-radius: 3px;
   background: var(--color-surface);
   color: var(--color-text-secondary);
-  font-size: 8px;
+  font-size: 0.5rem;
   line-height: 1;
   display: grid;
   place-items: center;
@@ -236,13 +236,13 @@
 }
 
 .wheelStepBtn:hover:not(:disabled) {
-  background: var(--brand-crimson);
-  border-color: var(--brand-crimson);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: var(--color-on-primary);
 }
 
 .durationColon {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   font-size: var(--font-size-md);
 }
@@ -278,10 +278,10 @@
 
 /* Rojo Carmesí EIDA cuando la duración rápida está seleccionada */
 .durationPresetChipActive {
-  background: var(--brand-crimson);
-  border-color: var(--brand-crimson);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: var(--color-on-primary);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 @media (max-width: 1150px) {

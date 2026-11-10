@@ -7,9 +7,9 @@
   padding: var(--space-8) var(--content-gutter);
 }
 
-/* Reading width for public content pages (same as the current public portal layout). */
+/* Uniform 1300px width across all pages (--content-max-width). */
 .narrow {
-  max-width: 960px;
+  max-width: var(--content-max-width);
 }
 
 @media (max-width: 640px) {

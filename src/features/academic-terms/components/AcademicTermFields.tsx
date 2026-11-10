@@ -1,3 +1,4 @@
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import type {
   AcademicTermFieldErrors,
   CreateAcademicTermPayload,
@@ -65,18 +66,19 @@ export function AcademicTermFields({
       {!editing && (
         <div className={`${styles.field} ${styles.fullWidth}`}>
           <label htmlFor={`${id}-status`}>Estado inicial *</label>
-          <select
+          <Dropdown
             id={`${id}-status`}
             name="status"
             value={values.status}
             disabled={disabled}
-            aria-invalid={Boolean(errors.status)}
+            invalid={Boolean(errors.status)}
             aria-describedby={`${id}-status-help${errors.status ? ` ${id}-status-error` : ''}`}
-            onChange={(event) => onChange('status', event.target.value)}
-          >
-            <option value="INACTIVE">Inactivo</option>
-            <option value="ACTIVE">Activo</option>
-          </select>
+            options={[
+              { value: 'INACTIVE', label: 'Inactivo' },
+              { value: 'ACTIVE', label: 'Activo' },
+            ]}
+            onChange={(nextStatus) => onChange('status', nextStatus)}
+          />
           <small id={`${id}-status-help`}>
             Solo puede haber un periodo activo. Activar este periodo no
             desactiva otro automáticamente.

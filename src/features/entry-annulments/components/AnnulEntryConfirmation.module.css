@@ -41,7 +41,7 @@
 }
 .summary dd {
   overflow-wrap: anywhere;
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 .field {
   display: grid;
@@ -63,7 +63,7 @@
   gap: var(--space-3);
   min-height: var(--input-height);
   cursor: pointer;
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 .confirm input[type='checkbox'] {
   flex: 0 0 18px;

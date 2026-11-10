@@ -137,7 +137,7 @@ test('Field and control CSS use tokens and define focus, hover, invalid and disa
 const authorizedConsumers = {
   Field: ['features/rooms/components/RoomFormField.tsx'],
   TextInput: ['features/rooms/components/RoomFormField.tsx', 'features/rooms/pages/AdminRoomsPage.tsx'],
-  Select: ['features/rooms/pages/AdminRoomsPage.tsx'],
+  Select: [],
   Textarea: ['features/rooms/components/RoomFormField.tsx'],
 }
 const consumersOf = (sources, component) =>
@@ -161,7 +161,7 @@ test('Field, TextInput, Select and Textarea are consumed only by the authorized 
 test('the consumer guard rejects an unauthorized import (negative check)', () => {
   const sources = new Map([
     ['features/rooms/components/RoomFormField.tsx', "import { Field } from '@/shared/components/ui/Field/Field'\nimport { TextInput } from '@/shared/components/ui/Field/TextInput'\nimport { Textarea } from '@/shared/components/ui/Field/Textarea'"],
-    ['features/rooms/pages/AdminRoomsPage.tsx', "import { Select } from '@/shared/components/ui/Field/Select'\nimport { TextInput } from '@/shared/components/ui/Field/TextInput'"],
+    ['features/rooms/pages/AdminRoomsPage.tsx', "import { TextInput } from '@/shared/components/ui/Field/TextInput'"],
     ['features/subjects/components/SubjectForm.tsx', "import { Field } from '@/shared/components/ui/Field/Field'"],
   ])
   assert.notDeepEqual(consumersOf(sources, 'Field'), authorizedConsumers.Field)

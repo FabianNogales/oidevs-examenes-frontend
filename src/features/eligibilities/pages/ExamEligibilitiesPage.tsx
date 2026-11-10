@@ -27,6 +27,7 @@ import pageStyles from '@/features/exams/pages/TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import styles from './Eligibilities.module.css'
 
 // Page heading id (the table section already uses exam-eligibilities-title).
@@ -254,20 +255,19 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
               </div>
               <div className={styles.field}>
                 <label htmlFor={filterId}>Habilitación</label>
-                <select
+                <Dropdown<'ALL' | EligibilityStatus>
                   id={filterId}
                   value={statusFilter}
-                  onChange={(event) => {
-                    setStatusFilter(
-                      event.target.value as 'ALL' | EligibilityStatus,
-                    )
+                  options={[
+                    { value: 'ALL', label: 'Todos' },
+                    { value: 'ELIGIBLE', label: 'Habilitados' },
+                    { value: 'INELIGIBLE', label: 'Inhabilitados' },
+                  ]}
+                  onChange={(nextStatus) => {
+                    setStatusFilter(nextStatus)
                     setPage(1)
                   }}
-                >
-                  <option value="ALL">Todos</option>
-                  <option value="ELIGIBLE">Habilitados</option>
-                  <option value="INELIGIBLE">Inhabilitados</option>
-                </select>
+                />
               </div>
             </div>
             {list.error ? (

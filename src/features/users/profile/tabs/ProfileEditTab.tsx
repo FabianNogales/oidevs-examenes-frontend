@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
-import { ChevronDownIcon } from '@/assets/icons/ChevronDownIcon'
 
 export function ProfileEditTab({
   entity,
@@ -13,7 +13,6 @@ export function ProfileEditTab({
   const [email, setEmail] = useState(entity.email)
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>(entity.status)
   const [institutionalCode, setInstitutionalCode] = useState('')
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState<{
@@ -165,59 +164,31 @@ export function ProfileEditTab({
           />
         </div>
 
-        {/* CAMPO DE ESTADO - CUSTOM DROPDOWN*/}
+        {/* CAMPO DE ESTADO - UNIVERSAL DROPDOWN */}
         <div className={layoutStyles.formGroup}>
-          <label id="edit-status-label">Estado de la cuenta</label>
-          <div className={layoutStyles.customSelectWrapper}>
-            <button
-              type="button"
-              aria-labelledby="edit-status-label"
-              className={`${layoutStyles.formInput} ${layoutStyles.statusSelect} ${layoutStyles.customSelectButton} ${
-                status === 'ACTIVE'
-                  ? layoutStyles.statusSelectActive
-                  : layoutStyles.statusSelectInactive
-              }`}
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              disabled={saving}
-            >
-              <span>
-                {status === 'ACTIVE' ? 'Activo (Habilitado)' : 'Inactivo (Inhabilitado)'}
-              </span>
-              
-              <ChevronDownIcon 
-                className={`${layoutStyles.customSelectIcon} ${
-                  isDropdownOpen ? layoutStyles.customSelectIconOpen : ''
-                }`} 
-              />
-            </button>
-
-            {isDropdownOpen && !saving && (
-              <ul className={layoutStyles.customOptionsList}>
-                <li
-                  className={`${layoutStyles.customOption} ${
-                    status === 'ACTIVE' ? layoutStyles.customOptionActiveSuccess : ''
-                  }`}
-                  onClick={() => {
-                    setStatus('ACTIVE')
-                    setIsDropdownOpen(false)
-                  }}
-                >
-                  Activo
-                </li>
-                <li
-                  className={`${layoutStyles.customOption} ${
-                    status === 'INACTIVE' ? layoutStyles.customOptionActiveDanger : ''
-                  }`}
-                  onClick={() => {
-                    setStatus('INACTIVE')
-                    setIsDropdownOpen(false)
-                  }}
-                >
-                  Inactivo
-                </li>
-              </ul>
-            )}
-          </div>
+          <label id="edit-status-label" htmlFor="edit-status">
+            Estado de la cuenta
+          </label>
+          <Dropdown<'ACTIVE' | 'INACTIVE'>
+            id="edit-status"
+            aria-labelledby="edit-status-label"
+            disabled={saving}
+            value={status}
+            tone={status === 'ACTIVE' ? 'success' : 'danger'}
+            options={[
+              {
+                value: 'ACTIVE',
+                label: 'Activo (Habilitado)',
+                tone: 'success',
+              },
+              {
+                value: 'INACTIVE',
+                label: 'Inactivo (Inhabilitado)',
+                tone: 'danger',
+              },
+            ]}
+            onChange={(nextStatus) => setStatus(nextStatus)}
+          />
         </div>
 
         <div className={layoutStyles.formActions}>

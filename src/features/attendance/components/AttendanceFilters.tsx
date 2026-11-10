@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import type { AttendanceQuery } from '../types/attendance.types'
 import styles from '../pages/Attendance.module.css'
 export function AttendanceFilters({
@@ -20,14 +21,15 @@ export function AttendanceFilters({
     <form onSubmit={submit} className={styles.filters}>
       <label>
         Asistencia
-        <select
+        <Dropdown
           value={view}
-          onChange={(e) => onChange({ view: e.target.value })}
-        >
-          <option value="all">Todos</option>
-          <option value="registered">Con ingreso válido</option>
-          <option value="pending">Pendientes de ingreso</option>
-        </select>
+          options={[
+            { value: 'all', label: 'Todos' },
+            { value: 'registered', label: 'Con ingreso válido' },
+            { value: 'pending', label: 'Pendientes de ingreso' },
+          ]}
+          onChange={(nextView) => onChange({ view: nextView })}
+        />
       </label>
       <label>
         Buscar estudiante

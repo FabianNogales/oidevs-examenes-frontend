@@ -780,7 +780,7 @@ test('F2.2 admin breadcrumb matches the page title and keeps the home link', asy
     { label: 'Inicio', to: '/' },
     { label: 'Gestión del calendario' },
   ])
-  assert.equal(textContent(byType(ui.tree, 'h1')[0]), 'Gestión del calendario')
+  assert.equal(textContent(byType(ui.tree, 'h2')[0]), 'Gestión del calendario')
   ui.h.unmount()
 })
 

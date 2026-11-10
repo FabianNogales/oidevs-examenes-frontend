@@ -10,57 +10,62 @@ Regla: consumir siempre los tokens semánticos `--color-*`, no la paleta `--bran
 (el propio `tokens.css` lo indica: "Components should consume semantic tokens").
 Los contratos de `src/shared/tests/cssContracts.test.mjs` comprueban los valores de esta página.
 
-## ✅ Paleta de marca (`:root`)
+## ✅ Paleta de marca (`:root` — Semi-Flat)
 
 | Token | Valor |
 |---|---|
-| `--brand-navy` | `#172554` |
-| `--brand-blue` | `#2563eb` |
-| `--brand-cobalt` | `#0049a8` |
-| `--brand-crimson` | `#8b1e3f` |
-| `--brand-pink` | `#d67a8c` |
-| `--brand-pink-light` | `#f7e9ed` |
-| `--brand-blue-light` | `#eaf3ff` |
-| `--brand-azure-mist` | `#e9f9f6` |
-| `--brand-white-warm` | `#fafafa` |
+| `--text-primary` / `--brand-navy` | `#172554` / `var(--text-primary)` |
+| `--text-secondary` | `#68778f` |
+| `--bg-primary` / `--brand-blue-light` | `#eaf3ff` / `var(--bg-primary)` |
+| `--bg-secondary` / `--brand-azure-mist` | `#dff1ff` / `var(--bg-secondary)` |
+| `--bg-tertiary` / `--brand-white-warm` | `#f9fcff` / `var(--bg-tertiary)` |
+| `--btn-primary` / `--brand-blue` / `--brand-cobalt` | `#2563eb` / `var(--btn-primary)` |
+| `--btn-secondary` / `--brand-crimson` | `#8b1e3f` / `var(--btn-secondary)` |
+| `--btn-secondary-accent` / `--brand-pink` | `#d67a8c` / `var(--btn-secondary-accent)` |
+| `--btn-secondary-soft` / `--brand-pink-light` | `#f7e9ed` / `var(--btn-secondary-soft)` |
+| `--destructive` / `--destructive-soft` | `#d32f2f` / `#fcd2d2` |
+| `--success` / `--success-soft` | `#2e7d32` / `#c2f2c4` |
+| `--warning` / `--warning-soft` | `#ffc107` / `#fff1c8` |
 
 ## ✅ Tipografía
 
 | Token | Valor |
 |---|---|
 | `--font-family` / `--font-family-base` | `'Poppins', system-ui, …` |
-| `--font-size-xs` · `sm` · `md` · `lg` · `xl` · `2xl` · `3xl` · `4xl` | `0.75` · `0.875` · `1` · `1.125` · `1.25` · `1.5` · `2` · `2.5rem` |
-| `--font-weight-regular` · `medium` · `semibold` · `bold` | `400` · `500` · `600` · `700` |
-| `--line-height-tight` · `normal` · `relaxed` | `1.25` · `1.5` · `1.6` |
+| `--type-h1` · `--type-h2` · `--type-h3` | `800 2.5rem/2.5rem` · `600 1.5rem/1.875rem` · `600 1.25rem/1.5625rem var(--font-family)` |
+| `--type-body` · `--type-small` · `--type-interactive` | `400 1rem/1.5rem` · `400 0.875rem/1.3125rem` · `600 0.875rem/1rem var(--font-family)` |
+| `--font-size-xs` · `sm` · `md` · `lg` · `xl` · `2xl` · `3xl` · `4xl` | `0.875` · `0.875` · `1` · `1` · `1.25` · `1.5` · `2.5` · `2.5rem` |
+| `--font-weight-regular` · `semibold` · `extrabold` | `400` · `600` · `800` (alias deprecados: `medium` = `400`, `bold` = `600`) |
+| `--line-height-tight` · `normal` · `relaxed` | `1.25` · `1.5` · `1.5` |
 
 ## ✅ Espaciado, radios y layout
 
 | Token | Valor |
 |---|---|
 | `--space-1` · `2` · `3` · `4` · `5` · `6` · `8` · `10` · `12` · `16` | `4` · `8` · `12` · `16` · `20` · `24` · `32` · `40` · `48` · `64px` |
-| `--radius-sm` · `md` · `lg` · `xl` · `pill` | `6` · `10` · `16` · `20px` · `9999px` |
+| `--radius-sm` · `md` · `lg` · `xl` · `pill` | `4` · `8` · `16` · `20px` · `9999px` |
 | `--button-height` / `--input-height` | `44px` |
-| `--button-radius` / `--input-radius` | `var(--radius-md)` |
-| `--content-max-width` | `1280px` |
+| `--button-radius` / `--input-radius` | `var(--radius-sm)` |
+| `--content-max-width` | `1300px` |
 | `--content-gutter` | `var(--space-4)`; `--space-6` desde 640px; `--space-8` desde 1024px |
 | `--header-height` / `--app-header-height` · `--footer-height` | `7rem` · `3rem` |
 | `--transition-fast` · `--transition-normal` | `150ms ease` · `250ms ease` |
-| `--focus-width` · `--focus-offset` | `3px` · `4px` |
+| `--focus-width` · `--focus-offset` | `2px` · `2px` |
 
 ## ✅ Color semántico (tema claro: `:root, [data-theme='light']`)
 
 | Grupo | Tokens (valor en tema claro) |
 |---|---|
-| Primario | `--color-primary` (`--brand-cobalt`), `--color-primary-hover` `#1d4ed8`, `--color-primary-active` `#1e40af`, `--color-primary-deep` `#002f7a`, `--color-on-primary` `#ffffff` |
-| Acento | `--color-accent` `#d9153b`, `--color-accent-hover` / `--color-accent-strong` `#c40f35`, `--color-accent-soft` (`--brand-pink-light`), `--color-on-accent` `#ffffff`, `--color-decorative` (`--brand-pink`) |
-| Superficies | `--color-background` (`--brand-blue-light`), `--color-surface` `#ffffff`, `--color-surface-soft` (`--brand-blue-light`), `--color-surface-muted` `#f5fbff`, `--color-surface-accent` (`--brand-pink-light`) |
-| Texto | `--color-text` (`--brand-navy`), `--color-text-primary` `#062772`, `--color-text-secondary` `#52627a`, `--color-text-muted` `#5b6a80` |
-| Bordes | `--color-border` `#dce5f2`, `--color-border-soft` `#dce8ff`, `--color-border-strong` `#b8c9e1`, `--color-input-border` (`--color-text-muted`) |
-| Deshabilitado | `--color-disabled-background` (`--color-surface-soft`), `--color-disabled-text` (`--color-text-secondary`) |
-| Estado | `--color-success` `#15803d` / `-soft` `#dcfce7`; `--color-warning` `#b45309` / `-soft` `#fef3c7`; `--color-error` `#b91c1c` / `-soft` `#fee2e2`; `--color-info` (`--color-primary-hover`) / `-soft` `#dbeafe` |
+| Primario | `--color-primary` (`--btn-primary`), `--color-primary-hover`, `--color-primary-active`, `--color-primary-deep`, `--color-on-primary` `#ffffff` |
+| Acento | `--color-accent` (`--btn-secondary`), `--color-accent-hover` / `--color-accent-strong`, `--color-accent-soft` (`--btn-secondary-soft`), `--color-on-accent` `#ffffff`, `--color-decorative` (`--btn-secondary-accent`) |
+| Superficies | `--color-background` (`--bg-primary`), `--color-surface` (`--bg-tertiary`), `--color-surface-soft` (`--bg-secondary`), `--color-surface-muted` (`--bg-primary`), `--color-surface-accent` (`--btn-secondary-soft`) |
+| Texto | `--color-text` / `--color-text-primary` (`--text-primary`), `--color-text-secondary` / `--color-text-muted` (`--text-secondary`) |
+| Bordes | `--color-border` `rgb(104 119 143 / 25%)`, `--color-border-soft` `rgb(104 119 143 / 15%)`, `--color-border-strong` `rgb(104 119 143 / 40%)`, `--color-input-border` (`--text-secondary`) |
+| Deshabilitado | `--color-disabled-background` (`--bg-secondary`), `--color-disabled-text` (`--text-secondary`) |
+| Estado | `--color-success` (`--success`) / `-soft` (`--success-soft`); `--color-warning` (`--warning`) / `-soft` (`--warning-soft`); `--color-error` (`--destructive`) / `-soft` (`--destructive-soft`); `--color-info` (`--btn-primary`) / `-soft` (`--bg-secondary`) |
 | Otros | `--color-footer`, `--color-footer-deep`, `--color-soft-red`, `--color-soft-blue`, `--color-soft-cyan`, `--color-cobalt-blue`, `--color-azure-mist` |
-| Foco y selección | `--color-focus` (`--color-primary`), `--color-selection-background`, `--color-selection-text` |
-| Sombras | `--shadow-sm`, `--shadow-md`, `--shadow-lg`, `--shadow-soft-rgb`, `--shadow-card-rgb` |
+| Foco y selección | `--color-focus` (`--btn-secondary`), `--color-selection-background` (`--btn-secondary`), `--color-selection-text` `#ffffff` |
+| Sombras | `--shadow-sm`, `--shadow-md`, `--shadow-lg`, `--shadow-lg-hover`, `--shadow-soft-rgb`, `--shadow-card-rgb` (`104 119 143`) |
 
 ### Uso actual en badges de estado
 
@@ -68,11 +73,11 @@ Los contratos de `src/shared/tests/cssContracts.test.mjs` comprueban los valores
 
 | Estado | Fondo / texto | Contraste (tema claro) |
 |---|---|---|
-| Por defecto (Inactivo, Despublicado, Archivado) | `--color-surface-soft` / `--color-text-secondary` | 5,54 |
-| PUBLISHED, ACTIVE | `--brand-blue-light` / `--color-primary` | 7,45 |
-| DRAFT | `--color-warning-soft` / `--color-warning` | 4,51 (en el límite AA) |
-| PENDING_CHANGES | `--brand-pink-light` / `--brand-crimson` | 7,57 |
-| CANCELLED | `--color-error-soft` / `--color-error` | 5,30 |
+| Por defecto (Inactivo, Despublicado, Archivado) | `--color-surface-soft` / `--color-text-secondary` | ≥ 4,5 |
+| PUBLISHED, ACTIVE | `--color-info-soft` / `--color-primary` | ≥ 4,5 |
+| DRAFT | `--color-warning-soft` (borde `--color-warning`) / `--color-text` | ≥ 7,0 |
+| PENDING_CHANGES | `--color-accent-soft` / `--color-accent` | ≥ 7,0 |
+| CANCELLED | `--color-error-soft` / `--color-error` | ≥ 4,5 |
 
 ## ✅ Tema oscuro: definido, **no activado**
 

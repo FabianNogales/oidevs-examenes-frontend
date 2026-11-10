@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { Download, ExternalLink, FileText, RefreshCw, ScanLine,} from 'lucide-react'
+import { Download, ExternalLink, FileText, RefreshCw, ScanLine } from 'lucide-react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { OfflineAccessGate } from '../components/OfflineAccessGate'
 import { OfflineExamSummary } from '../components/OfflineExamSummary'
 import { OfflinePreparationPanel } from '../components/OfflinePreparationPanel'
@@ -66,42 +67,43 @@ function OfflineWorkspace({
       Icon: RefreshCw,
     },
   ] as const
+  const headingTitle =
+    tab === 'prepare'
+      ? 'Preparación del control sin conexión'
+      : tab === 'control'
+        ? 'Control de ingreso sin conexión'
+        : 'Sincronización de ingresos'
   return (
-    <main className={shared.page}>
-      <Breadcrumbs
-        items={[
-          { label: 'Mis listas locales', to: '/offline' },
-          { label: 'Control sin conexión' },
-        ]}
-      />
-      <header className={shared.header}>
-        <div>
-          <p className={shared.eyebrow}>EIDA · Lista exclusiva</p>
-          <h1>
-            {tab === 'prepare'
-              ? 'Preparación del control sin conexión'
-              : tab === 'control'
-                ? 'Control de ingreso sin conexión'
-                : 'Sincronización de ingresos'}
-          </h1>
-          <p className={shared.headerSubtitle}>
-            <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
-            <span>
-              {data.stored?.packet.exam.name ?? `Examen ${examId}`} ·{' '}
-              {identity.displayName}
+    <main>
+      <PageContainer className={shared.page}>
+        <PageHeader
+          eyebrow="EIDA · Lista exclusiva"
+          subtitle={headingTitle}
+          breadcrumbs={[
+            { label: 'Mis listas locales', to: '/offline' },
+            { label: 'Control sin conexión' },
+          ]}
+          description={
+            <span className={shared.headerSubtitle}>
+              <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
+              <span>
+                {data.stored?.packet.exam.name ?? `Examen ${examId}`} ·{' '}
+                {identity.displayName}
+              </span>
             </span>
-          </p>
-        </div>
-        {canRequest ? (
-          <Link
-            className={workspace.onlineControlLink}
-            to={`/exams/${examId}/entry-control`}
-          >
-            <span>Abrir control online</span>
-            <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
-          </Link>
-        ) : null}
-      </header>
+          }
+          actions={
+            canRequest ? (
+              <Link
+                className={workspace.onlineControlLink}
+                to={`/exams/${examId}/entry-control`}
+              >
+                <span>Abrir control online</span>
+                <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
+              </Link>
+            ) : undefined
+          }
+        />
       {!canRequest && online ? (
         <div className={shared.notice}>
           <p>
@@ -210,6 +212,7 @@ function OfflineWorkspace({
           canRequest={Boolean(canRequest) && !data.error}
         />
       ) : null}
+      </PageContainer>
     </main>
   )
 }
@@ -220,8 +223,17 @@ export function OfflineEntryPage() {
     <OfflineAccessGate>
       {(identity) =>
         id === null ? (
-          <main className={shared.page}>
-            <p role="alert">El identificador del examen no es válido.</p>
+          <main>
+            <PageContainer className={shared.page}>
+              <PageHeader
+                subtitle="Control sin conexión"
+                breadcrumbs={[
+                  { label: 'Mis listas locales', to: '/offline' },
+                  { label: 'Control sin conexión' },
+                ]}
+              />
+              <p role="alert">El identificador del examen no es válido.</p>
+            </PageContainer>
           </main>
         ) : (
           <OfflineWorkspace

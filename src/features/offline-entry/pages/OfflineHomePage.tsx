@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { ArrowRight, Clock, FolderKanban } from 'lucide-react'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { OfflineAccessGate } from '../components/OfflineAccessGate'
 import { readOwnedOfflinePackages } from '../storage/offlineStore'
 import { offlineError } from '../api/offlineApi'
@@ -43,17 +45,17 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
     ).values(),
   ]
   return (
-    <main className={shared.page}>
-      <header className={shared.header}>
-        <div>
-          <p className={shared.eyebrow}>EIDA · Este dispositivo</p>
-          <h1>Mis listas locales</h1>
-          <p>
-            Paquetes descargados por {identity.displayName}. Los eventos se
-            conservan aunque salgas de una pantalla.
-          </p>
-        </div>
-      </header>
+    <main>
+      <PageContainer className={shared.page}>
+        <PageHeader
+          eyebrow="EIDA · Este dispositivo"
+          subtitle="Mis listas locales"
+          description={`Paquetes descargados por ${identity.displayName}. Los eventos se conservan aunque salgas de una pantalla.`}
+          breadcrumbs={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Mis listas locales' },
+          ]}
+        />
       <p className={shared.notice}>
         Prepara y usa este espacio en la misma pestaña. Al cerrarla o bloquear
         el acceso puede ser necesario volver a verificar tu cuenta con conexión.
@@ -75,7 +77,7 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
           <FolderKanban
             size={36}
             strokeWidth={1.65}
-            color="var(--brand-blue)"
+            color="var(--color-primary)"
             style={{ marginInline: 'auto', marginBottom: '12px' }}
             aria-hidden="true"
           />
@@ -118,6 +120,7 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
           </article>
         ))}
       </div>
+      </PageContainer>
     </main>
   )
 }

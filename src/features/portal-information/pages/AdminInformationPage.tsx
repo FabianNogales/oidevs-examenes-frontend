@@ -15,6 +15,7 @@ import { getInformationContent, listInformation } from '@/features/portal-inform
 import { InformationEditor } from '@/features/portal-information/components/InformationEditor'
 import type { AdminInformation, InformationKind } from '@/features/portal-information/types/information.types'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import styles from '@/features/portal-shared/components/portalShared.module.css'
 import adminStyles from './adminInformation.module.css'
 
@@ -164,7 +165,7 @@ export function AdminInformationPage() {
   const { notify } = useAuth()
   const [kind, setKind] = useState<InformationKind>('sections')
   const [published, setPublished] = useState('')
-  const visibilitySelect = useRef<HTMLSelectElement>(null)
+  const visibilitySelect = useRef<HTMLElement>(null)
   const [version, setVersion] = useState(0)
   const [selected, setSelected] = useState<{
     kind: InformationKind
@@ -210,27 +211,29 @@ export function AdminInformationPage() {
           <>
             <label className={styles.field}>
               Tipo de contenido
-              <select
+              <Dropdown
                 value={kind}
-                onChange={(event) =>
-                  setKind(event.target.value as InformationKind)
+                options={[
+                  { value: 'sections', label: 'Secciones institucionales' },
+                  { value: 'faqs', label: 'Preguntas frecuentes' },
+                ]}
+                onChange={(nextValue) =>
+                  setKind(nextValue as InformationKind)
                 }
-              >
-                <option value="sections">Secciones institucionales</option>
-                <option value="faqs">Preguntas frecuentes</option>
-              </select>
+              />
             </label>
             <label className={styles.field}>
               Visibilidad
-              <select
-                ref={visibilitySelect}
+              <Dropdown
+                triggerRef={visibilitySelect}
                 value={published}
-                onChange={(event) => setPublished(event.target.value)}
-              >
-                <option value="">Todas</option>
-                <option value="1">Publicado</option>
-                <option value="0">Despublicado</option>
-              </select>
+                options={[
+                  { value: '', label: 'Todas' },
+                  { value: '1', label: 'Publicado' },
+                  { value: '0', label: 'Despublicado' },
+                ]}
+                onChange={(nextValue) => setPublished(nextValue)}
+              />
             </label>
             {/* "Tipo de contenido" is the view selector, not a filter: only
                 Visibilidad is cleared, and the search keeps DataTable's "Limpiar". */}

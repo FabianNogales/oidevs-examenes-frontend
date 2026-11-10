@@ -54,11 +54,11 @@
   justify-content: flex-start;
   margin-block: var(--space-5);
 }
-.toolbar button,
-.tabs button,
-.panel button,
-.filters button,
-.listButtons button {
+.toolbar button:where(:not([data-ds-button])),
+.tabs button:where(:not([data-ds-button])),
+.panel button:where(:not([data-ds-button])),
+.filters button:where(:not([data-ds-button])),
+.listButtons button:where(:not([data-ds-button])) {
   font: inherit;
   min-height: var(--button-height);
   padding: var(--space-2) var(--space-4);
@@ -69,11 +69,11 @@
   cursor: pointer;
 }
 .tabs [aria-pressed='true'],
-.filters button {
+.filters button:where(:not([data-ds-button])) {
   background: var(--color-primary);
   color: var(--color-surface);
 }
-.toolbar button:disabled {
+.toolbar button:where(:not([data-ds-button])):disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -89,8 +89,8 @@
   gap: var(--space-2);
   min-width: 0;
 }
-.filters input,
-.filters select {
+.filters input:where(:not([data-ds-dropdown] input)),
+.filters select:where(:not([data-ds-dropdown] select)) {
   font: inherit;
   width: 100%;
   min-height: var(--input-height);
@@ -119,8 +119,8 @@
   .cards strong {
     font-size: var(--font-size-2xl);
   }
-  .toolbar button,
-  .filters button {
+  .toolbar button:where(:not([data-ds-button])),
+  .filters button:where(:not([data-ds-button])) {
     width: 100%;
   }
 }

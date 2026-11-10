@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 120;
-  background: rgb(15 23 42 / 52%);
+  background: color-mix(in srgb, var(--color-text-primary) 52%, transparent);
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
@@ -13,7 +13,7 @@
   width: min(520px, 100%);
   background: var(--color-surface);
   border: 2px solid var(--color-border-strong);
-  border-top: 6px solid var(--brand-crimson);
+  border-top: 6px solid var(--color-accent);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-6);
@@ -41,17 +41,17 @@
   width: fit-content;
   padding: 3px 10px;
   border-radius: var(--radius-pill);
-  background: var(--brand-pink-light);
-  border: 1px solid var(--brand-pink);
-  color: var(--brand-crimson);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-decorative);
+  color: var(--color-accent);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 .modalTitleGroup h3 {
   margin: 0;
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
 }
 
@@ -80,14 +80,14 @@
 
 .conflictRoomTitle {
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
 }
 
 .conflictSlotItem {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  color: var(--brand-crimson);
+  color: var(--color-accent);
 }
 
 .modalFooter {
@@ -124,10 +124,10 @@
   padding: 0 var(--space-5);
   border-radius: var(--button-radius);
   border: none;
-  background: var(--brand-crimson);
+  background: var(--color-accent);
   color: var(--color-on-primary);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 

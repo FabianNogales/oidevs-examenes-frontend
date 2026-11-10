@@ -1,3 +1,5 @@
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import styles from './AdminModulePage.module.css'
 
 interface AdminModulePageProps {
@@ -10,16 +12,14 @@ export function AdminModulePage({
   description,
 }: AdminModulePageProps) {
   return (
-    <section className={styles.page}>
+    <PageContainer className={styles.page}>
+      <PageHeader
+        eyebrow="Administración"
+        subtitle={title}
+        description={description}
+        breadcrumbs={[{ label: 'Inicio', to: '/admin' }, { label: title }]}
+      />
       <div className={styles.content}>
-        <p className={styles.eyebrow}>Administración</p>
-
-        <h1>{title}</h1>
-
-        <p className={styles.description}>
-          {description}
-        </p>
-
         <div
           className={styles.status}
           role="status"
@@ -27,6 +27,6 @@ export function AdminModulePage({
           Módulo preparado para su implementación.
         </div>
       </div>
-    </section>
+    </PageContainer>
   )
 }

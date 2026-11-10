@@ -27,7 +27,7 @@ test('Importar estudiantes conserva el encabezado y breadcrumbs compartidos en c
       { label: 'Estudiantes', to: '/admin/students/manage' },
       { label: crumb },
     ])
-    assert.equal(nodes(headers[0].type(headers[0].props), node => node.type === 'h1').length, 1)
+    assert.equal(nodes(headers[0].type(headers[0].props), node => node.type === 'h2').length, 1)
     assert.equal(nodes(tree, node => node.type === 'main').length, 0)
   }
   h.unmount()

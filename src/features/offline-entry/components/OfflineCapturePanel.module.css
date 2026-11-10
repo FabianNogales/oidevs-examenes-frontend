@@ -29,14 +29,14 @@
 }
 
 .metricCard strong {
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
 }
 
 .metricCardIcon {
-  color: var(--brand-blue);
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -44,7 +44,7 @@
   margin-top: var(--space-3);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 
 /* Selector Segmentado de Método (Manual / QR) */
@@ -87,13 +87,13 @@
 
 .methodButton:hover:not([aria-pressed='true']) {
   background: var(--color-surface-soft);
-  color: var(--brand-blue);
+  color: var(--color-primary);
 }
 
 .methodButton[aria-pressed='true'] {
-  background: var(--brand-pink-light);
-  border-color: var(--brand-crimson);
-  color: var(--brand-crimson);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 /* Buscador y Lista de Estudiantes */
@@ -151,7 +151,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);
-  background: #fbfcfe;
+  background: var(--color-surface);
   min-width: 0;
   transition: border-color var(--transition-fast);
 }
@@ -162,7 +162,7 @@
 
 .studentInfo strong {
   display: block;
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-md);
   overflow-wrap: anywhere;
 }
@@ -176,7 +176,7 @@
 .studentBlocker {
   display: block;
   margin-top: var(--space-2);
-  color: var(--brand-crimson);
+  color: var(--color-accent);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
@@ -186,7 +186,7 @@
   position: relative;
   aspect-ratio: 4 / 3;
   width: min(100%, 650px);
-  background: var(--brand-navy);
+  background: var(--color-text-primary);
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-block: var(--space-4);
@@ -206,7 +206,7 @@
   color: var(--color-on-primary);
   padding: var(--space-5);
   text-align: center;
-  background: color-mix(in srgb, var(--brand-navy) 82%, transparent);
+  background: color-mix(in srgb, var(--color-text-primary) 82%, transparent);
 }
 
 .guide {

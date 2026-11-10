@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { useCourseOfferings } from '../hooks/useCourseOfferings'
 import { useOfferingPeriods } from '../hooks/useOfferingPeriods'
 import { CourseOfferingsTable } from './CourseOfferingsTable'
@@ -128,37 +129,37 @@ function OfferingCatalog({
         </label>
         <label className={styles.filter} htmlFor={`${id}-term`}>
           Periodo académico
-          <select
+          <Dropdown<string | number>
             id={`${id}-term`}
             value={termId}
-            onChange={(event) => {
-              setTermId(event.target.value)
+            options={[
+              { value: '', label: 'Todos los periodos' },
+              ...periods.map((period) => ({
+                value: period.id,
+                label: `${period.name}${period.status === 'INACTIVE' ? ' — Inactivo' : ' — Activo'}`,
+              })),
+            ]}
+            onChange={(nextTerm) => {
+              setTermId(String(nextTerm))
               setPage(1)
             }}
-          >
-            <option value="">Todos los periodos</option>
-            {periods.map((period) => (
-              <option key={period.id} value={period.id}>
-                {period.name}
-                {period.status === 'INACTIVE' ? ' — Inactivo' : ' — Activo'}
-              </option>
-            ))}
-          </select>
+          />
         </label>
         <label className={styles.filter} htmlFor={`${id}-status`}>
           Estado de la asignación
-          <select
+          <Dropdown<CourseOfferingStatus | ''>
             id={`${id}-status`}
             value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as CourseOfferingStatus | '')
+            options={[
+              { value: '', label: 'Todos los estados' },
+              { value: 'ACTIVE', label: 'Activa' },
+              { value: 'INACTIVE', label: 'Inactiva' },
+            ]}
+            onChange={(nextStatus) => {
+              setStatus(nextStatus)
               setPage(1)
             }}
-          >
-            <option value="">Todos los estados</option>
-            <option value="ACTIVE">Activa</option>
-            <option value="INACTIVE">Inactiva</option>
-          </select>
+          />
         </label>
 
         <button type="submit" className={styles.primaryButton}>

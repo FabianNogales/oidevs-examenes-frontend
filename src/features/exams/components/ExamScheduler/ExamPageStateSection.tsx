@@ -1,12 +1,11 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import type { BreadcrumbItem } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { ExamsSkeleton } from '../ExamsSkeleton'
 import layoutStyles from './ExamSchedulerLayout.module.css'
 import pageStyles from '../../pages/TeacherExamsPage.module.css'
 
-export interface BreadcrumbItem {
-  label: string
-  to?: string
-}
+export type { BreadcrumbItem }
 
 export interface ExamSchedulerPageShellProps {
   breadcrumbs: BreadcrumbItem[]
@@ -22,15 +21,15 @@ export function ExamSchedulerPageShell({
   children,
 }: ExamSchedulerPageShellProps) {
   return (
-    <main className={layoutStyles.schedulerPage}>
-      <Breadcrumbs items={breadcrumbs} />
-      <header className={layoutStyles.pageHeader}>
-        <div className={layoutStyles.titleGroup}>
-          <h1>{title}</h1>
-          <p>{subtitle}</p>
-        </div>
-      </header>
-      {children}
+    <main>
+      <PageContainer className={layoutStyles.schedulerPage}>
+        <PageHeader
+          subtitle={title}
+          description={subtitle}
+          breadcrumbs={breadcrumbs}
+        />
+        {children}
+      </PageContainer>
     </main>
   )
 }

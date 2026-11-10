@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { IncidentStudentPicker } from './IncidentStudentPicker'
 import { IncidentNavigationGuard } from './IncidentNavigationGuard'
 import { useIncidentSubmission } from '../hooks/useIncidentSubmission'
@@ -98,22 +99,23 @@ export function IncidentForm({
       ) : null}
       <div className={styles.field}>
         <label htmlFor={`${id}-type`}>Tipo de incidencia *</label>
-        <select
+        <Dropdown<IncidentType | ''>
           id={`${id}-type`}
           value={type}
           required
           disabled={disabled}
-          aria-invalid={Boolean(errors.type)}
+          invalid={Boolean(errors.type)}
           aria-describedby={errors.type ? `${id}-type-error` : undefined}
-          onChange={(event) => setType(event.target.value as IncidentType | '')}
-        >
-          <option value="">Selecciona una categoría</option>
-          {Object.entries(INCIDENT_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          placeholder="Selecciona una categoría"
+          options={[
+            { value: '', label: 'Selecciona una categoría' },
+            ...Object.entries(INCIDENT_TYPE_LABELS).map(([value, label]) => ({
+              value: value as IncidentType,
+              label,
+            })),
+          ]}
+          onChange={(nextType) => setType(nextType)}
+        />
         {errors.type ? (
           <p className={styles.error} id={`${id}-type-error`}>
             {errors.type}

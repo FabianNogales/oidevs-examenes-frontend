@@ -121,10 +121,16 @@ export function sourceHarness(overrides = {}) {
 export function nodes(tree, predicate) {
   if (!tree || typeof tree !== 'object') return []
   if (Array.isArray(tree)) return tree.flatMap((child) => nodes(child, predicate))
+  if (typeof tree.type?.__dropdownStaticNode === 'function') {
+    return nodes(tree.type.__dropdownStaticNode(tree.props), predicate)
+  }
   return [...(predicate(tree) ? [tree] : []), ...nodes(tree.props?.children, predicate)]
 }
 export function textContent(tree) {
   if (Array.isArray(tree)) return tree.map(textContent).join('')
+  if (tree && typeof tree === 'object' && typeof tree.type?.__dropdownStaticNode === 'function') {
+    return textContent(tree.type.__dropdownStaticNode(tree.props))
+  }
   return tree && typeof tree === 'object' ? textContent(tree.props?.children) : String(tree ?? '')
 }
 export const settle = () => new Promise((done) => setImmediate(done))

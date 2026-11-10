@@ -7,7 +7,7 @@
   grid-template-columns: 270px minmax(0, 1fr);
   min-height: calc(100dvh - var(--app-header-height) - var(--footer-height));
   width: 100%;
-  background: var(--color-surface-muted, #f5fbff);
+  background: var(--color-surface-soft);
   font-family: var(--font-family);
 }
 
@@ -37,8 +37,8 @@
 .sidebar {
   justify-content: space-between;
   padding: 28px 20px;
-  background: var(--brand-blue-light, #eaf3ff);
-  border-right: 1px solid var(--color-border-strong, #b8c9e1);
+  background: var(--color-background);
+  border-right: 1px solid var(--color-border-strong);
 }
 
 .sidebarTop {
@@ -48,9 +48,9 @@
 .sidebarTitle {
   margin: 0;
   padding-left: 8px;
-  color: var(--brand-navy, #172554);
-  font-size: 20px;
-  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .optionsNav {
@@ -64,26 +64,26 @@
   width: 100%;
   min-height: 44px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1.5px solid transparent;
   background: transparent;
-  color: var(--brand-navy, #172554);
+  color: var(--color-text-primary);
   font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   text-align: left;
   cursor: pointer;
-  transition: all var(--transition-fast, 150ms ease);
+  transition: all var(--transition-fast);
 }
 
 .optionBtn:hover:not(.optionBtnActive) {
-  background: rgb(37 99 235 / 8%);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .optionBtnActive {
-  background: var(--brand-pink-light, #f7e9ed);
-  border-color: var(--brand-crimson, #8b1e3f);
-  color: var(--brand-crimson, #8b1e3f);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .optionIcon {
@@ -109,18 +109,18 @@
   min-height: 38px;
   padding: 0 18px;
   margin-top: 32px;
-  background: var(--color-surface, #ffffff);
-  border: 1.5px solid var(--brand-blue, #2563eb);
-  border-radius: 10px;
-  color: var(--brand-blue, #2563eb);
-  font-size: 14px;
-  font-weight: 600;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: background-color var(--transition-fast, 150ms ease);
+  transition: background-color var(--transition-fast);
 }
 
 .backBtn:hover {
-  background: var(--color-soft-blue, #dff1ff);
+  background: var(--color-info-soft);
 }
 
 /* ==========================================================================
@@ -129,7 +129,7 @@
 .mainArea {
   gap: 24px;
   padding: 28px 36px;
-  max-width: 1200px;
+  max-width: var(--content-max-width);
   width: 100%;
 }
 
@@ -138,17 +138,17 @@
   align-items: center;
   gap: 24px;
   padding: 24px 32px;
-  border-radius: 16px;
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  box-shadow: 0 6px 20px rgb(23 37 84 / 6%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .bannerActive {
-  background: linear-gradient(90deg, #e3f2fd 0%, #d7f4e2 58%, #2e7d32 100%);
+  background: linear-gradient(90deg, var(--color-info-soft) 0%, var(--color-success-soft) 58%, var(--color-success) 100%);
 }
 
 .bannerInactive {
-  background: linear-gradient(90deg, #e3f2fd 0%, #fde8ec 58%, #8b1e3f 100%);
+  background: linear-gradient(90deg, var(--color-info-soft) 0%, var(--color-accent-soft) 58%, var(--color-accent) 100%);
 }
 
 .avatarCircle {
@@ -157,20 +157,20 @@
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  border: 4px solid #ffffff;
-  color: #ffffff;
-  font-size: 34px;
-  font-weight: 700;
+  border: 4px solid var(--color-surface);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgb(23 37 84 / 15%);
+  box-shadow: var(--shadow-md);
 }
 
 .avatarStudent {
-  background: var(--brand-navy, #172554);
+  background: var(--color-text-primary);
 }
 
 .avatarCrimson {
-  background: var(--brand-crimson, #8b1e3f);
+  background: var(--color-accent);
 }
 
 .bannerIdentity {
@@ -179,9 +179,9 @@
 
 .entityName {
   margin: 0;
-  color: var(--brand-navy, #172554);
+  color: var(--color-text-primary);
   font-size: clamp(1.5rem, 2.4vw, 2.1rem);
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   line-height: 1.15;
 }
 
@@ -198,26 +198,26 @@
   align-items: center;
   gap: 6px;
   padding: 5px 16px;
-  border-radius: 9999px;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: var(--radius-pill);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .roleBadgeStudent {
-  background: var(--brand-blue, #2563eb);
+  background: var(--color-primary);
 }
 
 .roleBadgeCrimson {
-  background: var(--brand-crimson, #8b1e3f);
+  background: var(--color-accent);
 }
 
 .statusBannerActive {
-  background: #2e7d32;
+  background: var(--color-success);
 }
 
 .statusBannerInactive {
-  background: #b91c1c;
+  background: var(--color-error);
 }
 
 .statusCheckIcon {
@@ -226,10 +226,10 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #ffffff;
-  color: #2e7d32;
-  font-size: 11px;
-  font-weight: 800;
+  background: var(--color-surface);
+  color: var(--color-success);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-extrabold);
 }
 
 /* ==========================================================================
@@ -244,10 +244,10 @@
   align-items: center;
   gap: 16px;
   padding: 18px 22px;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid #e8eef7;
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgb(23 37 84 / 4%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .infoCardIcon {
@@ -255,9 +255,9 @@
   place-items: center;
   width: 46px;
   height: 46px;
-  border-radius: 12px;
-  background: var(--brand-blue-light, #eaf3ff);
-  color: var(--brand-blue, #2563eb);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -272,15 +272,15 @@
 }
 
 .infoCardLabel {
-  color: var(--color-text-secondary, #52627a);
-  font-size: 13px;
-  font-weight: 500;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
 }
 
 .infoCardValue {
-  color: var(--brand-navy, #172554);
-  font-size: 15px;
-  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   overflow-wrap: anywhere;
 }
 
@@ -288,21 +288,21 @@
   display: inline-flex;
   align-items: center;
   padding: 3px 14px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .accountStatusActive {
-  background: #dcfce7;
-  border: 1px solid #2e7d32;
-  color: #15803d;
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
 }
 
 .accountStatusInactive {
-  background: #fee2e2;
-  border: 1px solid #b91c1c;
-  color: #b91c1c;
+  background: var(--color-error-soft);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
 }
 
 /* ==========================================================================
@@ -310,23 +310,23 @@
    ========================================================================== */
 .sectionCard {
   padding: 28px 32px;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border, #dce5f2);
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgb(23 37 84 / 5%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .sectionCard h2 {
   margin: 0 0 6px;
-  color: var(--brand-navy, #172554);
-  font-size: 20px;
-  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .sectionCard p {
   margin: 0 0 20px;
-  color: var(--color-text-secondary, #52627a);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .editForm {
@@ -338,43 +338,43 @@
 }
 
 .formGroup label {
-  color: var(--brand-navy, #172554);
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .formInput {
   height: 44px;
   padding: 0 14px;
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  border-radius: 10px;
-  font-size: 14px;
-  color: var(--brand-navy, #172554);
-  background: #ffffff;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
 }
 
 .formInput:disabled {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--color-surface-soft);
+  color: var(--color-text-muted);
 }
 
 .feedbackMsg {
   grid-column: 1 / -1;
   padding: 12px 16px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   margin: 0;
 }
 
 .feedbackSuccess {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .feedbackError {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-error-soft);
+  color: var(--color-error);
 }
 
 .formActions {
@@ -389,22 +389,22 @@
 .saveBtn {
   min-height: 42px;
   padding: 0 20px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
 .cancelBtn {
-  background: #ffffff;
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  color: var(--brand-navy, #172554);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
 }
 
 .saveBtn {
-  background: var(--brand-blue, #2563eb);
+  background: var(--color-primary);
   border: none;
-  color: #ffffff;
+  color: var(--color-on-primary);
 }
 
 /* ==========================================================================
@@ -416,10 +416,10 @@
 }
 
 .statusSelect {
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  border-radius: var(--radius-md, 10px);
-  transition: all var(--transition-fast, 150ms ease);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
 }
 
 .customSelectButton {
@@ -434,7 +434,7 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  transition: transform var(--transition-fast, 150ms ease);
+  transition: transform var(--transition-fast);
 }
 
 .customSelectIconOpen {
@@ -442,23 +442,23 @@
 }
 
 .statusSelectActive {
-  background-color: #d1f4d9 !important;
-  border: 1.5px solid #2e7d32 !important;
-  color: #14532d !important;
+  background-color: var(--color-success-soft) !important;
+  border: 1.5px solid var(--color-success) !important;
+  color: var(--color-success) !important;
 }
 
 .statusSelectActive:focus {
-  box-shadow: 0 0 0 3px color-mix(in srgb, #2e7d32 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 20%, transparent);
 }
 
 .statusSelectInactive {
-  background-color: #fde8ec !important;
-  border: 1.5px solid #d9384a !important;
-  color: #9e1c2e !important;
+  background-color: var(--color-error-soft) !important;
+  border: 1.5px solid var(--color-error) !important;
+  color: var(--color-error) !important;
 }
 
 .statusSelectInactive:focus {
-  box-shadow: 0 0 0 3px color-mix(in srgb, #d9384a 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 20%, transparent);
 }
 
 /* Contenedor de las opciones */
@@ -467,9 +467,9 @@
   top: calc(100% + 6px);
   left: 0;
   width: 100%;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  border-radius: var(--radius-md, 10px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   list-style: none;
   padding: 0;
@@ -481,38 +481,38 @@
 /* Opciones individuales */
 .customOption {
   padding: 12px 14px;
-  color: var(--brand-navy, #172554);
-  font-family: var(--font-family, 'Poppins', sans-serif);
-  font-size: var(--font-size-sm, 14px);
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   cursor: pointer;
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 /* Hover genérico */
 .customOption:hover {
-  background-color: var(--brand-blue-light, #eaf3ff);
-  color: var(--brand-blue, #2563eb);
+  background-color: var(--color-background);
+  color: var(--color-primary);
 }
 
 /* Opción "Activo" seleccionada - Verde Universal */
 .customOptionActiveSuccess {
-  background-color: var(--color-success-soft, #dcfce7);
-  color: var(--color-success, #15803d);
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .customOptionActiveSuccess:hover {
-  background-color: #cbf4d8;
+  background-color: color-mix(in srgb, var(--color-success-soft) 88%, var(--color-success));
 }
 
 /* Opción "Inactivo" seleccionada */
 .customOptionActiveDanger {
-  background-color: var(--color-error-soft, #fee2e2);
-  color: var(--color-error, #b91c1c);
+  background-color: var(--color-error-soft);
+  color: var(--color-error);
 }
 
 .customOptionActiveDanger:hover {
-  background-color: #fdd4d4;
+  background-color: color-mix(in srgb, var(--color-error-soft) 88%, var(--color-error));
 }
 
 /* ==========================================================================
@@ -538,15 +538,15 @@
 .sectionTitleGroup h2,
 .sectionTitleGroup h3 {
   margin: 0;
-  color: var(--brand-navy, #172554);
-  font-size: 20px;
-  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .sectionTitleGroup p {
   margin: 0;
-  color: var(--color-text-secondary, #52627a);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 /* ==========================================================================
@@ -557,9 +557,9 @@
   align-items: center;
   gap: 6px;
   padding: 5px;
-  background: var(--brand-blue-light, #eaf3ff);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  border-radius: 12px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
 }
 
 .filterTabBtn {
@@ -569,35 +569,35 @@
   min-height: 36px;
   padding: 6px 16px;
   border: 1.5px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-text-secondary, #52627a);
-  font-family: var(--font-family, 'Poppins', sans-serif);
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all var(--transition-fast, 150ms ease);
+  transition: all var(--transition-fast);
 }
 
 .filterTabBtn:hover:not(.filterTabBtnActive):not(.filterTabBtnCompletedActive) {
-  color: var(--brand-navy, #172554);
-  background: rgb(255 255 255 / 60%);
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
 }
 
 /* Pestaña "Activas" seleccionada (Énfasis verde semántico) */
 .filterTabBtnActive {
-  background: var(--color-surface, #ffffff);
-  border-color: #2e7d32;
-  color: #15803d;
-  box-shadow: 0 2px 6px rgb(23 37 84 / 8%);
+  background: var(--color-surface);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Pestaña "Concluidas" seleccionada (Énfasis azul institucional) */
 .filterTabBtnCompletedActive {
-  background: var(--color-surface, #ffffff);
-  border-color: var(--brand-blue, #2563eb);
-  color: var(--brand-blue, #2563eb);
-  box-shadow: 0 2px 6px rgb(23 37 84 / 8%);
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .filterTabCounter {
@@ -607,21 +607,21 @@
   min-width: 22px;
   height: 20px;
   padding: 0 6px;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 700;
-  background: rgb(23 37 84 / 8%);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
   color: inherit;
 }
 
 .filterTabBtnActive .filterTabCounter {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .filterTabBtnCompletedActive .filterTabCounter {
-  background: var(--brand-blue-light, #eaf3ff);
-  color: var(--brand-blue, #2563eb);
+  background: var(--color-background);
+  color: var(--color-primary);
 }
 
 /* Badges para Aprobado / Reprobado / Periodo / Exámenes / Roles */
@@ -634,11 +634,11 @@
 
 .termBadge {
   padding: 4px 10px;
-  border-radius: 8px;
-  background: var(--brand-blue-light, #eaf3ff);
-  color: var(--brand-cobalt, #0049a8);
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .groupBadge {
@@ -648,51 +648,51 @@
   min-width: 36px;
   padding: 3px 10px;
   border-radius: 6px;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: var(--brand-navy, #172554);
-  font-size: 13px;
-  font-weight: 700;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .examTypeBadge {
   padding: 4px 10px;
-  border-radius: 8px;
-  background: var(--brand-pink-light, #f7e9ed);
-  color: var(--brand-crimson, #8b1e3f);
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .rolePill {
   padding: 4px 12px;
-  border-radius: 9999px;
-  font-size: 12.5px;
-  font-weight: 700;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .rolePillStudent {
-  background: var(--brand-blue-light, #eaf3ff);
-  color: var(--brand-blue, #2563eb);
-  border: 1px solid #bfdbfe;
+  background: var(--color-background);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border-strong);
 }
 
 .rolePillCollaborator {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: var(--color-warning-soft);
+  color: var(--color-text);
+  border: 1px solid var(--color-warning);
 }
 
 .rolePillTeacher {
-  background: var(--brand-pink-light, #f7e9ed);
-  color: var(--brand-crimson, #8b1e3f);
-  border: 1px solid var(--brand-pink, #d67a8c);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border: 1px solid var(--color-decorative);
 }
 
 .rolePillAdmin {
-  background: #ede9fe;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
+  background: var(--color-info-soft);
+  color: var(--color-info);
+  border: 1px solid var(--color-info);
 }
 
 /* ==========================================================================
