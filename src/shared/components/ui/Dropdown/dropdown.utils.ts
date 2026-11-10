@@ -150,6 +150,13 @@ export function createDropdownStaticNode<TValue extends DropdownValue>(
     },
   }))
 
+  const resolvedMulti = props.multiple
+    ? (props.value ?? props.defaultValue ?? [])
+    : []
+  const resolvedSingle = !props.multiple
+    ? (props.value ?? props.defaultValue ?? (props.options[0]?.value ?? ('' as TValue)))
+    : ('' as TValue)
+
   return {
     type: 'select',
     key: null,
@@ -160,7 +167,7 @@ export function createDropdownStaticNode<TValue extends DropdownValue>(
       multiple: props.multiple || undefined,
       disabled: props.disabled,
       required: props.required,
-      value: props.multiple ? props.value.map(String) : props.value,
+      value: props.multiple ? resolvedMulti.map(String) : resolvedSingle,
       'aria-label': props['aria-label'],
       'aria-labelledby': props['aria-labelledby'],
       'aria-describedby': props['aria-describedby'],
@@ -193,21 +200,21 @@ export function createDropdownStaticNode<TValue extends DropdownValue>(
             const nextValues = props.options
               .filter((option) => selectedRaw.includes(String(option.value)))
               .map((option) => option.value)
-            props.onChange(nextValues)
+            props.onChange?.(nextValues)
             return
           }
           const rawValue = (target ? target.value : eventOrValue) as TValue
-          props.onChange(toggleMultipleValue(rawValue, props.value))
+          props.onChange?.(toggleMultipleValue(rawValue, resolvedMulti))
           return
         }
 
         const rawSingle = (target ? target.value : eventOrValue) as DropdownValue
-        const nextSingle = coerceSingleValue(
+        const nextSingle = coerceSingleValue<TValue>(
           rawSingle,
-          props.value,
+          resolvedSingle,
           props.options,
         )
-        props.onChange(nextSingle)
+        props.onChange?.(nextSingle)
       },
     },
   }

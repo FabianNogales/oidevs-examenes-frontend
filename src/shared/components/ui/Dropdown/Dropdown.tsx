@@ -114,6 +114,20 @@ export function Dropdown<TValue extends DropdownValue = string>(
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState<number>(-1)
+  const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom')
+  const [uncontrolledSingle, setUncontrolledSingle] = useState<TValue>(
+    () =>
+      (!props.multiple && props.defaultValue !== undefined
+        ? props.defaultValue
+        : (options[0]?.value ?? ('' as TValue))) as TValue,
+  )
+  const [uncontrolledMultiple, setUncontrolledMultiple] = useState<
+    readonly TValue[]
+  >(() => (props.multiple && props.defaultValue ? props.defaultValue : []))
+
+  const currentValue: TValue | readonly TValue[] = isMultiple
+    ? (props.value ?? uncontrolledMultiple)
+    : (props.value !== undefined ? props.value : uncontrolledSingle)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -122,8 +136,8 @@ export function Dropdown<TValue extends DropdownValue = string>(
   const isInvalid = resolveInvalidFlag(invalid, ariaInvalid)
 
   const selectedOptions = useMemo(
-    () => getSelectedDropdownOptions(options, props.value, isMultiple),
-    [options, props.value, isMultiple],
+    () => getSelectedDropdownOptions(options, currentValue, isMultiple),
+    [options, currentValue, isMultiple],
   )
 
   const visibleOptions = useMemo(
@@ -158,9 +172,20 @@ export function Dropdown<TValue extends DropdownValue = string>(
 
   function openMenu() {
     if (disabled) return
+    if (
+      typeof window !== 'undefined' &&
+      triggerRef.current &&
+      typeof triggerRef.current.getBoundingClientRect === 'function'
+    ) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(spaceBelow < 240 && rect.top > spaceBelow ? 'top' : 'bottom')
+    } else {
+      setPlacement('bottom')
+    }
     setIsOpen(true)
     const firstSelectedIndex = visibleOptions.findIndex((option) =>
-      isOptionSelected(option.value, props.value, isMultiple),
+      isOptionSelected(option.value, currentValue, isMultiple),
     )
     setActiveIndex(
       firstSelectedIndex >= 0
@@ -190,24 +215,44 @@ export function Dropdown<TValue extends DropdownValue = string>(
   function handleOptionSelect(option: DropdownOption<TValue>) {
     if (disabled || option.disabled) return
     if (props.multiple) {
-      const nextValues = toggleMultipleValue(option.value, props.value)
-      props.onChange(nextValues)
+      const currentList = (props.value ?? uncontrolledMultiple) as readonly TValue[]
+      const nextValues = toggleMultipleValue(option.value, currentList)
+      if (props.value === undefined) {
+        setUncontrolledMultiple(nextValues)
+      }
+      props.onChange?.(nextValues)
       return
     }
-    const nextSingle = coerceSingleValue(option.value, props.value, options)
-    props.onChange(nextSingle)
+    const currentSingle = (
+      props.value !== undefined ? props.value : uncontrolledSingle
+    ) as TValue
+    const nextSingle = coerceSingleValue(option.value, currentSingle, options)
+    if (props.value === undefined) {
+      setUncontrolledSingle(nextSingle)
+    }
+    props.onChange?.(nextSingle)
     closeMenu(true)
   }
 
   function handleClear() {
     if (disabled) return
     if (props.multiple) {
-      props.onChange([])
+      if (props.value === undefined) {
+        setUncontrolledMultiple([])
+      }
+      props.onChange?.([])
       return
     }
     const emptyOption = options.find((opt) => String(opt.value) === '')
     const fallback = (emptyOption ? emptyOption.value : '') as TValue
-    props.onChange(coerceSingleValue(fallback, props.value, options))
+    const currentSingle = (
+      props.value !== undefined ? props.value : uncontrolledSingle
+    ) as TValue
+    const nextSingle = coerceSingleValue(fallback, currentSingle, options)
+    if (props.value === undefined) {
+      setUncontrolledSingle(nextSingle)
+    }
+    props.onChange?.(nextSingle)
     closeMenu(true)
   }
 
@@ -303,6 +348,7 @@ export function Dropdown<TValue extends DropdownValue = string>(
     .join(' ')
   const menuClasses = [
     styles.menu,
+    placement === 'top' ? styles.menuTop : null,
     align === 'end' ? styles.alignEnd : styles.alignStart,
     menuClassName,
   ]
@@ -329,8 +375,8 @@ export function Dropdown<TValue extends DropdownValue = string>(
         required={required}
         value={
           isMultiple
-            ? props.value.map(String)
-            : String(props.value ?? '')
+            ? (currentValue as readonly TValue[]).map(String)
+            : String(currentValue ?? '')
         }
         onChange={(event) => {
           if (disabled) return
@@ -341,15 +387,24 @@ export function Dropdown<TValue extends DropdownValue = string>(
             const nextValues = options
               .filter((option) => selectedRaw.includes(String(option.value)))
               .map((option) => option.value)
-            props.onChange(nextValues)
+            if (props.value === undefined) {
+              setUncontrolledMultiple(nextValues)
+            }
+            props.onChange?.(nextValues)
             return
           }
+          const currentSingle = (
+            props.value !== undefined ? props.value : uncontrolledSingle
+          ) as TValue
           const nextValue = coerceSingleValue(
             event.currentTarget.value,
-            props.value,
+            currentSingle,
             options,
           )
-          props.onChange(nextValue)
+          if (props.value === undefined) {
+            setUncontrolledSingle(nextValue)
+          }
+          props.onChange?.(nextValue)
         }}
       >
         {isMultiple && options.every((opt) => String(opt.value) !== '') ? null : (
@@ -475,7 +530,7 @@ export function Dropdown<TValue extends DropdownValue = string>(
               {visibleOptions.map((option, index) => {
                 const selected = isOptionSelected(
                   option.value,
-                  props.value,
+                  currentValue,
                   isMultiple,
                 )
                 const active = index === activeIndex

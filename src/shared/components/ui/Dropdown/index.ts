@@ -1,4 +1,7 @@
-export { Dropdown } from './Dropdown'
+import { Dropdown } from './Dropdown'
+
+export { Dropdown }
+export const Menu = Dropdown
 export type {
   DropdownAlign,
   DropdownBaseProps,
@@ -12,3 +15,8 @@ export type {
   DropdownTone,
   DropdownValue,
 } from './dropdown.types'
+export type {
+  DropdownOption as MenuOption,
+  DropdownProps as MenuProps,
+} from './dropdown.types'
+

@@ -87,20 +87,24 @@ export interface DropdownSingleProps<TValue extends DropdownValue = string>
   extends DropdownBaseProps<TValue> {
   /** Selección única (por defecto) */
   multiple?: false
-  /** Valor seleccionado actualmente */
-  value: TValue
+  /** Valor seleccionado actualmente (modo controlado) */
+  value?: TValue
+  /** Valor inicial cuando se utiliza de forma no controlada */
+  defaultValue?: TValue
   /** Callback al elegir una opción */
-  onChange: (value: TValue) => void
+  onChange?: (value: TValue) => void
 }
 
 export interface DropdownMultipleProps<TValue extends DropdownValue = string>
   extends DropdownBaseProps<TValue> {
   /** Selección múltiple habilitada */
   multiple: true
-  /** Lista de valores seleccionados actualmente */
-  value: readonly TValue[]
+  /** Lista de valores seleccionados actualmente (modo controlado) */
+  value?: readonly TValue[]
+  /** Valores iniciales cuando se utiliza de forma no controlada */
+  defaultValue?: readonly TValue[]
   /** Callback al alternar una o varias opciones */
-  onChange: (values: TValue[]) => void
+  onChange?: (values: TValue[]) => void
 }
 
 export type DropdownProps<TValue extends DropdownValue = string> =
