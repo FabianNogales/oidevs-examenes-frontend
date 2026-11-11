@@ -1,3 +1,4 @@
+import { LegacyCaseRedirect } from '@/features/discipline/LegacyCaseRedirect'
 import type { ReactNode } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
@@ -70,6 +71,9 @@ function DetailContent({
 
 export function IncidentDetailPage() {
   const params = useParams()
+  const location = useLocation()
+  if (!location.pathname.startsWith('/admin/'))
+    return <LegacyCaseRedirect source="INCIDENT" param="incidentId" />
   const examId = Number(params.examId)
   const incidentId = Number(params.incidentId)
   if (!isPositiveId(examId) || !isPositiveId(incidentId))

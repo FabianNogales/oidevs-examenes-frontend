@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { ExamIncidentNavigation } from '../components/ExamIncidentNavigation'
@@ -19,9 +19,11 @@ export function ExamIncidentConsultation({
   examId,
   mode = 'teacher',
   renderExamPicker,
+  embedded = false,
 }: {
   examId: number
   mode?: 'teacher' | 'admin'
+  embedded?: boolean
   renderExamPicker?: (exam?: IncidentsPage['exam']) => ReactNode
 }) {
   const list = useIncidentConsultation(examId, mode)
@@ -42,41 +44,48 @@ export function ExamIncidentConsultation({
   const response = list.response
   const filtered = Object.values(filters).some((value) => value.trim())
   // AdminLayout already renders the admin page's main landmark; the teacher route needs its own.
+  const Wrapper = embedded ? Fragment : PageContainer
   const content = (
-    <PageContainer labelledBy={titleId}>
-      <PageHeader
-        title="Incidencias e ingresos irregulares"
-        titleId={titleId}
-        description={
-          response
-            ? `${response.exam.name} · ${response.exam.subject_name}`
-            : 'Consulta los acontecimientos registrados para este examen.'
-        }
-        breadcrumbs={[
-          {
-            label: mode === 'admin' ? 'Administración' : 'Mis exámenes',
-            to: mode === 'admin' ? '/admin' : '/teacher/exams',
-          },
-          { label: 'Incidencias' },
-        ]}
-      />
-      {mode === 'teacher' && <ExamIncidentNavigation examId={examId} />}
+    <Wrapper {...(embedded ? {} : { labelledBy: titleId })}>
+      {!embedded && (
+        <PageHeader
+          title="Incidencias e ingresos irregulares"
+          titleId={titleId}
+          description={
+            response
+              ? `${response.exam.name} · ${response.exam.subject_name}`
+              : 'Consulta los acontecimientos registrados para este examen.'
+          }
+          breadcrumbs={[
+            {
+              label: mode === 'admin' ? 'Administración' : 'Mis exámenes',
+              to: mode === 'admin' ? '/admin' : '/teacher/exams',
+            },
+            { label: 'Incidencias' },
+          ]}
+        />
+      )}
+      {!embedded && mode === 'teacher' && (
+        <ExamIncidentNavigation examId={examId} />
+      )}
       {renderExamPicker?.(response?.exam)}
-      <div className={styles.access}>
-        {mode === 'teacher' && response?.permissions.can_create && (
-          <Link
-            className={styles.primaryAction}
-            to={`/exams/${examId}/incidents/create${search}`}
-          >
-            Registrar incidencia
-          </Link>
-        )}
-        {mode === 'teacher' && (
-          <Link to={`/exams/${examId}/entry-control?from=teacher`}>
-            Control de ingreso
-          </Link>
-        )}
-      </div>
+      {!embedded && (
+        <div className={styles.access}>
+          {mode === 'teacher' && response?.permissions.can_create && (
+            <Link
+              className={styles.primaryAction}
+              to={`/exams/${examId}/incidents/create${search}`}
+            >
+              Registrar incidencia
+            </Link>
+          )}
+          {mode === 'teacher' && (
+            <Link to={`/exams/${examId}/entry-control?from=teacher`}>
+              Control de ingreso
+            </Link>
+          )}
+        </div>
+      )}
       <IncidentConsultationFilters
         key={JSON.stringify(filters)}
         initial={filters}
@@ -113,7 +122,7 @@ export function ExamIncidentConsultation({
         Una incidencia documenta lo ocurrido; no confirma una infracción ni
         aplica una sanción.
       </p>
-    </PageContainer>
+    </Wrapper>
   )
-  return mode === 'admin' ? content : <main>{content}</main>
+  return embedded || mode === 'admin' ? content : <main>{content}</main>
 }

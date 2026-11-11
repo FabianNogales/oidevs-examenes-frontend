@@ -12,6 +12,7 @@ function setup(handler) {
     '@/shared/api/httpClient': { httpClient: { get: handler } },
     'react-router': {
       Link: 'link',
+      useLocation: () => ({ pathname: '/exams/4/incidents' }),
       NavLink: 'nav-link',
       useParams: () => ({ examId: '4' }),
       useSearchParams: () => [new URLSearchParams('from=teacher')],
@@ -63,8 +64,6 @@ test('HU27 navigation exposes only implemented sections and keeps exam summary f
     [
       '/teacher/exams/4?view=cancelled&page=2',
       '/exams/4/incidents?from=teacher',
-      '/teacher/exams/4/infractions',
-      '/teacher/exams/4/expulsions',
       '/teacher/exams/4/attendance',
       '/teacher/exams/4/reports',
     ],
@@ -79,11 +78,12 @@ test('HU27 listing renders actual empty results but not an authorization error a
       if (denied) throw { isAxiosError: true, response: { status: 403 } }
       return { data: result }
     })
-    const { ExamIncidentsPage } = h.load(
-      'features/incidents/pages/ExamIncidentsPage.tsx',
+    const { ExamIncidentConsultation } = h.load(
+      'features/incidents/pages/ExamIncidentConsultation.tsx',
     )
-    const element = ExamIncidentsPage()
-    let tree = h.render(() => expandTable(element.type(element.props)))
+    let tree = h.render(() =>
+      expandTable(ExamIncidentConsultation({ examId: 4 })),
+    )
     assert.equal(
       nodes(tree, (n) => n.type === 'data-table')[0].props.loading,
       true,

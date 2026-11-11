@@ -12,13 +12,16 @@ export function ExpulsionLayout({
   title,
   children,
   detail = false,
+  embedded = false,
 }: {
   examId: number
   exam?: InfractionExam
   title: string
   children: ReactNode
   detail?: boolean
+  embedded?: boolean
 }) {
+  if (embedded) return <>{children}</>
   return (
     <main>
       <PageContainer labelledBy={titleId}>
@@ -35,8 +38,8 @@ export function ExpulsionLayout({
             ...(detail
               ? [
                   {
-                    label: 'Expulsiones',
-                    to: `/teacher/exams/${examId}/expulsions`,
+                    label: 'Incidencias e infracciones',
+                    to: `/exams/${examId}/incidents?from=teacher&kind=expulsions`,
                   },
                 ]
               : []),

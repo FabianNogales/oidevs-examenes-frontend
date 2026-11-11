@@ -46,6 +46,7 @@ function setup(handler = async () => page) {
   let search = 'from=teacher',
     examId = 4
   const h = sourceHarness({
+    '@/features/discipline/LegacyCaseRedirect': {LegacyCaseRedirect: 'legacy-case'},
     '../components/IncidentExportActions': {
       IncidentExportActions: 'export-actions',
     },
@@ -62,7 +63,7 @@ function setup(handler = async () => page) {
       Link: 'link',
       NavLink: 'nav-link',
       useParams: () => ({ examId: String(examId), incidentId: '9' }),
-      useLocation: () => ({ state: {} }),
+      useLocation: () => ({ pathname: '/admin/incidents/9', state: {} }),
       useSearchParams: () => [
         new URLSearchParams(search),
         (next) => {

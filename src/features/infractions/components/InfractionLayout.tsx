@@ -13,13 +13,16 @@ export function InfractionLayout({
   title,
   children,
   detail = false,
+  embedded = false,
 }: {
   examId: number
   exam?: InfractionExam
   title: string
   children: ReactNode
   detail?: boolean
+  embedded?: boolean
 }) {
+  if (embedded) return <>{children}</>
   return (
     <main>
       <PageContainer labelledBy={titleId}>
@@ -36,8 +39,8 @@ export function InfractionLayout({
             ...(detail
               ? [
                   {
-                    label: 'Infracciones',
-                    to: `/teacher/exams/${examId}/infractions`,
+                    label: 'Incidencias e infracciones',
+                    to: `/exams/${examId}/incidents?from=teacher&kind=infractions`,
                   },
                 ]
               : []),

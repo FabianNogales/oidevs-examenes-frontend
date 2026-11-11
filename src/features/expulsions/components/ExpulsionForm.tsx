@@ -13,11 +13,27 @@ import type {
 import { RelatedInfractionPicker } from './RelatedInfractionPicker'
 import styles from '@/features/incidents/components/IncidentForm.module.css'
 import management from '@/features/infractions/components/InfractionManagement.module.css'
-export function ExpulsionForm({ examId }: { examId: number }) {
+export function ExpulsionForm({
+  examId,
+  caseRecord,
+  onSaved,
+  onCancel,
+  onBusyChange,
+}: {
+  examId: number
+  caseRecord?: { student: InfractionStudent; infraction: RelatedInfraction }
+  onSaved?: () => void
+  onCancel?: () => void
+  onBusyChange?: (busy: boolean) => void
+}) {
   const id = useId(),
     form = useRef<HTMLFormElement>(null)
-  const [student, setStudent] = useState<InfractionStudent | null>(null),
-    [infraction, setInfraction] = useState<RelatedInfraction | null>(null),
+  const [student, setStudent] = useState<InfractionStudent | null>(
+      caseRecord?.student ?? null,
+    ),
+    [infraction, setInfraction] = useState<RelatedInfraction | null>(
+      caseRecord?.infraction ?? null,
+    ),
     [reason, setReason] = useState(''),
     [confirmed, setConfirmed] = useState(false)
   const request = useInfractionMutation(
@@ -40,6 +56,14 @@ export function ExpulsionForm({ examId }: { examId: number }) {
       confirmed,
     })
   }
+  useEffect(() => {
+    onBusyChange?.(request.busy)
+  }, [request.busy, onBusyChange])
+  useEffect(() => {
+    if (request.saved) onSaved?.()
+  }, [request.saved, onSaved])
+  if (request.saved && onSaved)
+    return <p role="status">Expulsión confirmada.</p>
   if (request.saved)
     return (
       <Navigate
@@ -61,31 +85,42 @@ export function ExpulsionForm({ examId }: { examId: number }) {
         Los campos con * son obligatorios. La fecha, hora y responsable se
         registran en el servidor.
       </p>
-      <fieldset
-        className={styles.student}
-        disabled={disabled}
-        tabIndex={-1}
-        aria-invalid={!!fields.student_id}
-        aria-describedby={fields.student_id ? `${id}-student-error` : undefined}
-      >
-        <legend>Estudiante del examen *</legend>
-        <IncidentStudentPicker
-          examId={examId}
-          value={student}
-          onChange={(v) => {
-            setStudent(v)
-            setInfraction(null)
-            setConfirmed(false)
-          }}
+      {caseRecord ? (
+        <p>
+          <strong>
+            {caseRecord.student.first_names} {caseRecord.student.last_names}
+          </strong>{' '}
+          · Infracción #{caseRecord.infraction.id}
+        </p>
+      ) : (
+        <fieldset
+          className={styles.student}
           disabled={disabled}
-          emptyMessage="No se encontraron estudiantes del examen. Prueba con otro nombre, SIS o CI."
-        />
-        {fields.student_id && (
-          <p id={`${id}-student-error`} className={styles.error}>
-            {fields.student_id}
-          </p>
-        )}
-      </fieldset>
+          tabIndex={-1}
+          aria-invalid={!!fields.student_id}
+          aria-describedby={
+            fields.student_id ? `${id}-student-error` : undefined
+          }
+        >
+          <legend>Estudiante del examen *</legend>
+          <IncidentStudentPicker
+            examId={examId}
+            value={student}
+            onChange={(v) => {
+              setStudent(v)
+              setInfraction(null)
+              setConfirmed(false)
+            }}
+            disabled={disabled}
+            emptyMessage="No se encontraron estudiantes del examen. Prueba con otro nombre, SIS o CI."
+          />
+          {fields.student_id && (
+            <p id={`${id}-student-error`} className={styles.error}>
+              {fields.student_id}
+            </p>
+          )}
+        </fieldset>
+      )}
       <div className={styles.field}>
         <label htmlFor={`${id}-reason`}>Motivo de expulsión *</label>
         <textarea
@@ -107,7 +142,7 @@ export function ExpulsionForm({ examId }: { examId: number }) {
           </p>
         )}
       </div>
-      {student && (
+      {student && !caseRecord && (
         <RelatedInfractionPicker
           key={student.id}
           examId={examId}
@@ -164,7 +199,8 @@ export function ExpulsionForm({ examId }: { examId: number }) {
           to={back}
           aria-disabled={request.busy}
           onClick={(e) => {
-            if (request.busy) e.preventDefault()
+            if (request.busy || onCancel) e.preventDefault()
+            if (!request.busy) onCancel?.()
           }}
         >
           Cancelar
