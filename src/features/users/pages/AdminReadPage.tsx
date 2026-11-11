@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { BaseTableEntity, TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
-import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
+import detailDialog from './AdminDetailDialog.module.css'
 import { listAuditEvents, readAuditEvent, listCareers, readCareer } from '@/features/users/api/adminReadApi'
 import type { AuditEvent, Career, ReadPage as PageResult, ReadQuery } from '@/features/users/api/adminReadApi'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
@@ -52,9 +54,10 @@ function ReadPage<T extends BaseTableEntity & { id: number }>({ title, label, co
       searchPlaceholder="Buscar por código o nombre"
       onRetry={() => setQuery((current) => ({ ...current, version: current.version + 1 }))}
       onViewProfile={(item) => void openDetail(item)} emptyTitle={`No se encontraron ${label}`} emptyDescription="No hay registros para esta consulta." />
-    {selected.open && <CollaborationModal title="Detalle del registro" onClose={closeDetail}>
+    {selected.open && <PortalDialog title="Detalle del registro" onClose={closeDetail} closeOnBackdrop
+      className={detailDialog.dialog} closeClassName={dialogBase.closeButton}>
       {selected.error ? <p role="alert">{selected.error}</p> : selected.value ? renderDetail(selected.value) : <p role="status">Cargando detalle…</p>}
-    </CollaborationModal>}
+    </PortalDialog>}
   </>
   return <PageContainer>
     <PageHeader title={title} description={description} breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: title }]} />

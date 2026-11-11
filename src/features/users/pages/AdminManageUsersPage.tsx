@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
+import detailDialog from './AdminDetailDialog.module.css'
 import { AdminUserHistoryPage } from './AdminUserHistoryPage'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
@@ -259,7 +261,8 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
           }
         />
       </>
-      {detail.open && <CollaborationModal title="Detalle de cuenta" onClose={closeDetail}>
+      {detail.open && <PortalDialog title="Detalle de cuenta" onClose={closeDetail} closeOnBackdrop
+        className={detailDialog.dialog} closeClassName={dialogBase.closeButton}>
         {detail.error ? <p role="alert">{detail.error}</p> : detail.account ? <>
           <dl><dt>Nombre</dt><dd>{detail.account.full_name}</dd><dt>Código institucional</dt><dd>{detail.account.institutional_code ?? 'No registrado'}</dd>
             <dt>CI</dt><dd>{detail.account.identity_number ?? 'No registrado'}</dd><dt>Correo</dt><dd>{detail.account.email}</dd>
@@ -269,7 +272,7 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
           {detail.account.teacher_id && <p><Link to={`/admin/teachers/${detail.account.teacher_id}`} onClick={closeDetail}>Ver perfil docente</Link></p>}
           {detail.account.student_id && <p><Link to={`/admin/students/${detail.account.student_id}`} onClick={closeDetail}>Ver perfil estudiantil</Link></p>}
         </> : <p role="status">Cargando cuenta…</p>}
-      </CollaborationModal>}
+      </PortalDialog>}
 
       {/* Cuadro de diálogo de confirmación para Activar / Desactivar */}
       <ConfirmDialog
