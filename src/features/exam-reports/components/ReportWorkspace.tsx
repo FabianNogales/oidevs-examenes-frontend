@@ -60,7 +60,7 @@ export function ReportWorkspace({
           <form ref={form} onSubmit={submit} noValidate>
             <div className={styles.filters}>
               <label htmlFor={`${id}-type`}>
-                Tipo de reporte
+                Tipo de informe
                 <Dropdown<ReportKind>
                   id={`${id}-type`}
                   disabled={report.busy}
@@ -131,13 +131,13 @@ export function ReportWorkspace({
                 className={styles.primaryButton}
                 disabled={report.busy}
               >
-                {report.busy ? 'Generando reporte…' : 'Generar reporte'}
+                {report.busy ? 'Generando informe…' : 'Generar informe'}
               </button>
             </div>
           </form>
         ) : (
           <p role="alert">
-            No hay tipos de reporte autorizados para este examen.
+            No hay tipos de informe autorizados para este examen.
           </p>
         )}
       </section>
@@ -152,7 +152,7 @@ export function ReportWorkspace({
             Reintentar consulta
           </button>
           <p>
-            Puedes generar un reporte nuevo si el anterior venció o cambió tu
+            Puedes generar un informe nuevo si el anterior venció o cambió tu
             autorización.
           </p>
         </div>

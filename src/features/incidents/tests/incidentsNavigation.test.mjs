@@ -68,7 +68,7 @@ test('HU27 navigation exposes only implemented sections and keeps exam summary f
       '/teacher/exams/4/reports',
     ],
   )
-  assert.match(textContent(tree), /Reportes/)
+  assert.match(textContent(tree), /Informes del examen/)
   h.unmount()
 })
 

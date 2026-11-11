@@ -160,12 +160,7 @@ export function DisciplineWorkspace({ examId }: { examId: number }) {
                     <option value="">Todos</option>
                     <option value="INCIDENT">Incidencias</option>
                     {permissions?.can_manage && (
-                      <>
-                        <option value="INFRACTION">Infracciones</option>
-                        <option value="LEGACY_EXPULSION">
-                          Medidas históricas sin caso
-                        </option>
-                      </>
+                      <option value="INFRACTION">Infracciones</option>
                     )}
                   </Select>
                 )}
