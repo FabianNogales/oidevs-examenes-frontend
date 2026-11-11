@@ -1,3 +1,6 @@
+import { useEffect, useRef } from 'react'
+import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
+import { trapDialogFocus } from '@/shared/utils/trapDialogFocus'
 import type { Room, RoomBusySlot } from '../../types/exam.types'
 import styles from './SharedRoomConsentModal.module.css'
 
@@ -14,6 +17,23 @@ export function SharedRoomConsentModal({
   onCancel,
   onConfirmConsent,
 }: SharedRoomConsentModalProps) {
+  // G7: keyboard and focus behaviour only; the approved look of this dialog is unchanged.
+  const isOpen = room !== null
+  const cancelButton = useRef<HTMLButtonElement>(null)
+  useBodyScrollLock(isOpen)
+  useEffect(() => {
+    if (!isOpen) return
+    const previous =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    // The safe choice receives the initial focus.
+    cancelButton.current?.focus()
+    return () => {
+      if (previous?.isConnected) previous.focus({ preventScroll: true })
+    }
+  }, [isOpen])
+
   if (!room) return null
 
   return (
@@ -22,6 +42,19 @@ export function SharedRoomConsentModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="shared-room-consent-title"
+      // The backdrop is not focusable: a press on it would move focus to <body>, outside the Tab trap.
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) event.preventDefault()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          event.stopPropagation()
+          onCancel()
+          return
+        }
+        trapDialogFocus(event)
+      }}
     >
       <div className={styles.modalDialog}>
         <div className={styles.modalHeader}>
@@ -65,6 +98,7 @@ export function SharedRoomConsentModal({
 
         <div className={styles.modalFooter}>
           <button
+            ref={cancelButton}
             type="button"
             className={styles.cancelBtn}
             onClick={onCancel}
