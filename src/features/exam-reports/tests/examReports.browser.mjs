@@ -275,28 +275,9 @@ try {
   checks.push(
     'QR/manual dates and actors; server pending versus absent; automatic wrong-exam incidence; reported infraction and linked expulsion remain separate readonly records',
   )
-  await fill('input[type=date]', '2026-11-04')
-  await fill('input[type=date]:last-of-type', '2026-11-04')
-  await click('Generar informe')
-  await wait(
-    `document.querySelector('${resultSelector}')?.innerText.includes('El reporte no tiene registros')`,
-  )
-  assert.equal(
-    await evaluate(
-      "document.querySelector('table')?.innerText.includes('Ana')??false",
-    ),
-    false,
-  )
-  await fill('input[type=date]', '2026-11-05')
-  await evaluate(
-    "(()=>{const es=document.querySelectorAll('input[type=date]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(es[1],'2026-11-04');es[1].dispatchEvent(new Event('input',{bubbles:true}));es[1].dispatchEvent(new Event('change',{bubbles:true}))})()",
-  )
-  const beforeInvalid = requests.length
-  await click('Generar informe')
-  await wait(
-    "document.body.innerText.includes('La fecha final debe ser igual o posterior')",
-  )
-  assert.equal(requests.length, beforeInvalid)
+  assert.equal(await evaluate("document.querySelectorAll('input[type=date]').length"), 0)
+  assert.ok(requests.filter(r => r.query).every(r => !r.query.includes('date_from=') && !r.query.includes('date_to=')))
+  checks.push('Exam reports include the complete selected exam without date inputs or hidden date filters')
   await nav('/other')
   await nav('/teacher/exams/4/reports')
   await wait("document.querySelector('form')")

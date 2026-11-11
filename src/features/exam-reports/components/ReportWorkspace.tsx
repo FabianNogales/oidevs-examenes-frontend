@@ -81,58 +81,15 @@ export function ReportWorkspace({
                   </small>
                 )}
               </label>
-              <label htmlFor={`${id}-from`}>
-                Desde
-                <input
-                  id={`${id}-from`}
-                  type="date"
+              <div className={styles.actions}>
+                <button
+                  type="submit"
+                  className={styles.primaryButton}
                   disabled={report.busy}
-                  value={filters.date_from}
-                  onChange={(e) => change({ date_from: e.target.value })}
-                  aria-invalid={!!errors.date_from}
-                  aria-describedby={
-                    errors.date_from ? `${id}-from-error` : undefined
-                  }
-                />
-                {errors.date_from && (
-                  <small id={`${id}-from-error`} className={styles.error}>
-                    {errors.date_from}
-                  </small>
-                )}
-              </label>
-              <label htmlFor={`${id}-to`}>
-                Hasta
-                <input
-                  id={`${id}-to`}
-                  type="date"
-                  disabled={report.busy}
-                  value={filters.date_to}
-                  onChange={(e) => change({ date_to: e.target.value })}
-                  aria-invalid={!!errors.date_to}
-                  aria-describedby={
-                    errors.date_to ? `${id}-to-error` : undefined
-                  }
-                />
-                {errors.date_to && (
-                  <small id={`${id}-to-error`} className={styles.error}>
-                    {errors.date_to}
-                  </small>
-                )}
-              </label>
-            </div>
-            <p>
-              El intervalo se aplica a la fecha del examen para inscritos y
-              pendientes, y a la fecha del registro para ingresos, incidencias e
-              información disciplinaria.
-            </p>
-            <div className={styles.actions}>
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={report.busy}
-              >
-                {report.busy ? 'Generando informe…' : 'Generar informe'}
-              </button>
+                >
+                  {report.busy ? 'Generando informe…' : 'Generar informe'}
+                </button>
+              </div>
             </div>
           </form>
         ) : (

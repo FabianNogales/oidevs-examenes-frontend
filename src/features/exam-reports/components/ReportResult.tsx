@@ -31,11 +31,6 @@ export function ReportResult({
         <strong>Alcance:</strong> {page.exam.name} · {page.exam.subject.name} (
         {page.exam.subject.code}) · {page.exam.academic_term.name}
       </p>
-      <p>
-        <strong>Fechas aplicadas:</strong>{' '}
-        {r.filters.date_from || 'Sin límite inicial'} /{' '}
-        {r.filters.date_to || 'Sin límite final'} · America/La_Paz
-      </p>
       <div className={styles.counts}>
         <p>
           <strong>{r.total_participants}</strong> inscritos oficiales del examen
