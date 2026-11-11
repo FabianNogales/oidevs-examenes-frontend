@@ -1,18 +1,29 @@
-.modalScope > div {
-  padding: var(--space-4);
-}
-
-.modalScope [role='dialog'] {
-  display: flex;
-  flex-direction: column;
+/* PortalDialog: la clase duplicada gana a las reglas genéricas del componente sin depender del
+   orden del CSS. Conserva las medidas, el radio y la sombra del modal anterior. */
+.assignDialog.assignDialog {
   width: min(760px, calc(100vw - 32px));
   max-height: 88vh;
   max-height: 88dvh;
   padding: var(--space-6);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   overflow-y: auto;
 }
 
-.modalScope [role='dialog'] > :not(.results) {
+.assignDialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* El cuerpo de PortalDialog no genera caja: su contenido se reparte en la columna del diálogo,
+   igual que antes, y solo la lista de resultados cede altura. */
+.assignBody {
+  display: contents;
+}
+
+.assignDialog > header,
+.assignBody > :not(.results) {
   flex-shrink: 0;
 }
 
@@ -143,7 +154,7 @@
   gap: var(--space-2);
 }
 
-.modalScope .actions {
+.assignDialog .actions {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -151,11 +162,9 @@
 }
 
 @media (max-width: 640px) {
-  .modalScope > div {
-    padding: var(--space-3);
-  }
-  .modalScope [role='dialog'] {
+  .assignDialog.assignDialog {
     width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
     padding: var(--space-4);
   }
   .candidate,

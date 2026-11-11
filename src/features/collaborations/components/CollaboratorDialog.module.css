@@ -1,0 +1,17 @@
+/* Detalle y revocación de colaboradores (PortalDialog). Conserva las medidas del modal anterior:
+   560px, radio y sombra grandes. La clase duplicada gana a las reglas genéricas del componente
+   sin depender del orden del CSS. */
+.dialog.dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(88vh, 760px);
+  padding: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 640px) {
+  .dialog.dialog {
+    padding: var(--space-4);
+  }
+}

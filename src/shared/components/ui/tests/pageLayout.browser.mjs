@@ -74,7 +74,11 @@ const fixtures={
   '/admin/users/15/roles':{data:[{id:2,name:'DOCENTE',status:'ACTIVE',assigned:false}]},
   '/admin/teachers':page([]),
   '/admin/users/history':page([{id:1,user_id:15,actor_id:1,actor_name:'Responsable QA con nombre y apellidos extensos',action:'ROLE_ASSIGNED',created_at:'2026-11-07T10:00:00-04:00',old_context:{},new_context:{role:'DOCENTE'}}]),
-  '/admin/academic-terms':page([]),
+  '/admin/academic-terms':page([
+    {id:1,name:'Periodo QA 2026',start_date:'2026-01-01',end_date:'2026-12-31',status:'ACTIVE'},
+    {id:2,name:'Periodo QA histórico',start_date:'2025-01-01',end_date:'2025-12-31',status:'INACTIVE'},
+  ]),
+  '/admin/academic-terms/1':{data:{id:1,name:'Periodo QA 2026',start_date:'2026-01-01',end_date:'2026-12-31',status:'ACTIVE'}},
   '/admin/course-offerings':page([]),
   '/admin/portal/event-categories':{data:[]},
   '/admin/portal/events':page([]),
@@ -83,6 +87,8 @@ const fixtures={
   '/admin/subjects/careers':{data:[career]},
   '/admin/careers':page([career,{id:2,code:'QA-IND',name:'Carrera QA Industrial',status:'INACTIVE'}]),
   '/admin/portal/news':{data:[{id:41,title:'Noticia QA publicada',summary:'Resumen QA.',image_url:null,published_at:'2026-11-04T10:00:00-04:00',status:'PUBLISHED',revision:1,created_by:1,updated_by:1,published_by:1},{id:42,title:'Noticia QA en borrador',summary:'Resumen QA.',image_url:null,published_at:null,status:'DRAFT',revision:1,created_by:1,updated_by:1,published_by:null}],meta:{current_page:1,last_page:1,per_page:15,total:2}},
+  '/admin/portal/news-categories':{data:[]},
+  '/portal/news-categories':{data:[]},
   '/portal/news':{data:[{id:41,title:'Noticia QA publicada',summary:'Resumen QA.',image_url:null,published_at:'2026-11-04T10:00:00-04:00'}],meta:{current_page:1,last_page:1,per_page:15,total:1}},
   '/admin/portal/services':{data:[{id:42,name:'Servicio QA activo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/activo',display_order:1,status:'ACTIVE',revision:1,needs_review:false},{id:43,name:'Servicio QA inactivo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/inactivo',display_order:2,status:'INACTIVE',revision:1,needs_review:false}],meta:{current_page:1,last_page:1,per_page:15,total:2}},
   '/portal/services':{data:[{id:42,name:'Servicio QA activo',description:'Descripción QA.',icon:'link',url:'https://qa.example.edu/activo',display_order:1}],meta:{current_page:1,last_page:1,per_page:15,total:1}},
@@ -447,16 +453,16 @@ try {
       }
       if (!baseline && screen.collab === 'error') check(await evaluate(`!!document.querySelector('main [role=alert]')`), 'estado de error sin alerta')
       if (!baseline && screen.collab === 'assign') {
-        // The assign dialog (CollaborationModal, top layer) opens above the page and Escape returns focus.
+        // The assign dialog (G5.1: PortalDialog, a native modal <dialog>) opens above the page and Escape returns focus.
         await evaluate(`(()=>{const b=[...document.querySelectorAll('main button')].find(b=>b.textContent.trim()==='+ Asignar colaborador');b.focus();b.click()})()`)
-        await wait(`!!document.querySelector('[role=dialog][aria-modal=true]')`, `${label}: abrir asignar colaborador`)
+        await wait(`!!document.querySelector('dialog[open][aria-modal=true]')`, `${label}: abrir asignar colaborador`)
         await pause(100)
-        const dialog = await evaluate(`(()=>{const d=document.querySelector('[role=dialog][aria-modal=true]'),c=d.querySelector('[aria-label="Cerrar modal"]').getBoundingClientRect(),hit=document.elementFromPoint(c.left+c.width/2,c.top+c.height/2);
-          return {title:d.querySelector('h2')?.textContent,closeOnTop:!!hit&&d.contains(hit),focusInside:d.contains(document.activeElement),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1}})()`)
-        check(dialog.title === 'Asignar colaborador' && dialog.closeOnTop && dialog.focusInside && !dialog.overflow, 'diálogo de asignar: ' + JSON.stringify(dialog))
+        const dialog = await evaluate(`(()=>{const d=document.querySelector('dialog[open][aria-modal=true]'),c=d.querySelector('[aria-label="Cerrar ventana"]').getBoundingClientRect(),hit=document.elementFromPoint(c.left+c.width/2,c.top+c.height/2);
+          return {title:d.querySelector('h2')?.textContent,modal:d.matches(':modal'),closeOnTop:!!hit&&d.contains(hit),focusInside:d.contains(document.activeElement),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1}})()`)
+        check(dialog.title === 'Asignar colaborador' && dialog.modal && dialog.closeOnTop && dialog.focusInside && !dialog.overflow, 'diálogo de asignar: ' + JSON.stringify(dialog))
         await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
         await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
-        await wait(`!document.querySelector('[role=dialog][aria-modal=true]')`, `${label}: Escape cierra asignar colaborador`)
+        await wait(`!document.querySelector('dialog[open][aria-modal=true]')`, `${label}: Escape cierra asignar colaborador`)
         check(await evaluate(`document.activeElement?.textContent.trim()==='+ Asignar colaborador'`), 'foco no devuelto a «+ Asignar colaborador»')
         check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`), 'escritura inesperada en colaboradores')
       }
@@ -572,6 +578,25 @@ try {
         await wait(`!document.querySelector('dialog[open]')`, `${label}: Escape cierra el registro`)
         check(await evaluate(`document.activeElement?.textContent.trim()===${JSON.stringify(createLabel)}`), 'foco no devuelto al botón de registro')
         check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`), 'escritura inesperada en registro')
+      }
+      if (!baseline && screen.path === '/admin/academic-terms') {
+        const table = '[aria-label="Periodos académicos registrados"] table'
+        await wait(`document.querySelectorAll(${JSON.stringify(table + ' tbody tr')}).length===2`, `${label}: filas de periodos`)
+        check(await evaluate(`document.querySelector(${JSON.stringify(table + ' time[datetime="2026-01-01"]')})?.textContent.length>0`), 'fecha de inicio sin valor semántico')
+        for (const [action, title] of [
+          ['Editar periodo Periodo QA 2026', 'Editar periodo'],
+          ['Desactivar periodo Periodo QA 2026', 'Desactivar periodo'],
+          ['Activar periodo Periodo QA histórico', 'Activar periodo'],
+        ]) {
+          const selector = JSON.stringify(`${table} button[aria-label="${action}"]`)
+          await evaluate(`(()=>{const button=document.querySelector(${selector});button.focus();button.click()})()`)
+          await wait(`document.querySelector('dialog[open] h2')?.textContent.trim()===${JSON.stringify(title)}`, `${label}: ${title}`)
+          await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+          await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+          await wait(`!document.querySelector('dialog[open]')`, `${label}: Escape en ${title}`)
+          check(await evaluate(`document.activeElement===document.querySelector(${selector})`), `foco no devuelto tras ${title}`)
+        }
+        check(await evaluate(`pageLayoutQa.calls.every(call=>call.method==='get')`), 'escritura inesperada en Periodos')
       }
       if (screen.path === '/admin/users/manage') {
         const menuSelector='button[aria-controls][aria-label*="principal"]'
