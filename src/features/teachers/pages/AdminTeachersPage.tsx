@@ -3,7 +3,8 @@ import { PageContainer } from '@/shared/components/ui/PageContainer/PageContaine
 
 import { useEffect, useState, useRef, useCallback, type FormEvent } from 'react'
 import { Link } from 'react-router'
-import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
 
 import {
   createAdminTeacher,
@@ -152,8 +153,6 @@ export function AdminTeachersPage() {
   // Estados para activación / desactivación
   const [statusTeacher, setStatusTeacher] = useState<Teacher | null>(null)
   const [changingStatus, setChangingStatus] = useState(false)
-
-  useBodyScrollLock(formOpen || statusTeacher !== null)
 
   const [notice, setNotice] = useState<Parameters<typeof Snackbar>[0]['notice']>(
     null,
@@ -372,29 +371,16 @@ export function AdminTeachersPage() {
 
       {/* Modal de Registro de Nuevo Docente */}
       {formOpen && (
-        <div className={styles.modalBackdrop} role="presentation">
-          <div
-            className={styles.formModal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="teacher-form-title"
-          >
-            <header className={styles.modalHeader}>
-              <div>
-                <p className={styles.modalEyebrow}>Nuevo registro</p>
-                <h2 id="teacher-form-title">Registrar docente</h2>
-              </div>
-              <button
-                type="button"
-                className={styles.closeButton}
-                onClick={handleCloseForm}
-                disabled={saving}
-                aria-label="Cerrar formulario"
-              >
-                ×
-              </button>
-            </header>
-
+        <PortalDialog
+          title="Registrar docente"
+          subtitle="Nuevo registro"
+          busy={saving}
+          onClose={handleCloseForm}
+          className={styles.formDialog}
+          headerClassName={styles.modalHeader}
+          closeClassName={styles.closeButton}
+          initialFocusSelector="input"
+        >
             <form
               className={styles.teacherForm}
               onSubmit={handleSubmitTeacher}
@@ -546,76 +532,37 @@ export function AdminTeachersPage() {
                 </button>
               </footer>
             </form>
-          </div>
-        </div>
+        </PortalDialog>
       )}
 
-      {/* Modal de Confirmación de Estado */}
-      {statusTeacher && (
-        <div className={styles.modalBackdrop} role="presentation">
-          <div
-            className={styles.confirmModal}
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="status-confirm-title"
-          >
-            <div
-              className={
+      {/* Confirmación de estado: nativa (capa superior), sin cierre al pulsar el fondo */}
+      <ConfirmDialog
+        native
+        isOpen={statusTeacher !== null}
+        title={
+          statusTeacher?.status === 'ACTIVE'
+            ? 'Desactivar docente'
+            : 'Activar docente'
+        }
+        message={
+          statusTeacher
+            ? `${
                 statusTeacher.status === 'ACTIVE'
-                  ? styles.warningIcon
-                  : styles.activateIcon
-              }
-              aria-hidden="true"
-            >
-              {statusTeacher.status === 'ACTIVE' ? '!' : '✓'}
-            </div>
-
-            <h2 id="status-confirm-title">
-              {statusTeacher.status === 'ACTIVE'
-                ? 'Desactivar docente'
-                : 'Activar docente'}
-            </h2>
-
-            <p>
-              {statusTeacher.status === 'ACTIVE'
-                ? 'El docente dejará de tener acceso al sistema hasta que vuelva a ser activado.'
-                : 'El docente volverá a tener acceso al sistema.'}
-            </p>
-
-            <strong className={styles.confirmTeacherName}>
-              {statusTeacher.first_names} {statusTeacher.last_names}
-            </strong>
-
-            <div className={styles.confirmActions}>
-              <button
-                type="button"
-                className={styles.cancelButton}
-                disabled={changingStatus}
-                onClick={() => !changingStatus && setStatusTeacher(null)}
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                className={
-                  statusTeacher.status === 'ACTIVE'
-                    ? styles.confirmDeactivateButton
-                    : styles.confirmActivateButton
-                }
-                disabled={changingStatus}
-                onClick={handleConfirmStatusChange}
-              >
-                {changingStatus
-                  ? 'Procesando...'
-                  : statusTeacher.status === 'ACTIVE'
-                    ? 'Sí, desactivar'
-                    : 'Sí, activar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                  ? 'El docente dejará de tener acceso al sistema hasta que vuelva a ser activado.'
+                  : 'El docente volverá a tener acceso al sistema.'
+              } Docente: ${statusTeacher.first_names} ${statusTeacher.last_names}.`
+            : ''
+        }
+        confirmLabel={
+          statusTeacher?.status === 'ACTIVE' ? 'Sí, desactivar' : 'Sí, activar'
+        }
+        variant={statusTeacher?.status === 'ACTIVE' ? 'danger' : 'success'}
+        loading={changingStatus}
+        onConfirm={() => void handleConfirmStatusChange()}
+        onCancel={() => {
+          if (!changingStatus) setStatusTeacher(null)
+        }}
+      />
 
       <Snackbar notice={notice} onDismiss={() => setNotice(null)} />
     </section>
