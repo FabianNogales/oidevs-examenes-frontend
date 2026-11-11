@@ -1,0 +1,243 @@
+/* ==========================================================================
+   PESTAÑA 03: SINCRONIZACIÓN Y TARJETAS DE FILTRO EN ROJO CARMESÍ
+   ========================================================================== */
+
+.syncToolbarRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.syncActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 42px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--brand-blue);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.syncActionButton:disabled {
+  background: #e2e8f0;
+  color: #64748b;
+  opacity: 1;
+}
+
+.inlineHint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.eventsSection {
+  margin-top: var(--space-6);
+}
+
+.eventsHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.eventsHeaderIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-soft);
+  color: var(--brand-blue);
+}
+
+.clearFilterButton {
+  margin-left: auto;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--brand-crimson);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.filterGroup {
+  margin-bottom: var(--space-5);
+}
+
+.filterLabel {
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.filterCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.filterCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  min-height: 108px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: #fbfcfe;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.filterCard:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+
+.filterCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.filterCardCount {
+  color: var(--brand-navy);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.filterCardIcon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.filterCardTitle {
+  margin-top: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Selección Activa en Rojo Carmesí EIDA */
+.filterCard[data-active='true'] {
+  border: 1.5px solid var(--brand-crimson);
+  background: var(--brand-pink-light);
+  box-shadow: 0 4px 12px rgb(139 30 63 / 10%);
+}
+
+.filterCard[data-active='true'] .filterCardCount {
+  color: var(--brand-navy);
+}
+
+.filterCard[data-active='true'] .filterCardIcon,
+.filterCard[data-active='true'] .filterCardTitle {
+  color: var(--brand-crimson);
+  font-weight: var(--font-weight-semibold);
+}
+
+.emptyEventsBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: #fbfcfe;
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+.emptyEventsIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-soft);
+  color: var(--brand-blue);
+  margin-bottom: var(--space-3);
+}
+
+.emptyEventsBox p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.resultList {
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0 0 var(--space-4);
+}
+
+.resultItem {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+
+.resultItem header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.resultItem p {
+  font-size: var(--font-size-sm);
+}
+
+.resultItem details {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.resultItem summary {
+  cursor: pointer;
+  padding-block: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.footerInfoNote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 900px) {
+  .filterCardsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}

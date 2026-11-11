@@ -1,0 +1,26 @@
+.secondaryButton {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 45px;
+  padding: 0 20px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--brand-blue, #2563eb);
+  border-radius: 8px;
+  color: var(--brand-blue, #2563eb);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background: var(--brand-blue-light, #eaf3ff);
+}
+
+@media (max-width: 768px) {
+  .secondaryButton {
+    width: 100%;
+  }
+}

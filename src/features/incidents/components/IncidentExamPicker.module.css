@@ -1,0 +1,84 @@
+.picker {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.picker h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+.picker p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.picker input {
+  width: 100%;
+  min-height: var(--input-height);
+  padding: var(--space-3);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
+  font: inherit;
+}
+.picker ul {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+.picker button {
+  min-height: var(--button-height);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--button-radius);
+  font: inherit;
+  cursor: pointer;
+}
+.picker li button {
+  display: grid;
+  width: 100%;
+  gap: var(--space-1);
+  text-align: left;
+}
+.picker li button span {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.picker [aria-pressed='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-surface-soft);
+}
+.picker nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+.picker button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.picker :is(input, button):focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+@media (max-width: 640px) {
+  .picker {
+    padding: var(--space-4);
+  }
+  .picker nav {
+    justify-content: space-between;
+  }
+}

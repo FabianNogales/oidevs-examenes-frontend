@@ -3,6 +3,7 @@ import type { SubjectImportRow } from '../../types/subjectImport.types'
 import { SUBJECT_CSV_COLUMNS } from '../../utils/subjectCsv'
 import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 const PAGE_SIZE = 20
 export function SubjectImportTable({
@@ -122,25 +123,25 @@ export function SubjectImportTable({
             {filtered.length} filas
           </span>
           <div>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               disabled={current === 1}
               onClick={() => setPage(current - 1)}
             >
               Anterior
-            </button>
+            </Button>
             <span>
               Página {current} de {lastPage}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               disabled={current === lastPage}
               onClick={() => setPage(current + 1)}
             >
               Siguiente
-            </button>
+            </Button>
           </div>
         </nav>
       )}

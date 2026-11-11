@@ -34,6 +34,7 @@ import {
   useStudentImportContextVersion,
   STUDENT_IMPORT_DRAFT_TTL,
 } from '@/features/students/utils/studentImportDraft'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 type ImportFlowState = 'idle' | 'selected' | 'validating' | 'preview' | 'confirming' | 'success' | 'unknown'
 
@@ -283,14 +284,14 @@ function StudentImportContent({
               <h2 className={styles.panelTitle}>Archivo de estudiantes</h2>
               <p className={styles.columnsIntro}>El archivo debe incluir las siguientes columnas:</p>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.templateButton}
               onClick={downloadStudentCsvTemplate}
             >
               <DownloadIcon />
               Descargar plantilla CSV
-            </button>
+            </Button>
           </div>
 
           <ImportColumnsGuide />
@@ -305,23 +306,22 @@ function StudentImportContent({
             <span>Podrás revisar los estudiantes antes de confirmar la importación.</span>
           </div>
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               onClick={handleCancel}
               disabled={isProcessing}
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               onClick={() => { void handleValidate() }}
               disabled={!selectedFile || isProcessing}
             >
               {getPrimaryActionLabel(flowState)}
               <ArrowRightIcon />
-            </button>
+            </Button>
           </div>
         </>
       ) : null}
@@ -364,13 +364,13 @@ function StudentImportContent({
             Ya revisé el listado de estudiantes y comprobé el resultado antes de importar otro archivo.
           </label>
           <div className={styles.panelActions}>
-            <button type="button" className={styles.cancelButton} onClick={() => navigate(STUDENTS_PATH)}>
+            <Button variant="secondary" className={styles.cancelButton} onClick={() => navigate(STUDENTS_PATH)}>
               Ir a Gestión de estudiantes
-            </button>
-            <button type="button" className={styles.continueButton}
+            </Button>
+            <Button className={styles.continueButton}
               disabled={!reviewedUnknownResult} onClick={handleImportAnotherFile}>
               Iniciar una nueva importación
-            </button>
+            </Button>
           </div>
         </section>
       ) : null}
@@ -426,15 +426,15 @@ function StudentImportReview({
           <strong>{file?.name ?? 'Archivo recuperado (sesión anterior)'}</strong>
           {file ? <small>{formatFileSize(file.size)}</small> : null}
         </div>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={styles.changeFileButton}
           onClick={onChangeFile}
           disabled={isConfirming}
         >
           <FileIcon />
           Cambiar archivo
-        </button>
+        </Button>
       </div>
 
       <div className={styles.infoBanner}>
@@ -465,55 +465,54 @@ function StudentImportReview({
         </span>
         {totalPages > 1 ? (
           <div className={styles.pagerControls}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.pagerButton}
               onClick={() => setPage(currentPage - 1)}
               disabled={currentPage <= 1}
             >
               Anterior
-            </button>
+            </Button>
             <span className={styles.pagerPage}>Página {currentPage} de {totalPages}</span>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.pagerButton}
               onClick={() => setPage(currentPage + 1)}
               disabled={currentPage >= totalPages}
             >
               Siguiente
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>
 
       <div className={styles.reviewActions}>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={styles.downloadViewButton}
           onClick={() => downloadCurrentView(filteredRows)}
           disabled={filteredRows.length === 0}
         >
           <DownloadIcon />
           Descargar vista actual CSV
-        </button>
+        </Button>
         <div className={styles.reviewActionsRight}>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             className={styles.cancelButton}
             onClick={onCancel}
             disabled={isConfirming}
           >
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
             className={`${styles.continueButton} ${styles.confirmButton}`}
             onClick={onConfirm}
             disabled={!canConfirm || isConfirming || !file}
           >
             {isConfirming ? 'Confirmando...' : 'Confirmar importación'}
             <ArrowRightIcon />
-          </button>
+          </Button>
         </div>
       </div>
     </>

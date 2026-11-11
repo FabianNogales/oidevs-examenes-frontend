@@ -1,3 +1,4 @@
+import { AuthenticatedImage } from '@/shared/components/AuthenticatedImage/AuthenticatedImage'
 import { useEffect, useId, useRef, useState } from 'react'
 import { InfoCircleIcon, UserIcon } from '@/features/auth/components/AuthIcons'
 import { CollaborationModal as Modal } from '@/features/collaborations/components/CollaborationModal'
@@ -37,8 +38,9 @@ export function ManageEligibilityModal({
   const [eligibility, setEligibility] = useState(initialEligibility)
   const [status, setStatus] = useState<EligibilityStatus>(eligibility.status)
   const [reason, setReason] = useState(eligibility.reason ?? '')
-  const [observations, setObservations] = useState(eligibility.observations ?? '')
-  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null)
+  const [observations, setObservations] = useState(
+    eligibility.observations ?? '',
+  )
   const photoUrl = eligibility.profile_photo_url
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,8 +57,10 @@ export function ManageEligibilityModal({
       (reason !== (eligibility.reason ?? '') ||
         observations !== (eligibility.observations ?? '')))
   const reasonTooLong = reason.length > 500
-  const invalidReason = status === 'INELIGIBLE' && (!reason.trim() || reasonTooLong)
-  const invalidObservations = status === 'INELIGIBLE' && observations.length > 500
+  const invalidReason =
+    status === 'INELIGIBLE' && (!reason.trim() || reasonTooLong)
+  const invalidObservations =
+    status === 'INELIGIBLE' && observations.length > 500
 
   useEffect(() => () => request.current?.abort(), [])
 
@@ -82,7 +86,9 @@ export function ManageEligibilityModal({
       return
     }
     if (invalidObservations) {
-      setFieldErrors({ observations: 'Las observaciones admiten hasta 500 caracteres.' })
+      setFieldErrors({
+        observations: 'Las observaciones admiten hasta 500 caracteres.',
+      })
       observationsInput.current?.focus()
       return
     }
@@ -94,7 +100,12 @@ export function ManageEligibilityModal({
     const payload: UpdateEligibilityPayload =
       status === 'ELIGIBLE'
         ? { status: 'ELIGIBLE', revision: eligibility.revision }
-        : { status: 'INELIGIBLE', reason: reason.trim(), observations, revision: eligibility.revision }
+        : {
+            status: 'INELIGIBLE',
+            reason: reason.trim(),
+            observations,
+            revision: eligibility.revision,
+          }
     try {
       await onSave(eligibility.student_id, payload, controller.signal)
     } catch (cause) {
@@ -109,7 +120,8 @@ export function ManageEligibilityModal({
           setFieldErrors(cause.fieldErrors)
           setError(cause.message)
           if (cause.fieldErrors.reason) reasonInput.current?.focus()
-          else if (cause.fieldErrors.observations) observationsInput.current?.focus()
+          else if (cause.fieldErrors.observations)
+            observationsInput.current?.focus()
         } else {
           setError(
             cause instanceof Error
@@ -134,13 +146,20 @@ export function ManageEligibilityModal({
     try {
       const rows = await getExamEligibilities(examId, controller.signal)
       if (controller.signal.aborted) return
-      const row = rows.find((item) => item.student_id === eligibility.student_id)
-      if (!row) throw new Error('La habilitación ya no está disponible para tu cuenta.')
+      const row = rows.find(
+        (item) => item.student_id === eligibility.student_id,
+      )
+      if (!row)
+        throw new Error('La habilitación ya no está disponible para tu cuenta.')
       // Show the complete server snapshot first; keep the draft and its original revision.
       setCurrent(row)
     } catch (cause) {
       if (!controller.signal.aborted) {
-        setError(cause instanceof Error ? cause.message : 'No se pudieron consultar los datos actuales.')
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'No se pudieron consultar los datos actuales.',
+        )
       }
     } finally {
       if (request.current === controller) request.current = null
@@ -173,26 +192,50 @@ export function ManageEligibilityModal({
           <p className={styles.modalSubtitle}>
             Actualiza el estado de habilitación del estudiante para {examLabel}.
           </p>
-          <p className={sharedStyles.note}>Revisión del formulario: {eligibility.revision}</p>
+          <p className={sharedStyles.note}>
+            Revisión del formulario: {eligibility.revision}
+          </p>
           {conflict ? (
             <section aria-label="Conflicto de habilitación">
-              <p className={sharedStyles.error} role="alert">{ELIGIBILITY_CONFLICT_MESSAGE}</p>
-              <button type="button" className={sharedStyles.secondaryButton} disabled={busy}
-                onClick={() => void loadCurrent()}>
+              <p className={sharedStyles.error} role="alert">
+                {ELIGIBILITY_CONFLICT_MESSAGE}
+              </p>
+              <button
+                type="button"
+                className={sharedStyles.secondaryButton}
+                disabled={busy}
+                onClick={() => void loadCurrent()}
+              >
                 Consultar datos actuales
               </button>
               {current ? (
                 <div className={styles.historicalReason}>
-                  <strong>Datos actuales del servidor — Revisión {current.revision}</strong>
+                  <strong>
+                    Datos actuales del servidor — Revisión {current.revision}
+                  </strong>
                   <dl>
-                    <dt>Estado</dt><dd>{current.status === 'ELIGIBLE' ? 'Habilitado' : 'Inhabilitado'}</dd>
-                    <dt>Motivo</dt><dd>{current.reason ?? 'Sin motivo'}</dd>
-                    <dt>Observaciones</dt><dd>{current.observations ?? 'Sin observaciones'}</dd>
-                    <dt>Evaluado por</dt><dd>{current.evaluated_by ?? 'No informado'}</dd>
-                    <dt>Fecha de evaluación</dt><dd>{current.evaluated_at ?? 'No informada'}</dd>
+                    <dt>Estado</dt>
+                    <dd>
+                      {current.status === 'ELIGIBLE'
+                        ? 'Habilitado'
+                        : 'Inhabilitado'}
+                    </dd>
+                    <dt>Motivo</dt>
+                    <dd>{current.reason ?? 'Sin motivo'}</dd>
+                    <dt>Observaciones</dt>
+                    <dd>{current.observations ?? 'Sin observaciones'}</dd>
+                    <dt>Evaluado por</dt>
+                    <dd>{current.evaluated_by ?? 'No informado'}</dd>
+                    <dt>Fecha de evaluación</dt>
+                    <dd>{current.evaluated_at ?? 'No informada'}</dd>
                   </dl>
                   <p>Tu borrador se conserva hasta que decidas descartarlo.</p>
-                  <button type="button" className={sharedStyles.secondaryButton} disabled={busy} onClick={applyCurrent}>
+                  <button
+                    type="button"
+                    className={sharedStyles.secondaryButton}
+                    disabled={busy}
+                    onClick={applyCurrent}
+                  >
                     Descartar borrador y cargar estos datos
                   </button>
                 </div>
@@ -204,15 +247,11 @@ export function ManageEligibilityModal({
             aria-label="Datos del estudiante"
           >
             <div className={styles.studentAvatar} aria-hidden="true">
-              {photoUrl && failedPhotoUrl !== photoUrl ? (
-                <img
-                  src={photoUrl}
-                  alt=""
-                  onError={() => setFailedPhotoUrl(photoUrl)}
-                />
-              ) : (
-                <UserIcon />
-              )}
+              <AuthenticatedImage
+                url={photoUrl}
+                alt=""
+                placeholder={<UserIcon />}
+              />
             </div>
             <div className={styles.studentDetails}>
               <h3>{getEligibilityStudentName(eligibility)}</h3>
@@ -273,7 +312,9 @@ export function ManageEligibilityModal({
                   required
                   disabled={busy}
                   placeholder="Describe el motivo de inhabilitación..."
-                  aria-invalid={fieldErrors.reason || reasonTooLong ? true : undefined}
+                  aria-invalid={
+                    fieldErrors.reason || reasonTooLong ? true : undefined
+                  }
                   aria-describedby={`${fieldId}-hint ${fieldId}-reason-counter${fieldErrors.reason || reasonTooLong ? ` ${fieldId}-error` : ''}`}
                   onChange={(event) => {
                     setReason(event.target.value)
@@ -284,12 +325,20 @@ export function ManageEligibilityModal({
                 <small id={`${fieldId}-hint`} className={sharedStyles.note}>
                   El motivo es obligatorio para inhabilitar al estudiante.
                 </small>
-                <small id={`${fieldId}-reason-counter`} className={styles.characterCounter}>
+                <small
+                  id={`${fieldId}-reason-counter`}
+                  className={styles.characterCounter}
+                >
                   {reason.length} / 500
                 </small>
                 {fieldErrors.reason || reasonTooLong ? (
-                  <p id={`${fieldId}-error`} className={sharedStyles.error} role="alert">
-                    {fieldErrors.reason ?? 'El motivo admite hasta 500 caracteres.'}
+                  <p
+                    id={`${fieldId}-error`}
+                    className={sharedStyles.error}
+                    role="alert"
+                  >
+                    {fieldErrors.reason ??
+                      'El motivo admite hasta 500 caracteres.'}
                   </p>
                 ) : null}
               </div>
@@ -304,7 +353,11 @@ export function ManageEligibilityModal({
                   value={observations}
                   disabled={busy}
                   placeholder="Añade información adicional (opcional)..."
-                  aria-invalid={fieldErrors.observations || invalidObservations ? true : undefined}
+                  aria-invalid={
+                    fieldErrors.observations || invalidObservations
+                      ? true
+                      : undefined
+                  }
                   aria-describedby={`${fieldId}-counter${fieldErrors.observations || invalidObservations ? ` ${fieldId}-observations-error` : ''}`}
                   onChange={(event) => {
                     setObservations(event.target.value)
@@ -312,12 +365,20 @@ export function ManageEligibilityModal({
                     setError(null)
                   }}
                 />
-                <small id={`${fieldId}-counter`} className={styles.characterCounter}>
+                <small
+                  id={`${fieldId}-counter`}
+                  className={styles.characterCounter}
+                >
                   {observations.length} / 500
                 </small>
                 {fieldErrors.observations || invalidObservations ? (
-                  <p id={`${fieldId}-observations-error`} className={sharedStyles.error} role="alert">
-                    {fieldErrors.observations ?? 'Las observaciones admiten hasta 500 caracteres.'}
+                  <p
+                    id={`${fieldId}-observations-error`}
+                    className={sharedStyles.error}
+                    role="alert"
+                  >
+                    {fieldErrors.observations ??
+                      'Las observaciones admiten hasta 500 caracteres.'}
                   </p>
                 ) : null}
               </div>
@@ -326,8 +387,8 @@ export function ManageEligibilityModal({
           <div className={styles.informationBox}>
             <InfoCircleIcon />
             <p>
-              Este estado será utilizado en la identificación y control de ingreso
-              del examen.
+              Este estado será utilizado en la identificación y control de
+              ingreso del examen.
             </p>
           </div>
           {error ? (
@@ -347,7 +408,13 @@ export function ManageEligibilityModal({
             <button
               type="submit"
               className={sharedStyles.primaryButton}
-              disabled={busy || conflict || !changed || invalidReason || invalidObservations}
+              disabled={
+                busy ||
+                conflict ||
+                !changed ||
+                invalidReason ||
+                invalidObservations
+              }
             >
               {busy ? 'Guardando…' : 'Guardar'}
             </button>

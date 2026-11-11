@@ -1,19 +1,21 @@
 // Visual QA for Etapa B1 with simulated transport. No backend data is read or changed.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 import { createServer } from 'vite'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-news-admin-'))
 const demo = `
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import {MemoryRouter} from 'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
-import {AdminNewsPage} from '/src/features/portal-news/AdminNewsPage.tsx';
+import {AdminNewsPage} from '/src/features/portal-news/pages/AdminNewsPage.tsx';
 const e=React.createElement, root=createRoot(document.getElementById('root'));
 const rows=[
   {id:41,title:'Jornada institucional de bienvenida',summary:'Actividad para estudiantes de nuevo ingreso.',image_url:null,published_at:'2026-11-04T10:00:00-04:00',status:'PUBLISHED',revision:4,created_by:1,updated_by:1,published_by:1},
@@ -38,9 +40,14 @@ window.newsAdminQa={rows,calls:[],client:{
 root.render(e(MemoryRouter,{initialEntries:['/admin/portal/news']},e(AdminNewsPage)));
 `
 
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('news-admin')
+  const profile = browserProfile.dir
+  const evidence = join(process.cwd(), '.validation.local', 'newsAdmin')
+  await mkdir(evidence, { recursive: true })
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -187,7 +194,7 @@ try {
       captureBeyondViewport: true,
     })
     await writeFile(
-      join(profile, name + '.png'),
+      join(evidence, name + '.png'),
       Buffer.from(result.data, 'base64'),
     )
   }
@@ -333,9 +340,9 @@ try {
 
   assert.deepEqual(errors, [])
   await shot('news-admin-final')
-  console.log(`Capturas: ${profile}`)
+  console.log(`Capturas: ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }

@@ -11,6 +11,10 @@ import { Snackbar } from '@/shared/components/Snackbar'
 import { getMockCurrentUser } from '@/features/auth/mocks/currentUser.mock'
 import { getRequestStatus } from '@/features/auth/utils/apiErrors'
 import {
+  invalidateOfflineIdentity,
+  rememberOfflineIdentity,
+} from '@/features/offline-entry/services/offlineIdentity'
+import {
   invalidateStudentImportSession,
   removeLegacyStudentImportPreview,
   setStudentImportIdentity,
@@ -50,6 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           ? getMockCurrentUser()
           : await getCurrentUser()
         if (version !== sessionVersion.current) return null
+        if (!env.useAuthMock) rememberOfflineIdentity(currentUser)
         setStudentImportIdentity(currentUser)
         setUser(currentUser)
         setSessionError(false)
@@ -57,6 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } catch (error) {
         if (version === sessionVersion.current) {
           if (getRequestStatus(error) === 401) {
+            invalidateOfflineIdentity()
             invalidateStudentImportSession()
             setUser(null)
             setSessionError(false)
@@ -88,6 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const clearSession = useCallback(() => {
     sessionVersion.current += 1
+    invalidateOfflineIdentity()
     invalidateStudentImportSession()
     setUser(null)
     setSessionError(false)
@@ -95,6 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => startStudentImportSessionSync(() => {
     sessionVersion.current += 1
+    invalidateOfflineIdentity(false)
     setUser(null)
     setSessionError(false)
   }), [])
@@ -135,11 +143,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     const version = ++sessionVersion.current
+    invalidateOfflineIdentity()
     invalidateStudentImportSession()
     await requestLogin(credentials)
 
     const currentUser = await getCurrentUser()
     if (version !== sessionVersion.current) throw new Error('El contexto de autenticación cambió.')
+    rememberOfflineIdentity(currentUser)
     setStudentImportIdentity(currentUser)
     setUser(currentUser)
     setSessionError(false)
@@ -154,6 +164,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     setIsLoggingOut(true)
     sessionVersion.current += 1
+    invalidateOfflineIdentity()
     invalidateStudentImportSession()
 
     try {

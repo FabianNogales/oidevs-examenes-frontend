@@ -42,7 +42,7 @@
 .dangerButton {
   background: var(--color-error);
   border-color: var(--color-error);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 .dangerButton:hover:not(:disabled) {
   opacity: 0.9;

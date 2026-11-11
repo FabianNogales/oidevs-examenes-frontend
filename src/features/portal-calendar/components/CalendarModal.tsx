@@ -2,7 +2,7 @@ import {
   PortalDialog,
   type PortalDialogProps,
 } from '@/shared/components/PortalDialog/PortalDialog'
-import styles from '../portalCalendar.module.css'
+import styles from '../pages/portalCalendar.module.css'
 
 /** Compatibility adapter. Domain forms keep their existing style hooks. */
 export function CalendarModal(props: PortalDialogProps) {

@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { getAdminEvents, getEventCategories } from '../api/portalCalendarApi'
 import { AdminEventDialog } from '../components/AdminEventDialog'
-import { STATUS_LABELS, VISIBILITY_LABELS } from '../types'
+import { STATUS_LABELS, VISIBILITY_LABELS } from '../types/calendar.types'
 import { useCalendarResource } from '../hooks/useCalendarResource'
-import type { AdminPortalEvent, EventStatus, EventVisibility } from '../types'
+import type { AdminPortalEvent, EventStatus, EventVisibility } from '../types/calendar.types'
 import { boliviaInput, eventDateLabel } from '../utils/calendarDates'
-import styles from '../portalCalendar.module.css'
+import styles from './portalCalendar.module.css'
 
 // DataTable reserves `status` for ACTIVE/INACTIVE. Keep the calendar state separately.
 type EventRow = Omit<AdminPortalEvent, 'status'> & { eventStatus: EventStatus }
@@ -130,21 +132,11 @@ export function AdminCalendarPage() {
   }))
 
   return (
-    <div className={styles.page}>
-      <Breadcrumbs
-        items={[
-          { label: 'Inicio', to: '/' },
-          { label: 'Gestión del calendario' },
-        ]}
-      />
-      <header className={styles.toolbar}>
-        <div>
-          <h1 ref={heading} tabIndex={-1}>
-            Gestión del calendario
-          </h1>
-          <p>Eventos institucionales públicos y privados.</p>
-        </div>
-        <button
+    <PageContainer>
+      <PageHeader title="Gestión del calendario" titleRef={heading} focusableTitle
+        description="Eventos institucionales públicos y privados."
+        breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Gestión del calendario' }]}
+        actions={<button
           type="button"
           className={styles.primary}
           disabled={
@@ -153,8 +145,7 @@ export function AdminCalendarPage() {
           onClick={() => setSelected({ id: null })}
         >
           Crear evento
-        </button>
-      </header>
+        </button>} />
       <p className={styles.categoriesLink}>
         <Link to="/admin/portal/events/categories">Gestionar categorías</Link>
       </p>
@@ -334,6 +325,6 @@ export function AdminCalendarPage() {
           }}
         />
       ) : null}
-    </div>
+    </PageContainer>
   )
 }

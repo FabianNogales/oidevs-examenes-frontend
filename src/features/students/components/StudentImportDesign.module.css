@@ -14,16 +14,16 @@
   width: 100%;
   min-height: 250px;
   padding: var(--space-6) var(--space-4);
-  background: var(--color-surface-muted, #f5fbff);
-  border: 2px dashed var(--brand-navy, #172554);
+  background: var(--color-surface-muted);
+  border: 2px dashed var(--color-text);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .dropzone[data-dragging='true'] {
-  background: var(--brand-blue-light);
-  border-color: var(--brand-blue);
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary);
 }
 
 .dropzone[data-has-file='true'] {
@@ -50,14 +50,14 @@
 .dropzoneIcon {
   width: 48px;
   height: 48px;
-  color: var(--brand-blue);
+  color: var(--color-primary);
 }
 
 .dropzoneTitle {
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--brand-navy);
+  color: var(--color-text);
 }
 
 .emptyDropzoneState span {
@@ -70,41 +70,32 @@
   color: var(--color-text-muted);
 }
 
+/* Look and states come from Button (DS4.2a); the class only keeps the dropzone layout. */
 .selectFileButton {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
   min-width: 200px;
-  height: var(--button-height, 44px);
-  padding: 0 var(--space-6);
   margin-top: var(--space-2);
-  background: var(--brand-blue);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--color-on-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-
-.selectFileButton:hover {
-  background: var(--color-primary-hover);
 }
 
 .fileState {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  width: 100%;
+  min-width: 0;
   gap: var(--space-4);
-  color: var(--brand-navy);
+  color: var(--color-text);
 }
 
 .fileState div {
   display: flex;
   flex-direction: column;
+  flex: 1 1 12ch;
+  min-width: 0;
   gap: 2px;
 }
 
 .fileState strong {
+  overflow-wrap: anywhere;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
 }
@@ -114,21 +105,9 @@
   color: var(--color-text-secondary);
 }
 
+/* Layout only; the look comes from Button. Also part of the dropzone contract used by Ofertas. */
 .removeFileButton {
-  height: 40px;
-  padding: 0 var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  color: var(--brand-blue);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-
-.removeFileButton:hover {
-  background: var(--brand-blue-light);
-  border-color: var(--brand-blue);
+  flex: 0 0 auto;
 }
 
 .columnsGuide {
@@ -137,7 +116,7 @@
   flex-wrap: wrap;
   width: 100%;
   background: var(--color-surface-soft);
-  border: 1px solid var(--brand-navy);
+  border: 1px solid var(--color-text);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -148,9 +127,9 @@
   justify-content: center;
   align-items: center;
   height: 38px;
-  border-left: 1px solid var(--brand-navy);
+  border-left: 1px solid var(--color-text);
   font-size: var(--font-size-sm);
-  color: var(--brand-navy);
+  color: var(--color-text);
 }
 
 .columnsGuide span:first-child {
@@ -187,9 +166,9 @@
   gap: var(--space-1);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
-  border: 1px solid var(--brand-navy);
+  border: 1px solid var(--color-text);
   border-radius: var(--radius-sm);
-  color: var(--brand-navy);
+  color: var(--color-text);
   text-align: left;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -206,9 +185,9 @@
 }
 
 .summaryItem[data-active='true'] {
-  background: var(--brand-pink-light);
-  border-color: var(--brand-pink);
-  color: var(--brand-crimson);
+  background: var(--color-accent-soft);
+  border-color: var(--color-decorative);
+  color: var(--color-accent-strong);
 }
 
 .studentsPreview {
@@ -229,7 +208,7 @@
 .previewTableWrap {
   box-sizing: border-box;
   overflow-x: auto;
-  border: 1px solid var(--brand-navy);
+  border: 1px solid var(--color-text);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
 }
@@ -245,10 +224,10 @@
 .previewTable thead th {
   height: 48px;
   padding: var(--space-2) var(--space-3);
-  background: var(--brand-blue-light);
-  border-bottom: 1px solid var(--brand-navy);
-  border-right: 1px solid var(--brand-navy);
-  color: var(--brand-navy);
+  background: var(--color-surface-soft);
+  border-bottom: 1px solid var(--color-text);
+  border-right: 1px solid var(--color-text);
+  color: var(--color-text);
   font-weight: var(--font-weight-medium);
   text-align: center;
 }
@@ -260,10 +239,10 @@
 .previewTable tbody td {
   padding: var(--space-3) var(--space-2);
   vertical-align: middle;
-  border-bottom: 1px solid var(--brand-navy);
-  border-right: 1px solid var(--brand-navy);
+  border-bottom: 1px solid var(--color-text);
+  border-right: 1px solid var(--color-text);
   text-align: center;
-  color: var(--brand-navy);
+  color: var(--color-text);
   overflow-wrap: anywhere;
 }
 
@@ -276,7 +255,7 @@
 }
 
 .previewTable tbody tr[data-valid='false'] td {
-  background: var(--brand-pink-light);
+  background: var(--color-accent-soft);
 }
 
 .cellMain {
@@ -334,7 +313,7 @@
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  color: var(--brand-navy);
+  color: var(--color-text);
 }
 
 .successHeader p {
@@ -350,7 +329,7 @@
   margin-top: var(--space-4);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .previewSummary,
   .successSummary {
     flex-direction: column;

@@ -85,7 +85,9 @@ function OfferingCatalog({
   return (
     <section
       className={styles.card}
-      aria-label={teacherId ? 'Materias del docente' : 'Materias asignadas a docentes'}
+      aria-label={
+        teacherId ? 'Materias del docente' : 'Materias asignadas a docentes'
+      }
     >
       {notice && (
         <p className={styles.notice} role="status">
@@ -108,6 +110,22 @@ function OfferingCatalog({
         />
       )}
       <form className={styles.searchBar} onSubmit={submit}>
+        <label className={styles.searchField} htmlFor={`${id}-search`}>
+          <span className={styles.srOnly}>
+            Buscar materia{!teacherId && ' o docente'}
+          </span>
+          <input
+            id={`${id}-search`}
+            value={searchInput}
+            maxLength={100}
+            placeholder={
+              teacherId
+                ? 'Buscar por código o nombre de materia'
+                : 'Buscar por materia o docente'
+            }
+            onChange={(event) => setSearchInput(event.target.value)}
+          />
+        </label>
         <label className={styles.filter} htmlFor={`${id}-term`}>
           Periodo académico
           <select
@@ -142,22 +160,7 @@ function OfferingCatalog({
             <option value="INACTIVE">Inactiva</option>
           </select>
         </label>
-        <label className={styles.searchField} htmlFor={`${id}-search`}>
-          <span className={styles.srOnly}>
-            Buscar materia{!teacherId && ' o docente'}
-          </span>
-          <input
-            id={`${id}-search`}
-            value={searchInput}
-            maxLength={100}
-            placeholder={
-              teacherId
-                ? 'Buscar por código o nombre de materia'
-                : 'Buscar por materia o docente'
-            }
-            onChange={(event) => setSearchInput(event.target.value)}
-          />
-        </label>
+
         <button type="submit" className={styles.primaryButton}>
           Buscar
         </button>
@@ -194,7 +197,9 @@ function OfferingCatalog({
           />
         ) : (
           <div className={styles.state} role="status">
-            <h3>No hay asignaciones para esta consulta</h3>
+            <h2 className={styles.stateTitle}>
+              No hay asignaciones para esta consulta
+            </h2>
             <p>Revisa el periodo, el estado o la búsqueda seleccionados.</p>
           </div>
         ))}
@@ -204,8 +209,8 @@ function OfferingCatalog({
           aria-label="Paginación de asignaciones"
         >
           <p>
-            {response.meta.total} asignaciones · Página {response.meta.current_page}{' '}
-            de {response.meta.last_page}
+            {response.meta.total} asignaciones · Página{' '}
+            {response.meta.current_page} de {response.meta.last_page}
           </p>
           <div>
             <button

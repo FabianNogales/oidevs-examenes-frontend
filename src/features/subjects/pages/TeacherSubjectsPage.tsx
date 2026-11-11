@@ -1,18 +1,18 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
 
-import { useAuth } from '@/features/auth/hooks/useAuth'
-import { CreateExamModal } from '@/features/exams/components/CreateExamModal'
-import { createExam } from '@/features/exams/api/teacherExamsApi'
 import { getTeacherSubjects } from '@/features/subjects/api/teacherSubjectsApi'
 import { SubjectList } from '@/features/subjects/components/SubjectList'
 import { TeacherOfferingFilters } from '@/features/course-offerings/components/TeacherOfferingFilters'
 import { SubjectsSkeleton } from '@/features/subjects/components/SubjectsSkeleton'
 import type { Subject } from '@/features/subjects/types/subject.types'
-import type { CreateExamPayload } from '@/features/exams/types/exam.types'
-import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardError'
+import { getTeacherDashboardErrorMessage } from '@/features/home/api/teacherDashboardError'
 
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import styles from './TeacherSubjectsPage.module.css'
+
+const titleId = 'teacher-subjects-title'
 
 interface TeacherSubjectsPageProps {
   subjects?: Subject[]
@@ -27,23 +27,35 @@ export function TeacherSubjectsPage({
   errorMessage: providedErrorMessage,
   onRetry,
 }: TeacherSubjectsPageProps) {
-  const { notify } = useAuth()
   const [loadedSubjects, setLoadedSubjects] = useState<Subject[]>([])
   const [loadedIsLoading, setLoadedIsLoading] = useState(true)
-  const [loadedErrorMessage, setLoadedErrorMessage] = useState<string | null>(null)
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
-  const [period, setPeriod] = useState('')
-  const [isSubmittingExam, setIsSubmittingExam] = useState(false)
-  const [lastCreatedExamName, setLastCreatedExamName] = useState<string | null>(null)
+  const [loadedErrorMessage, setLoadedErrorMessage] = useState<string | null>(
+    null,
+  )
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const period = searchParams.get('period') ?? ''
+  function setPeriod(value: string) {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous)
+      if (value) next.set('period', value)
+      else next.delete('period')
+      return next
+    })
+  }
   const subjectsRequestInFlight = useRef(false)
   const hasProvidedSubjects = providedSubjects !== undefined
   const subjects = providedSubjects ?? loadedSubjects
-  const isLoading = hasProvidedSubjects ? providedIsLoading ?? false : loadedIsLoading
+  const isLoading = hasProvidedSubjects
+    ? (providedIsLoading ?? false)
+    : loadedIsLoading
   const errorMessage = hasProvidedSubjects
-    ? providedErrorMessage ?? null
+    ? (providedErrorMessage ?? null)
     : loadedErrorMessage
   const hasSubjects = subjects.length > 0
-  const visibleSubjects = subjects.filter((subject) => !period || subject.academicManagement === period)
+  const visibleSubjects = subjects.filter(
+    (subject) => !period || subject.academicManagement === period,
+  )
 
   const loadSubjects = useCallback(async () => {
     if (subjectsRequestInFlight.current) return
@@ -71,95 +83,77 @@ export function TeacherSubjectsPage({
     }
   }, [hasProvidedSubjects, loadSubjects])
 
-  const openCreateExamModal = useCallback((subject: Subject) => {
-    if (subject.canManage === false) return
-    setSelectedSubject(subject)
-  }, [])
-
-  const closeCreateExamModal = useCallback(() => {
-    setSelectedSubject(null)
-  }, [])
-
-  const submitCreateExam = useCallback(
-    async (payload: CreateExamPayload, subject: Subject) => {
-      setIsSubmittingExam(true)
-
-      try {
-        await createExam(subject.courseOfferingId, payload)
-
-        const examLabel = payload.name.trim() || 'Examen'
-        setLastCreatedExamName(examLabel)
-        notify('success', 'Examen programado correctamente.')
-        setSelectedSubject(null)
-      } finally {
-        setIsSubmittingExam(false)
-      }
-    },
-    [notify],
-  )
-
   return (
-    <main className={styles.page}>
-      <section className={styles.content}>
-        <Breadcrumbs
-          items={[{ label: 'Inicio', to: '/' }, { label: 'Mis materias' }]}
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Mis materias"
+          titleId={titleId}
+          description="Gestiona tus materias, crea examenes y administra estudiantes."
+          breadcrumbs={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Mis materias' },
+          ]}
         />
-        <header className={styles.pageHeader}>
-          <div>
-            <h1>Mis materias</h1>
-            <p>Gestiona tus materias, crea examenes y administra estudiantes.</p>
-          </div>
-        </header>
+        <section className={styles.content}>
+          {isLoading ? <SubjectsSkeleton /> : null}
 
-        {lastCreatedExamName ? (
-          <div className={styles.successBanner} role="status">
-            <strong>Último examen programado:</strong> {lastCreatedExamName}
-          </div>
-        ) : null}
+          {errorMessage ? (
+            <section className={styles.state} role="alert">
+              <h2>No se pudieron cargar las materias</h2>
+              <p>{errorMessage}</p>
+              {onRetry || !hasProvidedSubjects ? (
+                <button
+                  type="button"
+                  onClick={onRetry ?? (() => void loadSubjects())}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Reintentando…' : 'Reintentar'}
+                </button>
+              ) : null}
+            </section>
+          ) : null}
 
-        {isLoading ? <SubjectsSkeleton /> : null}
+          {!isLoading && !errorMessage && hasSubjects && (
+            <TeacherOfferingFilters
+              subjects={subjects}
+              term={period}
+              onChange={setPeriod}
+            />
+          )}
+          {!isLoading &&
+            !errorMessage &&
+            hasSubjects &&
+            visibleSubjects.length === 0 && (
+              <p role="status">
+                No hay materias asignadas en el periodo seleccionado.
+              </p>
+            )}
+          {!isLoading && !errorMessage && hasSubjects ? (
+            <SubjectList
+              subjects={visibleSubjects}
+              onCreateExam={(subject) => {
+                if (subject.canManage === false) return
+                navigate(
+                  `/teacher/subjects/${subject.courseOfferingId}/exams/create${period ? `?period=${encodeURIComponent(period)}` : ''}`,
+                )
+              }}
+              onAddStudents={(subject) =>
+                navigate(
+                  `/teacher/students/${subject.courseOfferingId}${period ? `?period=${encodeURIComponent(period)}` : ''}`,
+                )
+              }
+            />
+          ) : null}
 
-        {errorMessage ? (
-          <section className={styles.state} role="alert">
-            <h2>No se pudieron cargar las materias</h2>
-            <p>{errorMessage}</p>
-            {onRetry || !hasProvidedSubjects ? (
-              <button
-                type="button"
-                onClick={onRetry ?? (() => void loadSubjects())}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Reintentando…' : 'Reintentar'}
-              </button>
-            ) : null}
-          </section>
-        ) : null}
-
-        {!isLoading && !errorMessage && hasSubjects && <TeacherOfferingFilters subjects={subjects} term={period} onChange={setPeriod} />}
-        {!isLoading && !errorMessage && hasSubjects && visibleSubjects.length === 0 && <p role="status">No hay materias asignadas en el periodo seleccionado.</p>}
-        {!isLoading && !errorMessage && hasSubjects ? (
-          <SubjectList
-            subjects={visibleSubjects}
-            onCreateExam={openCreateExamModal}
-          />
-        ) : null}
-
-        {!isLoading && !errorMessage && !hasSubjects ? (
-          <section className={styles.state}>
-            <h2>No tienes materias asignadas actualmente.</h2>
-            <p>Cuando se asignen materias, apareceran en esta seccion.</p>
-          </section>
-        ) : null}
-      </section>
-
-      <CreateExamModal
-        key={selectedSubject?.courseOfferingId ?? 'closed'}
-        isOpen={selectedSubject !== null}
-        subject={selectedSubject}
-        isSubmitting={isSubmittingExam}
-        onClose={closeCreateExamModal}
-        onSubmit={submitCreateExam}
-      />
+          {!isLoading && !errorMessage && !hasSubjects ? (
+            <section className={styles.state}>
+              <h2>No tienes materias asignadas actualmente.</h2>
+              <p>Cuando se asignen materias, apareceran en esta seccion.</p>
+            </section>
+          ) : null}
+        </section>
+      </PageContainer>
     </main>
   )
 }

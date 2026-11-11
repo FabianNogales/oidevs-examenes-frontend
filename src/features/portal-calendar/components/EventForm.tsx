@@ -11,11 +11,11 @@ import type {
   EventCategory,
   EventInput,
   EventStatus,
-} from '../types'
-import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
-import { STATUS_LABELS, VISIBILITY_LABELS } from '../types'
+} from '../types/calendar.types'
+import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
+import { STATUS_LABELS, VISIBILITY_LABELS } from '../types/calendar.types'
 import { boliviaInput, inputToIso } from '../utils/calendarDates'
-import styles from '../portalCalendar.module.css'
+import styles from '../pages/portalCalendar.module.css'
 
 const STATUS_ACTIONS: Record<EventStatus, string> = {
   DRAFT: 'Despublicar',

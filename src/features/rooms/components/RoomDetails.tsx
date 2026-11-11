@@ -1,4 +1,5 @@
 import type { Room } from '../types/room.types'
+import { Button } from '@/shared/components/ui/Button/Button'
 import styles from './RoomDialog.module.css'
 
 export function RoomDetails({
@@ -39,28 +40,30 @@ export function RoomDetails({
           </div>
         ))}
       </dl>
-      {room.current_exam && (
-        <section className={styles.exam} aria-label="Examen actual">
-          <h3>Examen actual</h3>
-          <p>{room.current_exam.name}</p>
+      <section className={styles.exam} aria-label="Examen actual">
+        <h3>Examen actual</h3>
+        {room.current_exam ? (
+          <>
+            <p>{room.current_exam.name}</p>
+            <p>
+              {room.current_exam.exam_date} ·{' '}
+              {room.current_exam.start_time.slice(0, 5)} –{' '}
+              {room.current_exam.end_time.slice(0, 5)}
+            </p>
+          </>
+        ) : (
           <p>
-            {room.current_exam.exam_date} ·{' '}
-            {room.current_exam.start_time.slice(0, 5)} –{' '}
-            {room.current_exam.end_time.slice(0, 5)}
+            {room.current_exam === null
+              ? 'Sin examen en curso'
+              : 'Sin información'}
           </p>
-        </section>
-      )}
+        )}
+      </section>
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={onClose}
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cerrar
-        </button>
-        <button type="button" className={styles.primaryButton} onClick={onEdit}>
-          Editar aula
-        </button>
+        </Button>
+        <Button onClick={onEdit}>Editar aula</Button>
       </footer>
     </>
   )

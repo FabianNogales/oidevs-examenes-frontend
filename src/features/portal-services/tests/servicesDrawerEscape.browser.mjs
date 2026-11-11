@@ -3,12 +3,14 @@
 // Drawer, plus unexpected native closes, and checks focus and scroll restoration.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createServer } from 'vite'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-services-escape-'))
 const evidence = join(process.cwd(), '.validation.local', 'd4.3-portal-dialog')
 await mkdir(evidence, { recursive: true })
 const demo = `
@@ -17,7 +19,7 @@ import {createRoot} from 'react-dom/client';
 import {MemoryRouter} from 'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
-import {AdminServicesPage} from '/src/features/portal-services/AdminServicesPage.tsx';
+import {AdminServicesPage} from '/src/features/portal-services/pages/AdminServicesPage.tsx';
 const e=React.createElement, root=createRoot(document.getElementById('root'));
 const rows=[
   {id:42,name:'WebSISS',description:'Acceso al sistema de información estudiantil.',icon:'link',url:'https://websiss.umss.edu.bo/',display_order:1,status:'ACTIVE',revision:7,needs_review:false},
@@ -47,9 +49,12 @@ window.servicesEscapeQa={rows,calls:[],listDelay:0,client:{
 root.render(e(MemoryRouter,{initialEntries:['/admin/portal/services']},e(AdminServicesPage)));
 `
 
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('services-escape')
+  const profile = browserProfile.dir
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -405,6 +410,6 @@ try {
   console.log(`QA D4.3/D4.5.1: PASS · evidencia en ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }

@@ -2,16 +2,6 @@ type IconProps = {
   className?: string
 }
 
-export function HomeIcon({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5.5 10.5V20h13v-9.5" />
-      <path d="M9.5 20v-5h5v5" />
-    </svg>
-  )
-}
-
 export function InfoIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
@@ -19,17 +9,6 @@ export function InfoIcon({ className }: IconProps) {
       <path d="M9 8h6" />
       <path d="M9 12h6" />
       <path d="M9 16h3" />
-    </svg>
-  )
-}
-
-export function ServicesIcon({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 5h5v5H5z" />
-      <path d="M14 5h5v5h-5z" />
-      <path d="M5 14h5v5H5z" />
-      <path d="M14 14h5v5h-5z" />
     </svg>
   )
 }

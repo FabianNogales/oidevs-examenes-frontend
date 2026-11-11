@@ -1,3 +1,4 @@
+import { AuthenticatedImage } from '@/shared/components/AuthenticatedImage/AuthenticatedImage'
 import { useId, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { StudentProfileError } from '@/features/students/types/studentProfile'
@@ -18,7 +19,6 @@ export function StudentProfilePhoto({
 }: StudentProfilePhotoProps) {
   const id = useId()
   const input = useRef<HTMLInputElement>(null)
-  const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -27,7 +27,6 @@ export function StudentProfilePhoto({
     if (!photo || updating) return
     setSuccess(false)
     if (await onUpdate(photo)) {
-      setFailedUrl(null)
       setSuccess(true)
     }
   }
@@ -35,31 +34,29 @@ export function StudentProfilePhoto({
   return (
     <section className={styles.card} aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`}>Fotografía</h2>
-      {photoUrl && photoUrl !== failedUrl ? (
-        <img
-          className={styles.photo}
-          src={photoUrl}
-          alt="Tu foto de perfil"
-          onError={() => setFailedUrl(photoUrl)}
-        />
-      ) : (
-        <div
-          className={styles.placeholder}
-          role="img"
-          aria-label="Sin foto de perfil"
-        >
-          <svg
-            viewBox="0 0 48 48"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
+      <AuthenticatedImage
+        url={photoUrl}
+        className={styles.photo}
+        alt="Tu foto de perfil"
+        placeholder={
+          <div
+            className={styles.placeholder}
+            role="img"
+            aria-label="Sin foto de perfil"
           >
-            <circle cx="24" cy="16" r="8" />
-            <path d="M8 42v-4a16 16 0 0 1 32 0v4" />
-          </svg>
-        </div>
-      )}
+            <svg
+              viewBox="0 0 48 48"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <circle cx="24" cy="16" r="8" />
+              <path d="M8 42v-4a16 16 0 0 1 32 0v4" />
+            </svg>
+          </div>
+        }
+      />
       <input
         ref={input}
         id={`${id}-file`}

@@ -37,7 +37,7 @@ const historyPage = (data, current = 1, last = 1, total = data.length) => ({
 function panel(data, resource = 'events', handlers) {
   return component(
     client(handlers ?? { get: () => ({ data: historyPage(data) }) }),
-    'features/portal-shared/PortalHistory.tsx',
+    'features/portal-shared/components/PortalHistory.tsx',
     'PortalHistoryPanel',
     { resource, id: 47 },
   )
@@ -460,7 +460,7 @@ test('respuesta tardía tras cambiar de recurso no reemplaza su historial', asyn
 test('Ver historial carga bajo demanda y utiliza un panel accesible dentro del detalle', async () => {
   const ui = component(
     client(),
-    'features/portal-shared/PortalHistory.tsx',
+    'features/portal-shared/components/PortalHistory.tsx',
     'PortalHistory',
     { resource: 'events', id: 47 },
   )
@@ -491,20 +491,20 @@ const adminPages = [
     'features/portal-calendar/pages/AdminCalendarPage.tsx',
     'AdminCalendarPage',
   ],
-  ['news', 'features/portal-news/AdminNewsPage.tsx', 'AdminNewsPage'],
+  ['news', 'features/portal-news/pages/AdminNewsPage.tsx', 'AdminNewsPage'],
   [
     'information/sections',
-    'features/portal-information/AdminInformationPage.tsx',
+    'features/portal-information/pages/AdminInformationPage.tsx',
     'AdminInformationPage',
   ],
   [
     'information/faqs',
-    'features/portal-information/AdminInformationPage.tsx',
+    'features/portal-information/pages/AdminInformationPage.tsx',
     'AdminInformationPage',
   ],
   [
     'services',
-    'features/portal-services/AdminServicesPage.tsx',
+    'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   ],
 ]
@@ -670,9 +670,9 @@ test('páginas públicas y Home no pueden alcanzar el API/componente de historia
   for (const path of [
     'home/pages/HomePage.tsx',
     'portal-calendar/pages/CalendarPage.tsx',
-    'portal-news/NewsPage.tsx',
-    'portal-information/InformationPage.tsx',
-    'portal-services/ServicesPage.tsx',
+    'portal-news/pages/NewsPage.tsx',
+    'portal-information/pages/InformationPage.tsx',
+    'portal-services/pages/ServicesPage.tsx',
   ]) {
     visit(resolve(sourceRoot, 'features', path))
   }

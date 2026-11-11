@@ -7,12 +7,14 @@
 // Services Estado filter sits inline with the search row; no overflow at 320/390.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createServer } from 'vite'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-admin-filters-'))
 const evidence = join(process.cwd(), '.validation.local', 'admin-filters')
 await mkdir(evidence, { recursive: true })
 const demo = `
@@ -21,8 +23,8 @@ import {createRoot} from 'react-dom/client';
 import {MemoryRouter} from 'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
-import {AdminInformationPage} from '/src/features/portal-information/AdminInformationPage.tsx';
-import {AdminServicesPage} from '/src/features/portal-services/AdminServicesPage.tsx';
+import {AdminInformationPage} from '/src/features/portal-information/pages/AdminInformationPage.tsx';
+import {AdminServicesPage} from '/src/features/portal-services/pages/AdminServicesPage.tsx';
 const e=React.createElement, root=createRoot(document.getElementById('root'));
 const paginate=(rows,p={})=>{const per=15,cur=p.page??1,last=Math.max(1,Math.ceil(rows.length/per));return {data:{data:rows.slice((cur-1)*per,cur*per),links:{first:'?page=1',last:'?page='+last,prev:cur>1?'?page='+(cur-1):null,next:cur<last?'?page='+(cur+1):null},meta:{current_page:cur,last_page:last,per_page:per,total:rows.length}}}};
 const services=Array.from({length:20},(_,i)=>({id:i+1,name:'Servicio '+(i+1),description:'Descripción '+(i+1),icon:'link',url:'https://s'+(i+1)+'.umss.edu.bo/',display_order:i+1,status:i%2?'INACTIVE':'ACTIVE',revision:1,needs_review:false}));
@@ -47,9 +49,12 @@ const pages={information:AdminInformationPage,services:AdminServicesPage};
 qa.show=(name)=>{qa.calls=[];root.render(e(MemoryRouter,{key:name},e(pages[name])))};
 `
 
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('admin-filters')
+  const profile = browserProfile.dir
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -416,6 +421,6 @@ try {
   console.log(`QA filtros administrativos: PASS · evidencia en ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }

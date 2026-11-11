@@ -9,6 +9,7 @@ import type {
 import { validateSubject } from '../utils/subjectValidation'
 import { SubjectCareerSelector } from './SubjectCareerSelector'
 import styles from './SubjectDialog.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function SubjectForm({
   subject,
@@ -160,28 +161,25 @@ export function SubjectForm({
       {careers.error && (
         <div className={styles.error} role="alert">
           <p>{careers.error}</p>
-          <button
-            type="button"
-            className={styles.secondaryButton}
+          <Button
+            variant="secondary"
             onClick={careers.reload}
           >
             Reintentar carreras
-          </button>
+          </Button>
         </div>
       )}
       <footer className={styles.actions}>
         {saving && <span role="status">Guardando materia…</span>}
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           disabled={saving}
           onClick={onCancel}
         >
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className={styles.primaryButton}
           disabled={
             saving ||
             unavailable ||
@@ -198,7 +196,7 @@ export function SubjectForm({
             : subject
               ? 'Guardar cambios'
               : 'Registrar materia'}
-        </button>
+        </Button>
       </footer>
     </form>
   )

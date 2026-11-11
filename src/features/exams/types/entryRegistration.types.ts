@@ -52,6 +52,8 @@ export type EntryProcessingResponse<
   message: string
   processed_at: string
   data: EntryRegistrationData | null
+  // Optional HU27 extension; omitted by older HU14 responses.
+  incident?: { id: number; exam_id: number } | null
 }
 
 export type EntryManualPayload = { room_id: number }

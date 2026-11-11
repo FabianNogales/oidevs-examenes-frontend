@@ -42,7 +42,7 @@ function editor(handlers = {}, initial = stored, categories = options()) {
   const states = []
   const ui = component(
     client(handlers),
-    'features/portal-news/NewsEditor.tsx',
+    'features/portal-news/components/NewsEditor.tsx',
     'NewsEditor',
     {
       initial,
@@ -70,7 +70,7 @@ const fillText = (ui) => {
 
 test('D1.1 admin selector consumes the active catalog endpoint and rejects malformed data', async () => {
   const c = client({ get: () => ({ data: { data: active } }) })
-  const api = c.h.load('features/portal-news/newsApi.ts')
+  const api = c.h.load('features/portal-news/api/newsApi.ts')
   assert.deepEqual(await api.getNewsCategories(true), active)
   assert.equal(c.calls[0].args[0], '/admin/portal/news-categories')
   assert.deepEqual(await api.getNewsCategories(false), active)
@@ -78,7 +78,7 @@ test('D1.1 admin selector consumes the active catalog endpoint and rejects malfo
   for (const body of [null, { data: null }, { data: [{ id: '7', name: 'X' }] }]) {
     const bad = client({ get: () => ({ data: body }) })
     await assert.rejects(
-      bad.h.load('features/portal-news/newsApi.ts').getNewsCategories(true),
+      bad.h.load('features/portal-news/api/newsApi.ts').getNewsCategories(true),
     )
   }
 })
@@ -277,7 +277,7 @@ test('D1.1 category change counts as unsaved and reload restores the server cate
     },
     get: () => ({ data: { data: { ...stored, revision: 9 } } }),
   })
-  const ui = component(c, 'features/portal-news/NewsEditor.tsx', 'NewsEditor', {
+  const ui = component(c, 'features/portal-news/components/NewsEditor.tsx', 'NewsEditor', {
     initial: stored,
     categories: options(),
     onSaved() {},
@@ -306,7 +306,7 @@ test('D1.1 admin list shows category or "Sin categoría" and filters by category
       },
       { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
     ),
-    'features/portal-news/AdminNewsPage.tsx',
+    'features/portal-news/pages/AdminNewsPage.tsx',
     'AdminNewsPage',
   )
   await ui.ready()
@@ -371,7 +371,7 @@ const publicList = (compact = false) =>
               ),
             },
     }),
-    'features/portal-news/NewsList.tsx',
+    'features/portal-news/components/NewsList.tsx',
     'NewsList',
     { compact },
   )
@@ -420,7 +420,7 @@ test('D1.1 public responses accept category null and reject malformed categories
     [{ id: 3 }, false],
   ]) {
     const c = client({ get: () => ({ data: page([{ ...publicNews, category }]) }) })
-    const api = c.h.load('features/portal-news/newsApi.ts')
+    const api = c.h.load('features/portal-news/api/newsApi.ts')
     if (ok) await api.listNews({ page: 1 })
     else await assert.rejects(api.listNews({ page: 1 }))
   }

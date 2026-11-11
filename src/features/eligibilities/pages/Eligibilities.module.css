@@ -31,6 +31,20 @@
   color: var(--color-on-primary);
 }
 
+/* U3.3: groups the two header links inside PageHeader's actions, keeping the back link on its own line
+   (HU34 acceptance: it never shares a row with "Habilitación automática"). */
+.headerActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+@media (max-width: 640px) {
+  .headerActions {
+    align-items: stretch;
+  }
+}
+
 .backLink {
   display: inline-flex;
   align-items: center;

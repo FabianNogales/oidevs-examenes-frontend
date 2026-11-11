@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 import styles from './PortalDialog.module.css'
 
@@ -15,6 +15,8 @@ export interface PortalDialogProps {
   className?: string
   headerClassName?: string
   bodyClassName?: string
+  /** Element focused when the dialog opens. Defaults to the close button (unchanged behaviour). */
+  initialFocus?: RefObject<HTMLElement | null>
 }
 
 export function PortalDialog({
@@ -28,6 +30,7 @@ export function PortalDialog({
   className = '',
   headerClassName = '',
   bodyClassName = '',
+  initialFocus,
 }: PortalDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null)
   const close = useRef<HTMLButtonElement>(null)
@@ -42,12 +45,14 @@ export function PortalDialog({
         : null
     mounted.current = true
     element?.showModal()
-    close.current?.focus()
+    ;(initialFocus?.current ?? close.current)?.focus()
     return () => {
       mounted.current = false
       element?.close()
       if (previous?.isConnected) previous.focus({ preventScroll: true })
     }
+    // Runs once per mount: the dialog opens when it is rendered; initialFocus is read on open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const requestClose = () => {
     if (!busy && !closeBlocked) onClose()

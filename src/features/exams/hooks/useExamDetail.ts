@@ -5,7 +5,7 @@ import {
   parseExamId,
   type ExamDetailResult,
 } from '@/features/exams/api/examDetailsApi'
-import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardError'
+import { getTeacherDashboardErrorMessage } from '@/features/home/api/teacherDashboardError'
 
 export function useExamDetail(examId: string | number | undefined) {
   const id = parseExamId(examId)

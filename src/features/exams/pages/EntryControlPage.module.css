@@ -1,4 +1,6 @@
 .page {
+  min-height: calc(100dvh - var(--app-header-height) - var(--footer-height));
+  background: var(--color-background);
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -6,8 +8,8 @@
 }
 
 .page .content {
-  width: min(100%, 1120px);
-  max-width: 1120px;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -67,12 +69,6 @@
   font-size: var(--font-size-sm);
 }
 
-.pageHeading {
-  margin-bottom: var(--space-3);
-}
-.pageHeading h1 {
-  font-size: var(--font-size-xl);
-}
 .examHeader {
   padding-block: var(--space-2);
 }
@@ -711,10 +707,9 @@
     display: block;
   }
 
-  .page {
+  .page .container {
+    /* Preserve the existing outer gutter and scanner width through tablet size. */
     padding-inline: var(--space-4);
-    /* Guard against paint overflow after constraining intrinsic control widths. */
-    overflow-x: clip;
   }
 
   .page .content {

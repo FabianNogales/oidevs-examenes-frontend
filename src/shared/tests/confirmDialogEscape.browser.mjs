@@ -4,12 +4,14 @@
 // unexpected native closes. Run from the frontend root; requires local Chrome.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createServer } from 'vite'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from './browserProfile.mjs'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-confirm-escape-'))
 const evidence = join(process.cwd(), '.validation.local', 'd4.4-confirm-dialog')
 await mkdir(evidence, { recursive: true })
 const demo = `
@@ -54,9 +56,12 @@ function App(){
 createRoot(document.getElementById('root')).render(e(App));
 `
 
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('confirm-escape')
+  const profile = browserProfile.dir
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -356,6 +361,6 @@ try {
   console.log(`QA D4.4: PASS · evidencia en ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }

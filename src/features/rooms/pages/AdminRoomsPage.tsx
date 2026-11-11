@@ -1,6 +1,10 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useCallback, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
+import { Select } from '@/shared/components/ui/Field/Select'
+import { TextInput } from '@/shared/components/ui/Field/TextInput'
 import { Snackbar } from '@/shared/components/Snackbar'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { RoomDialog } from '../components/RoomDialog'
@@ -75,177 +79,153 @@ export function AdminRoomsPage() {
   const meta = rooms.result?.meta
 
   return (
-    <section className={styles.page} aria-labelledby="rooms-title">
-      <div className={styles.container}>
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', to: '/admin' },
-            { label: 'Aulas' },
-            { label: 'Gestionar aulas' },
-          ]}
-        />
-        <header className={styles.pageHeader}>
-          <div>
-            <p className={styles.eyebrow}>Administrador</p>
-            <h1 id="rooms-title" tabIndex={-1}>
-              Gestión de aulas
-            </h1>
-            <p className={styles.description}>
-              Consulta y administra las aulas o ambientes disponibles en el
-              sistema.
-            </p>
-          </div>
-          <div className={styles.headerActions}>
-            <Link to="/admin/rooms/import" className={styles.primaryButton}>
-              + Importar aulas (CSV)
-            </Link>
-            <button
-              type="button"
-              className={styles.primaryButton}
-              onClick={() => setSelection({ mode: 'create' })}
-            >
+    <PageContainer labelledBy="rooms-title">
+      <PageHeader
+        title="Gestión de aulas"
+        titleId="rooms-title"
+        focusableTitle
+        eyebrow="Administrador"
+        description="Consulta y administra las aulas o ambientes disponibles en el sistema."
+        breadcrumbs={[
+          { label: 'Inicio', to: '/admin' },
+          { label: 'Aulas' },
+          { label: 'Gestionar aulas' },
+        ]}
+        actions={
+          <>
+            <ButtonLink to="/admin/rooms/import">+ Importar aulas (CSV)</ButtonLink>
+            <Button onClick={() => setSelection({ mode: 'create' })}>
               + Registrar aula
-            </button>
+            </Button>
+          </>
+        }
+      />
+      <div className={styles.card}>
+        <form
+          className={styles.searchBar}
+          onSubmit={handleSearch}
+          role="search"
+          aria-label="Buscar aulas"
+        >
+          <div className={styles.searchField}>
+            <label className={styles.srOnly} htmlFor="rooms-search">
+              Buscar por nombre o código de aula
+            </label>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6.5" />
+              <path d="m16 16 5 5" />
+            </svg>
+            <TextInput
+              id="rooms-search"
+              type="search"
+              value={search}
+              maxLength={150}
+              placeholder="Buscar por nombre o código de aula"
+              onChange={(event) => setSearch(event.target.value)}
+            />
           </div>
-        </header>
-        <div className={styles.card}>
-          <form
-            className={styles.searchBar}
-            onSubmit={handleSearch}
-            role="search"
-            aria-label="Buscar aulas"
-          >
-            <div className={styles.searchField}>
-              <label className={styles.srOnly} htmlFor="rooms-search">
-                Buscar por nombre o código de aula
-              </label>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="10.5" cy="10.5" r="6.5" />
-                <path d="m16 16 5 5" />
-              </svg>
-              <input
-                id="rooms-search"
-                type="search"
-                value={search}
-                maxLength={150}
-                placeholder="Buscar por nombre o código de aula"
-                onChange={(event) => setSearch(event.target.value)}
-              />
+          <Button type="submit">Buscar</Button>
+          <label className={styles.filter}>
+            Estado
+            <Select
+              value={query.status}
+              onChange={(event) =>
+                changeQuery({
+                  ...query,
+                  page: 1,
+                  status: event.target.value as RoomStatus | '',
+                })
+              }
+            >
+              <option value="">Todos</option>
+              <option value="ACTIVE">Activos</option>
+              <option value="INACTIVE">Inactivos</option>
+            </Select>
+          </label>
+          {filtered && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSearch('')
+                changeQuery({ page: 1, search: '', status: '' })
+              }}
+            >
+              Limpiar filtros
+            </Button>
+          )}
+        </form>
+        <p className={styles.hint}>
+          El estado indica si el aula está habilitada. La disponibilidad
+          corresponde al momento de la consulta.
+        </p>
+        <div aria-busy={rooms.status === 'loading'}>
+          {rooms.status === 'loading' && (
+            <div className={styles.state} role="status">
+              Cargando aulas…
             </div>
-            <button className={styles.primaryButton} type="submit">
-              Buscar
-            </button>
-            <label className={styles.filter}>
-              Estado
-              <select
-                value={query.status}
-                onChange={(event) =>
-                  changeQuery({
-                    ...query,
-                    page: 1,
-                    status: event.target.value as RoomStatus | '',
-                  })
+          )}
+          {rooms.status === 'error' && (
+            <div className={styles.state} role="alert">
+              <h2>No se pudieron cargar las aulas</h2>
+              <p>{rooms.error}</p>
+              <Button onClick={rooms.reload}>Reintentar</Button>
+            </div>
+          )}
+          {rooms.status === 'ready' &&
+            (rooms.result.data.length ? (
+              <RoomsTable
+                rooms={rooms.result.data}
+                onDetail={(roomId) =>
+                  setSelection({ mode: 'detail', roomId })
+                }
+                onEdit={(roomId) => setSelection({ mode: 'edit', roomId })}
+                onStatusChange={setStatusRoom}
+              />
+            ) : (
+              <div className={styles.state} role="status">
+                <h2>
+                  {filtered
+                    ? 'No se encontraron aulas'
+                    : 'No hay aulas registradas'}
+                </h2>
+                <p>
+                  {filtered
+                    ? 'Prueba con otro nombre, código o estado.'
+                    : 'Las aulas registradas aparecerán aquí.'}
+                </p>
+              </div>
+            ))}
+        </div>
+        {rooms.status === 'ready' && meta && meta.total > 0 && (
+          <nav className={styles.pagination} aria-label="Paginación de aulas">
+            <p role="status">
+              {meta.from ?? 0}–{meta.to ?? 0} de {meta.total} aulas
+            </p>
+            <div>
+              <Button
+                variant="secondary"
+                disabled={meta.current_page <= 1}
+                onClick={() =>
+                  changeQuery({ ...query, page: meta.current_page - 1 })
                 }
               >
-                <option value="">Todos</option>
-                <option value="ACTIVE">Activos</option>
-                <option value="INACTIVE">Inactivos</option>
-              </select>
-            </label>
-            {filtered && (
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={() => {
-                  setSearch('')
-                  changeQuery({ page: 1, search: '', status: '' })
-                }}
+                Anterior
+              </Button>
+              <span>
+                Página {meta.current_page} de {meta.last_page}
+              </span>
+              <Button
+                variant="secondary"
+                disabled={meta.current_page >= meta.last_page}
+                onClick={() =>
+                  changeQuery({ ...query, page: meta.current_page + 1 })
+                }
               >
-                Limpiar filtros
-              </button>
-            )}
-          </form>
-          <p className={styles.hint}>
-            El estado indica si el aula está habilitada. La disponibilidad
-            corresponde al momento de la consulta.
-          </p>
-          <div aria-busy={rooms.status === 'loading'}>
-            {rooms.status === 'loading' && (
-              <div className={styles.state} role="status">
-                Cargando aulas…
-              </div>
-            )}
-            {rooms.status === 'error' && (
-              <div className={styles.state} role="alert">
-                <h2>No se pudieron cargar las aulas</h2>
-                <p>{rooms.error}</p>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={rooms.reload}
-                >
-                  Reintentar
-                </button>
-              </div>
-            )}
-            {rooms.status === 'ready' &&
-              (rooms.result.data.length ? (
-                <RoomsTable
-                  rooms={rooms.result.data}
-                  onDetail={(roomId) =>
-                    setSelection({ mode: 'detail', roomId })
-                  }
-                  onEdit={(roomId) => setSelection({ mode: 'edit', roomId })}
-                  onStatusChange={setStatusRoom}
-                />
-              ) : (
-                <div className={styles.state} role="status">
-                  <h2>
-                    {filtered
-                      ? 'No se encontraron aulas'
-                      : 'No hay aulas registradas'}
-                  </h2>
-                  <p>
-                    {filtered
-                      ? 'Prueba con otro nombre, código o estado.'
-                      : 'Las aulas registradas aparecerán aquí.'}
-                  </p>
-                </div>
-              ))}
-          </div>
-          {rooms.status === 'ready' && meta && meta.total > 0 && (
-            <nav className={styles.pagination} aria-label="Paginación de aulas">
-              <p role="status">
-                {meta.from ?? 0}–{meta.to ?? 0} de {meta.total} aulas
-              </p>
-              <div>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  disabled={meta.current_page <= 1}
-                  onClick={() =>
-                    changeQuery({ ...query, page: meta.current_page - 1 })
-                  }
-                >
-                  Anterior
-                </button>
-                <span>
-                  Página {meta.current_page} de {meta.last_page}
-                </span>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  disabled={meta.current_page >= meta.last_page}
-                  onClick={() =>
-                    changeQuery({ ...query, page: meta.current_page + 1 })
-                  }
-                >
-                  Siguiente
-                </button>
-              </div>
-            </nav>
-          )}
-        </div>
+                Siguiente
+              </Button>
+            </div>
+          </nav>
+        )}
       </div>
       {selection && (
         <RoomDialog
@@ -267,6 +247,6 @@ export function AdminRoomsPage() {
           onChanged={handleStatusChanged}
         />
       )}
-    </section>
+    </PageContainer>
   )
 }

@@ -466,6 +466,13 @@
   color: var(--brand-crimson, #8b1e3f);
 }
 
+/* DS5-F3: on phones «Reintentar» moves below the message instead of being clipped (unchanged from 480px). */
+@media (max-width: 479px) {
+  .errorBanner {
+    flex-wrap: wrap;
+  }
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;

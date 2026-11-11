@@ -13,6 +13,11 @@
   box-shadow: var(--shadow-md);
 }
 
+/* U1: Mis exámenes keeps this card at the PageContainer width (other consumers keep 1120px). */
+.contentFull {
+  width: 100%;
+}
+
 .pageHeader {
   margin-bottom: var(--space-6);
 }

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useRetryFocus } from '@/shared/hooks/useRetryFocus'
 import type { BaseTableEntity, DataTableProps } from './dataTable.types'
 import { DataTableRow } from './DataTableRow'
 import styles from './DataTable.module.css'
@@ -26,6 +27,7 @@ export function DataTable<T extends BaseTableEntity>({
   onToggleStatus,
 }: DataTableProps<T>) {
   const [searchInput, setSearchInput] = useState(initialSearch)
+  const { retryRef, markRetry } = useRetryFocus(loading, Boolean(error))
   const [activeSearch, setActiveSearch] = useState(initialSearch)
 
   const hasActions = Boolean(getProfilePath || onViewProfile || onToggleStatus)
@@ -154,8 +156,12 @@ export function DataTable<T extends BaseTableEntity>({
           {onRetry && (
             <button
               type="button"
+              ref={retryRef}
               className={styles.retryButton}
-              onClick={onRetry}
+              onClick={() => {
+                markRetry()
+                onRetry()
+              }}
             >
               Reintentar
             </button>

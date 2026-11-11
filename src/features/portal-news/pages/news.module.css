@@ -1,0 +1,28 @@
+.page,
+.list {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sortOrder {
+  margin: 0;
+}
+
+.categoryFilter {
+  max-width: 320px;
+}
+
+@media (max-width: 480px) {
+  .categoryFilter {
+    max-width: none;
+  }
+}
+
+.list > .cards {
+  margin-top: 8px;
+}
+
+/* NewsPage keeps portalBase .page for its descendant styles; PageContainer owns the padding. */
+.content.content {
+  padding: 0;
+}

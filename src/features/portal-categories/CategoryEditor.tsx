@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
-import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
-import { EditorFeedback, PortalField } from '@/features/portal-shared/PortalUi'
-import { useRevisionEditor } from '@/features/portal-shared/useRevisionEditor'
+import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
+import { EditorFeedback, PortalField } from '@/features/portal-shared/components/PortalUi'
+import { useRevisionEditor } from '@/features/portal-shared/hooks/useRevisionEditor'
 import {
   createCategory,
   findManagedCategory,
@@ -15,7 +15,7 @@ import {
   type CategoryCatalog,
   type ManagedCategory,
 } from './types'
-import styles from '@/features/portal-shared/portalShared.module.css'
+import styles from '@/features/portal-shared/components/portalShared.module.css'
 import categoryStyles from './categories.module.css'
 
 export type CategorySaveKind = 'created' | 'renamed' | 'activated' | 'deactivated'

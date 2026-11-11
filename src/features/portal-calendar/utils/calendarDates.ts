@@ -1,4 +1,4 @@
-import type { PortalEvent } from '../types'
+import type { PortalEvent } from '../types/calendar.types'
 
 export const CALENDAR_ZONE = 'America/La_Paz'
 const parts = (date: Date) =>

@@ -85,7 +85,7 @@ test('header/AppLayout: supported additional roles retain their routes, order an
   assert.deepEqual(header.navigation, config.getHeaderNavigation('admin', false, ['student', 'teacher', 'admin', 'teacher']))
   assert.equal(header.navigation.filter(item => item.to === '/').length, 1)
   assert.ok(header.navigation.some(item => item.to === '/students/qr'))
-  assert.ok(header.navigation.some(item => item.to === '/teacher/students'))
+  assert.ok(header.navigation.some(item => item.to === '/teacher/subjects'))
 })
 
 test('HU38: calendar is reached from Home, while Header only exposes calendar management to administrators', () => {
@@ -266,10 +266,32 @@ test('header: student and public navigation do not acquire admin destinations', 
   )
 })
 
+test('header: HU33 report navigation preserves incident access and has a teacher catalog', () => {
+  for (const [path, label] of [
+    ['/admin/incidents', 'Incidencias e ingresos irregulares'],
+    ['/admin/exam-reports', 'Reportes de exámenes'],
+  ]) {
+    const s = setup(path)
+    const items = s.config.navigationByRole.admin
+    let tree = s.render(items)
+    find(tree, 'button', 'Académico').props.onClick()
+    tree = s.render(items)
+    assert.deepEqual(selectedLinks(tree).map(textContent), [label])
+    s.h.unmount()
+  }
+  const s = setup('/teacher/exam-reports')
+  assert.ok(
+    s.config.navigationByRole.teacher
+      .find((item) => item.label === 'Mis exámenes')
+      .children.some((item) => item.to === '/teacher/exam-reports'),
+  )
+  s.h.unmount()
+})
+
 const ADMIN_GROUPS = {
   Contenidos: ['/news', '/admin/portal/news', '/admin/portal/events', '/admin/portal/information', '/admin/portal/services'],
   Usuarios: ['/admin/users/manage', '/admin/users/roles', '/admin/users/history', '/admin/teachers', '/admin/teachers/assignments', '/admin/teachers/assignments/import', '/admin/students/manage', '/admin/students/import'],
-  Académico: ['/admin/rooms', '/admin/rooms/import', '/admin/subjects', '/admin/subjects/import', '/admin/careers', '/admin/eligibility-policies'],
+  Académico: ['/admin/rooms', '/admin/rooms/import', '/admin/subjects', '/admin/subjects/import', '/admin/careers', '/admin/eligibility-policies', '/admin/incidents', '/admin/exam-reports'],
 }
 const destinations = (items) => items.flatMap(item => item.children ? destinations(item.children) : [item.to])
 
@@ -302,7 +324,7 @@ test('admin header: multi-role accounts retain all routes without duplicating pu
   const { config } = setup('/')
   const paths = destinations(config.getHeaderNavigation('admin', true, ['teacher', 'student', 'admin']))
   assert.equal(new Set(paths).size, paths.length)
-  for (const path of ['/news', '/students/profile', '/students/qr', '/teacher/subjects', '/teacher/students', '/collaborator']) assert.ok(paths.includes(path), path)
+  for (const path of ['/news', '/students/profile', '/students/qr', '/teacher/subjects', '/collaborator']) assert.ok(paths.includes(path), path)
 })
 
 for (const [path, group] of [

@@ -19,6 +19,7 @@ import {
   prepareAcademicCsv,
 } from '../utils/academicCsv'
 import styles from '../pages/EligibilityAutomation.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 type Props = {
   offeringId: number
@@ -179,14 +180,14 @@ export function AcademicCsvImportPanel({
             criterios de habilitación.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={`${studentPageStyles.templateButton} ${styles.academicTemplateButton}`}
           onClick={downloadAcademicCsvTemplate}
         >
           <DownloadIcon />
           Descargar plantilla CSV
-        </button>
+        </Button>
       </header>
 
       <div>
@@ -246,14 +247,13 @@ export function AcademicCsvImportPanel({
       </div>
 
       <div className={studentPageStyles.panelActions}>
-        <button
-          type="button"
+        <Button
           className={`${studentPageStyles.continueButton} ${styles.academicPreviewButton}`}
           disabled={!prepared || validating || working}
           onClick={() => void generatePreview()}
         >
           {working ? 'Procesando…' : 'Validar y generar vista previa'}
-        </button>
+        </Button>
       </div>
 
       {preview ? (
@@ -384,14 +384,13 @@ function AcademicCsvPreview({
         </div>
       ) : null}
       <div className={studentPageStyles.panelActions}>
-        <button
-          type="button"
+        <Button
           className={`${studentPageStyles.continueButton} ${styles.academicPreviewButton}`}
           disabled={!preview.can_confirm || working}
           onClick={onConfirm}
         >
           {working ? 'Confirmando…' : 'Confirmar importación'}
-        </button>
+        </Button>
       </div>
     </section>
   )

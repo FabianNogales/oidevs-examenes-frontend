@@ -1,0 +1,594 @@
+.page {
+  flex: 1;
+  min-width: 0;
+
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+.container {
+  width: min(100%, 1400px);
+  margin-inline: auto;
+}
+
+/* ==============================
+   CABECERA
+   ============================== */
+.pageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.eyebrow,
+.modalEyebrow {
+  margin: 0 0 5px;
+  color: #66768f;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  color: #0c2d6c;
+  font-size: clamp(1.7rem, 2vw, 2.25rem);
+  font-weight: 700;
+}
+
+.description {
+  max-width: 680px;
+  margin: 7px 0 0;
+  color: #66768f;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.registerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 41px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 16px;
+  color: #ffffff;
+  background: #0c2d6c;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.assignmentHint {
+  margin-block: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.assignmentHint a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.assignButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 41px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--button-radius);
+  color: var(--color-primary);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.assignButton:hover {
+  background: var(--color-surface-soft);
+}
+
+@media (max-width: 640px) {
+  .headerActions {
+    width: 100%;
+  }
+  .headerActions > * {
+    flex: 1 1 100%;
+  }
+}
+
+.registerButton span {
+  font-size: 1.15rem;
+}
+
+.registerButton:hover:not(:disabled) {
+  background: #173f82;
+}
+
+.registerButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* ==============================
+   MODALES (Detalle, Crear/Editar y Confirmar)
+   ============================== */
+.modalBackdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 24px;
+  background: rgb(7 23 48 / 52%);
+}
+
+.detailModal,
+.formModal {
+  width: min(100%, 680px);
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgb(3 15 35 / 28%);
+}
+
+.detailModal {
+  max-width: 620px;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 21px 24px 17px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  color: #0c2d6c;
+  font-size: 1.3rem;
+}
+
+.closeButton {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  color: #52627a;
+  background: transparent;
+  font-size: 1.45rem;
+  cursor: pointer;
+}
+
+.closeButton:hover:not(:disabled) {
+  background: #edf2f7;
+}
+
+.modalLoading,
+.modalError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 42px 24px;
+  text-align: center;
+}
+
+.modalLoading p,
+.modalError p {
+  margin: 10px 0 0;
+  color: #66768f;
+  font-size: 0.78rem;
+}
+
+.modalError strong {
+  color: #8c243b;
+}
+
+.modalError .closeDetailButton {
+  margin-top: 20px;
+}
+
+/* ==============================
+   ESTILOS INTERNOS DEL DETALLE
+   ============================== */
+.detailContent {
+  padding: 23px 24px 24px;
+}
+
+.teacherIdentity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #0c2d6c;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.teacherIdentity h3 {
+  margin: 0 0 7px;
+  color: #172b4d;
+  font-size: 1rem;
+}
+
+.activeBadge,
+.inactiveBadge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 68px;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+
+.activeBadge {
+  color: #17663b;
+  background: #e7f7ee;
+}
+
+.inactiveBadge {
+  color: #8f2b3f;
+  background: #fdecef;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 22px 0 0;
+}
+
+.detailGrid div {
+  min-width: 0;
+}
+
+.detailGrid dt {
+  margin-bottom: 5px;
+  color: #8795a8;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.detailGrid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #263950;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.detailFullWidth {
+  grid-column: 1 / -1;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 23px;
+  padding-top: 18px;
+  border-top: 1px solid #e6ebf2;
+}
+
+.editFromDetailButton,
+.closeDetailButton,
+.cancelButton,
+.saveButton {
+  min-height: 40px;
+  border-radius: 7px;
+  padding: 0 15px;
+  font-family: inherit;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.editFromDetailButton,
+.saveButton {
+  border: 0;
+  color: #ffffff;
+  background: #0c2d6c;
+}
+
+.editFromDetailButton:hover:not(:disabled),
+.saveButton:hover:not(:disabled) {
+  background: #173f82;
+}
+
+.closeDetailButton,
+.cancelButton {
+  border: 1px solid #c7d2e2;
+  color: #344a67;
+  background: #ffffff;
+}
+
+.closeDetailButton:hover:not(:disabled),
+.cancelButton:hover:not(:disabled) {
+  background: #f4f7fb;
+}
+
+/* ==============================
+   FORMULARIO DE DOCENTE
+   ============================== */
+.teacherForm {
+  padding: 22px 24px 24px;
+}
+
+.formError {
+  margin-bottom: 18px;
+  border: 1px solid #efc7cf;
+  border-radius: 7px;
+  padding: 11px 13px;
+  color: #8c243b;
+  background: #fff7f8;
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px 18px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.formField > span {
+  color: #344a67;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.formField b {
+  margin-left: 2px;
+  color: #cd123a;
+}
+
+.formField input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #c8d4e3;
+  border-radius: 7px;
+  padding: 0 12px;
+  color: #1e3048;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.8rem;
+  outline: none;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.formField input:focus {
+  border-color: #315f9f;
+  box-shadow: 0 0 0 3px rgb(49 95 159 / 10%);
+}
+
+.formField input[aria-invalid='true'] {
+  border-color: #cf4d64;
+  box-shadow: 0 0 0 3px rgb(207 77 100 / 8%);
+}
+
+.formField input:disabled {
+  background: #f5f7fa;
+  cursor: not-allowed;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.fieldError {
+  color: #b4233f;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.initialPasswordInfo {
+  margin-top: 18px;
+  border-left: 3px solid #214e8f;
+  padding: 10px 12px;
+  color: #52627a;
+  background: #f3f7fc;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e4eaf2;
+}
+
+/* ==============================
+   CONFIRMACIÓN DE ESTADO
+   ============================== */
+.confirmModal {
+  width: min(100%, 440px);
+  border-radius: 12px;
+  padding: 28px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 24px 70px rgb(3 15 35 / 28%);
+}
+
+.confirmModal h2 {
+  margin: 14px 0 8px;
+  color: #0c2d6c;
+  font-size: 1.22rem;
+}
+
+.confirmModal p {
+  max-width: 360px;
+  margin: 0 auto 14px;
+  color: #66768f;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.confirmTeacherName {
+  display: block;
+  color: #263950;
+  font-size: 0.86rem;
+}
+
+.warningIcon,
+.activateIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-inline: auto;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.warningIcon {
+  color: #a12a43;
+  background: #fdecef;
+}
+
+.activateIcon {
+  color: #17663b;
+  background: #e7f7ee;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.confirmDeactivateButton,
+.confirmActivateButton {
+  min-height: 40px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 16px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirmDeactivateButton {
+  background: #b4233f;
+}
+
+.confirmDeactivateButton:hover:not(:disabled) {
+  background: #941d34;
+}
+
+.confirmActivateButton {
+  background: #17663b;
+}
+
+.confirmActivateButton:hover:not(:disabled) {
+  background: #125331;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==============================
+   RESPONSIVO MÓVIL
+   ============================== */
+@media (max-width: 767px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .registerButton {
+    width: 100%;
+  }
+  .detailGrid,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .detailFullWidth,
+  .fullWidth {
+    grid-column: auto;
+  }
+  .modalBackdrop {
+    align-items: start;
+    padding: 16px;
+  }
+  .detailModal,
+  .formModal {
+    margin-top: 20px;
+  }
+  .teacherForm,
+  .detailContent,
+  .modalHeader {
+    padding-inline: 18px;
+  }
+}
+
+@media (max-width: 479px) {
+  .formActions,
+  .confirmActions {
+    flex-direction: column-reverse;
+  }
+  .formActions button,
+  .confirmActions button {
+    width: 100%;
+  }
+  .confirmModal {
+    padding: 24px 18px;
+  }
+  .modalFooter {
+    flex-direction: column;
+  }
+  .modalFooter button {
+    width: 100%;
+  }
+}

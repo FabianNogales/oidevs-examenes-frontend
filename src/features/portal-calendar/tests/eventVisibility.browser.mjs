@@ -2,12 +2,14 @@
 // Requires locally installed Chrome. It never connects to or modifies backend.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 import { createServer } from 'vite'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-event-visibility-'))
 const demo = `
 import React from 'react';
 import {createRoot} from 'react-dom/client';
@@ -18,9 +20,9 @@ import {AdminCalendarPage} from '/src/features/portal-calendar/pages/AdminCalend
 import {PortalDialog} from '/src/shared/components/PortalDialog/PortalDialog.tsx';
 import {ConfirmDialog} from '/src/shared/components/ConfirmDialog/ConfirmDialog.tsx';
 import {DataTable} from '/src/shared/components/DataTable/DataTable.tsx';
-import {PortalField} from '/src/features/portal-shared/PortalUi.tsx';
-import {AdminStatusBadge} from '/src/features/portal-shared/AdminStatusBadge.tsx';
-import sharedStyles from '/src/features/portal-shared/portalShared.module.css';
+import {PortalField} from '/src/features/portal-shared/components/PortalUi.tsx';
+import {AdminStatusBadge} from '/src/features/portal-shared/components/AdminStatusBadge.tsx';
+import sharedStyles from '/src/features/portal-shared/components/portalShared.module.css';
 const e=React.createElement, root=createRoot(document.getElementById('root'));
 const category={id:73,name:'Institucional'};
 const initial={id:47,title:'Jornada institucional',description:'Actividad de prueba de visibilidad.',
@@ -63,9 +65,14 @@ qa.showShared=()=>root.render(e(MemoryRouter,{key:++key},e(SharedUiQa)));
 qa.reset();
 `
 
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('event-visibility')
+  const profile = browserProfile.dir
+  const evidence = join(process.cwd(), '.validation.local', 'eventVisibility')
+  await mkdir(evidence, { recursive: true })
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -221,7 +228,7 @@ try {
       captureBeyondViewport: true,
     })
     await writeFile(
-      join(profile, name + '.png'),
+      join(evidence, name + '.png'),
       Buffer.from(result.data, 'base64'),
     )
   }
@@ -459,9 +466,9 @@ try {
     )
   }
   assert.deepEqual(errors, [])
-  console.log(`Capturas: ${profile}`)
+  console.log(`Capturas: ${evidence}`)
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await vite?.close()
 }

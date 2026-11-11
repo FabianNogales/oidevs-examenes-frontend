@@ -1,24 +1,30 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 
-import { env } from '@/app/config/env'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   addStudentToSubject,
   getSubjectStudents,
   getTeacherSubjects,
-  importStudentsCsv,
 } from '@/features/students/api/teacherStudentsApi'
-import { AddStudentsModal } from '@/features/students/components/AddStudentsModal'
+import { ManualStudentEnrollmentDialog } from '../components/ManualStudentEnrollmentDialog'
 import { StudentsSkeleton } from '@/features/students/components/StudentsSkeleton'
-import type { CsvImportSummary, StudentEnrollment } from '@/features/students/types/student.types'
+import { SubjectStudentsTable } from '../components/SubjectStudentsTable'
+import type { StudentEnrollment } from '@/features/students/types/student.types'
 import type { Subject } from '@/features/subjects/types/subject.types'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 
 import styles from './TeacherSubjectStudentsPage.module.css'
 
+const titleId = 'subject-students-title'
+
 export function TeacherSubjectStudentsPage() {
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const period = searchParams.get('period')
+  const subjectsPath = `/teacher/subjects${period ? `?period=${encodeURIComponent(period)}` : ''}`
   const { notify } = useAuth()
   const { courseOfferingId } = useParams()
   const [subject, setSubject] = useState<Subject | null>(null)
@@ -41,13 +47,16 @@ export function TeacherSubjectStudentsPage() {
 
     try {
       const subjects = await getTeacherSubjects()
-      const selectedSubject = subjects.find(
-        (item) => String(item.courseOfferingId) === String(courseOfferingId),
-      ) ?? null
+      const selectedSubject =
+        subjects.find(
+          (item) => String(item.courseOfferingId) === String(courseOfferingId),
+        ) ?? null
 
       if (!selectedSubject) {
         setSubject(null)
-        throw new Error('La materia seleccionada no está disponible para este docente.')
+        throw new Error(
+          'La materia seleccionada no está disponible para este docente.',
+        )
       }
 
       setSubject(selectedSubject)
@@ -82,7 +91,10 @@ export function TeacherSubjectStudentsPage() {
   }, [loadSubjectData])
 
   async function handleManualSubmit(sis: string) {
-    if (subject?.canManage === false) throw new Error('Esta oferta es de solo consulta. No se pueden agregar estudiantes.')
+    if (subject?.canManage === false)
+      throw new Error(
+        'Esta oferta es de solo consulta. No se pueden agregar estudiantes.',
+      )
     if (!courseOfferingId) {
       throw new Error('No se seleccionó una materia válida.')
     }
@@ -95,165 +107,114 @@ export function TeacherSubjectStudentsPage() {
     setIsModalOpen(false)
   }
 
-  async function handleCsvSubmit(file: File): Promise<CsvImportSummary> {
-    if (subject?.canManage === false) throw new Error('Esta oferta es de solo consulta. No se pueden importar estudiantes.')
-    if (!courseOfferingId) {
-      throw new Error('No se seleccionó una materia válida.')
-    }
-
-    const summary = await importStudentsCsv(courseOfferingId, file)
-    let mergedStudents = [...students]
-
-    for (const imported of summary.importedStudents) {
-      if (!mergedStudents.some((student) => student.sis === imported.sis)) {
-        mergedStudents.push(imported)
-      }
-    }
-
-    if (!env.useStudentsMock) {
-      try {
-        mergedStudents = await getSubjectStudents(courseOfferingId)
-        setStudentsError(null)
-      } catch {
-        setStudentsError('La importación se procesó, pero no se pudo actualizar el listado de estudiantes.')
-      }
-    }
-
-    setStudents(mergedStudents)
-    notify(
-      summary.validCount > 0 ? 'success' : 'error',
-      summary.validCount > 0
-        ? `Se registraron ${summary.validCount} estudiantes.`
-        : 'La importación no agregó estudiantes.',
-    )
-
-    return summary
-  }
-
   if (isLoading) {
     return <StudentsSkeleton variant="students" />
   }
 
-  if (errorMessage || !subject) {
-    return (
-      <main className={styles.page}>
-        <section className={styles.content}>
-          <Breadcrumbs
-            items={[
-              { label: 'Inicio', to: '/' },
-              { label: 'Estudiantes', to: '/teacher/students' },
-              { label: 'Estudiantes de la materia' },
-            ]}
-          />
-          <div className={styles.state} role="alert">
-            <h1>No se pudo acceder a la materia</h1>
-            <p>{errorMessage ?? 'La materia no existe o no está disponible.'}</p>
-            <button type="button" onClick={() => navigate('/teacher/students')}>
-              Volver a estudiantes
-            </button>
-          </div>
-        </section>
-      </main>
-    )
-  }
+  // AppLayout has no main landmark: this page owns it. A single PageHeader serves the
+  // error and loaded states so the page always has exactly one heading of level 1.
+  const loaded = !errorMessage && subject ? subject : null
 
   return (
-    <main className={styles.page}>
-      <section className={styles.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title={loaded ? loaded.name : 'No se pudo acceder a la materia'}
+          titleId={titleId}
+          eyebrow={loaded ? 'Materia' : undefined}
+          breadcrumbs={[
             { label: 'Inicio', to: '/' },
-            { label: 'Estudiantes', to: '/teacher/students' },
-            { label: subject.name },
+            { label: 'Mis materias', to: subjectsPath },
+            {
+              label: loaded
+                ? `Estudiantes de ${loaded.name}`
+                : 'Estudiantes de la materia',
+            },
           ]}
         />
-        <header className={styles.pageHeader}>
-          <div className={styles.headingWrap}>
-            <button
-              type="button"
-              className={styles.backButton}
-              onClick={() => navigate('/teacher/students')}
-            >
-              ← Volver
-            </button>
-            <div>
-              <p className={styles.subjectLabel}>Materia</p>
-              <h1>{subject.name}</h1>
-            </div>
-          </div>
 
-          <div className={styles.subjectMeta}>
-            <div>
-              <span>Código</span>
-              <strong>{subject.code ?? 'No disponible'}</strong>
-            </div>
-            <div>
-              <span>Gestión académica</span>
-              <strong>{subject.academicManagement}</strong>
-            </div>
+        {!loaded ? (
+          <div className={styles.state} role="alert">
+            <p>
+              {errorMessage ?? 'La materia no existe o no está disponible.'}
+            </p>
+            <Link className={styles.backLink} to={subjectsPath}>
+              ← Volver a mis materias
+            </Link>
           </div>
-        </header>
-
-        {subject.canManage === false && <p role="status">Oferta de solo consulta: se conserva el historial de estudiantes, pero no se permiten nuevas inscripciones.</p>}
-        <div className={styles.toolbar}>
-          <div>
-            <h2>Estudiantes inscritos</h2>
-          </div>
-          <button type="button" className={styles.primaryButton} disabled={subject?.canManage === false} onClick={() => setIsModalOpen(true)}>
-            Agregar estudiantes
-          </button>
-        </div>
-
-        {studentsError ? (
-          <section className={styles.emptyState} role="status">
-            <h3>Listado de estudiantes no disponible</h3>
-            <p>{studentsError}</p>
-            <p>Las operaciones de inscripción manual y CSV siguen disponibles.</p>
-          </section>
-        ) : students.length === 0 ? (
-          <section className={styles.emptyState}>
-            <h3>No hay estudiantes inscritos en esta materia.</h3>
-            <p>Agrega estudiantes por SIS o CSV para comenzar.</p>
-            <button type="button" className={styles.primaryButton} disabled={subject?.canManage === false} onClick={() => setIsModalOpen(true)}>
-              Agregar estudiantes
-            </button>
-          </section>
         ) : (
-          <section className={styles.list} aria-label="Estudiantes inscritos">
-            <div className={styles.studentsHeader} role="rowgroup">
-              <span>SIS</span>
-              <span>NOMBRE</span>
-              <span>ESTADO</span>
+          <>
+            <div className={styles.subjectMeta}>
+              <div>
+                <span>Código</span>
+                <strong>{loaded.code ?? 'No disponible'}</strong>
+              </div>
+              <div>
+                <span>Gestión académica</span>
+                <strong>{loaded.academicManagement}</strong>
+              </div>
             </div>
 
-            {students.map((student) => (
-              <article key={student.id} className={styles.studentRow}>
-                <div className={styles.studentCell}>
-                  <strong>{student.sis}</strong>
-                </div>
+            {loaded.canManage === false && (
+              <p role="status">
+                Oferta de solo consulta: se conserva el historial de
+                estudiantes, pero no se permiten nuevas inscripciones.
+              </p>
+            )}
+            <div className={styles.toolbar}>
+              <div>
+                <h2>Estudiantes inscritos</h2>
+              </div>
+              <div className={styles.enrollmentActions}>
+                <Button
+                  variant="secondary"
+                  disabled={loaded.canManage === false}
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  + Agregar estudiante manualmente
+                </Button>
+                {loaded.canManage === false ? (
+                  <Button disabled>Importar estudiantes (CSV)</Button>
+                ) : (
+                  <ButtonLink
+                    to={`/teacher/students/${courseOfferingId}/import${period ? `?period=${encodeURIComponent(period)}` : ''}`}
+                  >
+                    Importar estudiantes (CSV)
+                  </ButtonLink>
+                )}
+              </div>
+            </div>
 
-                <div className={styles.studentCell}>
-                  <strong>{student.fullName}</strong>
-                </div>
-
-                <div className={styles.studentCell}>
-                  <span className={styles.status}>{student.status}</span>
-                </div>
-              </article>
-            ))}
-          </section>
+            {studentsError ? (
+              <section className={styles.emptyState} role="status">
+                <h3>Listado de estudiantes no disponible</h3>
+                <p>{studentsError}</p>
+                <p>
+                  Las operaciones de inscripción manual y CSV siguen
+                  disponibles.
+                </p>
+              </section>
+            ) : students.length === 0 ? (
+              <section className={styles.emptyState}>
+                <h3>No hay estudiantes inscritos en esta materia.</h3>
+                <p>Agrega estudiantes por SIS o CSV para comenzar.</p>
+              </section>
+            ) : (
+              <section aria-label="Estudiantes inscritos">
+                <SubjectStudentsTable students={students} />
+              </section>
+            )}
+          </>
         )}
-      </section>
+      </PageContainer>
 
-      <AddStudentsModal
-        isOpen={isModalOpen}
-        subjectName={subject.name}
-        onClose={() => setIsModalOpen(false)}
-        onManualSubmit={handleManualSubmit}
-        onCsvSubmit={handleCsvSubmit}
-        onCsvPreview={(file) => importStudentsCsv(courseOfferingId!, file, true)}
-      />
-
+      {loaded && isModalOpen && (
+        <ManualStudentEnrollmentDialog
+          subjectName={loaded.name}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleManualSubmit}
+        />
+      )}
     </main>
   )
 }

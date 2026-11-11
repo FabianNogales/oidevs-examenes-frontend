@@ -13,7 +13,7 @@ import type {
   EventStatus,
   EventVisibility,
   PortalEvent,
-} from '../types'
+} from '../types/calendar.types'
 
 // Contract: backend 852fb54, docs/HU38_HU39_PORTAL_CALENDAR_API.md.
 export async function getEventCategories(

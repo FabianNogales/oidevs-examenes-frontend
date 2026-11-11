@@ -16,6 +16,7 @@ function setup() {
     reload: () => {},
   }
   const overrides = {
+    '@/features/incidents/components/IncidentControlDialog': { IncidentControlDialog: 'incident-dialog' },
     '@/shared/hooks/useAuthenticatedImage': { useAuthenticatedImage: () => ({ src: null, loading: false, failed: false }) },
     'react-router': {
       Link: 'Link',
@@ -27,6 +28,7 @@ function setup() {
   }
   for (const name of [
     'EntryControlStudentModal',
+    'EntryHistoryModal',
     'EntryControlStudentsList',
     'EntryQrPanel',
     'EntryStudentsSummary',
@@ -124,6 +126,27 @@ test('entry: keyboard method navigation uses the same camera activation lifecycl
   h.key('Home')
   assert.equal(h.scanner().props.active, false)
   h.key('ArrowRight')
+  assert.equal(h.scanner().props.active, true)
+})
+
+test('HU28 history is gated by server permission and pauses the same QR camera until closed', () => {
+  const h = setup()
+  let reloads = 0
+  h.list.reload = () => reloads++
+  let tree = h.render()
+  assert.equal(nodes(tree, n => n.type === 'button' && textContent(n) === 'Gestionar ingresos').length, 0)
+  h.list.response.permissions = { can_annul_entries: true }
+  h.render()
+  h.click('Registro de asistencia')
+  h.click('Escanear QR')
+  const scanner = h.scanner().type
+  h.click('Gestionar ingresos')
+  assert.equal(h.scanner().props.active, false)
+  assert.equal(h.scanner().type, scanner)
+  h.modal('EntryHistoryModal').props.onEntriesChanged()
+  assert.equal(reloads, 1)
+  h.modal('EntryHistoryModal').props.onClose()
+  h.render()
   assert.equal(h.scanner().props.active, true)
 })
 

@@ -8,6 +8,7 @@ import {
   validateRoomForm,
 } from '../utils/roomValidation'
 import { RoomFormField } from './RoomFormField'
+import { Button } from '@/shared/components/ui/Button/Button'
 import styles from './RoomDialog.module.css'
 
 interface Props {
@@ -101,21 +102,12 @@ export function RoomForm({ room, onCancel, onSaved, onBusyChange }: Props) {
       </div>
       <footer className={styles.actions}>
         {saving && <span role="status">Guardando aula…</span>}
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={onCancel}
-          disabled={saving}
-        >
+        <Button variant="secondary" onClick={onCancel} disabled={saving}>
           Cancelar
-        </button>
-        <button
-          type="submit"
-          className={styles.primaryButton}
-          disabled={saving || unavailable}
-        >
+        </Button>
+        <Button type="submit" loading={saving} disabled={unavailable}>
           {saving ? 'Guardando…' : room ? 'Guardar cambios' : 'Registrar aula'}
-        </button>
+        </Button>
       </footer>
     </form>
   )

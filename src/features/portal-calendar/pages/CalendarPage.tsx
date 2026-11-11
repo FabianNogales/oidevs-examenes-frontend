@@ -1,22 +1,21 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { InstitutionalCalendar } from '../components/InstitutionalCalendar'
-import styles from '../portalCalendar.module.css'
 
 export function CalendarPage() {
   return (
-    <main className={styles.publicPage}>
-      <Breadcrumbs
-        items={[
-          { label: 'Inicio', to: '/' },
-          { label: 'Calendario institucional' },
-        ]}
-      />
-      <h1>Calendario institucional</h1>
-      <p>
-        Consulta las actividades publicadas por la institución. Horarios de
-        Bolivia.
-      </p>
-      <InstitutionalCalendar />
+    <main>
+      <PageContainer width="narrow">
+        <PageHeader
+          title="Calendario institucional"
+          description="Consulta las actividades publicadas por la institución. Horarios de Bolivia."
+          breadcrumbs={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Calendario institucional' },
+          ]}
+        />
+        <InstitutionalCalendar />
+      </PageContainer>
     </main>
   )
 }

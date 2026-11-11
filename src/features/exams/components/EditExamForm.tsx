@@ -1,109 +1,156 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { ExamFormFields } from './ExamFormFields'
-import { useAvailableRooms } from '../hooks/useAvailableRooms'
 import { useExamNavigationGuard } from '../hooks/useExamNavigationGuard'
+import { useExamSchedulerState } from '../hooks/useExamSchedulerState'
 import { ExamMutationError, updateExam } from '../api/examMutationsApi'
 import type { ExamDetail } from '../api/examDetailsApi'
-import type { EvaluationType } from '../types/exam.types'
-import { validateExamForm, type ExamFormValues } from '../utils/examValidation'
-import styles from './EditExamForm.module.css'
+import { validateExamForm } from '../utils/examValidation'
+import {
+  BuildDefaultExamName,
+  ParseExistingExamToSchedulerState,
+} from '../utils/examScheduleFormatters'
+import { ExamNavigationGuardBanner } from './ExamScheduler/ExamNavigationGuardBanner'
+import { ExamSchedulerWorkspace } from './ExamScheduler/ExamSchedulerWorkspace'
+import layoutStyles from './ExamScheduler/ExamSchedulerLayout.module.css'
 
-function initialValues(exam: ExamDetail): ExamFormValues {
-  return {
-    name: exam.name,
-    exam_date: exam.exam_date,
-    start_time: exam.start_time.slice(0, 5),
-    duration_minutes: String(exam.duration_minutes),
-    evaluation_type: exam.evaluation_type ?? '',
-    room_id: exam.room ? String(exam.room.id) : '',
-    rules: exam.rules ?? '',
-  }
-}
-
-type Props = {
+export interface EditExamFormProps {
   exam: ExamDetail
   backTo: string
   onSaved: () => void
   onReload: () => void
 }
 
-export function EditExamForm({ exam, backTo, onSaved, onReload }: Props) {
+export function EditExamForm({
+  exam,
+  backTo,
+  onSaved,
+  onReload,
+}: EditExamFormProps) {
   const navigate = useNavigate()
-  const [values, setValues] = useState(() => initialValues(exam))
+  const initialParsed = useMemo(
+    () => ParseExistingExamToSchedulerState(exam),
+    [exam],
+  )
+
+  const initialSharedFlag = Boolean(
+    (exam as unknown as Record<string, unknown>).is_shared_room ||
+      exam.rules?.includes('[SHARED_ROOM]'),
+  )
+  const offeringId = (exam as unknown as Record<string, unknown>)
+    .course_offering_id as number | string | undefined
+
+  const [hasModifiedTitleType, setHasModifiedTitleType] =
+    useState<boolean>(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [needsReload, setNeedsReload] = useState(false)
-  const request = useRef<AbortController | null>(null)
-  const formRef = useRef<HTMLFormElement>(null)
-  const noticeRef = useRef<HTMLElement>(null)
-  const roomsState = useAvailableRooms(
-    true,
-    values.exam_date,
-    values.start_time,
-    values.duration_minutes,
-    exam.id,
-  )
-  const dirty = JSON.stringify(values) !== JSON.stringify(initialValues(exam))
-  const guard = useExamNavigationGuard(dirty, busy)
-  const selectedRoomAvailable = roomsState.rooms.some(
-    (room) => String(room.id) === values.room_id,
-  )
-  useEffect(() => () => request.current?.abort(), [])
-  useEffect(() => {
-    if (guard.blocked) noticeRef.current?.focus()
-  }, [guard.blocked])
+  const [busy, setBusy] = useState<boolean>(false)
+  const [needsReload, setNeedsReload] = useState<boolean>(false)
+  const requestRef = useRef<AbortController | null>(null)
 
-  function change(field: keyof ExamFormValues, value: string) {
-    const schedule = ['exam_date', 'start_time', 'duration_minutes'].includes(
-      field,
-    )
-    setValues((current) => ({
-      ...current,
-      [field]: value,
-      ...(schedule ? { room_id: '' } : {}),
-    }))
-    setErrors((current) => ({
-      ...current,
-      [field]: '',
-      ...(schedule ? { room_id: '', exam_date: '', start_time: '' } : {}),
-    }))
+  const ClearFieldErrors = (fields: string[]) => {
+    setErrors((current) => {
+      const next = { ...current }
+      fields.forEach((field) => {
+        next[field] = ''
+      })
+      return next
+    })
     setError(null)
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  const scheduler = useExamSchedulerState({
+    courseOfferingId: offeringId,
+    excludeExamId: exam.id,
+    initialPartialNumber: initialParsed.partialNumber,
+    initialEvaluationType: initialParsed.evaluationType,
+    initialHours: initialParsed.hours,
+    initialMinutes: initialParsed.minutes,
+    initialStartTime: initialParsed.startTime,
+    initialExamDate: initialParsed.examDate,
+    initialSelectedRoomIds: initialParsed.selectedRoomId
+      ? [initialParsed.selectedRoomId]
+      : [],
+    initialSharedRoomEnabled: initialSharedFlag,
+    onScheduleFieldChange: ClearFieldErrors,
+  })
+
+  useEffect(() => () => requestRef.current?.abort(), [])
+
+  const resolvedExamName = hasModifiedTitleType
+    ? BuildDefaultExamName(scheduler.evaluationType, scheduler.partialNumber)
+    : exam.name ||
+      BuildDefaultExamName(scheduler.evaluationType, scheduler.partialNumber)
+
+  const isDirty =
+    resolvedExamName !== exam.name ||
+    scheduler.evaluationType !== initialParsed.evaluationType ||
+    scheduler.durationMinutes !== exam.duration_minutes ||
+    scheduler.startTime !== initialParsed.startTime ||
+    scheduler.examDate !== initialParsed.examDate ||
+    scheduler.primaryRoomId !== initialParsed.selectedRoomId ||
+    scheduler.selectedRoomIds.length > 1 ||
+    scheduler.isSharedRoomEnabled !== initialSharedFlag
+
+  const guard = useExamNavigationGuard(isDirty, busy)
+
+  const HandleSubmitUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (request.current || !dirty || needsReload || !roomsState.isReady) return
-    const validation = validateExamForm(values)
-    if (!selectedRoomAvailable)
-      validation.room_id =
-        'Selecciona un ambiente disponible para este horario.'
-    setErrors(validation)
-    if (Object.keys(validation).length) {
-      requestAnimationFrame(() =>
-        formRef.current
-          ?.querySelector<HTMLElement>('[aria-invalid="true"]')
-          ?.focus(),
-      )
+    if (
+      requestRef.current ||
+      !isDirty ||
+      needsReload ||
+      !scheduler.roomsState.isReady
+    ) {
       return
     }
+
+    const validation = validateExamForm({
+      name: resolvedExamName,
+      exam_date: scheduler.examDate,
+      start_time: scheduler.startTime,
+      duration_minutes: scheduler.durationString,
+      evaluation_type: scheduler.evaluationType,
+      room_id: scheduler.primaryRoomId,
+      rules: '',
+    })
+
+    if (!scheduler.areAllSelectedRoomsValid) {
+      validation.room_id =
+        'Selecciona un ambiente disponible o confirma el uso compartido para este horario.'
+    }
+
+    setErrors(validation)
+    if (Object.keys(validation).length > 0) return
+
     const controller = new AbortController()
-    request.current = controller
+    requestRef.current = controller
     setBusy(true)
     setError(null)
+
     try {
       await updateExam(
         exam,
         {
-          name: values.name.trim(),
-          exam_date: values.exam_date,
-          start_time: `${values.start_time}:00`,
-          duration_minutes: Number(values.duration_minutes),
-          room_id: Number(values.room_id),
-          evaluation_type: values.evaluation_type as EvaluationType,
-          rules: values.rules.trim() || null,
-        },
+          name: resolvedExamName.trim(),
+          exam_date: scheduler.examDate,
+          start_time: `${scheduler.startTime}:00`,
+          duration_minutes: scheduler.durationMinutes,
+          room_id: Number(scheduler.primaryRoomId),
+          evaluation_type: scheduler.evaluationType,
+          partial_number:
+            scheduler.evaluationType === 'partial'
+              ? Math.min(6, Math.max(1, Number(scheduler.partialNumber) || 1))
+              : null,
+          is_shared_room: scheduler.isSharedRoomEnabled,
+          shared_consent: scheduler.selectedRoomIds.some((id) =>
+            scheduler.consentedSharedRoomIds.has(id),
+          ),
+          additional_room_ids:
+            scheduler.selectedRoomIds.length > 1
+              ? scheduler.selectedRoomIds.slice(1).map(Number)
+              : [],
+          rules: null,
+        } as Parameters<typeof updateExam>[1],
         controller.signal,
       )
       if (!controller.signal.aborted) {
@@ -120,109 +167,67 @@ export function EditExamForm({ exam, backTo, onSaved, onReload }: Props) {
       setErrors(failure?.fields ?? {})
       setNeedsReload(failure?.status !== 422)
       if (failure?.fields.room_id) {
-        setValues((current) => ({ ...current, room_id: '' }))
-        roomsState.reload()
+        scheduler.setSelectedRoomIds([])
+        scheduler.roomsState.reload()
       }
     } finally {
       if (!controller.signal.aborted) setBusy(false)
-      if (request.current === controller) request.current = null
+      if (requestRef.current === controller) requestRef.current = null
     }
   }
 
+  const canSubmit =
+    !busy && !needsReload && isDirty && scheduler.isSelectionValid
+
+  const activeErrorMessage =
+    error ||
+    scheduler.roomsState.roomError ||
+    errors.room_id ||
+    errors.exam_date ||
+    errors.start_time ||
+    errors.duration_minutes ||
+    errors.name
+
   return (
     <form
-      ref={formRef}
-      className={styles.form}
+      className={layoutStyles.schedulerForm}
       noValidate
-      onSubmit={(event) => void submit(event)}
+      onSubmit={(event) => void HandleSubmitUpdate(event)}
       aria-busy={busy}
     >
-      {guard.blocked ? (
-        <section
-          className={styles.notice}
-          role="alert"
-          ref={noticeRef}
-          tabIndex={-1}
-        >
-          <p>
-            {busy
-              ? 'Se está guardando el examen. Espera a que termine la operación.'
-              : 'Tienes cambios sin guardar. ¿Deseas descartarlos y salir?'}
-          </p>
-          <div className={styles.actions}>
-            <button type="button" onClick={guard.stay}>
-              Seguir editando
-            </button>
-            <button type="button" disabled={busy} onClick={guard.discard}>
-              Descartar cambios
-            </button>
-          </div>
-        </section>
-      ) : null}
-      <p className={styles.context}>
-        La materia y el periodo académico se conservan. Los campos con * son
-        obligatorios.
-      </p>
-      <fieldset disabled={busy || needsReload}>
-        <legend className={styles.legend}>
-          Información editable del examen
-        </legend>
-        <ExamFormFields
-          values={values}
-          errors={errors}
-          roomsState={roomsState}
-          disabled={busy || needsReload}
-          onChange={change}
-        />
-      </fieldset>
-      {roomsState.roomError && !needsReload ? (
-        <button type="button" onClick={roomsState.reload} disabled={busy}>
-          Reintentar ambientes
-        </button>
-      ) : null}
-      {error ? (
-        <section className={styles.error} role="alert">
-          <p>{error}</p>
-          {Object.entries(errors)
-            .filter(([key]) => !(key in values))
-            .map(([key, value]) => (
-              <p key={key}>{value}</p>
-            ))}
-          {needsReload ? (
-            <>
-              <p>
-                Al recargar se reemplazará lo escrito por la información actual
-                del examen.
-              </p>
-              <button type="button" onClick={onReload}>
-                Recargar examen y descartar cambios
-              </button>
-            </>
-          ) : null}
-        </section>
-      ) : null}
-      <div className={styles.actions}>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void navigate(backTo)}
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          className={styles.primary}
-          disabled={
-            busy ||
-            needsReload ||
-            !dirty ||
-            !roomsState.isReady ||
-            !selectedRoomAvailable
-          }
-        >
-          {busy ? 'Guardando…' : 'Guardar cambios'}
-        </button>
-      </div>
+      <ExamNavigationGuardBanner
+        blocked={guard.blocked}
+        isBusy={busy}
+        stayLabel="Seguir editando"
+        onStay={guard.stay}
+        onDiscard={guard.discard}
+      />
+
+      <ExamSchedulerWorkspace
+        scheduler={scheduler}
+        examName={resolvedExamName}
+        controlsDisabled={busy || needsReload}
+        isSubmitting={busy}
+        canSubmit={canSubmit}
+        activeErrorMessage={activeErrorMessage}
+        showRetryRoomsBtn={Boolean(scheduler.roomsState.roomError && !needsReload)}
+        showReloadExamBtn={needsReload}
+        submitLabel="Guardar cambios"
+        submittingLabel="Guardando…"
+        onPartialChange={(nextPartial) => {
+          scheduler.setPartialNumber(nextPartial)
+          setHasModifiedTitleType(true)
+          setError(null)
+        }}
+        onEvaluationTypeChange={(nextType) => {
+          scheduler.setEvaluationType(nextType)
+          setHasModifiedTitleType(true)
+          setError(null)
+        }}
+        onRetryRooms={scheduler.roomsState.reload}
+        onReloadExam={onReload}
+        onCancel={() => void navigate(backTo)}
+      />
     </form>
   )
 }

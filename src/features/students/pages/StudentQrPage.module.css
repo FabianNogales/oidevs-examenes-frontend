@@ -1,27 +1,14 @@
 .page {
   position: relative;
   isolation: isolate;
-  width: 100%;
-  max-width: var(--content-max-width);
-  margin-inline: auto;
-  padding: var(--space-10) var(--content-gutter) var(--space-12);
   color: var(--color-text);
   line-height: var(--line-height-relaxed);
   overflow-wrap: anywhere;
 }
 
-.header {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: var(--space-6);
-}
-.header h1 {
-  margin: 0;
-  font-size: clamp(var(--font-size-3xl), 4vw, var(--font-size-4xl));
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
-}
-.header h1::after {
+/* U2: decorative accent under the page h1, kept provisionally: no Figma reference could confirm or
+   remove it (pending design decision). Layout and heading scale come from PageContainer/PageHeader. */
+.page h1::after {
   content: '';
   display: block;
   width: var(--space-12);
@@ -29,11 +16,6 @@
   margin-top: var(--space-4);
   border-radius: var(--radius-pill);
   background: var(--color-accent);
-}
-.header p {
-  margin: var(--space-3) 0 0;
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
 }
 .notice {
   display: flex;
@@ -442,9 +424,6 @@
 }
 
 @media (max-width: 639px) {
-  .page {
-    padding-block: var(--space-6) var(--space-8);
-  }
   .examCard {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);

@@ -1,6 +1,7 @@
 import { useActiveAcademicTerm } from '../hooks/useActiveAcademicTerm'
 import { formatAcademicTermDate } from '../utils/academicTermDate'
 import styles from '../pages/AdminAcademicTermsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function ActiveAcademicTermSummary() {
   const { state, reload } = useActiveAcademicTerm()
@@ -13,13 +14,12 @@ export function ActiveAcademicTermSummary() {
       {state?.status === 'error' && (
         <div role="alert">
           <p>{state.message}</p>
-          <button
-            type="button"
-            className={styles.secondaryButton}
+          <Button
+            variant="secondary"
             onClick={reload}
           >
             Reintentar periodo activo
-          </button>
+          </Button>
         </div>
       )}
       {state?.status === 'ready' &&

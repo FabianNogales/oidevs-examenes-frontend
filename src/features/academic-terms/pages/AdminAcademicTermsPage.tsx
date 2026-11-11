@@ -1,4 +1,5 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
 import { useAcademicTerms } from '../hooks/useAcademicTerms'
@@ -16,6 +17,7 @@ import { AcademicTermDialog } from '../components/AcademicTermDialog'
 import { AcademicTermStatusDialog } from '../components/AcademicTermStatusDialog'
 import { ActiveAcademicTermSummary } from '../components/ActiveAcademicTermSummary'
 import styles from './AdminAcademicTermsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 const INITIAL_QUERY: AcademicTermsQuery = { page: 1, search: '', status: '' }
 
@@ -58,145 +60,129 @@ export function AdminAcademicTermsPage() {
     else setQuery(next)
   }
   return (
-    <section className={styles.page} aria-labelledby="academic-terms-title">
-      <div className={styles.container}>
-        <Link to="/admin" className={styles.backLink}>
-          <span aria-hidden="true">←</span>Volver al inicio
-        </Link>
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', to: '/admin' },
-            { label: 'Periodos académicos' },
-          ]}
-        />
-        <header className={styles.pageHeader}>
-          <div>
-            <p className={styles.eyebrow}>Administrador</p>
-            <h1 id="academic-terms-title" tabIndex={-1}>
-              Periodos académicos
-            </h1>
-            <p className={styles.description}>
-              Consulta las gestiones disponibles para organizar las ofertas
-              académicas y conservar su historial.
-            </p>
-          </div>
-          <button
-            type="button"
-            className={styles.primaryButton}
+    <PageContainer labelledBy="academic-terms-title">
+      <Link to="/admin" className={styles.backLink}>
+        <span aria-hidden="true">←</span>Volver al inicio
+      </Link>
+      <PageHeader
+        title="Periodos académicos"
+        titleId="academic-terms-title"
+        focusableTitle
+        eyebrow="Administrador"
+        description="Consulta las gestiones disponibles para organizar las ofertas académicas y conservar su historial."
+        breadcrumbs={[
+          { label: 'Inicio', to: '/admin' },
+          { label: 'Periodos académicos' },
+        ]}
+        actions={
+          <Button
             onClick={() => setSelection({ mode: 'create' })}
           >
             + Registrar periodo
-          </button>
-        </header>
-        <ActiveAcademicTermSummary key={activeRevision} />
-        <div className={styles.card}>
-          <AcademicTermsFilters query={query} onChange={changeQuery} />
-          <div aria-busy={!state}>
-            {!state && (
-              <div className={styles.state} role="status">
-                Cargando periodos académicos…
-              </div>
-            )}
-            {state?.status === 'error' && (
-              <div className={styles.state} role="alert">
-                <h2>No se pudieron cargar los periodos</h2>
-                <p>{state.message}</p>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={reload}
-                >
-                  Reintentar catálogo
-                </button>
-              </div>
-            )}
-            {state?.status === 'ready' &&
-              (state.result.data.length ? (
-                <AcademicTermsTable
-                  terms={state.result.data}
-                  onDetail={(termId) =>
-                    setSelection({ mode: 'detail', termId })
-                  }
-                  onEdit={(termId) => setSelection({ mode: 'edit', termId })}
-                  onStatus={(term) =>
-                    setStatusSelection({
-                      termId: term.id,
-                      targetStatus:
-                        term.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-                    })
-                  }
-                />
-              ) : (
-                <div className={styles.state} role="status">
-                  <h2>
-                    {filtered
-                      ? 'No se encontraron periodos'
-                      : 'No hay periodos registrados'}
-                  </h2>
-                  <p>
-                    {filtered
-                      ? 'Prueba otro nombre o cambia el filtro de estado.'
-                      : 'Los periodos registrados aparecerán aquí con sus fechas y estado.'}
-                  </p>
-                </div>
-              ))}
-          </div>
-          {meta && meta.total > 0 && (
-            <footer className={styles.pagination}>
-              <p aria-live="polite">
-                {meta.from}-{meta.to} de {meta.total} periodos
-              </p>
-              <div>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  disabled={meta.current_page === 1}
-                  onClick={() =>
-                    changeQuery({ ...query, page: meta.current_page - 1 })
-                  }
-                >
-                  Anterior
-                </button>
-                <span>
-                  Página {meta.current_page} de {meta.last_page}
-                </span>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  disabled={meta.current_page === meta.last_page}
-                  onClick={() =>
-                    changeQuery({ ...query, page: meta.current_page + 1 })
-                  }
-                >
-                  Siguiente
-                </button>
-              </div>
-            </footer>
+          </Button>
+        }
+      />
+      <ActiveAcademicTermSummary key={activeRevision} />
+      <div className={styles.card}>
+        <AcademicTermsFilters query={query} onChange={changeQuery} />
+        <div aria-busy={!state}>
+          {!state && (
+            <div className={styles.state} role="status">
+              Cargando periodos académicos…
+            </div>
           )}
+          {state?.status === 'error' && (
+            <div className={styles.state} role="alert">
+              <h2>No se pudieron cargar los periodos</h2>
+              <p>{state.message}</p>
+              <Button
+                onClick={reload}
+              >
+                Reintentar catálogo
+              </Button>
+            </div>
+          )}
+          {state?.status === 'ready' &&
+            (state.result.data.length ? (
+              <AcademicTermsTable
+                terms={state.result.data}
+                onEdit={(termId) => setSelection({ mode: 'edit', termId })}
+                onStatus={(term) =>
+                  setStatusSelection({
+                    termId: term.id,
+                    targetStatus:
+                      term.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+                  })
+                }
+              />
+            ) : (
+              <div className={styles.state} role="status">
+                <h2>
+                  {filtered
+                    ? 'No se encontraron periodos'
+                    : 'No hay periodos registrados'}
+                </h2>
+                <p>
+                  {filtered
+                    ? 'Prueba otro nombre o cambia el filtro de estado.'
+                    : 'Los periodos registrados aparecerán aquí con sus fechas y estado.'}
+                </p>
+              </div>
+            ))}
         </div>
-        {selection !== null && (
-          <AcademicTermDialog
-            key={
-              selection.mode === 'create'
-                ? 'create'
-                : `${selection.mode}:${selection.termId}`
-            }
-            selection={selection}
-            onClose={() => setSelection(null)}
-            onSaved={saved}
-          />
-        )}
-        {statusSelection !== null && (
-          <AcademicTermStatusDialog
-            key={`${statusSelection.termId}:${statusSelection.targetStatus}`}
-            {...statusSelection}
-            onClose={() => setStatusSelection(null)}
-            onSaved={(term) => saved(term, false, true)}
-            onRefresh={refresh}
-          />
+        {meta && meta.total > 0 && (
+          <footer className={styles.pagination}>
+            <p aria-live="polite">
+              {meta.from}-{meta.to} de {meta.total} periodos
+            </p>
+            <div>
+              <Button
+                variant="secondary"
+                disabled={meta.current_page === 1}
+                onClick={() =>
+                  changeQuery({ ...query, page: meta.current_page - 1 })
+                }
+              >
+                Anterior
+              </Button>
+              <span>
+                Página {meta.current_page} de {meta.last_page}
+              </span>
+              <Button
+                variant="secondary"
+                disabled={meta.current_page === meta.last_page}
+                onClick={() =>
+                  changeQuery({ ...query, page: meta.current_page + 1 })
+                }
+              >
+                Siguiente
+              </Button>
+            </div>
+          </footer>
         )}
       </div>
+      {selection !== null && (
+        <AcademicTermDialog
+          key={
+            selection.mode === 'create'
+              ? 'create'
+              : `${selection.mode}:${selection.termId}`
+          }
+          selection={selection}
+          onClose={() => setSelection(null)}
+          onSaved={saved}
+        />
+      )}
+      {statusSelection !== null && (
+        <AcademicTermStatusDialog
+          key={`${statusSelection.termId}:${statusSelection.targetStatus}`}
+          {...statusSelection}
+          onClose={() => setStatusSelection(null)}
+          onSaved={(term) => saved(term, false, true)}
+          onRefresh={refresh}
+        />
+      )}
       <Snackbar notice={notice} onDismiss={dismissNotice} />
-    </section>
+    </PageContainer>
   )
 }

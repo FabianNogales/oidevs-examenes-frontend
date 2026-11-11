@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EIDA · Prueba aislada de IndexedDB</title>
+  </head>
+  <body>
+    <h1>Prueba manual de IndexedDB real</h1>
+    <p>
+      Usar únicamente en un origen o perfil de navegador aislado, sin una sesión
+      EIDA activa. No envía peticiones al backend. Crea datos ficticios
+      exclusivamente para esta prueba.
+    </p>
+    <button id="create">1. Crear datos y comprobar transacciones</button>
+    <button id="reload">2. Recargar esta página</button>
+    <button id="verify">
+      3. Comprobar persistencia y eliminar solo los datos de prueba
+    </button>
+    <pre id="output" role="status"></pre>
+    <script type="module" src="./storage.browser.ts"></script>
+  </body>
+</html>

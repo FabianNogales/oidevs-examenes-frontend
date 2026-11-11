@@ -9,6 +9,7 @@ import { OfferingImportReport } from './OfferingImportReport'
 import { OfferingPeriodScope } from './OfferingPeriodScope'
 import styles from './OfferingImport.module.css'
 import local from '../pages/AdminCourseOfferingsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function OfferingImportPanel({
   onBusy,
@@ -37,8 +38,8 @@ export function OfferingImportPanel({
             Asigna materias a docentes mediante un archivo CSV.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={styles.templateButton}
           disabled={processing}
           onClick={downloadOfferingTemplate}
@@ -47,7 +48,7 @@ export function OfferingImportPanel({
             <path d="M12 3v12m-5-5 5 5 5-5M5 21h14" />
           </svg>
           Descargar plantilla CSV
-        </button>
+        </Button>
       </div>
       <OfferingPeriodScope>
         {(term) => (
@@ -128,22 +129,21 @@ function OfferingImportFlow({
             </span>
           </p>
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               disabled={processing}
               onClick={onCancel}
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               disabled={processing || !flow.file}
               onClick={() => void validate()}
             >
               {processing ? 'Validando…' : 'Validar y continuar'}
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -159,22 +159,21 @@ function OfferingImportFlow({
             report={flow.preview}
           />
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               disabled={processing}
               onClick={reset}
             >
               Cambiar archivo
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               disabled={processing || !flow.preview.summary.valid}
               onClick={() => void confirm()}
             >
               {processing ? 'Confirmando…' : 'Confirmar importación'}
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -189,20 +188,19 @@ function OfferingImportFlow({
             report={flow.result}
           />
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               onClick={onViewAssignments}
             >
               Ver materias asignadas
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               onClick={reset}
             >
               Importar otro archivo
-            </button>
+            </Button>
           </div>
         </>
       )}

@@ -1,10 +1,10 @@
 import { useCallback, useId, useState } from 'react'
-import { PortalFeedback, PortalPager } from '@/features/portal-shared/PortalUi'
-import { publicationDate } from '@/features/portal-shared/portalApi'
-import { usePortalResource } from '@/features/portal-shared/usePortalResource'
+import { PortalFeedback, PortalPager } from '@/features/portal-shared/components/PortalUi'
+import { publicationDate } from '@/features/portal-shared/api/portalApi'
+import { usePortalResource } from '@/features/portal-shared/hooks/usePortalResource'
 import { getCategoryHistory } from './categoriesApi'
 import type { CategoryCatalog, CategoryHistoryEntry } from './types'
-import styles from '@/features/portal-shared/portalHistory.module.css'
+import styles from '@/features/portal-shared/components/portalHistory.module.css'
 
 // Only the fields and actions verified in backend 9172f18 are interpreted.
 // Anything else is omitted instead of shown as raw codes, IDs or JSON.

@@ -12,31 +12,39 @@ import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { HomePage } from '@/features/home/pages/HomePage'
 import { TeacherStudentsPage } from '@/features/students/pages/TeacherStudentsPage'
 import { TeacherSubjectStudentsPage } from '@/features/students/pages/TeacherSubjectStudentsPage'
+import { ImportSubjectStudentsPage } from '@/features/students/pages/ImportSubjectStudentsPage'
 import { StudentQrPage } from '@/features/students/pages/StudentQrPage'
 import { ImportStudentsPage } from '@/features/students/pages/ImportStudentsPage'
 import { TeacherSubjectsPage } from '@/features/subjects/pages/TeacherSubjectsPage'
 import { TeacherExamsPage } from '@/features/exams/pages/TeacherExamsPage'
 import { TeacherExamDetailPage } from '@/features/exams/pages/TeacherExamDetailPage'
 import { TeacherExamEditPage } from '@/features/exams/pages/TeacherExamEditPage'
+import { TeacherExamCreatePage } from '@/features/exams/pages/TeacherExamCreatePage'
 import { ExamEligibilitiesPage } from '@/features/eligibilities/pages/ExamEligibilitiesPage'
 import { ExamCollaboratorsPage } from '@/features/collaborations/pages/ExamCollaboratorsPage'
 import { CollaboratorPage } from '@/features/collaborations/pages/CollaboratorPage'
 import { EntryControlPage } from '@/features/exams/pages/EntryControlPage'
+import { OfflineEntryPage } from '@/features/offline-entry/pages/OfflineEntryPage'
+import { OfflineHomePage } from '@/features/offline-entry/pages/OfflineHomePage'
+import { TeacherDistributionPage } from '@/features/offline-entry/pages/TeacherDistributionPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { StudentLayout } from '@/layouts/StudentLayout/StudentLayout'
 import { StudentProfilePage } from '@/features/students/pages/StudentProfilePage'
 import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
-import { AdminNotFoundPage } from '@/features/admin/pages/AdminNotFoundPage'
-import { AdminTeachersPage } from '@/features/admin/pages/AdminTeachersPage'
-import { AdminManageStudentsPage } from '@/features/admin/pages/AdminManageStudentsPage'
-import { AdminStudentDetailPage } from '@/features/admin/pages/AdminStudentDetailPage'
-import { AdminTeacherDetailPage } from '@/features/admin/pages/AdminTeacherDetailPage'
-import { AdminManageUsersPage } from '@/features/admin/pages/AdminManageUsersPage'
+import { AdminNotFoundPage } from '@/features/users/pages/AdminNotFoundPage'
+import { AdminTeachersPage } from '@/features/teachers/pages/AdminTeachersPage'
+import { AdminManageStudentsPage } from '@/features/students/pages/AdminManageStudentsPage'
+import { AdminStudentDetailPage } from '@/features/students/pages/AdminStudentDetailPage'
+import { AdminTeacherDetailPage } from '@/features/teachers/pages/AdminTeacherDetailPage'
+import { AdminManageUsersPage } from '@/features/users/pages/AdminManageUsersPage'
 
 export const router = createBrowserRouter([
   {
     element: <AuthEventHandler />,
     children: [
+      // These routes have a narrowly scoped local continuity gate; online routes retain ProtectedRoute.
+      { path: '/offline', element: <OfflineHomePage /> },
+      { path: '/exams/:examId/offline', element: <OfflineEntryPage /> },
       {
         path: '/',
         element: <AppLayout />,
@@ -55,35 +63,35 @@ export const router = createBrowserRouter([
           {
             path: 'news',
             lazy: async () => {
-              const { NewsPage } = await import('@/features/portal-news/NewsPage')
+              const { NewsPage } = await import('@/features/portal-news/pages/NewsPage')
               return { Component: NewsPage }
             },
           },
           {
             path: 'news/:newsId',
             lazy: async () => {
-              const { NewsDetailPage } = await import('@/features/portal-news/NewsPage')
+              const { NewsDetailPage } = await import('@/features/portal-news/pages/NewsPage')
               return { Component: NewsDetailPage }
             },
           },
           {
             path: 'information',
             lazy: async () => {
-              const { InformationPage } = await import('@/features/portal-information/InformationPage')
+              const { InformationPage } = await import('@/features/portal-information/pages/InformationPage')
               return { Component: InformationPage }
             },
           },
           {
             path: 'services',
             lazy: async () => {
-              const { ServicesPage } = await import('@/features/portal-services/ServicesPage')
+              const { ServicesPage } = await import('@/features/portal-services/pages/ServicesPage')
               return { Component: ServicesPage }
             },
           },
           {
             path: 'services/:serviceId',
             lazy: async () => {
-              const { ServiceDetailPage } = await import('@/features/portal-services/ServicesPage')
+              const { ServiceDetailPage } = await import('@/features/portal-services/pages/ServicesPage')
               return { Component: ServiceDetailPage }
             },
           },
@@ -102,6 +110,27 @@ export const router = createBrowserRouter([
                 path: 'exams/:examId/entry-control',
                 element: <EntryControlPage />,
               },
+              {
+                path: 'exams/:examId/incidents',
+                lazy: async () => {
+                  const { ExamIncidentsPage } = await import('@/features/incidents/pages/ExamIncidentsPage')
+                  return { Component: ExamIncidentsPage }
+                },
+              },
+              {
+                path: 'exams/:examId/incidents/create',
+                lazy: async () => {
+                  const { CreateIncidentPage } = await import('@/features/incidents/pages/CreateIncidentPage')
+                  return { Component: CreateIncidentPage }
+                },
+              },
+              {
+                path: 'exams/:examId/incidents/:incidentId',
+                lazy: async () => {
+                  const { IncidentDetailPage } = await import('@/features/incidents/pages/IncidentDetailPage')
+                  return { Component: IncidentDetailPage }
+                },
+              },
             ],
           },
           {
@@ -113,7 +142,7 @@ export const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <HomePage />,
+                    element: <HomePage embedded />,
                   },
                   {
                     path: 'users/manage',
@@ -136,7 +165,7 @@ export const router = createBrowserRouter([
                   {
                     path: 'portal/news',
                     lazy: async () => {
-                      const { AdminNewsPage } = await import('@/features/portal-news/AdminNewsPage')
+                      const { AdminNewsPage } = await import('@/features/portal-news/pages/AdminNewsPage')
                       return { Component: AdminNewsPage }
                     },
                   },
@@ -150,14 +179,14 @@ export const router = createBrowserRouter([
                   {
                     path: 'portal/information',
                     lazy: async () => {
-                      const { AdminInformationPage } = await import('@/features/portal-information/AdminInformationPage')
+                      const { AdminInformationPage } = await import('@/features/portal-information/pages/AdminInformationPage')
                       return { Component: AdminInformationPage }
                     },
                   },
                   {
                     path: 'portal/services',
                     lazy: async () => {
-                      const { AdminServicesPage } = await import('@/features/portal-services/AdminServicesPage')
+                      const { AdminServicesPage } = await import('@/features/portal-services/pages/AdminServicesPage')
                       return { Component: AdminServicesPage }
                     },
                   },
@@ -175,11 +204,44 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'audit-logs',
-                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="audit-logs" /> } },
+                    lazy: async () => {
+                      const { AdminReadPage } =
+                        await import('@/features/users/pages/AdminReadPage')
+                      return {
+                        Component: () => <AdminReadPage kind="audit-logs" />,
+                      }
+                    },
+                  },
+                  {
+                    path: 'exam-reports',
+                    lazy: async () => {
+                      const { AdminExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                      return { Component: AdminExamReportsPage }
+                    },
+                  },
+                  {
+                    path: 'incidents',
+                    lazy: async () => {
+                      const { AdminIncidentsPage } = await import('@/features/incidents/pages/AdminIncidentsPage')
+                      return { Component: AdminIncidentsPage }
+                    },
+                  },
+                  {
+                    path: 'incidents/:examId/:incidentId',
+                    lazy: async () => {
+                      const { IncidentDetailPage } = await import('@/features/incidents/pages/IncidentDetailPage')
+                      return { Component: IncidentDetailPage }
+                    },
                   },
                   {
                     path: 'careers',
-                    lazy: async () => { const { AdminReadPage } = await import('@/features/admin/pages/AdminReadPage'); return { Component: () => <AdminReadPage kind="careers" /> } },
+                    lazy: async () => {
+                      const { AdminReadPage } =
+                        await import('@/features/users/pages/AdminReadPage')
+                      return {
+                        Component: () => <AdminReadPage kind="careers" />,
+                      }
+                    },
                   },
                   {
                     path: 'users/history',
@@ -187,7 +249,11 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'users/:userId/roles',
-                    lazy: async () => { const { AdminUserRolesPage } = await import('@/features/admin/pages/AdminUserRolesPage'); return { Component: AdminUserRolesPage } },
+                    lazy: async () => {
+                      const { AdminUserRolesPage } =
+                        await import('@/features/users/pages/AdminUserRolesPage')
+                      return { Component: AdminUserRolesPage }
+                    },
                   },
                   {
                     path: 'teachers',
@@ -285,6 +351,10 @@ export const router = createBrowserRouter([
                 element: <TeacherSubjectsPage />,
               },
               {
+                path: 'teacher/subjects/:courseOfferingId/exams/create',
+                element: <TeacherExamCreatePage />,
+              },
+              {
                 path: 'teacher/students',
                 element: <TeacherStudentsPage />,
               },
@@ -301,8 +371,78 @@ export const router = createBrowserRouter([
                 element: <TeacherExamEditPage />,
               },
               {
+                path: 'teacher/exam-reports',
+                lazy: async () => {
+                  const { TeacherExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                  return { Component: TeacherExamReportsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/reports',
+                lazy: async () => {
+                  const { TeacherExamReportsPage } = await import('@/features/exam-reports/pages/ExamReportsPage')
+                  return { Component: TeacherExamReportsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/attendance',
+                lazy: async () => {
+                  const { AttendancePage } = await import('@/features/attendance/pages/AttendancePage')
+                  return { Component: AttendancePage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions',
+                lazy: async () => {
+                  const { ExamExpulsionsPage } =
+                    await import('@/features/expulsions/pages/ExamExpulsionsPage')
+                  return { Component: ExamExpulsionsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions/create',
+                lazy: async () => {
+                  const { CreateExpulsionPage } =
+                    await import('@/features/expulsions/pages/CreateExpulsionPage')
+                  return { Component: CreateExpulsionPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/expulsions/:expulsionId',
+                lazy: async () => {
+                  const { ExpulsionDetailPage } =
+                    await import('@/features/expulsions/pages/ExpulsionDetailPage')
+                  return { Component: ExpulsionDetailPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/infractions',
+                lazy: async () => {
+                  const { ExamInfractionsPage } = await import('@/features/infractions/pages/ExamInfractionsPage')
+                  return { Component: ExamInfractionsPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/infractions/create',
+                lazy: async () => {
+                  const { CreateInfractionPage } = await import('@/features/infractions/pages/CreateInfractionPage')
+                  return { Component: CreateInfractionPage }
+                },
+              },
+              {
+                path: 'teacher/exams/:examId/infractions/:infractionId',
+                lazy: async () => {
+                  const { InfractionDetailPage } = await import('@/features/infractions/pages/InfractionDetailPage')
+                  return { Component: InfractionDetailPage }
+                },
+              },
+              {
                 path: 'teacher/exams/:examId/collaborators',
                 element: <ExamCollaboratorsPage />,
+              },
+              {
+                path: 'teacher/exams/:examId/offline/assignments',
+                element: <TeacherDistributionPage />,
               },
               {
                 path: 'teacher/exams/:examId/eligibilities',
@@ -319,6 +459,10 @@ export const router = createBrowserRouter([
               {
                 path: 'teacher/students/:courseOfferingId',
                 element: <TeacherSubjectStudentsPage />,
+              },
+              {
+                path: 'teacher/students/:courseOfferingId/import',
+                element: <ImportSubjectStudentsPage />,
               },
             ],
           },
