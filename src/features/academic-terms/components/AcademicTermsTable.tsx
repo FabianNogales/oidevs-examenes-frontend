@@ -1,7 +1,9 @@
+import { DataTable } from '@/shared/components/DataTable/DataTable'
+import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
+import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { AcademicTerm } from '../types/academicTerm.types'
 import { formatAcademicTermDate } from '../utils/academicTermDate'
 import { AcademicTermStatusBadge } from './AcademicTermStatusBadge'
-import styles from '../pages/AdminAcademicTermsPage.module.css'
 
 export function AcademicTermsTable({
   terms,
@@ -12,68 +14,66 @@ export function AcademicTermsTable({
   onEdit: (id: number) => void
   onStatus: (term: AcademicTerm) => void
 }) {
+  const columns: TableColumnDef<AcademicTerm>[] = [
+    {
+      id: 'name',
+      header: 'Periodo',
+      width: '28%',
+      cell: (term) => <strong className={tableStyles.primaryText}>{term.name}</strong>,
+    },
+    {
+      id: 'start',
+      header: 'Fecha de inicio',
+      cell: ({ start_date }) => (
+        <time dateTime={start_date}>{formatAcademicTermDate(start_date)}</time>
+      ),
+    },
+    {
+      id: 'end',
+      header: 'Fecha de fin',
+      cell: ({ end_date }) => (
+        <time dateTime={end_date}>{formatAcademicTermDate(end_date)}</time>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Estado',
+      cell: ({ status }) => <AcademicTermStatusBadge status={status} />,
+    },
+    {
+      id: 'actions',
+      header: 'Acciones',
+      width: '28%',
+      cell: (term) => {
+        const isActive = term.status === 'ACTIVE'
+        const action = isActive ? 'Desactivar' : 'Activar'
+        return (
+          <div className={tableStyles.actionButtons}>
+            <button
+              type="button"
+              className={tableStyles.btnViewProfile}
+              aria-label={`Editar periodo ${term.name}`}
+              onClick={() => onEdit(term.id)}
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              className={isActive ? tableStyles.btnDeactivate : tableStyles.btnActivate}
+              aria-label={`${action} periodo ${term.name}`}
+              onClick={() => onStatus(term)}
+            >
+              {action}
+            </button>
+          </div>
+        )
+      },
+    },
+  ]
+
   return (
-    <div className={styles.tableScroll}>
-      <table className={styles.table}>
-        <caption className={styles.srOnly}>
-          Periodos académicos registrados
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Periodo</th>
-            <th scope="col">Fecha de inicio</th>
-            <th scope="col">Fecha de fin</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {terms.map((term) => (
-            <tr key={term.id}>
-              <th scope="row" data-label="Periodo">
-                {term.name}
-              </th>
-              <td data-label="Fecha de inicio">
-                <time dateTime={term.start_date}>
-                  {formatAcademicTermDate(term.start_date)}
-                </time>
-              </td>
-              <td data-label="Fecha de fin">
-                <time dateTime={term.end_date}>
-                  {formatAcademicTermDate(term.end_date)}
-                </time>
-              </td>
-              <td data-label="Estado">
-                <AcademicTermStatusBadge status={term.status} />
-              </td>
-              <td data-label="Acciones">
-                <div className={styles.rowActions}>
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    aria-label={`Editar periodo ${term.name}`}
-                    onClick={() => onEdit(term.id)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      term.status === 'ACTIVE'
-                        ? styles.deactivateButton
-                        : styles.secondaryButton
-                    }
-                    aria-label={`${term.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} periodo ${term.name}`}
-                    onClick={() => onStatus(term)}
-                  >
-                    {term.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <section aria-label="Periodos académicos registrados">
+      <DataTable columns={columns} data={terms} loading={false} entityLabel="periodos académicos" />
+    </section>
   )
 }
