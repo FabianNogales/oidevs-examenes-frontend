@@ -5,7 +5,9 @@ import local from './StudentDialog.module.css'
 
 // Native modal <dialog> shared by the student dialogs (DS4.2b). It lives in the browser's top layer,
 // so neither the sticky Header nor the Snackbar can paint over it, without any z-index.
-// PortalDialog is not used yet: its `.dialog button` rule overrides Button (pending, DS4.2c).
+// Kept as a justified exception to PortalDialog (G7) because of three contracts PortalDialog does
+// not offer: a kicker above the title with a subtitle below the header, initial focus on the dialog
+// itself when no element is given, and focus returned to the dialog while busy.
 export function StudentDialog({
   title,
   kicker,

@@ -3,6 +3,62 @@
 Registro compartido. Cada subetapa se asigna aquí **antes** de empezar y se actualiza
 al cerrarla. No marcar nada como hecho sin la validación de [validation.md](validation.md).
 
+## Cierre G1–G7 · Regresión consolidada
+
+- `Dev_Erick`, 2026-11-11. G1–G7 validado con una excepción preexistente.
+- Navegador: 17 ejecuciones, 401 comprobaciones PASS sobre el árbol final. `tsc -b`, build y diff --check PASS. ESLint: 35 errores, 0 nuevos.
+- Node (80 archivos, 951 pruebas): 949 PASS, 1 fallo, 1 TODO.
+  - Corregido en el cierre: `pageLayout.test.mjs` registra `OfflineHomePage.tsx` y `OfflineEntryPage.tsx` (G6) como consumidores autorizados de `PageContainer`/`PageHeader`.
+  - Fallo preexistente, sin corregir: `browserProfileUsage.test.mjs` por `portal-categories/tests/categories.browser.mjs` (`mkdtemp`, `tmpdir()`, `kill()` directos). Ambos archivos están sin cambios respecto a `HEAD`; falta verificarlo en una copia limpia de `HEAD`.
+  - TODO previo: `examSchedulingTime.test.mjs` (bloqueo D3).
+
+## G7 · Excepciones justificadas y migas de las fichas administrativas
+
+- `Dev_Erick`, 2026-11-11. Cierra el plan G1–G7.
+- Excepciones que se conservan:
+  - `SharedRoomConsentModal`: pertenece a Programar Evaluación (diseño aprobado y guardado). No usa `PortalDialog`.
+  - `StudentDialog`: antetítulo y subtítulo propios, foco inicial en el diálogo y foco devuelto al diálogo en `busy`; contratos que `PortalDialog` no ofrece.
+  - `EntityProfileLayout`: ficha con banner y barra lateral; no usa `PageContainer`/`PageHeader`.
+- Correcciones: `SharedRoomConsentModal` gana foco inicial, contención de Tab, Escape, retorno del foco y bloqueo de scroll, sin cambios de CSS. Las fichas de docente y estudiante muestran siempre migas (`getProfileBreadcrumbs`): Inicio / módulo de origen / detalle. Comentario de `StudentDialog` actualizado.
+- Origen de las migas: ruta o `forcedContext`. Ninguna ruta produce hoy el contexto «Usuarios»; desde Gestión de usuarios se ven las migas de Docentes o Estudiantes.
+- PASS: `sharedRoomConsent.browser` 8/8 (nuevo; aspecto idéntico a `HEAD`), `examCreateDesignGuard.browser` 5/5 (crear) y 5/5 (editar), `adminEntityProfile.browser` 30/30, `studentDialogs.browser` 10/10, Node 279/280 (0 fallos, 1 TODO previo), `tsc -b`, build y diff --check. ESLint: 1 error previo en `profileTabs.registry.tsx` (`_context`), 0 nuevos.
+- Sin cubrir: apertura del consentimiento desde el selector de aulas real. Pendientes fuera de G7: destino de «Inicio» (`/admin` frente a `/`), posición de las migas en la ficha, × de `StudentDialog`.
+
+## G6 · Páginas offline con `PageContainer` y `PageHeader`
+
+- `Dev_Erick`, 2026-11-11. «Mis listas locales» (`/offline`) y el control sin conexión (`/exams/:examId/offline`) usan `main` + `PageContainer` (1280px) + `PageHeader`; el identificador no válido gana cabecera con h1. `OfflineAccessGate`, modales, `TeacherDistributionPage`, almacenamiento y service worker sin cambios. `OfflineShared.module.css` pierde solo `.header` (sin consumidores).
+- PASS: `offlinePages.browser` 9/9 (nuevo; línea base 9/9 antes de migrar; cinco anchos), `teacherDistribution.browser` 20/20, Node 51/51 (incluye `offlineShell` y `offlinePwa`), `tsc -b`, build y diff --check. ESLint: 1 error previo en `TeacherDistributionPage.tsx:65` (sin modificar); 0 en los archivos tocados.
+- Cambios visibles: h1 a 32/24px, ancho de contenido 1216px a 1440px (antes 1268px), margen móvil de 16px, antetítulo sin mayúsculas espaciadas. Pendiente: el gate sigue alineado a 1300px, así que a 1440px el contenido queda unos 35px más adentro que su cabecera institucional.
+- Sin cubrir por la prueba (dobles): IndexedDB real, service worker, descarga correcta, captura, QR y sincronización.
+
+## G5.2 · Modales de habilitaciones en `PortalDialog`
+
+- `Dev_Erick`, 2026-11-10. «Cargar habilitaciones» (720px, foco en el campo de archivo) y «Gestionar habilitación» (640px, foco en el estado marcado) dejan `CollaborationModal` y usan `PortalDialog` (`closeOnBackdrop`, `closeClassName`). Lógica, validaciones, API y payloads sin cambios.
+- PASS: `eligibilities.browser` 10/10 (nuevo, cinco anchos), `eligibilities.integration` 46/46 (dependencia simulada actualizada a `PortalDialog`), `collaborationModal.browser` 5/5, `hu34.ui.browser`, `pageLayout.browser` 215/215, Node 87/87, `tsc -b`, ESLint de habilitaciones, build y diff --check.
+- Defectos previos detectados por la prueba nueva y corregidos después (2026-11-10): a 320 y 375px «Volver al listado de habilitaciones» sobresalía del contenido del diálogo (`.modalActions button` gana `max-width: 100%` y `white-space: normal`; una línea desde 640px); tras un 422 el foco no llegaba al campo con error (ahora se aplica al terminar la petición, en motivo u observaciones). Revalidado: `eligibilities.browser` 10/10 con aserciones estrictas, `hu34.ui.browser`, Node 54/54, `tsc -b`, ESLint, build y diff --check.
+- `CollaborationModal` sigue en uso en control de ingreso, cancelación de examen y offline.
+
+## G5.1 · Modales de colaboradores en `PortalDialog`
+
+- `Dev_Erick`, 2026-11-10. Detalle, revocar y asignar colaborador dejan `CollaborationModal` y usan `PortalDialog` (`closeOnBackdrop`, `closeClassName`). Detalle y revocar: 560px (`CollaboratorDialog.module.css`). Asignar: 760px, 88dvh, scroll interno de resultados y foco inicial en la búsqueda. `PortalDialog` y `CollaborationModal` sin cambios; este último conserva sus demás consumidores (habilitaciones, control de ingreso, cancelación de examen, offline).
+- Cambios visibles: × «Cerrar ventana», foco inicial en la × o en la búsqueda, contenedor `<dialog>` nativo.
+- PASS: `collaborators.browser` 10/10 (nuevo, cinco anchos y 768×560), `collaborationModal.browser` 5/5, `pageLayout.browser` 215/215, Node 31/31, `tsc -b`, build y diff --check. Dos pruebas adaptadas al nuevo contenedor sin retirar aserciones (`assignCollaborator.integration`, bloque de Colaboradores de `pageLayout.browser`).
+- ESLint: 2 errores previos `set-state-in-effect` en `CollaborationsProvider.tsx` y `useExamCollaborators.ts` (sin modificar); 0 en los archivos tocados.
+
+## G4 · Eliminación de `StudentDetailModal`
+
+- `Dev_Erick`, 2026-11-10. El modal no tenía consumidores desde `853837d` (el detalle y la edición viven en `AdminStudentDetailPage`), así que se eliminó en lugar de migrarlo a `PortalDialog`: `StudentDetailModal.tsx` y `StudentDetailModal.module.css`.
+- PASS: Node 139/139 (students, `cssContracts`, `pathReferences`), `tsc -b`, ESLint de students, build y diff --check. Ruta `students/:studentId` intacta.
+- Las menciones anteriores de este modal en este documento son históricas. Su fila en la tabla de contraste de campos (`.input`) ya no aplica: el selector dejó de existir.
+- Decisiones G6–G7: G6 se limita a `OfflineHomePage` y `OfflineEntryPage`. `SharedRoomConsentModal` (Programar Evaluación, diseño aprobado) y `StudentDialog` (contratos propios, DS4.2b) quedan como excepciones justificadas.
+
+## G3 · Tabla de Periodos académicos
+
+- `Dev_Erick`, 2026-11-10. `AcademicTermsTable` usa `DataTable` con las fechas, los estados y las acciones de fila del catálogo.
+- PASS: Chrome simulado 215/215, incluidas las acciones de Periodos en cinco anchos. Node 27/27, ESLint focalizado, build y diff --check.
+- Revalidación D2 (2026-11-10, sesión posterior, sin cambios de código): `pageLayout.browser` 215/215 a la primera, `hu34.ui.browser` PASS, `adminDetailDialogs.browser` 9/9, `teachers.browser` 9/9, Node 79/79, `tsc -b`, build y diff --check PASS. ESLint: solo el error previo `set-state-in-effect` de `AdminTeachersPage.tsx:202`, presente en `HEAD`. El timeout de arranque de Chrome registrado antes no se reprodujo; causa sin confirmar y esperas del script sin tocar.
+- Pendiente de accesibilidad: `DataTable` no emite `<caption>` ni `<th scope="row">`; la tabla de Periodos los tenía. Hoy la nombra una `<section aria-label>`. Requiere ampliar `DataTable` con autorización.
+
 Leyenda: ✅ hecho · 🔄 en curso · ⏳ pendiente · — no aplica.
 Responsable: `Pendiente` hasta que el equipo lo asigne.
 
