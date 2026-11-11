@@ -180,8 +180,18 @@
 .csvFormat code {
   overflow-wrap: anywhere;
 }
-.bulkModal [role='dialog'] {
-  width: min(100%, 720px);
+/* PortalDialog: la clase duplicada gana a las reglas genéricas del componente sin depender del
+   orden del CSS. Conserva las medidas, el radio y la sombra del modal anterior. */
+.bulkDialog.bulkDialog,
+.manageDialog.manageDialog {
+  max-height: min(88vh, 760px);
+  padding: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.bulkDialog.bulkDialog {
+  width: min(720px, calc(100vw - 32px));
 }
 .bulkResult {
   margin-top: var(--space-5);
@@ -238,15 +248,15 @@ table.bulkErrors {
   padding-left: var(--space-4);
 }
 
-.manageModal [role='dialog'] {
-  width: min(100%, 640px);
+.manageDialog.manageDialog {
+  width: min(640px, calc(100vw - 32px));
   padding: var(--space-8);
 }
-.manageModal [role='dialog'] h2 {
+.manageDialog.manageDialog h2 {
   color: var(--color-text);
   font-size: clamp(var(--font-size-2xl), 4vw, var(--font-size-3xl));
 }
-.manageModal [role='dialog'] > div:first-child {
+.manageDialog.manageDialog > header {
   margin-bottom: var(--space-2);
 }
 .modalSubtitle {
@@ -413,10 +423,12 @@ table.bulkErrors {
   gap: var(--space-3);
   margin-top: var(--space-6);
 }
+/* Cada botón conserva su ancho natural; solo uno más ancho que la fila parte su texto. */
 .modalActions button {
   flex-shrink: 0;
   min-width: 100px;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
 }
 div.tableWrap {
   overflow-x: visible;
@@ -498,7 +510,10 @@ table.table td {
   .bulkSummary {
     grid-template-columns: minmax(0, 1fr);
   }
-  .manageModal [role='dialog'] {
+  .bulkDialog.bulkDialog {
+    padding: var(--space-4);
+  }
+  .manageDialog.manageDialog {
     padding: var(--space-5);
   }
   .studentSummary {

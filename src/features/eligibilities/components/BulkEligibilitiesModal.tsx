@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { CollaborationModal as Modal } from '@/features/collaborations/components/CollaborationModal'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
 import { EligibilityApiError, getBulkEligibilityNotice } from '../api/eligibilitiesApi'
 import type { BulkEligibilityResult } from '../types/eligibility.types'
 import { getSafeEligibilityMessage } from '../utils/eligibilityErrors'
@@ -76,8 +77,15 @@ export function BulkEligibilitiesModal({
   }
 
   return (
-    <div className={styles.bulkModal}>
-      <Modal title="Cargar habilitaciones" onClose={close} busy={busy}>
+    <PortalDialog
+      title="Cargar habilitaciones"
+      onClose={close}
+      busy={busy}
+      closeOnBackdrop
+      className={styles.bulkDialog}
+      closeClassName={dialogBase.closeButton}
+      initialFocusSelector='input[type="file"]'
+    >
         <form
           onSubmit={(event) => {
             event.preventDefault()
@@ -233,7 +241,6 @@ export function BulkEligibilitiesModal({
             </button>
           </div>
         </form>
-      </Modal>
-    </div>
+    </PortalDialog>
   )
 }
