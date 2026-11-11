@@ -13,7 +13,9 @@ import { EntityProfileError } from '@/features/users/profile/components/EntityPr
 import {
   getProfileTabs,
   getBackRouteByContext,
+  getProfileBreadcrumbs,
 } from '@/features/users/profile/config/profileTabs.registry'
+import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import type {
   EditableEntityValues,
   ProfileModuleContext,
@@ -199,6 +201,7 @@ export function AdminStudentDetailPage({
       onOptionChange={handleOptionChange}
       onBack={() => navigate(backRoute)}
     >
+      <Breadcrumbs items={getProfileBreadcrumbs(moduleContext)} />
       {currentTabConfig.render({
         entity: unifiedEntity,
         moduleContext,

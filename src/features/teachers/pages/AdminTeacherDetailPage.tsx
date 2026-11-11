@@ -8,6 +8,7 @@ import { EntityProfileError } from '@/features/users/profile/components/EntityPr
 import {
   getProfileTabs,
   getBackRouteByContext,
+  getProfileBreadcrumbs,
 } from '@/features/users/profile/config/profileTabs.registry'
 import type {
   EditableEntityValues,
@@ -167,15 +168,7 @@ export function AdminTeacherDetailPage({
       onOptionChange={handleOptionChange}
       onBack={() => navigate(backRoute)}
     >
-      {moduleContext === 'teachers' && (
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', to: '/admin' },
-            { label: 'Docentes', to: '/admin/teachers' },
-            { label: currentTabConfig.label },
-          ]}
-        />
-      )}
+      <Breadcrumbs items={getProfileBreadcrumbs(moduleContext)} />
       {currentTabConfig.render({
         entity: unifiedEntity,
         moduleContext,

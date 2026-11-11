@@ -47,8 +47,14 @@ const router=createMemoryRouter([{Component:AdminShell,children:[
   // Destinations of "Regresar" (static routes rank above the profile routes, as in the application).
   {path:'/admin/students/manage',element:e('p',{'data-qa':'students-list'},'Gestión de estudiantes')},
   {path:'/admin/teachers',element:e('p',{'data-qa':'teachers-list'},'Gestión de docentes')},
+  {path:'/admin/users/manage',element:e('p',{'data-qa':'users-list'},'Usuarios')},
+  {path:'/admin',element:e('p',{'data-qa':'admin-home'},'Inicio')},
   {path:'/admin/students/:studentId',element:e(AdminStudentDetailPage)},
   {path:'/admin/teachers/:teacherId',element:e(AdminTeacherDetailPage)},
+  // G7: the application has no route that yields the «users» context (Usuarios links to the two routes
+  // above). These QA-only routes exercise it through the pages' own forcedContext prop.
+  {path:'/qa/users/students/:studentId',element:e(AdminStudentDetailPage,{forcedContext:'users'})},
+  {path:'/qa/users/teachers/:teacherId',element:e(AdminTeacherDetailPage,{forcedContext:'users'})},
   {path:'*',element:e('p',{'data-qa':'other'},'Otra ruta')}]}],{initialEntries:['/admin/students/8']});
 window.__router=router;
 createRoot(document.getElementById('root')).render(e(RouterProvider,{router}));
@@ -56,9 +62,21 @@ window.profileReady=true;
 `
 
 const profiles = [
-  { name: 'estudiante', path: '/admin/students/8', fullName: 'Estudiante QA con apellidos extensos', back: '/admin/students/manage' },
-  { name: 'docente', path: '/admin/teachers/3', fullName: 'Docente QA con nombre extenso', back: '/admin/teachers' },
+  { name: 'estudiante', path: '/admin/students/8', fullName: 'Estudiante QA con apellidos extensos', back: '/admin/students/manage',
+    crumbs: [['Inicio', '/admin'], ['Estudiantes', '/admin/students/manage'], ['Detalle del estudiante', null]] },
+  { name: 'docente', path: '/admin/teachers/3', fullName: 'Docente QA con nombre extenso', back: '/admin/teachers',
+    crumbs: [['Inicio', '/admin'], ['Docentes', '/admin/teachers'], ['Detalle del docente', null]] },
+  // G7: «users» context (forcedContext; see the QA-only routes above).
+  { name: 'estudiante desde usuarios', path: '/qa/users/students/8', fullName: 'Estudiante QA con apellidos extensos', back: '/admin/users/manage',
+    crumbs: [['Inicio', '/admin'], ['Usuarios', '/admin/users/manage'], ['Detalle del usuario', null]] },
+  { name: 'docente desde usuarios', path: '/qa/users/teachers/3', fullName: 'Docente QA con nombre extenso', back: '/admin/users/manage',
+    crumbs: [['Inicio', '/admin'], ['Usuarios', '/admin/users/manage'], ['Detalle del usuario', null]] },
 ]
+// G7: breadcrumbs of the profile (label and link; the last one is the current page, without link).
+const inspectCrumbs = `(()=>{const nav=document.querySelector('main nav[aria-label="Ruta de navegación"]');if(!nav)return null;
+  return {items:[...nav.querySelectorAll('li')].map(li=>{const a=li.querySelector('a');return [li.textContent.trim(),a?a.getAttribute('href'):null]}),
+    current:nav.querySelector('[aria-current=page]')?.textContent.trim()??null,navs:document.querySelectorAll('main nav[aria-label="Ruta de navegación"]').length,
+    inside:(()=>{const r=nav.getBoundingClientRect();return r.width>0&&r.left>=-1&&r.right<=document.documentElement.clientWidth+1})()}})()`
 
 // DS5-F2: error states (title, back button label and destination as rendered by each page).
 const errorStates = [
@@ -177,9 +195,12 @@ try {
       if (page.overflow) problems.push('desbordamiento horizontal: ' + page.overflowing.join(', '))
       if (page.sidebar.count < 3 || page.sidebar.problems.length) problems.push('barra lateral: ' + JSON.stringify(page.sidebar))
       if (page.banner.problems.length || page.banner.badges < 2 || page.banner.stacked !== (width < 480)) problems.push('cabecera del perfil: ' + JSON.stringify(page.banner))
+      const crumbs = await evaluate(inspectCrumbs)
+      if (!crumbs || crumbs.navs !== 1 || !crumbs.inside || JSON.stringify(crumbs.items) !== JSON.stringify(profile.crumbs) || crumbs.current !== profile.crumbs.at(-1)[0])
+        problems.push('migas: ' + JSON.stringify(crumbs))
       if (width === 390 || width === 1440) {
         const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
-        await writeFile(join(evidence, `${profile.name}-${width}.png`), Buffer.from(shot.data, 'base64'))
+        await writeFile(join(evidence, `${profile.name.replaceAll(' ', '-')}-${width}.png`), Buffer.from(shot.data, 'base64'))
       }
       // Sidebar tab: "Editar datos" becomes active and shows its form (nothing is submitted).
       await clickText('Editar datos')
@@ -191,6 +212,13 @@ try {
       // "Regresar" goes back to the module list.
       await clickText('Regresar')
       await wait(`window.__router.state.location.pathname===${JSON.stringify(profile.back)}`, `${profile.name}: Regresar`)
+      // G7: the module breadcrumb leads to the same list; the breadcrumbs stay when the tab changes.
+      await evaluate(`window.__router.navigate(${JSON.stringify(profile.path + '?tab=editar')})`)
+      await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(profile.fullName)}&&!!document.querySelector('main nav[aria-label="Ruta de navegación"] a')`, `${profile.name}: migas tras cambiar de pestaña`)
+      const tabCrumbs = await evaluate(inspectCrumbs)
+      if (JSON.stringify(tabCrumbs?.items) !== JSON.stringify(profile.crumbs)) problems.push('migas con otra pestaña: ' + JSON.stringify(tabCrumbs))
+      await evaluate(`[...document.querySelectorAll('main nav[aria-label="Ruta de navegación"] a')].find(a=>a.textContent.trim()===${JSON.stringify(profile.crumbs[1][0])}).click()`)
+      await wait(`window.__router.state.location.pathname===${JSON.stringify(profile.back)}`, `${profile.name}: miga del módulo`)
       if (problems.length) failures.push(`${profile.name} ${width}px: ${problems.join(' · ')}`)
       console.log(`${problems.length ? 'FAIL' : 'PASS'} perfil ${profile.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
     }

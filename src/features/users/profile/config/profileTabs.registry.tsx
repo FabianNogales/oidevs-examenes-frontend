@@ -3,6 +3,7 @@ import type {
   ProfileModuleContext,
   ProfileTabConfig,
 } from '../types/entityProfile.types'
+import type { BreadcrumbItem } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 
 import { ProfileOverviewTab } from '../tabs/ProfileOverviewTab'
 import { ProfileEditTab } from '../tabs/ProfileEditTab'
@@ -131,4 +132,29 @@ export function getBackRouteByContext(context: ProfileModuleContext): string {
     case 'users':
       return '/admin/users/manage'
   }
+}
+
+const PROFILE_BREADCRUMB_LABELS: Record<
+  ProfileModuleContext,
+  { module: string; detail: string }
+> = {
+  students: { module: 'Estudiantes', detail: 'Detalle del estudiante' },
+  teachers: { module: 'Docentes', detail: 'Detalle del docente' },
+  users: { module: 'Usuarios', detail: 'Detalle del usuario' },
+}
+
+/**
+ * Migas de las fichas administrativas (G7): Inicio / módulo de origen / detalle.
+ * El módulo enlaza al mismo listado que "< Regresar". El contexto es el de la ficha
+ * (ruta o `forcedContext`); no se infiere del historial del navegador.
+ */
+export function getProfileBreadcrumbs(
+  context: ProfileModuleContext,
+): BreadcrumbItem[] {
+  const labels = PROFILE_BREADCRUMB_LABELS[context]
+  return [
+    { label: 'Inicio', to: '/admin' },
+    { label: labels.module, to: getBackRouteByContext(context) },
+    { label: labels.detail },
+  ]
 }
