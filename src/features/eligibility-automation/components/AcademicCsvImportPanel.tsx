@@ -14,8 +14,8 @@ import type {
 import type { AcademicCsvRow } from '../utils/academicCsv'
 import {
   AcademicCsvValidationError,
-  ACADEMIC_CSV_COLUMNS,
   downloadAcademicCsvTemplate,
+  getAcademicCsvLayout,
   prepareAcademicCsv,
 } from '../utils/academicCsv'
 import styles from '../pages/EligibilityAutomation.module.css'
@@ -24,6 +24,7 @@ import { Button } from '@/shared/components/ui/Button/Button'
 type Props = {
   offeringId: number
   schema: ImportSchema
+  layout: ReturnType<typeof getAcademicCsvLayout>
   onConfirmed: () => Promise<void>
 }
 
@@ -52,6 +53,7 @@ function humanizeAcademicImportMessage(message: string): string {
 export function AcademicCsvImportPanel({
   offeringId,
   schema,
+  layout,
   onConfirmed,
 }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -76,7 +78,7 @@ export function AcademicCsvImportPanel({
     setError('')
     setValidating(true)
     try {
-      const next = await prepareAcademicCsv(file, schema)
+      const next = await prepareAcademicCsv(file, schema, layout)
       if (request === operation.current) setPrepared(next)
     } catch (validationError) {
       if (request === operation.current) {
@@ -154,9 +156,10 @@ export function AcademicCsvImportPanel({
     }
   }
 
-  const maxStudentRows = schema.assessment_keys.length
-    ? Math.floor(schema.max_rows / schema.assessment_keys.length)
+  const maxStudentRows = layout.assessmentKeys.length
+    ? Math.floor(schema.max_rows / layout.assessmentKeys.length)
     : 0
+  const asksIfTaken = layout.columns.some(({ key }) => key.startsWith('rindio_'))
 
   return (
     <section
@@ -172,8 +175,7 @@ export function AcademicCsvImportPanel({
             Importar datos académicos
           </h3>
           <p className={styles.academicImportDescription}>
-            Carga las calificaciones y asistencia de los estudiantes mediante un
-            archivo CSV.
+            Carga los datos académicos de los estudiantes mediante un archivo CSV.
           </p>
           <p className={styles.academicImportDescription}>
             Estos datos serán utilizados para evaluar automáticamente los
@@ -183,7 +185,8 @@ export function AcademicCsvImportPanel({
         <Button
           variant="secondary"
           className={`${studentPageStyles.templateButton} ${styles.academicTemplateButton}`}
-          onClick={downloadAcademicCsvTemplate}
+          disabled={layout.assessmentKeys.length === 0}
+          onClick={() => downloadAcademicCsvTemplate(layout.columns)}
         >
           <DownloadIcon />
           Descargar plantilla CSV
@@ -198,10 +201,16 @@ export function AcademicCsvImportPanel({
           className={`${studentDesignStyles.columnsGuide} ${styles.academicColumnsGuide}`}
           aria-label="Columnas de la plantilla CSV"
         >
-          {ACADEMIC_CSV_COLUMNS.map((column) => (
+          {layout.columns.map((column) => (
             <span key={column.key}>{column.label}</span>
           ))}
         </div>
+        {layout.requiresAssessmentForAttendance ? (
+          <p>Para registrar la asistencia, el importador requiere indicar si el estudiante rindió un parcial.</p>
+        ) : null}
+        {asksIfTaken ? (
+          <p>En las columnas «Rindió», escribe «Sí» o «No».</p>
+        ) : null}
       </div>
 
       <CsvDropzone
@@ -260,7 +269,7 @@ export function AcademicCsvImportPanel({
         <AcademicCsvPreview
           preview={preview}
           inputRows={prepared?.rows ?? []}
-          assessmentCount={schema.assessment_keys.length}
+          layout={layout}
           working={working}
           onConfirm={() => void confirmImport()}
         />
@@ -278,16 +287,22 @@ export function AcademicCsvImportPanel({
 function AcademicCsvPreview({
   preview,
   inputRows,
-  assessmentCount,
+  layout,
   working,
   onConfirm,
 }: {
   preview: CsvImportPreview
   inputRows: AcademicCsvRow[]
-  assessmentCount: number
+  layout: Props['layout']
   working: boolean
   onConfirm: () => void
 }) {
+  const assessmentCount = layout.assessmentKeys.length
+  const includesPP = layout.columns.some(({ key }) => key === 'nota_pp')
+  const includesSP = layout.columns.some(({ key }) => key === 'nota_sp')
+  const includesTakenPP = layout.columns.some(({ key }) => key === 'rindio_pp')
+  const includesTakenSP = layout.columns.some(({ key }) => key === 'rindio_sp')
+  const includesAttendance = layout.columns.some(({ key }) => key === 'asistencias')
   const errorsByInputRow = new Map<
     number,
     { sis: string | null; messages: Set<string> }
@@ -342,11 +357,17 @@ function AcademicCsvPreview({
               <tr>
                 <th scope="col">SIS</th>
                 <th scope="col">Nombre completo</th>
-                <th scope="col">Nota PP</th>
-                <th scope="col">Nota SP</th>
-                <th scope="col">Asistencia</th>
-                <th scope="col">% asistencia</th>
-                <th scope="col">Promedio</th>
+                {includesPP ? <th scope="col">Nota PP</th> : null}
+                {includesSP ? <th scope="col">Nota SP</th> : null}
+                {includesTakenPP ? <th scope="col">Rindió PP</th> : null}
+                {includesTakenSP ? <th scope="col">Rindió SP</th> : null}
+                {includesAttendance ? (
+                  <>
+                    <th scope="col">Asistencia</th>
+                    <th scope="col">% asistencia</th>
+                  </>
+                ) : null}
+                {includesPP && includesSP ? <th scope="col">Promedio</th> : null}
                 <th scope="col">Estado de validación</th>
               </tr>
             </thead>
@@ -364,13 +385,17 @@ function AcademicCsvPreview({
                   <tr key={`${source.sis}-${index}`}>
                     <td>{source.sis}</td>
                     <td>{source.nombre_completo}</td>
-                    <td>{formatAssessment(pp, source.nota_pp)}</td>
-                    <td>{formatAssessment(sp, source.nota_sp)}</td>
-                    <td>
-                      {source.asistencias} / {source.total_clases}
-                    </td>
-                    <td>{formatAttendancePercentage(attended, total)}</td>
-                    <td>{formatAverage(source.nota_pp, source.nota_sp)}</td>
+                    {includesPP ? <td>{formatAssessment(pp, source.nota_pp)}</td> : null}
+                    {includesSP ? <td>{formatAssessment(sp, source.nota_sp)}</td> : null}
+                    {includesTakenPP ? <td>{source.rindio_pp}</td> : null}
+                    {includesTakenSP ? <td>{source.rindio_sp}</td> : null}
+                    {includesAttendance ? (
+                      <>
+                        <td>{source.asistencias} / {source.total_clases}</td>
+                        <td>{formatAttendancePercentage(attended, total)}</td>
+                      </>
+                    ) : null}
+                    {includesPP && includesSP ? <td>{formatAverage(source.nota_pp, source.nota_sp)}</td> : null}
                     <td>
                       <span className={styles.academicValidationStatus}>
                         {academicValidationStatus(error?.messages)}

@@ -40,6 +40,7 @@ import { PageContainer } from '@/shared/components/ui/PageContainer/PageContaine
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useAcademicData } from '../hooks/useAcademicData'
 import { AcademicCsvImportPanel } from '../components/AcademicCsvImportPanel'
+import { getAcademicCsvLayout } from '../utils/academicCsv'
 import {
   academicActionLabel,
   academicHistoryChanges,
@@ -809,6 +810,12 @@ export function EligibilityAutomationPage() {
     loadSchema,
     loadRecords,
   } = useAcademicData(offeringId, section === 'academic')
+  const csvLayout = schema && configuration
+    ? getAcademicCsvLayout(
+        [...configuration.mandatory_criteria, ...selectedCriteria],
+        schema,
+      )
+    : null
 
   const loadConfiguration = useCallback(async () => {
     if (examId === null) return
@@ -1477,11 +1484,12 @@ export function EligibilityAutomationPage() {
                   </details>
                 </div>
               ) : null}
-              {schema && offeringId ? (
+              {schema && offeringId && csvLayout ? (
                 <AcademicCsvImportPanel
-                  key={offeringId}
+                  key={`${offeringId}:${csvLayout.columns.map(({ key }) => key).join(',')}:${csvLayout.requiresAssessmentForAttendance}`}
                   offeringId={offeringId}
                   schema={schema}
+                  layout={csvLayout}
                   onConfirmed={async () => {
                     await loadRecords(1, '')
                     setRecordSearch('')

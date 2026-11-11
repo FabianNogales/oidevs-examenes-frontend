@@ -1,10 +1,12 @@
-import type { ImportSchema } from '../types/eligibilityAutomation.types'
+import type { ImportSchema, SelectedCriterion } from '../types/eligibilityAutomation.types'
 
 export const ACADEMIC_CSV_COLUMNS = [
   { key: 'sis', label: 'SIS' },
   { key: 'nombre_completo', label: 'Nombre completo' },
   { key: 'nota_pp', label: 'Nota PP' },
   { key: 'nota_sp', label: 'Nota SP' },
+  { key: 'rindio_pp', label: 'Rindió PP' },
+  { key: 'rindio_sp', label: 'Rindió SP' },
   { key: 'asistencias', label: 'Asistencias' },
   { key: 'total_clases', label: 'Total de clases' },
 ] as const
@@ -25,9 +27,52 @@ const ASSESSMENT_COLUMN_BY_KEY: Record<string, 'nota_pp' | 'nota_sp'> = {
   FIRST_PARTIAL: 'nota_pp',
   SECOND_PARTIAL: 'nota_sp',
 }
+const TAKEN_COLUMN_BY_KEY: Record<string, 'rindio_pp' | 'rindio_sp'> = {
+  FIRST_PARTIAL: 'rindio_pp',
+  SECOND_PARTIAL: 'rindio_sp',
+}
 
 export type AcademicCsvRow = {
   [Header in (typeof ACADEMIC_CSV_HEADERS)[number]]: string
+}
+
+type AcademicCsvColumn = (typeof ACADEMIC_CSV_COLUMNS)[number]
+
+export function getAcademicCsvLayout(
+  criteria: readonly SelectedCriterion[],
+  schema: ImportSchema,
+) {
+  const activeCriteria = criteria.filter((criterion) => criterion.status !== 'INACTIVE')
+  const keysFor = ({ parameters }: SelectedCriterion) => [
+    parameters.assessment_key,
+    ...(Array.isArray(parameters.assessment_keys) ? parameters.assessment_keys : []),
+  ]
+  const selectedKeys = new Set(activeCriteria.flatMap(keysFor))
+  const selectedAssessments = schema.assessment_keys.filter((key) => selectedKeys.has(key))
+  const includesAttendance = activeCriteria.length === 0 ||
+    activeCriteria.some(({ code }) => code === 'MIN_ATTENDANCE_PERCENTAGE')
+  // The import endpoint requires an assessment on every row, even for attendance.
+  const requiresAssessmentForAttendance = activeCriteria.length > 0 &&
+    activeCriteria.every(({ code }) => code === 'MIN_ATTENDANCE_PERCENTAGE')
+  const assessmentKeys = activeCriteria.length === 0
+    ? schema.assessment_keys
+    : requiresAssessmentForAttendance
+      ? schema.assessment_keys.slice(0, 1)
+      : selectedAssessments
+  const scoredKeys = new Set(activeCriteria
+    .filter(({ code }) => code !== 'PREVIOUS_ASSESSMENTS_TAKEN')
+    .flatMap(keysFor))
+  const assessmentColumns = new Set<string>(assessmentKeys.map((key) =>
+    activeCriteria.length === 0 || scoredKeys.has(key)
+      ? ASSESSMENT_COLUMN_BY_KEY[key]
+      : TAKEN_COLUMN_BY_KEY[key],
+  ))
+  const columns = ACADEMIC_CSV_COLUMNS.filter(({ key }) =>
+    key === 'sis' || key === 'nombre_completo' ||
+    assessmentColumns.has(key) ||
+    (includesAttendance && (key === 'asistencias' || key === 'total_clases')),
+  )
+  return { assessmentKeys, columns, requiresAssessmentForAttendance }
 }
 
 export class AcademicCsvValidationError extends Error {
@@ -37,12 +82,14 @@ export class AcademicCsvValidationError extends Error {
   }
 }
 
-export function getAcademicCsvTemplate(): string {
-  return `${ACADEMIC_CSV_HEADERS.join(',')}\r\n`
+export function getAcademicCsvTemplate(
+  columns: readonly AcademicCsvColumn[] = ACADEMIC_CSV_COLUMNS.filter(({ key }) => !key.startsWith('rindio_')),
+): string {
+  return `${columns.map(({ key }) => key).join(',')}\r\n`
 }
 
-export function downloadAcademicCsvTemplate(): void {
-  const blob = new Blob([getAcademicCsvTemplate()], {
+export function downloadAcademicCsvTemplate(columns: readonly AcademicCsvColumn[]): void {
+  const blob = new Blob([getAcademicCsvTemplate(columns)], {
     type: 'text/csv;charset=utf-8',
   })
   const objectUrl = URL.createObjectURL(blob)
@@ -56,7 +103,13 @@ export function downloadAcademicCsvTemplate(): void {
 export async function prepareAcademicCsv(
   file: Pick<File, 'name' | 'size' | 'arrayBuffer'>,
   schema: ImportSchema,
+  layout = getAcademicCsvLayout([], schema),
 ): Promise<{ csv: string; rows: AcademicCsvRow[] }> {
+  const expectedHeaders = layout.columns.map(({ key }) => key)
+  const { assessmentKeys } = layout
+  if (assessmentKeys.length === 0) {
+    throw new AcademicCsvValidationError('Selecciona una evaluación válida en los criterios marcados.')
+  }
   if (!file.name.toLowerCase().endsWith('.csv')) {
     throw new AcademicCsvValidationError(
       'Selecciona un archivo con formato .csv.',
@@ -101,23 +154,27 @@ export async function prepareAcademicCsv(
     (index === 0 ? header.replace(/^\uFEFF/, '') : header).trim(),
   )
   if (
-    headers.length !== ACADEMIC_CSV_HEADERS.length ||
-    headers.some((header, index) => header !== ACADEMIC_CSV_HEADERS[index])
+    headers.length !== expectedHeaders.length ||
+    headers.some((header, index) => header !== expectedHeaders[index])
   ) {
     throw new AcademicCsvValidationError(
-      `Las columnas deben estar en este orden: ${ACADEMIC_CSV_HEADERS.join(', ')}.`,
+      `Las columnas deben estar en este orden: ${expectedHeaders.join(', ')}.`,
     )
   }
 
   const rows = records.slice(1).map((cells, index) => {
     const rowNumber = index + 2
-    if (cells.length !== ACADEMIC_CSV_HEADERS.length) {
+    if (cells.length !== expectedHeaders.length) {
       throw new AcademicCsvValidationError(
-        `La fila ${rowNumber} debe contener ${ACADEMIC_CSV_HEADERS.length} columnas.`,
+        `La fila ${rowNumber} debe contener ${expectedHeaders.length} columnas.`,
       )
     }
-    const row = {} as AcademicCsvRow
-    ACADEMIC_CSV_HEADERS.forEach((header, columnIndex) => {
+    const row: AcademicCsvRow = {
+      sis: '', nombre_completo: '', nota_pp: '', nota_sp: '',
+      rindio_pp: '', rindio_sp: '',
+      asistencias: '', total_clases: '',
+    }
+    expectedHeaders.forEach((header, columnIndex) => {
       row[header] = cells[columnIndex].trim()
     })
     return row
@@ -161,25 +218,19 @@ export async function prepareAcademicCsv(
 
     const ppScore = validateScore(row.nota_pp, 'Nota PP', rowNumber, schema)
     const spScore = validateScore(row.nota_sp, 'Nota SP', rowNumber, schema)
-    const attended = parseNonNegativeNumber(
-      row.asistencias,
-      'Asistencias',
-      rowNumber,
-    )
-    const total = parseNonNegativeNumber(
-      row.total_clases,
-      'Total de clases',
-      rowNumber,
-    )
-    if (attended > total) {
-      throw new AcademicCsvValidationError(
-        `La fila ${rowNumber}: las asistencias no pueden superar el total de clases.`,
-      )
-    }
-    if (!Number.isInteger(attended) || !Number.isInteger(total) || total < 1) {
-      throw new AcademicCsvValidationError(
-        `La fila ${rowNumber}: asistencias y total de clases deben ser enteros, y el total debe ser mayor que cero.`,
-      )
+    if (expectedHeaders.includes('asistencias')) {
+      const attended = parseNonNegativeNumber(row.asistencias, 'Asistencias', rowNumber)
+      const total = parseNonNegativeNumber(row.total_clases, 'Total de clases', rowNumber)
+      if (attended > total) {
+        throw new AcademicCsvValidationError(
+          `La fila ${rowNumber}: las asistencias no pueden superar el total de clases.`,
+        )
+      }
+      if (!Number.isInteger(attended) || !Number.isInteger(total) || total < 1) {
+        throw new AcademicCsvValidationError(
+          `La fila ${rowNumber}: asistencias y total de clases deben ser enteros, y el total debe ser mayor que cero.`,
+        )
+      }
     }
     const grades = { nota_pp: ppScore, nota_sp: spScore }
     if (ppScore !== '' && !schema.assessment_keys.includes('FIRST_PARTIAL')) {
@@ -193,13 +244,21 @@ export async function prepareAcademicCsv(
       )
     }
 
-    return schema.assessment_keys.map((assessmentKey) => {
+    return assessmentKeys.map((assessmentKey) => {
       const scoreColumn = ASSESSMENT_COLUMN_BY_KEY[assessmentKey]
       const score = scoreColumn ? grades[scoreColumn] : ''
+      const takenColumn = TAKEN_COLUMN_BY_KEY[assessmentKey]
+      const explicitTaken = expectedHeaders.includes(takenColumn)
+      const taken = row[takenColumn]?.toLowerCase()
+      if (explicitTaken && taken !== 'si' && taken !== 'sí' && taken !== 'no') {
+        throw new AcademicCsvValidationError(
+          `La fila ${rowNumber}: escribe «Sí» o «No» para indicar si rindió el parcial.`,
+        )
+      }
       const values: Record<string, string> = {
         sis: row.sis,
         assessment_key: assessmentKey,
-        was_taken: score ? trueValue : falseValue,
+        was_taken: (explicitTaken ? taken !== 'no' : score !== '') ? trueValue : falseValue,
         score,
         attended_classes: row.asistencias,
         total_classes: row.total_clases,
@@ -210,10 +269,10 @@ export async function prepareAcademicCsv(
 
   if (schema.max_rows > 0 && backendRows.length > schema.max_rows) {
     const maxStudents = Math.floor(
-      schema.max_rows / schema.assessment_keys.length,
+      schema.max_rows / assessmentKeys.length,
     )
     throw new AcademicCsvValidationError(
-      `La conversión al formato de importación requiere ${schema.assessment_keys.length} filas por estudiante y supera el límite de ${schema.max_rows} filas CSV (máximo ${maxStudents} estudiantes con el esquema actual).`,
+      `La conversión al formato de importación requiere ${assessmentKeys.length} filas por estudiante y supera el límite de ${schema.max_rows} filas CSV (máximo ${maxStudents} estudiantes con el esquema actual).`,
     )
   }
 

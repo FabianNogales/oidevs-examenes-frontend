@@ -352,7 +352,7 @@ try {
         ])
         assert.ok(
           importLayout.descriptions.some((text) =>
-            text.includes('Carga las calificaciones y asistencia'),
+            text.includes('Carga los datos académicos'),
           ),
         )
         assert.ok(
@@ -645,6 +645,59 @@ try {
   await evaluate('hu34Ui.examError=null')
   result.contract = contractFailures
   assert.deepEqual(contractFailures, [], 'contrato de página de habilitaciones')
+  await evaluate(
+    `(()=>{const saved=hu34Ui.configuration;hu34Ui.reset(${JSON.stringify(auto)});hu34Ui.configuration={...saved,mandatory_criteria:[],selected_criteria:saved.selected_criteria.filter(c=>c.code==='MIN_ATTENDANCE_PERCENTAGE')}})()`,
+  )
+  await wait(`document.querySelector('input[type=checkbox]')`)
+  await button('Datos académicos')
+  const csvGuide = `[...document.querySelectorAll('[aria-label="Columnas de la plantilla CSV"] span')].map(el=>el.textContent)`
+  await wait(`${csvGuide}.length > 0`)
+  assert.deepEqual(await evaluate(csvGuide), [
+    'SIS', 'Nombre completo', 'Rindió PP', 'Asistencias', 'Total de clases',
+  ])
+  const downloadedHeader = await evaluate(`(async () => {
+    const createObjectURL = URL.createObjectURL
+    const anchorClick = HTMLAnchorElement.prototype.click
+    let downloaded
+    URL.createObjectURL = (blob) => {
+      downloaded = blob.text()
+      return createObjectURL.call(URL, blob)
+    }
+    HTMLAnchorElement.prototype.click = function () {
+      if (!this.download) anchorClick.call(this)
+    }
+    try {
+      const download = [...document.querySelectorAll('button')]
+        .find(button => button.textContent.includes('Descargar plantilla CSV'))
+      download.click()
+      return (await downloaded).trim()
+    } finally {
+      URL.createObjectURL = createObjectURL
+      HTMLAnchorElement.prototype.click = anchorClick
+    }
+  })()`)
+  assert.equal(downloadedHeader, 'sis,nombre_completo,rindio_pp,asistencias,total_clases')
+  await uploadAcademicCsv(
+    'asistencia.csv',
+    downloadedHeader + '\n202600001,Juan Perez,Sí,18,20\n',
+  )
+  await wait(`[...document.querySelectorAll('button')].some(b=>b.textContent.includes('Validar y generar vista previa')&&!b.disabled)`)
+  await button('Validar y generar vista previa')
+  await wait(`document.querySelector('[aria-labelledby="academic-preview-title"] tbody tr')`)
+  const previewCells = (selector) => evaluate(
+    `[...document.querySelectorAll('[aria-labelledby="academic-preview-title"] ${selector}')].map(cell => cell.textContent.trim())`,
+  )
+  assert.deepEqual(await previewCells('thead th'), [
+    'SIS', 'Nombre completo', 'Rindió PP', 'Asistencia', '% asistencia', 'Estado de validación',
+  ])
+  assert.deepEqual((await previewCells('tbody tr:first-child td')).slice(0, 4), [
+    '202600001', 'Juan Perez', 'Sí', '18 / 20',
+  ])
+  assert.deepEqual(await evaluate(`hu34Ui.importedCsv.trim().split(/\\r?\\n/)`), [
+    'sis,assessment_key,was_taken,score,attended_classes,total_classes',
+    '202600001,FIRST_PARTIAL,true,,18,20',
+  ])
+  result.checks.push('attendance CSV and preview use only the selected fields and required assessment status')
   const arrayGroup = `document.querySelector('fieldset.'+hu34Ui.styles.assessmentOptions)`
   const remountKeepingConfiguration = async () => {
     await evaluate(
@@ -1024,14 +1077,20 @@ try {
     description: 'Descripción actualizada para nuevas configuraciones.',
   })
   await evaluate(
-    `(()=>{const card=[...document.querySelectorAll('.'+hu34Ui.styles.criterionCatalogCard)].find(item=>item.querySelector('h2').textContent==='Puntaje acumulado mínimo actualizado');card.querySelectorAll('button')[1].click()})()`,
+    `(()=>{const card=[...document.querySelectorAll('.'+hu34Ui.styles.criterionCatalogCard)].find(item=>item.querySelector('h2').textContent==='Puntaje acumulado mínimo actualizado');const trigger=card.querySelectorAll('button')[1];trigger.focus();trigger.click()})()`,
   )
-  await wait(`document.querySelector('[role=dialog]')`)
+  await wait(`document.querySelector('dialog[role=alertdialog][open]')`)
   assert.ok(
     await evaluate(
-      `document.querySelector('[role=dialog]').innerText.includes('Los resultados históricos no serán modificados.')`,
+      `document.querySelector('dialog[role=alertdialog][open]').innerText.includes('Los resultados históricos se conservan.')`,
     ),
   )
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+  await wait(`!document.querySelector('dialog[role=alertdialog][open]')`)
+  assert.equal(await evaluate('document.activeElement.textContent.trim()'), 'Desactivar')
+  await evaluate('document.activeElement.click()')
+  await wait(`document.querySelector('dialog[role=alertdialog][open]')`)
   await button('Confirmar')
   await wait(
     `document.body.innerText.includes('Los resultados históricos no fueron modificados.')`,

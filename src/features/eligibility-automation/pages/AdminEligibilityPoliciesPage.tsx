@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import {
   EligibilityAutomationApiError,
@@ -478,46 +479,19 @@ export function AdminEligibilityPoliciesPage() {
         ) : null}
       </section>
       {pendingStatus ? (
-        <div
-          className={styles.criterionStatusDialog}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="criterion-status-title"
-        >
-          <div className={styles.panel}>
-            <h2 id="criterion-status-title">
-              {pendingStatus.status === 'ACTIVE'
-                ? '¿Desactivar este criterio?'
-                : '¿Activar este criterio?'}
-            </h2>
-            <p>
-              {pendingStatus.status === 'ACTIVE'
-                ? 'Los nuevos cálculos dejarán de utilizar este criterio. Los resultados históricos no serán modificados.'
-                : 'Este criterio estará disponible para configuraciones y nuevos cálculos.'}
-            </p>
-            <p>
-              <strong>{pendingStatus.name}</strong>
-            </p>
-            <div className={styles.policySaveActions}>
-              <button
-                type="button"
-                className={sharedStyles.primaryButton}
-                disabled={statusWorking}
-                onClick={() => void confirmStatusChange()}
-              >
-                {statusWorking ? 'Actualizando…' : 'Confirmar'}
-              </button>
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                disabled={statusWorking}
-                onClick={() => setPendingStatus(null)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          isOpen
+          native
+          title={pendingStatus.status === 'ACTIVE'
+            ? '¿Desactivar este criterio?'
+            : '¿Activar este criterio?'}
+          message={pendingStatus.status === 'ACTIVE'
+            ? `Criterio: ${pendingStatus.name}. Los nuevos cálculos dejarán de utilizar este criterio. Los resultados históricos se conservan.`
+            : `Criterio: ${pendingStatus.name}. Este criterio estará disponible para configuraciones y nuevos cálculos.`}
+          loading={statusWorking}
+          onConfirm={() => void confirmStatusChange()}
+          onCancel={() => setPendingStatus(null)}
+        />
       ) : null}
     </PageContainer>
   )

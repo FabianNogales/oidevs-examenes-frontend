@@ -379,6 +379,50 @@ test('valid academic CSV validates teacher fields and adapts to the current back
     '202600001,FIRST_PARTIAL,true,28,18,20',
     '202600001,SECOND_PARTIAL,true,32,18,20',
   ])
+
+  const criterion = (code, parameters = {}) => ({ code, parameters })
+  const grade = criterion('MIN_ASSESSMENT_SCORE', { assessment_key: 'SECOND_PARTIAL' })
+  const attendance = criterion('MIN_ATTENDANCE_PERCENTAGE')
+  const mandatory = criterion('SECOND_INSTANCE_PARTIAL_AVERAGE', {
+    assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'],
+  })
+  const parseFor = async (criteria, row) => {
+    const layout = csv.getAcademicCsvLayout(criteria, schema)
+    const header = csv.getAcademicCsvTemplate(layout.columns)
+    const data = new TextEncoder().encode(header + row + '\r\n')
+    const result = await csv.prepareAcademicCsv({
+      name: 'datos.csv',
+      size: data.byteLength,
+      arrayBuffer: async () => data.buffer,
+    }, schema, layout)
+    return [header.trim(), ...result.csv.trim().split(/\r?\n/).slice(1)]
+  }
+  assert.deepEqual(await parseFor([grade], '1,Juan,0'), [
+    'sis,nombre_completo,nota_sp',
+    '1,SECOND_PARTIAL,true,0,,',
+  ])
+  assert.deepEqual(await parseFor([grade, attendance], '1,Juan,32,18,20'), [
+    'sis,nombre_completo,nota_sp,asistencias,total_clases',
+    '1,SECOND_PARTIAL,true,32,18,20',
+  ])
+  assert.deepEqual(await parseFor([mandatory], '1,Juan,28,32'), [
+    'sis,nombre_completo,nota_pp,nota_sp',
+    '1,FIRST_PARTIAL,true,28,,',
+    '1,SECOND_PARTIAL,true,32,,',
+  ])
+  assert.deepEqual(await parseFor([attendance], '1,Juan,Sí,18,20'), [
+    'sis,nombre_completo,rindio_pp,asistencias,total_clases',
+    '1,FIRST_PARTIAL,true,,18,20',
+  ])
+  await assert.rejects(parseFor([attendance], '1,Juan,,18,20'), /indicar si rindió/)
+  const taken = criterion('PREVIOUS_ASSESSMENTS_TAKEN', {
+    assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'],
+  })
+  assert.deepEqual(await parseFor([taken], '1,Juan,Sí,No'), [
+    'sis,nombre_completo,rindio_pp,rindio_sp',
+    '1,FIRST_PARTIAL,true,,,',
+    '1,SECOND_PARTIAL,false,,,',
+  ])
 })
 
 test('academic CSV rejects invalid headers, row values, and file limits', async () => {
