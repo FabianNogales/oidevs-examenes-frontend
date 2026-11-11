@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { Download, ExternalLink, FileText, RefreshCw, ScanLine,} from 'lucide-react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { OfflineAccessGate } from '../components/OfflineAccessGate'
 import { OfflineExamSummary } from '../components/OfflineExamSummary'
 import { OfflinePreparationPanel } from '../components/OfflinePreparationPanel'
@@ -17,6 +18,9 @@ import type { OfflineIdentity } from '../services/offlineIdentity'
 import shared from '../components/OfflineShared.module.css'
 import workspace from '../components/OfflineWorkspace.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
+import pageStyles from './OfflinePages.module.css'
+
+const titleId = 'offline-entry-title'
 
 function OfflineWorkspace({
   examId,
@@ -67,41 +71,43 @@ function OfflineWorkspace({
     },
   ] as const
   return (
-    <main className={shared.page}>
-      <Breadcrumbs
-        items={[
+    <main className={pageStyles.main}>
+      <PageContainer labelledBy={titleId}>
+      <PageHeader
+        title={
+          tab === 'prepare'
+            ? 'Preparación del control sin conexión'
+            : tab === 'control'
+              ? 'Control de ingreso sin conexión'
+              : 'Sincronización de ingresos'
+        }
+        titleId={titleId}
+        eyebrow="EIDA · Lista exclusiva"
+        breadcrumbs={[
           { label: 'Mis listas locales', to: '/offline' },
           { label: 'Control sin conexión' },
         ]}
-      />
-      <header className={shared.header}>
-        <div>
-          <p className={shared.eyebrow}>EIDA · Lista exclusiva</p>
-          <h1>
-            {tab === 'prepare'
-              ? 'Preparación del control sin conexión'
-              : tab === 'control'
-                ? 'Control de ingreso sin conexión'
-                : 'Sincronización de ingresos'}
-          </h1>
-          <p className={shared.headerSubtitle}>
+        description={
+          <span className={shared.headerSubtitle}>
             <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
             <span>
               {data.stored?.packet.exam.name ?? `Examen ${examId}`} ·{' '}
               {identity.displayName}
             </span>
-          </p>
-        </div>
-        {canRequest ? (
-          <Link
-            className={workspace.onlineControlLink}
-            to={`/exams/${examId}/entry-control`}
-          >
-            <span>Abrir control online</span>
-            <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
-          </Link>
-        ) : null}
-      </header>
+          </span>
+        }
+        actions={
+          canRequest ? (
+            <Link
+              className={workspace.onlineControlLink}
+              to={`/exams/${examId}/entry-control`}
+            >
+              <span>Abrir control online</span>
+              <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+          ) : null
+        }
+      />
       {!canRequest && online ? (
         <div className={shared.notice}>
           <p>
@@ -210,9 +216,12 @@ function OfflineWorkspace({
           canRequest={Boolean(canRequest) && !data.error}
         />
       ) : null}
+      </PageContainer>
     </main>
   )
 }
+
+const invalidTitleId = 'offline-entry-invalid-title'
 export function OfflineEntryPage() {
   const { examId } = useParams()
   const id = parseExamId(examId)
@@ -220,8 +229,14 @@ export function OfflineEntryPage() {
     <OfflineAccessGate>
       {(identity) =>
         id === null ? (
-          <main className={shared.page}>
-            <p role="alert">El identificador del examen no es válido.</p>
+          <main className={pageStyles.main}>
+            <PageContainer labelledBy={invalidTitleId}>
+              <PageHeader
+                title="Control de ingreso sin conexión"
+                titleId={invalidTitleId}
+              />
+              <p role="alert">El identificador del examen no es válido.</p>
+            </PageContainer>
           </main>
         ) : (
           <OfflineWorkspace

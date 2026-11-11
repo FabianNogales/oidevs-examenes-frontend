@@ -10,23 +10,6 @@
   flex: 1;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin-block: var(--space-5);
-}
-
-.header h1 {
-  font-size: clamp(1.65rem, 3.6vw, 2.2rem);
-  color: var(--brand-navy);
-  margin: 0 0 var(--space-2);
-  letter-spacing: -0.02em;
-}
-
-.header p,
 .muted {
   color: var(--color-text-secondary);
 }

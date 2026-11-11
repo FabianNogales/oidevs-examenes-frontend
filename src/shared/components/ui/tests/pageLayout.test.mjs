@@ -143,6 +143,9 @@ const authorizedConsumers = [
   'features/incidents/pages/ExamIncidentsPage.tsx',
   'features/incidents/pages/IncidentDetailPage.tsx',
   'features/infractions/components/InfractionLayout.tsx',
+  // G6: the two offline pages (outside AppLayout, inside OfflineAccessGate).
+  'features/offline-entry/pages/OfflineEntryPage.tsx',
+  'features/offline-entry/pages/OfflineHomePage.tsx',
   'features/offline-entry/pages/TeacherDistributionPage.tsx',
   'features/portal-calendar/pages/AdminCalendarPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',
@@ -194,6 +197,8 @@ const ownsMain = [
   'features/incidents/pages/ExamIncidentsPage.tsx',
   'features/incidents/pages/IncidentDetailPage.tsx',
   'features/infractions/components/InfractionLayout.tsx',
+  'features/offline-entry/pages/OfflineEntryPage.tsx',
+  'features/offline-entry/pages/OfflineHomePage.tsx',
   'features/offline-entry/pages/TeacherDistributionPage.tsx',
   'features/portal-calendar/pages/CalendarPage.tsx',
   'features/portal-information/pages/InformationPage.tsx',
@@ -215,6 +220,8 @@ const exclusiveBranches = {
   'features/incidents/pages/ExamIncidentsPage.tsx': { main: 2, headers: 2 },
   // One PageLandmark wraps both branches with <main>, except under AdminLayout.
   'features/incidents/pages/IncidentDetailPage.tsx': { main: 1, headers: 2 },
+  // G6: the workspace and the invalid-id branch (h1 «Control de ingreso sin conexión»).
+  'features/offline-entry/pages/OfflineEntryPage.tsx': { main: 2, headers: 2 },
   // Selected-list view (h1 from AssignedListStudentsView), main view and invalid id.
   'features/offline-entry/pages/TeacherDistributionPage.tsx': { main: 3, headers: 2 },
 }

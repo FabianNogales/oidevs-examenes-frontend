@@ -7,9 +7,14 @@ import { offlineError } from '../api/offlineApi'
 import { formatOfflineTime } from '../utils/offlineRules'
 import type { OfflineIdentity } from '../services/offlineIdentity'
 import type { StoredPackage } from '../types/offline.types'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import shared from "../components/OfflineShared.module.css";
 import distStyles from "../components/OfflineDistribution.module.css";
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
+import pageStyles from './OfflinePages.module.css'
+
+const titleId = 'offline-home-title'
 
 function OwnedLists({ identity }: { identity: OfflineIdentity }) {
   const [packages, setPackages] = useState<StoredPackage[]>([])
@@ -43,17 +48,19 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
     ).values(),
   ]
   return (
-    <main className={shared.page}>
-      <header className={shared.header}>
-        <div>
-          <p className={shared.eyebrow}>EIDA · Este dispositivo</p>
-          <h1>Mis listas locales</h1>
-          <p>
+    <main className={pageStyles.main}>
+      <PageContainer labelledBy={titleId}>
+      <PageHeader
+        title="Mis listas locales"
+        titleId={titleId}
+        eyebrow="EIDA · Este dispositivo"
+        description={
+          <>
             Paquetes descargados por {identity.displayName}. Los eventos se
             conservan aunque salgas de una pantalla.
-          </p>
-        </div>
-      </header>
+          </>
+        }
+      />
       <p className={shared.notice}>
         Prepara y usa este espacio en la misma pestaña. Al cerrarla o bloquear
         el acceso puede ser necesario volver a verificar tu cuenta con conexión.
@@ -118,6 +125,7 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
           </article>
         ))}
       </div>
+      </PageContainer>
     </main>
   )
 }
