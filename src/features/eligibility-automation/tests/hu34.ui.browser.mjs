@@ -39,7 +39,13 @@ const catalogCriteria=structuredClone(catalogSeed);
 const empty={data:[],meta:{current_page:1,per_page:10,total:0,last_page:1}};
 const academicRecord={id:81,course_offering_id:8,student_id:14,sis_code:'QA-081',first_names:'Estudiante',last_names:'de prueba',assessments:{FIRST_PARTIAL:{was_taken:true,score:25},SECOND_PARTIAL:{was_taken:true,score:25}},attended_classes:5,total_classes:10,revision:7};
 const academicImportPreview={preview_id:'academic-preview',can_confirm:true,total_rows:2,valid_records:[{student_id:14,sis:'202600001',assessments:{FIRST_PARTIAL:{was_taken:true,score:28},SECOND_PARTIAL:{was_taken:true,score:32}},attended_classes:18,total_classes:20}],errors:[]};
-const academicHistory=[{id:201,user_id:9,action:'ACADEMIC_RECORD_CORRECTED',entity_type:'academic_record',entity_id:81,old_values:{student_id:14,assessments:{FIRST_PARTIAL:{was_taken:true,score:25},SECOND_PARTIAL:{was_taken:true,score:25}},attended_classes:17,total_classes:20,reason:'Motivo anterior'},new_values:{student_id:14,assessments:{FIRST_PARTIAL:{was_taken:true,score:30},SECOND_PARTIAL:{was_taken:true,score:30}},attended_classes:18,total_classes:20,reason:'Prueba HU34: corrección de notas y preservación de decisión manual'},created_at:'2026-11-03T21:37:33Z'},{id:202,user_id:9,action:'ACADEMIC_RECORD_IMPORTED',entity_type:'academic_record',entity_id:81,old_values:null,new_values:{student_id:14},created_at:'2026-11-03T20:00:00Z'}];
+const academicHistory=[{id:201,user_id:9,action:'ACADEMIC_RECORD_CORRECTED',entity_type:'academic_record',entity_id:81,old_values:{student_id:14,assessments:{FIRST_PARTIAL:{was_taken:true,score:25},SECOND_PARTIAL:{was_taken:true,score:25}},attended_classes:17,total_classes:20,reason:'Motivo anterior'},new_values:{student_id:14,assessments:{FIRST_PARTIAL:{was_taken:true,score:30},SECOND_PARTIAL:{was_taken:true,score:30}},attended_classes:18,total_classes:20,reason:'Prueba HU34: corrección de notas y preservación de decisión manual'},created_at:'2026-11-03T21:37:33Z'},{id:202,user_id:9,action:'ACADEMIC_RECORD_IMPORTED',entity_type:'academic_record',entity_id:81,old_values:null,new_values:{student_id:14},created_at:'2026-11-03T20:00:00Z'},
+// Real backend shapes (7779b48). Offering events reuse id 81 on purpose: it collides with academic record 81.
+{id:203,user_id:9,action:'ACADEMIC_IMPORT_CONFIRMED',entity_type:'CourseOffering',entity_id:81,old_values:null,new_values:{mode:'MERGE',preview_id:'2899b84b-a33b-428a-a489-55ecc9baef10',record_ids:[81],created_records:0,updated_records:1,unchanged_records:2},created_at:'2026-11-03T19:00:00Z'},
+{id:204,user_id:9,action:'ACADEMIC_IMPORT_PREVIEWED',entity_type:'CourseOffering',entity_id:81,old_values:null,new_values:{mode:'MERGE',errors:1,preview_id:'28baa75d-bc3d-4a1c-a243-d00b4499a2c3',total_rows:3},created_at:'2026-11-03T18:00:00Z'},
+{id:205,user_id:9,action:'ACADEMIC_RECORD_CORRECTED',entity_type:'AcademicRecord',entity_id:81,old_values:{id:81,revision:1,student_id:14,updated_by:9,assessments:{},total_classes:20,attended_classes:16,course_offering_id:8},new_values:{id:81,mode:'MERGE',revision:2,student_id:14,updated_by:9,assessments:{},total_classes:20,attended_classes:15,correction_reason:'Ajuste parcial de asistencia',course_offering_id:8},created_at:'2026-11-03T17:00:00Z'},
+{id:206,user_id:9,action:'ACADEMIC_RECORD_IMPORTED',entity_type:'AcademicRecord',entity_id:81,old_values:null,new_values:{id:81,mode:'MERGE',revision:1,student_id:14,updated_by:9,assessments:{},total_classes:20,attended_classes:10,correction_reason:'',course_offering_id:8},created_at:'2026-11-03T16:00:00Z'},
+{id:207,user_id:9,action:'ACADEMIC_IMPORT_CONFIRMED',entity_type:'CourseOffering',entity_id:81,old_values:null,new_values:{preview_id:'111657f8-e468-4a29-af13-314ced6aa89f',record_ids:[81]},created_at:'2026-11-03T15:00:00Z'}];
 const evaluationHistory=[{id:71,preview_id:'00000000-0000-4000-a000-000000000071',exam_id:17,eligibility_policy_id:7,created_by:2,created_at:'2026-11-03T14:00:00Z',confirmed_at:'2026-11-03T14:05:00Z',confirmation:{evaluation_id:71,updated:1,unchanged:2,manual_preserved:1,pending:2}},{id:70,preview_id:'00000000-0000-4000-a000-000000000070',exam_id:17,eligibility_policy_id:7,created_by:2,created_at:'2026-11-02T14:00:00Z',confirmed_at:null,confirmation:null}];
 const resultFixture={student:{id:11,display_name:'Estudiante de prueba',sis:'QA-001'},computed_status:'PENDING',current_status:'ELIGIBLE',effective_status:'PENDING',manual_override_preserved:false,will_update:false,reason:'Faltan datos académicos para resolver el criterio.',missing_fields:['assessments.FIRST_PARTIAL','assessments.SECOND_PARTIAL'],eligibility_revision:2,criteria_results:[{code:'SECOND_INSTANCE_PARTIAL_AVERAGE',name:required.name,status:'PENDING',actual_value:null,required_value:25,reason:'Razón original conservada.'}]};
 const evaluationFixture={id:71,preview_id:'00000000-0000-4000-a000-000000000071',exam_id:17,expires_at:'2026-11-03T14:30:00Z',created_at:'2026-11-03T14:00:00Z',confirmed_at:null,configuration,catalog:catalogCriteria,confirmation:null,results:{data:[resultFixture,{...resultFixture,student:{...resultFixture.student,id:12}},{...resultFixture,student:{id:13,display_name:'Bruno Inscrito Demo',sis:'QA-003'},computed_status:'ELIGIBLE',current_status:'INELIGIBLE',effective_status:'INELIGIBLE',manual_override_preserved:true,will_update:false,reason:'Se conserva la decisión manual vigente.',missing_fields:[],criteria_results:[{code:'SECOND_INSTANCE_PARTIAL_AVERAGE',name:required.name,status:'PASSED',actual_value:30,required_value:25}]}],meta:{...empty.meta,total:3}},summary:{total:3,eligible:1,ineligible:0,pending:2}};
@@ -118,7 +124,7 @@ const makeMergePreview=async(file,reason)=>{
 window.hu34Ui={styles,calls:[],mode:'normal',configuration:structuredClone(configuration),academicRecord:structuredClone(academicRecord),offeringId:8,evaluation:evaluationFixture,reset(path='/teacher/exams/17/eligibilities/automatic?view=past&search=QA&page=2',mode='normal'){
 this.mode=mode;this.mergePending=null;this.mergeConfirmation=null;this.mergeFailed=false;this.calls=[];this.pages=null;this.expired=false;this.holdFilter=null;this.releaseReview=null;this.configuration=structuredClone(configuration);this.academicRecord=structuredClone(academicRecord);this.offeringId=8;catalogCriteria.splice(0,catalogCriteria.length,...structuredClone(catalogSeed));root.render(e(MemoryRouter,{key:++key,initialEntries:[path]},e(Routes,null,e(Route,{path:'/teacher/exams/:examId/eligibilities',element:e(ExamEligibilitiesPage)}),e(Route,{path:'/teacher/exams/:examId/eligibilities/automatic',element:e(EligibilityAutomationPage)}),e(Route,{path:'/admin/eligibility-policies',element:e(AdminEligibilityPoliciesPage)}))));},client:{
 async get(url,config){hu34Ui.calls.push({method:'get',url,params:config?.params});
-if(url.endsWith('/options')||url.endsWith('/configuration')){if(hu34Ui.mode==='loading')return new Promise(()=>{});if(hu34Ui.mode==='error')throw error(500,'No se pudo cargar el catálogo de prueba.');return {data:{data:url.endsWith('/options')?options:hu34Ui.mode==='no-criteria'?{...hu34Ui.configuration,mandatory_criteria:[],selected_criteria:[],criteria:[],inactive_criteria:[]}:hu34Ui.configuration}}}
+if(url.endsWith('/options')||url.endsWith('/configuration')){if(hu34Ui.mode==='loading')return new Promise(()=>{});if(hu34Ui.mode==='error')throw error(500,'No se pudo cargar el catálogo de prueba.');return {data:{data:url.endsWith('/options')?options:hu34Ui.mode==='no-criteria'?{...hu34Ui.configuration,mandatory_criteria:[],selected_criteria:[],criteria:[],inactive_criteria:[]}:hu34Ui.mode==='revision-zero'?{...hu34Ui.configuration,revision:0,configured_evaluation_type:null,manual_review_conditions:null,mandatory_criteria:[],selected_criteria:[],criteria:[],inactive_criteria:[]}:hu34Ui.configuration}}}
 if(url==='/admin/eligibility-criteria')return {data:{data:catalogCriteria,meta:{...empty.meta,total:catalogCriteria.length},catalog_revision:'catalog-r7'}};
 if(url.startsWith('/admin/eligibility-criteria/')&&url.endsWith('/history'))return {data:{data:criteriaHistory,meta:{...empty.meta,total:criteriaHistory.length}}};
 if(url.startsWith('/admin/eligibility-criteria/'))return {data:{data:catalogCriteria.find(c=>c.code===decodeURIComponent(url.split('/').at(-1)))}};
@@ -693,11 +699,55 @@ try {
           historySummary.academic[0].text,
           /student_id|old_values|new_values|assessment_key|ACADEMIC_RECORD_CORRECTED/,
         )
+        // Estabilización H5: a created record is labelled as such (was the generic import heading).
         assert.equal(
           historySummary.academic[1].heading,
-          'Importación de datos académicos',
+          'Registro académico creado',
         )
         assert.equal(historySummary.academic[1].hasDetails, false)
+        assert.doesNotMatch(
+          historySummary.academic[1].text,
+          /1 registro académico creado/,
+        )
+        const [, , confirmed, previewed, mergeUpdate, mergeCreate, bare] =
+          historySummary.academic
+        // Offering events are never attributed to the student whose record id matches the offering id.
+        assert.equal(confirmed.heading, 'Importación confirmada')
+        assert.match(
+          confirmed.text,
+          /Importación parcial \(MERGE\) · Creados: 0 · Actualizados: 1 · Sin cambios: 2/,
+        )
+        assert.equal(previewed.heading, 'Vista previa de importación')
+        assert.match(
+          previewed.text,
+          /Importación parcial \(MERGE\) · 3 filas · 1 con errores/,
+        )
+        for (const offeringEvent of [confirmed, previewed, bare]) {
+          assert.doesNotMatch(
+            offeringEvent.text,
+            /Bruno|SIS|Estudiante|registro académico creado|→/,
+          )
+          assert.match(offeringEvent.text, /Responsable: Usuario #9/)
+        }
+        // Missing counters are omitted, never defaulted to 1.
+        assert.equal(bare.heading, 'Importación confirmada')
+        assert.doesNotMatch(bare.text, /Creados|Actualizados|Sin cambios|\b1 registro/)
+        assert.equal(
+          mergeUpdate.heading,
+          'Actualización por importación parcial (MERGE)',
+        )
+        assert.match(mergeUpdate.text, /Bruno Inscrito Demo · SIS 202600002/)
+        assert.match(mergeUpdate.text, /Asistencia\s+16 \/ 20 → 15 \/ 20/)
+        assert.match(mergeUpdate.text, /Motivo\s+Ajuste parcial de asistencia/)
+        assert.equal(mergeCreate.heading, 'Registro académico creado')
+        assert.match(mergeCreate.text, /Alta por importación parcial \(MERGE\)/)
+        assert.match(mergeCreate.text, /Bruno Inscrito Demo · SIS 202600002/)
+        assert.match(mergeCreate.text, /Asistencia\s+Sin dato → 10 \/ 20/)
+        assert.doesNotMatch(mergeCreate.text, /10 \/ 20 → 10 \/ 20|Motivo/)
+        assert.doesNotMatch(
+          historySummary.academic.map((card) => card.text).join('\n'),
+          /CourseOffering|AcademicRecord|preview_id|correction_reason|record_ids/,
+        )
         assert.match(
           historySummary.evaluations[0].text,
           /Evaluación de habilitación/,
@@ -1739,6 +1789,131 @@ try {
   assert.equal(correctedAttendance.revision, 7)
   result.checks.push(
     'MERGE attendance, zero, two assessments, before/proposed, actions, justification, invalidation, conflict, expiry, retry, responsive and attendance-only correction',
+  )
+  // Estabilización H1: the review cannot be generated from an unsaved configuration.
+  const generateLabel = 'Generar revisión de habilitaciones'
+  const generateState = () =>
+    evaluate(
+      `(()=>{const b=[...document.querySelectorAll('main button')].find(el=>el.textContent.trim()===${JSON.stringify(generateLabel)});const id=b.getAttribute('aria-describedby');const note=id?document.getElementById(id):null;return {disabled:b.disabled,describedBy:id,role:note?.getAttribute('role')??null,text:note?.textContent.trim()??null,notes:document.querySelectorAll('#evaluation-blocked').length}})()`,
+    )
+  const previewCalls = () =>
+    evaluate(
+      `hu34Ui.calls.filter(c=>c.method==='post'&&c.url.endsWith('/evaluations/preview')).map(c=>c.payload)`,
+    )
+  await reset(auto, 'revision-zero')
+  await wait('document.getElementById("configuration-title")')
+  await wait(
+    `document.body.innerText.includes('Guarda la configuración y después genera la')`,
+  )
+  assert.equal(
+    await evaluate(`document.body.innerText.includes('Revisa y confirma para aplicar el resultado')`),
+    false,
+  )
+  await button('Revisar y aplicar')
+  let blocked = await generateState()
+  assert.equal(blocked.disabled, true)
+  assert.equal(blocked.describedBy, 'evaluation-blocked')
+  assert.equal(blocked.role, 'status')
+  assert.match(blocked.text, /Primero guarda la configuración de criterios/)
+  assert.match(blocked.text, /sin seleccionar criterios opcionales/)
+  await evaluate(
+    `[...document.querySelectorAll('main button')].find(el=>el.textContent.trim()===${JSON.stringify(generateLabel)}).click()`,
+  )
+  await pause(250)
+  assert.deepEqual(await previewCalls(), [])
+  await noOverflow('revision 0 blocked review')
+  // Saving with zero optional criteria is enough to unlock the review.
+  await button('Configurar criterios')
+  await evaluate('hu34Ui.mode="normal"')
+  await button('Guardar configuración')
+  await wait(`hu34Ui.calls.some(c=>c.method==='put')`)
+  const firstSave = await evaluate(
+    `hu34Ui.calls.find(c=>c.method==='put').payload`,
+  )
+  assert.equal(firstSave.revision, 0)
+  assert.deepEqual(firstSave.criteria, [])
+  await wait(`document.body.innerText.includes('La revisión vigente es 5')`)
+  await button('Revisar y aplicar')
+  blocked = await generateState()
+  assert.deepEqual(blocked, {
+    disabled: false,
+    describedBy: null,
+    role: null,
+    text: null,
+    notes: 0,
+  })
+  await button(generateLabel)
+  await wait(
+    `hu34Ui.calls.some(c=>c.method==='post'&&c.url.endsWith('/evaluations/preview'))`,
+  )
+  const unlocked = await previewCalls()
+  assert.equal(unlocked.length, 1)
+  assert.equal(unlocked[0].configuration_revision, 5)
+  // Unsaved changes block the review until they are saved or reverted.
+  await reset(auto)
+  await wait('document.getElementById("configuration-title")')
+  await wait('document.querySelector("#manual-review-conditions")')
+  const savedConditions = await evaluate(
+    'document.querySelector("#manual-review-conditions").value',
+  )
+  await button('Revisar y aplicar')
+  assert.equal((await generateState()).disabled, false)
+  await button('Configurar criterios')
+  await input('#manual-review-conditions', 'Condición todavía sin guardar')
+  await button('Revisar y aplicar')
+  blocked = await generateState()
+  assert.equal(blocked.disabled, true)
+  assert.equal(blocked.describedBy, 'evaluation-blocked')
+  assert.equal(blocked.role, 'status')
+  assert.match(blocked.text, /cambios sin guardar en la configuración/)
+  assert.deepEqual(await previewCalls(), [])
+  await button('Configurar criterios')
+  await input('#manual-review-conditions', savedConditions)
+  await button('Revisar y aplicar')
+  assert.equal((await generateState()).disabled, false)
+  assert.equal((await generateState()).notes, 0)
+  // Estabilización H3: the records table tells the four assessment states apart.
+  await reset(auto, 'correction')
+  await wait('document.getElementById("configuration-title")')
+  await button('Datos académicos')
+  await wait('document.body.innerText.includes("Estudiante de prueba")')
+  const scoreCells = async (assessments) => {
+    await evaluate(
+      `hu34Ui.academicRecord={...hu34Ui.academicRecord,assessments:${JSON.stringify(assessments)}}`,
+    )
+    const before = await evaluate(
+      `hu34Ui.calls.filter(c=>c.method==='get'&&c.url.endsWith('/academic-records')).length`,
+    )
+    await button('Buscar')
+    await wait(
+      `hu34Ui.calls.filter(c=>c.method==='get'&&c.url.endsWith('/academic-records')).length>${before}`,
+    )
+    await pause(250)
+    return evaluate(
+      `(()=>{const row=[...document.querySelectorAll('main table tbody tr')].find(tr=>tr.innerText.includes('QA-081'));return [...row.cells].map(td=>td.innerText.trim())})()`,
+    )
+  }
+  const pendingScores = await scoreCells({
+    FIRST_PARTIAL: { was_taken: true, score: null },
+    SECOND_PARTIAL: { was_taken: false, score: null },
+  })
+  assert.ok(pendingScores.includes('Rindió · sin nota'), pendingScores.join('|'))
+  assert.ok(pendingScores.includes('No rindió'), pendingScores.join('|'))
+  const missingScores = await scoreCells({})
+  assert.equal(
+    missingScores.filter((cell) => cell === 'Sin registro').length,
+    2,
+    missingScores.join('|'),
+  )
+  const zeroScores = await scoreCells({
+    FIRST_PARTIAL: { was_taken: true, score: 0 },
+    SECOND_PARTIAL: { was_taken: true, score: 70 },
+  })
+  assert.ok(zeroScores.includes('0') && zeroScores.includes('70'), zeroScores.join('|'))
+  for (const cells of [pendingScores, missingScores, zeroScores])
+    assert.equal(cells.includes('No rendido'), false)
+  result.checks.push(
+    'stabilization: review blocked at revision 0 and with unsaved changes, unlocked after saving zero optional criteria; four score states; history offering events, real counters, MERGE labels, created records and correction_reason',
   )
   result.checks.push(
     'optional parameters/revision unchanged',

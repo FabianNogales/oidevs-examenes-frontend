@@ -44,9 +44,11 @@ import { CriterionResults, EvaluationReview } from '../components/EvaluationRevi
 import { getAcademicCsvLayout, getPersistedAcademicCriteria } from '../utils/academicCsv'
 import { displayStatus, displayValue } from '../utils/evaluationReview'
 import {
-  academicActionLabel,
   academicHistoryChanges,
   academicHistoryReason,
+  academicHistorySummary,
+  academicScoreLabel,
+  isAcademicRecordEvent,
   assessmentLabel,
   combinationLabel,
   conditionLabel,
@@ -150,9 +152,7 @@ function isPage<T>(value: ApiPage<T> | null): value is ApiPage<T> {
 }
 
 function academicScore(record: AcademicRecord, key: string): string {
-  const assessment = record.assessments?.[key]
-  if (!assessment?.was_taken || assessment.score === null) return 'No rendido'
-  return String(assessment.score)
+  return academicScoreLabel(record.assessments?.[key])
 }
 
 function academicAttendancePercentage(record: AcademicRecord): string {
@@ -771,6 +771,16 @@ export function EligibilityAutomationPage() {
     JSON.stringify(selectedCriteria) !== JSON.stringify(configuration.selected_criteria.filter((item) => !item.required && !item.locked)) ||
     manualReviewConditions !== (configuration.manual_review_conditions ?? '')
   )
+  // El servidor solo evalúa una configuración guardada (revisión >= 1) y sin
+  // cambios locales pendientes; se bloquea aquí con una explicación.
+  const evaluationBlockedReason =
+    configuration === null
+      ? null
+      : configuration.revision < 1
+        ? 'Primero guarda la configuración de criterios en «Configurar criterios». Puedes guardarla sin seleccionar criterios opcionales.'
+        : configurationDirty
+          ? 'Tienes cambios sin guardar en la configuración. Guárdalos en «Configurar criterios» antes de generar la revisión.'
+          : null
 
   const loadConfiguration = useCallback(async () => {
     if (examId === null) return
@@ -1015,6 +1025,7 @@ export function EligibilityAutomationPage() {
 
   async function createEvaluationPreview() {
     if (examId === null || configuration === null) return
+    if (evaluationBlockedReason) return
     setEvaluationWorking(true)
     setEvaluationError('')
     setEvaluationMustRefresh(false)
@@ -1328,7 +1339,8 @@ export function EligibilityAutomationPage() {
                 <p className={styles.note}>
                   Sin criterios automáticos aplicables, el servidor propone habilitar
                   a los estudiantes inscritos activos y conserva las decisiones
-                  protegidas. Revisa y confirma para aplicar el resultado.
+                  protegidas. Guarda la configuración y después genera la
+                  revisión para comprobar y aplicar el resultado.
                 </p>
               ) : null}
               <section
@@ -1576,7 +1588,13 @@ export function EligibilityAutomationPage() {
                 type="button"
                 className={sharedStyles.primaryButton}
                 disabled={
-                  !configuration || savingConfiguration || evaluationWorking
+                  !configuration ||
+                  savingConfiguration ||
+                  evaluationWorking ||
+                  evaluationBlockedReason !== null
+                }
+                aria-describedby={
+                  evaluationBlockedReason ? 'evaluation-blocked' : undefined
                 }
                 onClick={() => void createEvaluationPreview()}
               >
@@ -1584,6 +1602,11 @@ export function EligibilityAutomationPage() {
                   ? 'Procesando…'
                   : 'Generar revisión de habilitaciones'}
               </button>
+              {evaluationBlockedReason ? (
+                <p id="evaluation-blocked" role="status">
+                  {evaluationBlockedReason}
+                </p>
+              ) : null}
               {evaluationError ? (
                 <div role="alert" className={styles.error}>
                   <p>{evaluationError}</p>
@@ -1875,11 +1898,19 @@ function HistoryCard({
   entry: AcademicHistoryEntry
   records: ApiPage<AcademicRecord> | null
 }) {
-  const studentId = entry.new_values?.student_id ?? entry.old_values?.student_id
-  const student = records?.data.find(
-    (record) =>
-      record.student_id === studentId || record.id === entry.entity_id,
-  )
+  // Los eventos de la oferta (vista previa, confirmación) no pertenecen a un
+  // estudiante: su entity_id es el de la oferta y no debe cruzarse con registros.
+  const forRecord = isAcademicRecordEvent(entry.entity_type)
+  const studentId = forRecord
+    ? (entry.new_values?.student_id ?? entry.old_values?.student_id)
+    : undefined
+  const student = forRecord
+    ? records?.data.find(
+        (record) =>
+          record.student_id === studentId || record.id === entry.entity_id,
+      )
+    : undefined
+  const summary = academicHistorySummary(entry)
   const auditName =
     [entry.new_values?.first_names, entry.new_values?.last_names]
       .filter(
@@ -1894,33 +1925,31 @@ function HistoryCard({
       )
       .join(' ')
   const auditSis = entry.new_values?.sis_code ?? entry.old_values?.sis_code
-  const studentName = student
-    ? `${student.first_names} ${student.last_names}`.trim()
-    : auditName
-  const studentSis =
-    student?.sis_code ?? (typeof auditSis === 'string' ? auditSis : null)
-  const changes = academicHistoryChanges(entry.old_values, entry.new_values)
+  const studentName = !forRecord
+    ? ''
+    : student
+      ? `${student.first_names} ${student.last_names}`.trim()
+      : auditName
+  const studentSis = !forRecord
+    ? null
+    : (student?.sis_code ?? (typeof auditSis === 'string' ? auditSis : null))
+  const changes = forRecord
+    ? academicHistoryChanges(entry.old_values, entry.new_values)
+    : []
   const reason = academicHistoryReason(entry.old_values, entry.new_values)
   const isImport = entry.action.includes('IMPORT')
-  const importedCount = academicImportCount(entry)
 
   return (
     <article className={styles.historyItem}>
-      <h4>
-        {isImport
-          ? 'Importación de datos académicos'
-          : academicActionLabel(entry.action)}
-      </h4>
+      <h4>{summary.title}</h4>
       <p>
         <time dateTime={entry.created_at}>
           {evaluationDateLabel(entry.created_at)}
         </time>
       </p>
-      <p className={styles.historyLead}>
-        {isImport
-          ? `${importedCount} ${importedCount === 1 ? 'registro académico creado' : 'registros académicos importados'}`
-          : '1 registro académico actualizado'}
-      </p>
+      {summary.lead ? (
+        <p className={styles.historyLead}>{summary.lead}</p>
+      ) : null}
       {studentName || studentSis ? (
         <p>
           {studentName || 'Estudiante'}
@@ -1957,13 +1986,4 @@ function HistoryCard({
       ) : null}
     </article>
   )
-}
-
-function academicImportCount(entry: AcademicHistoryEntry): number {
-  const candidates = [entry.new_values?.created_records]
-  const count = candidates.find(
-    (value): value is number =>
-      typeof value === 'number' && Number.isInteger(value) && value > 0,
-  )
-  return count ?? 1
 }
