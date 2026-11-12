@@ -9,6 +9,7 @@ import type { ExamEligibility } from '@/features/eligibilities/types/eligibility
 import { httpClient } from '@/shared/api/httpClient'
 import type {
   AcademicHistoryEntry,
+  AcademicImportMode,
   AcademicRecord,
   AcademicRecordPayload,
   ApiPage,
@@ -163,9 +164,14 @@ export async function getImportSchema(
 export async function previewAcademicImport(
   offeringId: number,
   file: File,
+  options?: { mode: AcademicImportMode; reason?: string },
 ): Promise<CsvImportPreview> {
   const formData = new FormData()
   formData.append('file', file)
+  if (options) {
+    formData.append('mode', options.mode)
+    if (options.reason !== undefined) formData.append('reason', options.reason)
+  }
   try {
     const response = await httpClient.post<{ data: CsvImportPreview }>(
       `/academic-offerings/${offeringId}/academic-records/imports/preview`,

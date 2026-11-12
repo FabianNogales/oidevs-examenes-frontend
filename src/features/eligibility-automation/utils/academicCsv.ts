@@ -118,7 +118,7 @@ export async function prepareAcademicCsv(
   file: Pick<File, 'name' | 'size' | 'arrayBuffer'>,
   schema: ImportSchema,
   layout = getAcademicCsvLayout([], schema),
-): Promise<{ csv: string; rows: AcademicCsvRow[] }> {
+): Promise<{ csv: string; rows: AcademicCsvRow[]; sourceRows: number[] }> {
   const expectedHeaders = layout.columns.map(({ key }) => key)
   const { assessmentKeys } = layout
   if (assessmentKeys.length === 0) {
@@ -307,6 +307,7 @@ export async function prepareAcademicCsv(
   return {
     csv: backendCsv,
     rows,
+    sourceRows: rows.flatMap((_, index) => assessmentKeys.map(() => index + 2)),
   }
 }
 
@@ -381,11 +382,179 @@ function parseNonNegativeNumber(
   return value
 }
 
-function parseCsv(content: string): string[][] {
+export function getAcademicMergeTemplates(schema: ImportSchema) {
+  if (!schema.modes?.includes('MERGE') || !schema.merge) return []
+  const merge = schema.merge
+  return [
+    {
+      id: 'attendance',
+      label: 'Solo asistencia',
+      columns: merge.attendance_columns,
+    },
+    {
+      id: 'assessment',
+      label: 'Evaluación individual',
+      columns: merge.assessment_columns,
+    },
+    {
+      id: 'combined',
+      label: 'Evaluaciones y asistencia',
+      columns: merge.allowed_columns,
+    },
+  ].filter(
+    ({ columns }) =>
+      merge.required_columns.every((column) => columns.includes(column)) &&
+      columns.every((column) => merge.allowed_columns.includes(column)),
+  )
+}
+
+export function downloadAcademicMergeTemplate(columns: readonly string[]) {
+  const blob = new Blob([columns.join(',') + '\r\n'], {
+    type: 'text/csv;charset=utf-8',
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'plantilla_actualizacion_academica.csv'
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+export type PreparedAcademicMerge = {
+  csv: string
+  rows: Record<string, string>[]
+  sourceRows: number[]
+}
+
+export async function prepareAcademicMergeCsv(
+  file: Pick<File, 'name' | 'size' | 'arrayBuffer'>,
+  schema: ImportSchema,
+): Promise<PreparedAcademicMerge> {
+  const merge = schema.merge
+  if (
+    !schema.modes?.includes('MERGE') ||
+    !merge ||
+    merge.empty_values !== 'PRESERVE'
+  )
+    throw new AcademicCsvValidationError(
+      'El esquema no admite la importación parcial.',
+    )
+  if (!file.name.toLowerCase().endsWith('.csv') || file.size === 0)
+    throw new AcademicCsvValidationError('Selecciona un archivo CSV con datos.')
+  if (file.size > schema.max_file_kb * 1024)
+    throw new AcademicCsvValidationError(
+      'El archivo supera el tamaño permitido.',
+    )
+  if (
+    schema.delimiter !== ',' ||
+    schema.encoding.replace(/[-_]/g, '').toUpperCase() !== 'UTF8'
+  )
+    throw new AcademicCsvValidationError(
+      'El esquema requiere un formato CSV no compatible.',
+    )
+  let content: string
+  try {
+    content = new TextDecoder('utf-8', { fatal: true }).decode(
+      await file.arrayBuffer(),
+    )
+  } catch {
+    throw new AcademicCsvValidationError(
+      'El archivo no contiene texto UTF-8 válido.',
+    )
+  }
+  if (content.includes('\0'))
+    throw new AcademicCsvValidationError(
+      'El archivo contiene caracteres nulos.',
+    )
+  const records = parseCsv(content, true)
+  const headers = (records.shift() ?? []).map((header, index) =>
+    index === 0 ? header.replace(/^\uFEFF/, '') : header,
+  )
+  if (
+    new Set(headers).size !== headers.length ||
+    headers.some((header) => !merge.allowed_columns.includes(header)) ||
+    !merge.required_columns.every((header) => headers.includes(header))
+  )
+    throw new AcademicCsvValidationError(
+      'Encabezados desconocidos, duplicados o incompletos para MERGE.',
+    )
+  if (!records.length || records.length > schema.max_rows)
+    throw new AcademicCsvValidationError(
+      'El archivo debe contener entre 1 y ' + schema.max_rows + ' filas.',
+    )
+  const seen = new Set<string>()
+  const rows = records.map((cells, index) => {
+    const rowNumber = index + 2
+    const fail = (message: string): never => {
+      throw new AcademicCsvValidationError('Fila ' + rowNumber + ': ' + message)
+    }
+    if (cells.length !== headers.length)
+      fail('cantidad incorrecta de columnas.')
+    const row = Object.fromEntries(
+      headers.map((header, column) => [header, cells[column].trim()]),
+    )
+    if (!row.sis || row.sis.length > 50) fail('indica un SIS válido.')
+    const key = row.assessment_key ?? ''
+    const taken = row.was_taken ?? ''
+    const score = row.score ?? ''
+    const attended = row.attended_classes ?? ''
+    const total = row.total_classes ?? ''
+    if (key && !schema.assessment_keys.includes(key))
+      fail('evaluación no admitida.')
+    if (taken && !schema.was_taken_values.includes(taken))
+      fail('was_taken debe ser true o false.')
+    if (!key && (taken !== '' || score !== ''))
+      fail('indica assessment_key para la evaluación.')
+    if ((attended === '') !== (total === ''))
+      fail('proporciona ambas cantidades de asistencia.')
+    const targets = []
+    if (key && (taken !== '' || score !== '')) {
+      validateScore(score, 'Nota', rowNumber, schema)
+      if (taken === 'false' && score !== '')
+        fail('una evaluación no rendida no puede tener nota.')
+      targets.push('assessment:' + key)
+    }
+    if (total !== '') {
+      const a = Number(attended),
+        t = Number(total)
+      if (
+        !Number.isInteger(a) ||
+        !Number.isInteger(t) ||
+        a < 0 ||
+        t < 1 ||
+        a > t ||
+        t > 1000000
+      )
+        fail('cantidades de asistencia inválidas.')
+      targets.push('attendance')
+    }
+    if (!targets.length) fail('la fila no aporta datos para modificar.')
+    for (const target of targets) {
+      const identity = row.sis + ':' + target
+      if (seen.has(identity))
+        fail('datos duplicados para el mismo SIS y ' + target + '.')
+      seen.add(identity)
+    }
+    return row
+  })
+  // Cada registro lógico se envía una sola vez. Vacíos y columnas omitidas se conservan.
+  const csv = [
+    headers.join(','),
+    ...rows.map((row) =>
+      headers.map((header) => escapeCsv(row[header])).join(','),
+    ),
+    '',
+  ].join('\r\n')
+  return { csv, rows, sourceRows: rows.map((_, index) => index + 2) }
+}
+
+function parseCsv(content: string, includeEmptyRecords = false): string[][] {
   const rows: string[][] = []
   let row: string[] = []
   let cell = ''
   let quoted = false
+  let recordStarted = false
+  let afterQuote = false
 
   for (let index = 0; index < content.length; index += 1) {
     const character = content[index]
@@ -395,24 +564,47 @@ function parseCsv(content: string): string[][] {
         index += 1
       } else if (character === '"') {
         quoted = false
+        afterQuote = true
       } else {
         cell += character
       }
       continue
     }
+    if (
+      includeEmptyRecords &&
+      afterQuote &&
+      ![',', '\n', '\r'].includes(character)
+    ) {
+      throw new AcademicCsvValidationError(
+        'CSV con caracteres después de una comilla de cierre.',
+      )
+    }
+    if (includeEmptyRecords && character === '"' && cell.length !== 0) {
+      throw new AcademicCsvValidationError('CSV con comillas inválidas.')
+    }
     if (character === '"' && cell.length === 0) {
       quoted = true
+      recordStarted = true
     } else if (character === ',') {
       row.push(cell)
       cell = ''
+      afterQuote = false
+      recordStarted = true
     } else if (character === '\n' || character === '\r') {
       row.push(cell)
-      if (row.some((value) => value.trim() !== '')) rows.push(row)
+      if (
+        row.some((value) => value.trim() !== '') ||
+        (includeEmptyRecords && recordStarted)
+      )
+        rows.push(row)
       row = []
       cell = ''
+      afterQuote = false
+      recordStarted = false
       if (character === '\r' && content[index + 1] === '\n') index += 1
     } else {
       cell += character
+      recordStarted = true
     }
   }
   if (quoted) {
@@ -421,10 +613,13 @@ function parseCsv(content: string): string[][] {
     )
   }
   row.push(cell)
-  if (row.some((value) => value.trim() !== '')) rows.push(row)
+  if (
+    row.some((value) => value.trim() !== '') ||
+    (includeEmptyRecords && recordStarted)
+  )
+    rows.push(row)
   return rows
 }
-
 function escapeCsv(value: string): string {
   return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
 }

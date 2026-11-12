@@ -488,7 +488,7 @@ function CorrectionForm({
           </fieldset>
         )
       })}
-      {layout.includesAttendance ? <div className={styles.formGrid}>
+      {layout.includesAttendance || Object.keys(record.assessments ?? {}).length === 0 ? <div className={styles.formGrid}>
         <label>
           Clases asistidas
           <input
@@ -565,7 +565,8 @@ function CorrectionForm({
           className={sharedStyles.primaryButton}
           disabled={
             saving ||
-            Object.keys(values.assessments).length === 0 ||
+            (Object.keys(values.assessments).length === 0 &&
+              (values.attended_classes === null || values.total_classes === null)) ||
             !values.reason.trim()
           }
         >

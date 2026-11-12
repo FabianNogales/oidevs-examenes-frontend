@@ -1128,3 +1128,193 @@ test('applying confirms the whole snapshot by preview id, without body, filters 
   assert.deepEqual(calls[0].args[2], { params: undefined })
   assert.equal(confirmation.updated, 46)
 })
+
+// HU34 E4 — the partial CSV preserves exactly the fields requested by the user.
+const mergeSchema = {
+  columns: [
+    'sis',
+    'assessment_key',
+    'was_taken',
+    'score',
+    'attended_classes',
+    'total_classes',
+  ],
+  assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'],
+  encoding: 'UTF-8',
+  delimiter: ',',
+  max_rows: 1000,
+  max_file_kb: 5120,
+  score_min: 0,
+  score_max: 100,
+  score_decimal_places: 2,
+  was_taken_values: ['true', 'false'],
+  modes: ['CREATE_ONLY', 'MERGE'],
+  default_mode: 'CREATE_ONLY',
+  merge: {
+    allowed_columns: [
+      'sis',
+      'assessment_key',
+      'was_taken',
+      'score',
+      'attended_classes',
+      'total_classes',
+    ],
+    required_columns: ['sis'],
+    attendance_columns: ['sis', 'attended_classes', 'total_classes'],
+    assessment_columns: ['sis', 'assessment_key', 'was_taken', 'score'],
+    empty_values: 'PRESERVE',
+    reason_required_for_updates: true,
+    reason_max_length: 500,
+    confirmation_revalidates_revisions: true,
+  },
+}
+const partialCsvFile = (text) => ({
+  name: 'partial.csv',
+  size: Buffer.byteLength(text),
+  arrayBuffer: async () => new TextEncoder().encode(text).buffer,
+})
+const loadCsv = () =>
+  createHarness().load(resolve(featureRoot, 'utils/academicCsv.ts'))
+
+test('MERGE templates are derived from the published import schema', () => {
+  const csv = loadCsv()
+  assert.deepEqual(
+    csv.getAcademicMergeTemplates(mergeSchema).map((t) => t.columns),
+    [
+      mergeSchema.merge.attendance_columns,
+      mergeSchema.merge.assessment_columns,
+      mergeSchema.merge.allowed_columns,
+    ],
+  )
+  assert.deepEqual(
+    csv.getAcademicMergeTemplates({ ...mergeSchema, merge: undefined }),
+    [],
+  )
+})
+
+test('MERGE attendance without an assessment preserves zero and original row mapping', async () => {
+  const csv = loadCsv()
+  const result = await csv.prepareAcademicMergeCsv(
+    partialCsvFile('sis,attended_classes,total_classes\n202600001,0,20\n'),
+    mergeSchema,
+  )
+  assert.equal(
+    result.csv,
+    'sis,attended_classes,total_classes\r\n202600001,0,20\r\n',
+  )
+  assert.deepEqual(result.rows, [
+    { sis: '202600001', attended_classes: '0', total_classes: '20' },
+  ])
+  assert.deepEqual(result.sourceRows, [2])
+  assert.doesNotMatch(result.csv, /assessment_key|was_taken/)
+})
+
+test('MERGE one or two assessments leaves empty and omitted fields untouched', async () => {
+  const csv = loadCsv()
+  const result = await csv.prepareAcademicMergeCsv(
+    partialCsvFile(
+      'score,sis,assessment_key,was_taken\n0,1,FIRST_PARTIAL,\n,1,SECOND_PARTIAL,true\n',
+    ),
+    mergeSchema,
+  )
+  assert.deepEqual(result.sourceRows, [2, 3])
+  assert.equal(result.rows[0].score, '0')
+  assert.equal(result.rows[0].was_taken, '')
+  assert.equal(result.rows[1].score, '')
+  assert.doesNotMatch(result.csv, /false|attended_classes|total_classes/)
+  const scoreOnly = await csv.prepareAcademicMergeCsv(
+    partialCsvFile('sis,assessment_key,score\n1,FIRST_PARTIAL,50\n'),
+    mergeSchema,
+  )
+  assert.equal(scoreOnly.rows[0].was_taken, undefined)
+})
+
+test('MERGE rejects unknown headers, duplicates, missing targets and incompatible values', async () => {
+  const csv = loadCsv()
+  for (const text of [
+    'sis,nombre_completo\n1,Juan\n',
+    'sis,sis,score\n1,1,50\n',
+    'score\n50\n',
+    'sis,attended_classes\n1,2\n',
+    'sis,attended_classes,total_classes\n1,21,20\n',
+    'sis,assessment_key,was_taken,score\n1,FIRST_PARTIAL,false,0\n',
+    'sis,assessment_key,score\n1,FIRST_PARTIAL,101\n',
+    'sis,assessment_key,score\n1,UNKNOWN,20\n',
+    'sis,assessment_key,score\n1,FIRST_PARTIAL,30\n1,FIRST_PARTIAL,30\n',
+    'sis,attended_classes,total_classes\n1,10,20\n1,10,20\n',
+    'sis,score\n1,50\n',
+    'sis,assessment_key,score\n1,FIRST_PARTIAL,\n',
+    'sis,score\n,,\n',
+    'sis,score\n1,2"bad\n',
+  ])
+    await assert.rejects(
+      csv.prepareAcademicMergeCsv(partialCsvFile(text), mergeSchema),
+      csv.AcademicCsvValidationError,
+    )
+})
+
+test('MERGE sends mode and reason only in preview and preserves server actions and revisions', async () => {
+  const view = {
+    preview_id: 'partial-1',
+    mode: 'MERGE',
+    reason: 'Ajuste',
+    can_confirm: true,
+    summary: { created_records: 1, updated_records: 1, unchanged_records: 1 },
+    valid_records: ['CREATE', 'UPDATE', 'UNCHANGED'].map((action, i) => ({
+      action,
+      record_id: i || null,
+      revision: i || null,
+      before: { assessments: {}, attended_classes: null, total_classes: null },
+      proposed: { assessments: {}, attended_classes: 0, total_classes: 20 },
+    })),
+    errors: [],
+  }
+  const { api, calls } = createHarness({ post: () => response({ data: view }) })
+  assert.deepEqual(
+    await api.previewAcademicImport(8, new File(['csv'], 'partial.csv'), {
+      mode: 'MERGE',
+      reason: 'Ajuste',
+    }),
+    view,
+  )
+  assert.equal(calls[0].args[1].get('mode'), 'MERGE')
+  assert.equal(calls[0].args[1].get('reason'), 'Ajuste')
+  await api.confirmAcademicImport(8, 'partial-1')
+  assert.equal(calls[1].args[1], undefined)
+  assert.equal(
+    calls[1].args[0],
+    '/academic-offerings/8/academic-records/imports/partial-1/confirm',
+  )
+})
+
+test('MERGE preserves reason validation and concurrency errors from the backend', async () => {
+  const validation = createHarness({
+    post: () => {
+      throw httpError(422, {
+        message: 'Justifica la actualización.',
+        errors: { reason: ['Máximo 500 caracteres.'] },
+      })
+    },
+  })
+  await assert.rejects(
+    validation.api.previewAcademicImport(8, new File(['csv'], 'p.csv'), {
+      mode: 'MERGE',
+      reason: 'x'.repeat(501),
+    }),
+    (error) =>
+      error.status === 422 &&
+      error.fieldErrors.reason === 'Máximo 500 caracteres.',
+  )
+  const conflict = createHarness({
+    post: () => {
+      throw httpError(409, {
+        code: 'AUTOMATION_CONFLICT',
+        message: 'Los datos cambiaron.',
+      })
+    },
+  })
+  await assert.rejects(
+    conflict.api.confirmAcademicImport(8, 'partial-1'),
+    (error) => error.status === 409 && error.code === 'AUTOMATION_CONFLICT',
+  )
+})

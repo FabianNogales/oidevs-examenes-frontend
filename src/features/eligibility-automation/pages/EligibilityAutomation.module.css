@@ -1213,3 +1213,56 @@
     width: 100%;
   }
 }
+
+/* HU34 E4: comparación local de la importación parcial. */
+.mergeRecord {
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+.mergeDifference {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.mergeDifference h6 {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+.mergeDifference dd {
+  margin-inline-start: 0;
+}
+@media (max-width: 640px) {
+  .mergeDifference { grid-template-columns: minmax(0, 1fr); }
+}
+
+.mergeControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.mergeControls label {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mergeControls select,
+.mergeControls textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+}
+
+.mergeControls select,
+.mergeControls textarea {
+  min-height: var(--input-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+.mergeControls textarea { min-height: 6rem; resize: vertical; }

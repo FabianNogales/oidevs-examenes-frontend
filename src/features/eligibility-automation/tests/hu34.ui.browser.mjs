@@ -99,14 +99,30 @@ const remoteView = (view, params = {}) => {
   }
 }
 const error=(status,message)=>new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status,data:{message}});
+const mergeValues={assessments:{FIRST_PARTIAL:{was_taken:true,score:60},SECOND_PARTIAL:{was_taken:true,score:70}},attended_classes:10,total_classes:20};
+const makeMergePreview=async(file,reason)=>{
+ const lines=(await file.text()).trim().split(/\\r?\\n/);const headers=lines.shift().split(',');const groups=new Map();
+ for(const line of lines){const cells=line.split(',');const row=Object.fromEntries(headers.map((h,i)=>[h,cells[i]??'']));
+   const before=row.sis==='NEW'?{assessments:{},attended_classes:null,total_classes:null}:structuredClone(mergeValues);
+   const item=groups.get(row.sis)??{student_id:groups.size+1,sis:row.sis,record_id:row.sis==='NEW'?null:81,revision:row.sis==='NEW'?null:7,before,proposed:structuredClone(before)};
+   if(row.assessment_key&&(row.was_taken||row.score)){const prior=item.proposed.assessments[row.assessment_key]??{score:null};item.proposed.assessments[row.assessment_key]={...prior,...(row.was_taken?{was_taken:row.was_taken==='true'}:{}),...(row.score!==undefined&&row.score!==''?{score:Number(row.score)}:{})};const a=item.proposed.assessments[row.assessment_key];if(a.was_taken===undefined||(!a.was_taken&&a.score!==null))throw error(422,'La evaluación nueva requiere was_taken o el cambio requiere corrección explícita.');}
+   if(row.total_classes!==undefined&&row.total_classes!==''){item.proposed.attended_classes=Number(row.attended_classes);item.proposed.total_classes=Number(row.total_classes)}
+   groups.set(row.sis,item);
+ }
+ const records=[...groups.values()].map(r=>({...r,...r.proposed,action:r.record_id===null?'CREATE':JSON.stringify(r.before)===JSON.stringify(r.proposed)?'UNCHANGED':'UPDATE'}));
+ const summary={created_records:records.filter(r=>r.action==='CREATE').length,updated_records:records.filter(r=>r.action==='UPDATE').length,unchanged_records:records.filter(r=>r.action==='UNCHANGED').length};
+ if(summary.updated_records&&!reason.trim())throw new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status:422,data:{message:'Justifica la actualización.',errors:{reason:['Justificación obligatoria para actualizar.']}}});
+ if(reason.length>500)throw error(422,'Máximo 500 caracteres.');
+ return {preview_id:'merge-preview-'+hu34Ui.calls.length,expires_at:new Date(Date.now()+(hu34Ui.mode==='merge-expired'?-60000:1800000)).toISOString(),mode:'MERGE',reason,can_confirm:true,total_rows:lines.length,valid_records:records,summary,errors:[]};
+};
 window.hu34Ui={styles,calls:[],mode:'normal',configuration:structuredClone(configuration),academicRecord:structuredClone(academicRecord),offeringId:8,evaluation:evaluationFixture,reset(path='/teacher/exams/17/eligibilities/automatic?view=past&search=QA&page=2',mode='normal'){
-this.mode=mode;this.calls=[];this.pages=null;this.expired=false;this.holdFilter=null;this.releaseReview=null;this.configuration=structuredClone(configuration);this.academicRecord=structuredClone(academicRecord);this.offeringId=8;catalogCriteria.splice(0,catalogCriteria.length,...structuredClone(catalogSeed));root.render(e(MemoryRouter,{key:++key,initialEntries:[path]},e(Routes,null,e(Route,{path:'/teacher/exams/:examId/eligibilities',element:e(ExamEligibilitiesPage)}),e(Route,{path:'/teacher/exams/:examId/eligibilities/automatic',element:e(EligibilityAutomationPage)}),e(Route,{path:'/admin/eligibility-policies',element:e(AdminEligibilityPoliciesPage)}))));},client:{
+this.mode=mode;this.mergePending=null;this.mergeConfirmation=null;this.mergeFailed=false;this.calls=[];this.pages=null;this.expired=false;this.holdFilter=null;this.releaseReview=null;this.configuration=structuredClone(configuration);this.academicRecord=structuredClone(academicRecord);this.offeringId=8;catalogCriteria.splice(0,catalogCriteria.length,...structuredClone(catalogSeed));root.render(e(MemoryRouter,{key:++key,initialEntries:[path]},e(Routes,null,e(Route,{path:'/teacher/exams/:examId/eligibilities',element:e(ExamEligibilitiesPage)}),e(Route,{path:'/teacher/exams/:examId/eligibilities/automatic',element:e(EligibilityAutomationPage)}),e(Route,{path:'/admin/eligibility-policies',element:e(AdminEligibilityPoliciesPage)}))));},client:{
 async get(url,config){hu34Ui.calls.push({method:'get',url,params:config?.params});
 if(url.endsWith('/options')||url.endsWith('/configuration')){if(hu34Ui.mode==='loading')return new Promise(()=>{});if(hu34Ui.mode==='error')throw error(500,'No se pudo cargar el catálogo de prueba.');return {data:{data:url.endsWith('/options')?options:hu34Ui.mode==='no-criteria'?{...hu34Ui.configuration,mandatory_criteria:[],selected_criteria:[],criteria:[],inactive_criteria:[]}:hu34Ui.configuration}}}
 if(url==='/admin/eligibility-criteria')return {data:{data:catalogCriteria,meta:{...empty.meta,total:catalogCriteria.length},catalog_revision:'catalog-r7'}};
 if(url.startsWith('/admin/eligibility-criteria/')&&url.endsWith('/history'))return {data:{data:criteriaHistory,meta:{...empty.meta,total:criteriaHistory.length}}};
 if(url.startsWith('/admin/eligibility-criteria/'))return {data:{data:catalogCriteria.find(c=>c.code===decodeURIComponent(url.split('/').at(-1)))}};
-if(url.endsWith('/import-schema')){if(hu34Ui.mode==='schema-error')throw error(500,'No se pudo cargar el esquema.');if(hu34Ui.mode==='late-academic')return new Promise(resolve=>{hu34Ui.lateSchema=()=>resolve({data:{data:{columns:['OLD_OFFERING'],assessment_keys:keys}}})});return {data:{data:{columns:['sis','assessment_key','was_taken','score','attended_classes','total_classes'],assessment_keys:keys,encoding:'UTF-8',delimiter:',',max_rows:1000,max_file_kb:5120,score_min:0,score_max:100,score_decimal_places:2,was_taken_values:['true','false']}}};}
+if(url.endsWith('/import-schema')){if(hu34Ui.mode==='schema-error')throw error(500,'No se pudo cargar el esquema.');if(hu34Ui.mode==='late-academic')return new Promise(resolve=>{hu34Ui.lateSchema=()=>resolve({data:{data:{columns:['OLD_OFFERING'],assessment_keys:keys}}})});return {data:{data:{columns:['sis','assessment_key','was_taken','score','attended_classes','total_classes'],assessment_keys:keys,encoding:'UTF-8',delimiter:',',max_rows:1000,max_file_kb:5120,score_min:0,score_max:100,score_decimal_places:2,was_taken_values:['true','false'],modes:['CREATE_ONLY','MERGE'],default_mode:'CREATE_ONLY',merge:{allowed_columns:['sis','assessment_key','was_taken','score','attended_classes','total_classes'],required_columns:['sis'],attendance_columns:['sis','attended_classes','total_classes'],assessment_columns:['sis','assessment_key','was_taken','score'],empty_values:'PRESERVE',reason_required_for_updates:true,reason_max_length:500,confirmation_revalidates_revisions:true}}}};}
 if(url.includes('/academic-offerings/')&&url.endsWith('/academic-records/history'))return {data:{data:academicHistory,meta:{...empty.meta,total:academicHistory.length}}};
 if(url.includes('/academic-offerings/')&&url.endsWith('/academic-records')){if(hu34Ui.mode==='records-error')throw new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status:422,data:{message:'The search field must be a string.',errors:{search:['The search field must be a string.']}}});if(hu34Ui.mode==='late-academic')return new Promise(resolve=>{hu34Ui.lateRecords=()=>resolve({data:{data:[{id:999,first_names:'OLD_OFFERING'}],meta:empty.meta}})});if(hu34Ui.mode==='history')return {data:{data:[{...hu34Ui.academicRecord,first_names:'Bruno',last_names:'Inscrito Demo',sis_code:'202600002'}],meta:{...empty.meta,total:1}}};if(hu34Ui.mode==='correction'||hu34Ui.mode==='correction-conflict')return {data:{data:[hu34Ui.academicRecord],meta:{...empty.meta,total:1}}};return {data:empty};}
 if(url.endsWith('/evaluations'))return {data:{data:evaluationHistory,meta:{...empty.meta,total:evaluationHistory.length}}};
@@ -122,7 +138,12 @@ if(url.endsWith('/eligibilities'))return {data:{exam:{id:17,manual_review_condit
 return {data:empty};
 },async put(url,payload){hu34Ui.calls.push({method:'put',url,payload});if(hu34Ui.mode==='conflict')throw error(409,'La configuración cambió en el servidor.');if(hu34Ui.mode==='criteria-conflict')throw new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status:422,data:{code:'CRITERIA_CONFLICT',message:'Revisa los criterios indicados.',errors:{'criteria.0.parameters.assessment_keys':['Conflicto identificado por el catálogo.']}}});hu34Ui.configuration={...hu34Ui.configuration,revision:5,catalog_revision:payload.catalog_revision,manual_review_conditions:payload.manual_review_conditions,selected_criteria:payload.criteria,criteria:[required,...payload.criteria]};return {data:{data:hu34Ui.configuration}}},
 async patch(url,payload){hu34Ui.calls.push({method:'patch',url,payload});if(url.includes('/academic-records/')){if(hu34Ui.mode==='correction-conflict')throw error(409,'El registro académico cambió en el servidor.');hu34Ui.academicRecord={...hu34Ui.academicRecord,...payload,revision:hu34Ui.academicRecord.revision+1};return {data:{data:hu34Ui.academicRecord}}}if(hu34Ui.mode==='criterion-conflict')throw error(409,'El criterio cambió en el servidor.');const statusChange=url.endsWith('/status');const parts=url.split('/');const code=decodeURIComponent(parts[parts.length-(statusChange?2:1)]);const index=catalogCriteria.findIndex(c=>c.code===code);catalogCriteria[index]={...catalogCriteria[index],...payload,revision:catalogCriteria[index].revision+1};return {data:{data:catalogCriteria[index]}}},
-async post(url,payload,config){hu34Ui.calls.push({method:'post',url,payload,params:config?.params});if(url.endsWith('/evaluations/preview')){const view=hu34Ui.pages?hu34Ui.pages(1):hu34Ui.evaluation;return {data:{data:remoteView(view,config?.params)}}}if(url.endsWith('/imports/preview')){hu34Ui.importedCsv=await payload.get('file').text();return {data:{data:academicImportPreview}}}if(url.endsWith('/imports/academic-preview/confirm'))return {data:{data:{preview_id:'academic-preview',created_records:1,record_ids:[81]}}};if(url.endsWith('/confirm')&&url.includes('/evaluations/')){if(hu34Ui.mode==='confirm-conflict')throw error(409,'Conflicto de prueba al confirmar.');return {data:{data:{evaluation_id:71,updated:0,unchanged:1,manual_preserved:1,pending:2}}}}throw error(422,'No se aplican operaciones académicas en esta prueba visual.')}
+async post(url,payload,config){hu34Ui.calls.push({method:'post',url,payload,params:config?.params});if(url.endsWith('/evaluations/preview')){const view=hu34Ui.pages?hu34Ui.pages(1):hu34Ui.evaluation;return {data:{data:remoteView(view,config?.params)}}}if(url.endsWith('/imports/preview')){hu34Ui.importedCsv=await payload.get('file').text();if(payload.get('mode')==='MERGE'){const view=await makeMergePreview(payload.get('file'),payload.get('reason')??'');hu34Ui.mergePending=view;return {data:{data:view}}}return {data:{data:academicImportPreview}}}if(url.includes('/imports/merge-preview-')&&url.endsWith('/confirm')){
+ if(hu34Ui.mode==='merge-conflict')throw new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status:409,data:{code:'AUTOMATION_CONFLICT',message:'Los datos cambiaron.'}});
+ const view=hu34Ui.mergePending;hu34Ui.mergeConfirmation??={preview_id:view.preview_id,...view.summary,record_ids:[81]};
+ if(hu34Ui.mode==='merge-retry'&&!hu34Ui.mergeFailed){hu34Ui.mergeFailed=true;throw error(500,'Respuesta interrumpida; reintenta la confirmación.');}
+ return {data:{data:hu34Ui.mergeConfirmation}};
+}if(url.endsWith('/imports/academic-preview/confirm'))return {data:{data:{preview_id:'academic-preview',created_records:1,record_ids:[81]}}};if(url.endsWith('/confirm')&&url.includes('/evaluations/')){if(hu34Ui.mode==='confirm-conflict')throw error(409,'Conflicto de prueba al confirmar.');return {data:{data:{evaluation_id:71,updated:0,unchanged:1,manual_preserved:1,pending:2}}}}throw error(422,'No se aplican operaciones académicas en esta prueba visual.')}
 }};hu34Ui.reset();`
 
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
@@ -1559,6 +1580,165 @@ try {
   assert.ok((await reviewState()).rows[0][3].includes('Heredado'))
   result.checks.push(
     'remote review: filters, search, pagination, global summary, empty page, protected sources, reasons, races, whole confirmation, no criteria and responsive',
+  )
+  // HU34 E4: server previews of technical MERGE files and guarded confirmation.
+  const mergePanel = '[aria-labelledby="academic-merge-preview-title"]'
+  const reasonInput = '#academic-merge-reason'
+  const openMerge = async (mode = 'normal') => {
+    await reset(auto, mode)
+    await wait('document.getElementById("configuration-title")')
+    await button('Datos académicos')
+    await wait('document.getElementById("academic-import-mode")')
+    await select('#academic-import-mode', 'MERGE')
+  }
+  const previewMerge = async (text, reason = 'Corrección justificada') => {
+    await uploadAcademicCsv('partial.csv', text)
+    await pause(100)
+    await input(reasonInput, reason)
+    await button('Validar y generar vista previa')
+    await wait(`document.querySelector('${mergePanel}')`)
+  }
+  const attendanceCsv = 'sis,attended_classes,total_classes\n1,0,20\n'
+  const mixedCsv =
+    'sis,assessment_key,was_taken,score,attended_classes,total_classes\nNEW,,,,0,20\n1,FIRST_PARTIAL,,0,,\n1,SECOND_PARTIAL,,70,,\n1,,,,11,20\n2,,,,10,20\n'
+  await openMerge()
+  assert.equal(
+    await evaluate('document.querySelector("#academic-merge-reason").maxLength'),
+    500,
+  )
+  await uploadAcademicCsv('attendance.csv', attendanceCsv)
+  await pause(100)
+  await button('Validar y generar vista previa')
+  await wait(
+    'document.body.innerText.includes("Justificación obligatoria para actualizar.")',
+  )
+  assert.equal(await evaluate(`!!document.querySelector('${mergePanel}')`), false)
+  await input(reasonInput, 'a'.repeat(500))
+  await button('Validar y generar vista previa')
+  await wait(`document.querySelector('${mergePanel}')`)
+  assert.equal(await evaluate('hu34Ui.mergePending.reason.length'), 500)
+  assert.equal(
+    await evaluate('hu34Ui.importedCsv'),
+    'sis,attended_classes,total_classes\r\n1,0,20\r\n',
+  )
+  const difference = await evaluate(
+    `document.querySelector('${mergePanel}').innerText`,
+  )
+  assert.ok(
+    difference.includes('Actualizar: 1') &&
+      difference.includes('Anterior') &&
+      difference.includes('Propuesto'),
+  )
+  assert.ok(difference.includes('Nota: 60') && difference.includes('Nota: 70'))
+  await input(reasonInput, 'Nueva justificación')
+  assert.equal(await evaluate(`!!document.querySelector('${mergePanel}')`), false)
+  await previewMerge(mixedCsv)
+  const mixed = await evaluate(
+    `document.querySelector('${mergePanel}').innerText`,
+  )
+  assert.ok(mixed.includes('Crear: 1 · Actualizar: 1 · Sin cambios: 1'))
+  assert.ok(mixed.includes('Nota: 0') && mixed.includes('Nota: 70'))
+  assert.equal(await evaluate('hu34Ui.importedCsv.includes("false")'), false)
+  await uploadAcademicCsv('replacement.csv', attendanceCsv)
+  await pause(100)
+  assert.equal(await evaluate(`!!document.querySelector('${mergePanel}')`), false)
+  await button('Validar y generar vista previa')
+  await wait(`document.querySelector('${mergePanel}')`)
+  await select('#academic-import-mode', 'CREATE_ONLY')
+  assert.equal(await evaluate(`!!document.querySelector('${mergePanel}')`), false)
+  // No justification is required when all rows create records.
+  await openMerge()
+  await previewMerge('sis,attended_classes,total_classes\nNEW,0,20\n', '')
+  await button('Confirmar importación')
+  await wait('document.body.innerText.includes("Importación confirmada")')
+  assert.equal(await evaluate(`!!document.querySelector('${mergePanel}')`), false)
+  assert.equal(await evaluate('hu34Ui.mergeConfirmation.created_records'), 1)
+  // A concurrent change invalidates the reviewed snapshot and allows regeneration.
+  await openMerge('merge-conflict')
+  await previewMerge(attendanceCsv)
+  await button('Confirmar importación')
+  await wait(
+    'document.body.innerText.includes("Los datos cambiaron o la vista previa caducó")',
+  )
+  assert.equal(await evaluate(`!!document.querySelector('${mergePanel}')`), false)
+  await evaluate('hu34Ui.mode="normal"')
+  await button('Validar y generar vista previa')
+  await wait(`document.querySelector('${mergePanel}')`)
+  await button('Confirmar importación')
+  await wait('document.body.innerText.includes("Importación confirmada")')
+  // Retrying after a lost confirmation response sends the same preview and no body.
+  await openMerge('merge-retry')
+  await previewMerge(attendanceCsv)
+  await button('Confirmar importación')
+  await wait('document.body.innerText.includes("Respuesta interrumpida")')
+  await button('Confirmar importación')
+  await wait('document.body.innerText.includes("Importación confirmada")')
+  const retries = await evaluate(
+    'hu34Ui.calls.filter(c=>c.url.includes("/imports/merge-preview-")&&c.url.endsWith("/confirm")).map(c=>({url:c.url,payload:c.payload??null}))',
+  )
+  assert.equal(retries.length, 2)
+  assert.deepEqual(retries[0], retries[1])
+  assert.equal(retries[0].payload, null)
+  await openMerge('merge-expired')
+  await previewMerge(attendanceCsv)
+  assert.equal(
+    await evaluate(`document.querySelector('${mergePanel} button').disabled`),
+    true,
+  )
+  // Backend validation can reject a taken-state change that would retain a hidden score.
+  await openMerge()
+  await uploadAcademicCsv(
+    'invalid.csv',
+    'sis,assessment_key,was_taken\n1,FIRST_PARTIAL,false\n',
+  )
+  await pause(100)
+  await input(reasonInput, 'Revisar estado')
+  await button('Validar y generar vista previa')
+  await wait('document.body.innerText.includes("requiere corrección explícita")')
+  assert.equal(await evaluate(`!!document.querySelector('${mergePanel}')`), false)
+  for (const width of [320, 375, 640, 768, 1440]) {
+    await send('Emulation.setDeviceMetricsOverride', {
+      width,
+      height: 1000,
+      deviceScaleFactor: 1,
+      mobile: width < 768,
+    })
+    await openMerge()
+    await previewMerge(mixedCsv)
+    await noOverflow(width + ': MERGE differences')
+    if (width === 320 || width === 1440) await shot('merge-' + width)
+  }
+  // Full replacement correction accepts attendance-only records and keeps an empty assessments map.
+  await reset(auto, 'correction')
+  await evaluate(
+    'hu34Ui.academicRecord={...hu34Ui.academicRecord,assessments:{},attended_classes:10,total_classes:20}',
+  )
+  await wait('document.getElementById("configuration-title")')
+  await button('Datos académicos')
+  await wait('document.body.innerText.includes("Estudiante de prueba")')
+  await button('Corregir')
+  const attendanceForm = await evaluate(`'form.'+hu34Ui.styles.correction`)
+  await input(attendanceForm + ' textarea', 'Ajustar asistencia')
+  await input(
+    attendanceForm +
+      ' .' +
+      (await evaluate('hu34Ui.styles.formGrid')) +
+      ' input[type=number]',
+    '0',
+  )
+  await button('Guardar corrección')
+  await wait(
+    'hu34Ui.calls.some(c=>c.method==="patch"&&c.url.includes("/academic-records/"))',
+  )
+  const correctedAttendance = await evaluate(
+    'hu34Ui.calls.find(c=>c.method==="patch"&&c.url.includes("/academic-records/")).payload',
+  )
+  assert.deepEqual(correctedAttendance.assessments, {})
+  assert.equal(correctedAttendance.attended_classes, 0)
+  assert.equal(correctedAttendance.total_classes, 20)
+  assert.equal(correctedAttendance.revision, 7)
+  result.checks.push(
+    'MERGE attendance, zero, two assessments, before/proposed, actions, justification, invalidation, conflict, expiry, retry, responsive and attendance-only correction',
   )
   result.checks.push(
     'optional parameters/revision unchanged',
