@@ -45,9 +45,9 @@ const resultFixture={student:{id:11,display_name:'Estudiante de prueba',sis:'QA-
 const evaluationFixture={id:71,preview_id:'00000000-0000-4000-a000-000000000071',exam_id:17,expires_at:'2026-11-03T14:30:00Z',created_at:'2026-11-03T14:00:00Z',confirmed_at:null,configuration,catalog:catalogCriteria,confirmation:null,results:{data:[resultFixture,{...resultFixture,student:{...resultFixture.student,id:12}},{...resultFixture,student:{id:13,display_name:'Bruno Inscrito Demo',sis:'QA-003'},computed_status:'ELIGIBLE',current_status:'INELIGIBLE',effective_status:'INELIGIBLE',manual_override_preserved:true,will_update:false,reason:'Se conserva la decisión manual vigente.',missing_fields:[],criteria_results:[{code:'SECOND_INSTANCE_PARTIAL_AVERAGE',name:required.name,status:'PASSED',actual_value:30,required_value:25}]}],meta:{...empty.meta,total:3}},summary:{total:3,eligible:1,ineligible:0,pending:2}};
 const error=(status,message)=>new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status,data:{message}});
 window.hu34Ui={styles,calls:[],mode:'normal',configuration:structuredClone(configuration),academicRecord:structuredClone(academicRecord),offeringId:8,evaluation:evaluationFixture,reset(path='/teacher/exams/17/eligibilities/automatic?view=past&search=QA&page=2',mode='normal'){
-this.mode=mode;this.calls=[];this.configuration=structuredClone(configuration);this.academicRecord=structuredClone(academicRecord);this.offeringId=8;catalogCriteria.splice(0,catalogCriteria.length,...structuredClone(catalogSeed));root.render(e(MemoryRouter,{key:++key,initialEntries:[path]},e(Routes,null,e(Route,{path:'/teacher/exams/:examId/eligibilities',element:e(ExamEligibilitiesPage)}),e(Route,{path:'/teacher/exams/:examId/eligibilities/automatic',element:e(EligibilityAutomationPage)}),e(Route,{path:'/admin/eligibility-policies',element:e(AdminEligibilityPoliciesPage)}))));},client:{
+this.mode=mode;this.calls=[];this.pages=null;this.expired=false;this.configuration=structuredClone(configuration);this.academicRecord=structuredClone(academicRecord);this.offeringId=8;catalogCriteria.splice(0,catalogCriteria.length,...structuredClone(catalogSeed));root.render(e(MemoryRouter,{key:++key,initialEntries:[path]},e(Routes,null,e(Route,{path:'/teacher/exams/:examId/eligibilities',element:e(ExamEligibilitiesPage)}),e(Route,{path:'/teacher/exams/:examId/eligibilities/automatic',element:e(EligibilityAutomationPage)}),e(Route,{path:'/admin/eligibility-policies',element:e(AdminEligibilityPoliciesPage)}))));},client:{
 async get(url,config){hu34Ui.calls.push({method:'get',url,params:config?.params});
-if(url.endsWith('/options')||url.endsWith('/configuration')){if(hu34Ui.mode==='loading')return new Promise(()=>{});if(hu34Ui.mode==='error')throw error(500,'No se pudo cargar el catálogo de prueba.');return {data:{data:url.endsWith('/options')?options:hu34Ui.configuration}}}
+if(url.endsWith('/options')||url.endsWith('/configuration')){if(hu34Ui.mode==='loading')return new Promise(()=>{});if(hu34Ui.mode==='error')throw error(500,'No se pudo cargar el catálogo de prueba.');return {data:{data:url.endsWith('/options')?options:hu34Ui.mode==='no-criteria'?{...hu34Ui.configuration,mandatory_criteria:[],selected_criteria:[],criteria:[],inactive_criteria:[]}:hu34Ui.configuration}}}
 if(url==='/admin/eligibility-criteria')return {data:{data:catalogCriteria,meta:{...empty.meta,total:catalogCriteria.length},catalog_revision:'catalog-r7'}};
 if(url.startsWith('/admin/eligibility-criteria/')&&url.endsWith('/history'))return {data:{data:criteriaHistory,meta:{...empty.meta,total:criteriaHistory.length}}};
 if(url.startsWith('/admin/eligibility-criteria/'))return {data:{data:catalogCriteria.find(c=>c.code===decodeURIComponent(url.split('/').at(-1)))}};
@@ -55,12 +55,13 @@ if(url.endsWith('/import-schema')){if(hu34Ui.mode==='schema-error')throw error(5
 if(url.includes('/academic-offerings/')&&url.endsWith('/academic-records/history'))return {data:{data:academicHistory,meta:{...empty.meta,total:academicHistory.length}}};
 if(url.includes('/academic-offerings/')&&url.endsWith('/academic-records')){if(hu34Ui.mode==='records-error')throw new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status:422,data:{message:'The search field must be a string.',errors:{search:['The search field must be a string.']}}});if(hu34Ui.mode==='late-academic')return new Promise(resolve=>{hu34Ui.lateRecords=()=>resolve({data:{data:[{id:999,first_names:'OLD_OFFERING'}],meta:empty.meta}})});if(hu34Ui.mode==='history')return {data:{data:[{...hu34Ui.academicRecord,first_names:'Bruno',last_names:'Inscrito Demo',sis_code:'202600002'}],meta:{...empty.meta,total:1}}};if(hu34Ui.mode==='correction'||hu34Ui.mode==='correction-conflict')return {data:{data:[hu34Ui.academicRecord],meta:{...empty.meta,total:1}}};return {data:empty};}
 if(url.endsWith('/evaluations'))return {data:{data:evaluationHistory,meta:{...empty.meta,total:evaluationHistory.length}}};
+if(hu34Ui.pages&&url.split('/').at(-2)==='evaluations')return {data:{data:hu34Ui.pages(config?.params?.page??1)}};
 if(url.endsWith('/evaluations/71'))return {data:{data:evaluationFixture}};
 if(url.endsWith('/eligibilities'))return {data:{exam:{id:17,manual_review_conditions:'Revisar documentación presentada fuera de plazo.'},data:[]}};
 return {data:empty};
 },async put(url,payload){hu34Ui.calls.push({method:'put',url,payload});if(hu34Ui.mode==='conflict')throw error(409,'La configuración cambió en el servidor.');if(hu34Ui.mode==='criteria-conflict')throw new AxiosError('QA','ERR_BAD_RESPONSE',undefined,undefined,{status:422,data:{code:'CRITERIA_CONFLICT',message:'Revisa los criterios indicados.',errors:{'criteria.0.parameters.assessment_keys':['Conflicto identificado por el catálogo.']}}});hu34Ui.configuration={...hu34Ui.configuration,revision:5,catalog_revision:payload.catalog_revision,manual_review_conditions:payload.manual_review_conditions,selected_criteria:payload.criteria,criteria:[required,...payload.criteria]};return {data:{data:hu34Ui.configuration}}},
 async patch(url,payload){hu34Ui.calls.push({method:'patch',url,payload});if(url.includes('/academic-records/')){if(hu34Ui.mode==='correction-conflict')throw error(409,'El registro académico cambió en el servidor.');hu34Ui.academicRecord={...hu34Ui.academicRecord,...payload,revision:hu34Ui.academicRecord.revision+1};return {data:{data:hu34Ui.academicRecord}}}if(hu34Ui.mode==='criterion-conflict')throw error(409,'El criterio cambió en el servidor.');const statusChange=url.endsWith('/status');const parts=url.split('/');const code=decodeURIComponent(parts[parts.length-(statusChange?2:1)]);const index=catalogCriteria.findIndex(c=>c.code===code);catalogCriteria[index]={...catalogCriteria[index],...payload,revision:catalogCriteria[index].revision+1};return {data:{data:catalogCriteria[index]}}},
-async post(url,payload){hu34Ui.calls.push({method:'post',url,payload});if(url.endsWith('/evaluations/preview'))return {data:{data:hu34Ui.evaluation}};if(url.endsWith('/imports/preview')){hu34Ui.importedCsv=await payload.get('file').text();return {data:{data:academicImportPreview}}}if(url.endsWith('/imports/academic-preview/confirm'))return {data:{data:{preview_id:'academic-preview',created_records:1,record_ids:[81]}}};if(url.endsWith('/confirm')&&url.includes('/evaluations/'))return {data:{data:{evaluation_id:71,updated:0,unchanged:1,manual_preserved:1,pending:2}}};throw error(422,'No se aplican operaciones académicas en esta prueba visual.')}
+async post(url,payload){hu34Ui.calls.push({method:'post',url,payload});if(url.endsWith('/evaluations/preview')){const view=hu34Ui.pages?hu34Ui.pages(1):hu34Ui.evaluation;return {data:{data:{...view,expires_at:new Date(Date.now()+(hu34Ui.expired?-60000:1800000)).toISOString()}}}}if(url.endsWith('/imports/preview')){hu34Ui.importedCsv=await payload.get('file').text();return {data:{data:academicImportPreview}}}if(url.endsWith('/imports/academic-preview/confirm'))return {data:{data:{preview_id:'academic-preview',created_records:1,record_ids:[81]}}};if(url.endsWith('/confirm')&&url.includes('/evaluations/')){if(hu34Ui.mode==='confirm-conflict')throw error(409,'Conflicto de prueba al confirmar.');return {data:{data:{evaluation_id:71,updated:0,unchanged:1,manual_preserved:1,pending:2}}}}throw error(422,'No se aplican operaciones académicas en esta prueba visual.')}
 }};hu34Ui.reset();`
 
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
@@ -245,6 +246,54 @@ try {
   }
   const auto =
     '/teacher/exams/17/eligibilities/automatic?view=past&search=QA&page=2'
+  // «Revisar y aplicar» (HU34 E1): the results table, its filters, search and dialogs.
+  const reviewSection = `document.querySelector('[aria-labelledby="review-results-title"]')`
+  const reviewState = () =>
+    evaluate(
+      `(()=>{const s=${reviewSection};const text=el=>el.innerText.replace(/\\s+/g,' ').trim();return {rows:[...s.querySelectorAll('tbody tr')].map(tr=>[...tr.querySelectorAll('td')].map(text)),pressed:[...s.querySelectorAll('button[aria-pressed=true]')].map(text),filters:[...s.querySelectorAll('button[aria-pressed]')].map(text),footer:s.querySelector('footer')?text(s.querySelector('footer')):null,status:text(s.querySelector('[role=status]')),text:text(s)}})()`,
+    )
+  const reviewFilter = async (label) => {
+    assert.ok(
+      await evaluate(
+        `(()=>{const b=[...${reviewSection}.querySelectorAll('button[aria-pressed]')].find(el=>el.textContent.trim().startsWith(${JSON.stringify(label + ' (')}));if(!b)return false;b.focus();b.click();return true})()`,
+      ),
+      `filtro ${label}`,
+    )
+    await pause(80)
+  }
+  const reviewSearch = async (query) => {
+    await input('[aria-labelledby="review-results-title"] input[type=search]', query)
+    await evaluate(`${reviewSection}.querySelector('form').requestSubmit()`)
+    await pause(80)
+  }
+  const reviewSummary = () =>
+    evaluate(
+      `Object.fromEntries([...document.querySelectorAll('[aria-labelledby="review-summary-title"] dl > div')].map(item=>[item.querySelector('dt').textContent.trim(),Number(item.querySelector('dd').textContent.trim())]))`,
+    )
+  const openDetail = async (name) => {
+    assert.ok(
+      await evaluate(
+        `(()=>{const b=${reviewSection}.querySelector('button[aria-label=${JSON.stringify('Ver detalle de ' + name)}]');if(!b)return false;b.focus();b.click();return true})()`,
+      ),
+      `detalle de ${name}`,
+    )
+    await wait(`document.querySelector('dialog[open]')`)
+    // The panel slides in for 180ms; its geometry is read once it has settled.
+    await pause(260)
+  }
+  const dialogState = () =>
+    evaluate(
+      `(()=>{const d=document.querySelector('dialog[open]');const r=d.getBoundingClientRect();return {title:document.getElementById(d.getAttribute('aria-labelledby')).textContent.trim(),modal:d.matches(':modal'),metrics:Object.fromEntries([...d.querySelectorAll('dl > div')].map(item=>[item.querySelector('dt').textContent.trim(),item.querySelector('dd').textContent.trim()])),notice:d.querySelector('.'+hu34Ui.styles.manualNotice)?.textContent.trim()??null,reason:d.querySelector('.'+hu34Ui.styles.reasonText)?.textContent.trim()??null,criteria:[...d.querySelectorAll('.'+hu34Ui.styles.criteriaResults+' > li')].map(li=>li.innerText.replace(/\\s+/g,' ').trim()),text:d.innerText.replace(/\\s+/g,' ').trim(),inside:r.left>=-1&&r.top>=-1&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1,focusInside:d.contains(document.activeElement)}})()`,
+    )
+  const closeDialog = async () => {
+    for (const type of ['keyDown', 'keyUp'])
+      await send('Input.dispatchKeyEvent', { type, key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+    await wait(`!document.querySelector('dialog[open]')`)
+  }
+  const confirmCalls = () =>
+    evaluate(
+      `hu34Ui.calls.filter(call=>call.method==='post'&&call.url.includes('/evaluations/')&&call.url.endsWith('/confirm')).map(call=>({url:call.url,payload:call.payload??null}))`,
+    )
   await send('Page.enable')
   await send('Runtime.enable')
   await send('Page.navigate', {
@@ -337,7 +386,7 @@ try {
     assert.equal(await evaluate(`!!document.querySelector('[aria-labelledby="academic-import-title"]')`), false)
     await reset(auto)
     await wait(`document.getElementById('configuration-title')`)
-    for (const label of ['Datos académicos', 'Vista previa', 'Historial']) {
+    for (const label of ['Datos académicos', 'Revisar y aplicar', 'Historial']) {
       if (label === 'Datos académicos') await evaluate(`hu34Ui.mode='history'`)
       await button(label)
       await pause(100)
@@ -464,9 +513,9 @@ try {
         }
         await noOverflow(`${width}: academic search and records`)
       }
-      if (label === 'Vista previa') {
-        await button('Generar vista previa de habilitaciones')
-        await wait(`document.querySelector('.'+hu34Ui.styles.resultCard)`)
+      if (label === 'Revisar y aplicar') {
+        await button('Generar revisión de habilitaciones')
+        await wait(`document.getElementById('review-summary-title')`)
         const previewPayload = await evaluate(
           `hu34Ui.calls.find(call=>call.method==='post'&&call.url.endsWith('/evaluations/preview')).payload`,
         )
@@ -474,26 +523,53 @@ try {
           configuration_revision: 4,
           catalog_revision: 'catalog-r7',
         })
-        const resultMetrics = await evaluate(
-          `(()=>{const cards=[...document.querySelectorAll('.'+hu34Ui.styles.resultCard)];const metrics=card=>Object.fromEntries([...card.querySelectorAll('.'+hu34Ui.styles.resultDetails+' > div')].map(item=>[item.querySelector('dt').textContent.trim(),item.querySelector('dd').textContent.trim()]));const bruno=cards.find(card=>card.querySelector('.'+hu34Ui.styles.resultHeading+' strong').textContent==='Bruno Inscrito Demo');return {bruno:metrics(bruno),decision:bruno.querySelector('.'+hu34Ui.styles.status).textContent.trim(),notice:bruno.querySelector('.'+hu34Ui.styles.manualNotice).textContent.trim(),reason:bruno.querySelector('.'+hu34Ui.styles.reasonText).textContent.trim(),noOverride:metrics(cards.find(card=>card.querySelector('.'+hu34Ui.styles.resultHeading+' strong').textContent==='Estudiante de prueba'))}})()`,
-        )
-        assert.deepEqual(resultMetrics, {
+        // HU34 E1: the result cards became a table with a detail panel. The same facts are asserted
+        // on the new markup («Estado efectivo» is now «Estado final propuesto», «Se actualizará» is
+        // «Se actualizará el registro», and the protected decision is the «Protegido» tag).
+        // Nobody changes state in this snapshot, so the default filter «Solo cambios» is empty.
+        const initial = await reviewState()
+        assert.deepEqual(initial.pressed, ['Solo cambios (0)'])
+        assert.deepEqual(initial.filters, ['Todos (3)', 'Solo cambios (0)', 'Habilitados (0)', 'Inhabilitados (1)', 'Pendientes (2)', 'Protegidos (1)'])
+        assert.equal(initial.rows.length, 0)
+        assert.ok(initial.text.includes('Ningún estudiante cambia de estado con esta evaluación.'))
+        await noOverflow(`${width}: empty review filter`)
+        await reviewFilter('Todos')
+        const all = await reviewState()
+        assert.equal(all.rows.length, 3)
+        const brunoRow = all.rows.find((row) => row[0] === 'Bruno Inscrito Demo')
+        const pendingRow = all.rows.find((row) => row[0] === 'Estudiante de prueba')
+        assert.deepEqual(brunoRow.slice(1, 4), ['QA-003', 'Inhabilitado', 'Inhabilitado Protegido'])
+        assert.deepEqual(pendingRow.slice(1, 4), ['QA-001', 'Habilitado', 'Pendiente Se conserva el estado actual'])
+        await openDetail('Bruno Inscrito Demo')
+        const bruno = await dialogState()
+        assert.deepEqual([bruno.title, bruno.modal, bruno.inside, bruno.focusInside], ['Bruno Inscrito Demo', true, true, true], `${width}px detail panel`)
+        await closeDialog()
+        assert.equal(await evaluate(`document.activeElement?.getAttribute('aria-label')`), 'Ver detalle de Bruno Inscrito Demo', 'focus returns to the row action')
+        await openDetail('Estudiante de prueba')
+        const noOverride = await dialogState()
+        await closeDialog()
+        assert.deepEqual({ bruno: bruno.metrics, decision: brunoRow[3], notice: bruno.notice, reason: bruno.reason, noOverride: noOverride.metrics }, {
           bruno: {
-            'Resultado calculado': 'Habilitado',
             'Estado actual': 'Inhabilitado',
-            'Estado efectivo': 'Inhabilitado',
-            'Se actualizará': 'No',
+            'Estado final propuesto': 'Inhabilitado',
+            'Resultado calculado': 'Habilitado',
+            'Cambia de estado': 'No',
+            'Se actualizará el registro': 'No',
           },
-          decision: 'Decisión vigente: Inhabilitado',
+          decision: 'Inhabilitado Protegido',
           notice: 'Se conserva la decisión manual vigente.',
           reason: 'Se conserva la decisión manual vigente.',
           noOverride: {
-            'Resultado calculado': 'Pendiente',
             'Estado actual': 'Habilitado',
-            'Estado efectivo': 'Pendiente',
-            'Se actualizará': 'No',
+            'Estado final propuesto': 'Pendiente',
+            'Resultado calculado': 'Pendiente',
+            'Cambia de estado': 'No',
+            'Se actualizará el registro': 'No',
           },
         })
+        assert.equal(noOverride.notice, null)
+        assert.equal(noOverride.criteria.length, 1)
+        assert.deepEqual(await reviewSummary(), { 'Total evaluado': 3, 'Habilitados propuestos': 0, 'Inhabilitados propuestos': 1, Pendientes: 2, 'Cambios de estado': 0, 'Decisiones protegidas': 1 })
         await noOverflow(`${width}: populated pending results`)
       }
       if (label === 'Historial') {
@@ -996,20 +1072,35 @@ try {
     ),
   )
   await reset(auto)
-  await button('Vista previa')
-  await button('Generar vista previa de habilitaciones')
-  await wait(`document.querySelector('article')`)
+  await button('Revisar y aplicar')
+  await button('Generar revisión de habilitaciones')
+  await wait(`document.getElementById('review-summary-title')`)
+  // HU34 E1: the same three facts, now read from the table filter and the detail panel.
+  await reviewFilter('Pendientes')
+  const pendingReview = await reviewState()
+  assert.deepEqual(pendingReview.pressed, ['Pendientes (2)'])
+  assert.equal(pendingReview.rows.filter((row) => row[3].startsWith('Pendiente')).length, 2)
+  assert.equal(pendingReview.rows.length, 2)
+  await openDetail('Estudiante de prueba')
+  const pendingDetail = await dialogState()
+  await closeDialog()
+  await reviewFilter('Protegidos')
+  await openDetail('Bruno Inscrito Demo')
+  const protectedDetail = await dialogState()
+  await closeDialog()
   assert.ok(
-    await evaluate(
-      `[...document.querySelectorAll('.'+hu34Ui.styles.status)].filter(el=>el.textContent==='Pendiente').length===2`,
-    ),
+    protectedDetail.text.includes('Se conserva la decisión manual vigente.') &&
+      pendingDetail.text.includes('Datos del primer parcial') &&
+      pendingDetail.text.includes('Datos del segundo parcial'),
   )
-  assert.ok(
-    await evaluate(
-      `document.body.innerText.includes('Se conserva la decisión manual vigente.')&&document.body.innerText.includes('Datos del primer parcial')&&document.body.innerText.includes('Datos del segundo parcial')`,
-    ),
-  )
-  await button('Confirmar evaluación')
+  // The confirmation states the whole snapshot is applied, whatever the visible filter.
+  await button('Aplicar habilitaciones')
+  await wait(`document.querySelector('dialog[open]')`)
+  const applyDialog = await dialogState()
+  assert.equal(applyDialog.title, 'Aplicar habilitaciones')
+  assert.ok(applyDialog.text.includes('los resultados de los 3 estudiantes de esta revisión, no solo los que muestra la tabla'))
+  assert.deepEqual(await confirmCalls(), [])
+  await button('Aplicar a 3 estudiantes')
   await wait(`document.body.innerText.includes('Proceso confirmado')`)
   assert.ok(
     await evaluate(
@@ -1184,6 +1275,202 @@ try {
     await evaluate(
       `!document.body.innerText.includes('Crear política')&&!document.body.innerText.includes('Agregar criterio')`,
     ),
+  )
+  // ── HU34 E1 — «Revisar y aplicar» with a 230-student snapshot served in three backend pages ──
+  // Per residue of the student number (23 students each): 1 becomes eligible, 2 becomes ineligible,
+  // 3 protected manual decision, 4 pending, 5 rewritten without a state change (will_update),
+  // the rest unchanged. The backend summary counts computed statuses (184 eligible), not final ones.
+  const installBigSnapshot = `(()=>{const pad=n=>String(n).padStart(4,'0');const criterion=hu34Ui.evaluation.results.data[0].criteria_results[0].name;
+    const make=i=>{const k=i%10;const student={id:1000+i,display_name:i===7?'Ángela Núñez Prueba':'Estudiante QA '+pad(i),sis:'QA-'+pad(i)};
+      const row=(computed,current,effective,manual,will,reason,missing=[])=>({student,computed_status:computed,current_status:current,effective_status:effective,manual_override_preserved:manual,will_update:will,reason,missing_fields:missing,eligibility_revision:1,criteria_results:[{code:'SECOND_INSTANCE_PARTIAL_AVERAGE',name:criterion,status:computed==='PENDING'?'PENDING':computed==='ELIGIBLE'?'PASSED':'FAILED',actual_value:computed==='PENDING'?null:30,required_value:25}]});
+      if(k===1)return row('ELIGIBLE','INELIGIBLE','ELIGIBLE',false,true,'Cumple los criterios.');
+      if(k===2)return row('INELIGIBLE','ELIGIBLE','INELIGIBLE',false,true,'No cumple el promedio requerido.');
+      if(k===3)return row('ELIGIBLE','INELIGIBLE','INELIGIBLE',true,false,'Se conserva la decisión manual vigente.');
+      if(k===4)return row('PENDING','ELIGIBLE','PENDING',false,false,'Faltan datos académicos.',['assessments.FIRST_PARTIAL']);
+      if(k===5)return row('ELIGIBLE','ELIGIBLE','ELIGIBLE',false,true,'Cumple los criterios.');
+      return row('ELIGIBLE','ELIGIBLE','ELIGIBLE',false,false,'Cumple los criterios.')};
+    const all=Array.from({length:230},(_,index)=>make(index+1));
+    hu34Ui.pages=page=>({...hu34Ui.evaluation,id:90,preview_id:'preview-big-90',results:{data:all.slice((page-1)*100,page*100),meta:{current_page:page,per_page:100,total:230,last_page:3}},summary:{total:230,eligible:184,ineligible:23,pending:23}});return true})()`
+  const openBigReview = async (mode = 'normal', expired = false) => {
+    await reset(auto, mode)
+    await evaluate(installBigSnapshot)
+    if (expired) await evaluate(`hu34Ui.expired=true`)
+    await wait(`document.getElementById('configuration-title')`)
+    await button('Revisar y aplicar')
+    await button('Generar revisión de habilitaciones')
+    await wait(`document.getElementById('review-summary-title')`)
+  }
+  const applyButtonDisabled = () =>
+    evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Aplicar habilitaciones').disabled`)
+  await send('Emulation.setDeviceMetricsOverride', { width: 1024, height: 1000, deviceScaleFactor: 1, mobile: false })
+  await openBigReview()
+  // More than one backend page: pages 2 and 3 are requested and every result is loaded.
+  assert.deepEqual(
+    await evaluate(`hu34Ui.calls.filter(call=>call.method==='get'&&call.url.endsWith('/evaluations/90')).map(call=>call.params)`),
+    [{ page: 2, per_page: 100 }, { page: 3, per_page: 100 }],
+  )
+  // Final proposed statuses come from effective_status; changes and protected are counted locally.
+  assert.deepEqual(await reviewSummary(), { 'Total evaluado': 230, 'Habilitados propuestos': 161, 'Inhabilitados propuestos': 46, Pendientes: 23, 'Cambios de estado': 46, 'Decisiones protegidas': 23 })
+  assert.ok(await evaluate(`document.querySelector('[aria-labelledby="review-summary-title"]').innerText.replace(/\\s+/g,' ').includes('volverá a registrar 69 habilitaciones; 23 de ellas no cambian de estado')`), 'will_update without a state change is reported apart')
+  let bigState = await reviewState()
+  assert.deepEqual(bigState.filters, ['Todos (230)', 'Solo cambios (46)', 'Habilitados (161)', 'Inhabilitados (46)', 'Pendientes (23)', 'Protegidos (23)'])
+  assert.deepEqual(bigState.pressed, ['Solo cambios (46)'], 'default filter')
+  assert.equal(bigState.rows.length, 10)
+  assert.ok(bigState.rows.every((row) => row[3].endsWith('Cambia')))
+  assert.ok(bigState.footer.includes('Mostrando 1 a 10 de 46') && bigState.footer.includes('Página 1 de 5'), bigState.footer)
+  // Local pagination over the filtered set.
+  for (let step = 0; step < 4; step++) await button('Siguiente')
+  bigState = await reviewState()
+  assert.equal(bigState.rows.length, 6)
+  assert.ok(bigState.footer.includes('Mostrando 41 a 46 de 46') && bigState.footer.includes('Página 5 de 5'), bigState.footer)
+  assert.equal(await evaluate(`[...${reviewSection}.querySelectorAll('button')].find(b=>b.textContent.trim()==='Siguiente').disabled`), true)
+  await button('Anterior')
+  assert.ok((await reviewState()).footer.includes('Mostrando 31 a 40 de 46'))
+  // The six filters: each one is applied before paginating and starts again at page 1.
+  const filterCases = [
+    ['Todos', 230, 23, () => true],
+    ['Habilitados', 161, 17, (row) => row[3].startsWith('Habilitado')],
+    ['Inhabilitados', 46, 5, (row) => row[3].startsWith('Inhabilitado')],
+    ['Pendientes', 23, 3, (row) => row[3].startsWith('Pendiente') && row[3].endsWith('Se conserva el estado actual')],
+    ['Protegidos', 23, 3, (row) => row[3].includes('Protegido')],
+    ['Solo cambios', 46, 5, (row) => row[2] !== row[3].replace(' Cambia', '') && row[3].endsWith('Cambia')],
+  ]
+  for (const [label, total, pages, matches] of filterCases) {
+    await reviewFilter(label)
+    const filtered = await reviewState()
+    assert.deepEqual(filtered.pressed, [`${label} (${total})`])
+    assert.equal(filtered.rows.length, 10, label)
+    assert.ok(filtered.rows.every(matches), `${label}: ${JSON.stringify(filtered.rows[0])}`)
+    assert.ok(filtered.footer.includes(`a 10 de ${total}`) && filtered.footer.includes(`Página 1 de ${pages}`), `${label}: ${filtered.footer}`)
+    await button('Siguiente')
+    assert.ok((await reviewState()).footer.includes(`Página 2 de ${pages}`), `${label}: second page`)
+  }
+  // Keyboard: the filters are native buttons; Space on the focused one applies it.
+  await evaluate(`[...${reviewSection}.querySelectorAll('button[aria-pressed]')].find(b=>b.textContent.startsWith('Pendientes')).focus()`)
+  for (const type of ['keyDown', 'keyUp'])
+    await send('Input.dispatchKeyEvent', { type, key: ' ', code: 'Space', windowsVirtualKeyCode: 32 })
+  await pause(80)
+  assert.deepEqual((await reviewState()).pressed, ['Pendientes (23)'], 'filter applied with the keyboard')
+  // Search by name (accents ignored) and by SIS, combined with the active filter.
+  await reviewFilter('Todos')
+  await reviewSearch('angela nunez')
+  bigState = await reviewState()
+  assert.deepEqual(bigState.rows.map((row) => row.slice(0, 2)), [['Ángela Núñez Prueba', 'QA-0007']])
+  await reviewSearch('QA-0013')
+  bigState = await reviewState()
+  assert.deepEqual(bigState.rows.map((row) => [row[1], row[3]]), [['QA-0013', 'Inhabilitado Protegido']])
+  await reviewFilter('Solo cambios')
+  bigState = await reviewState()
+  assert.equal(bigState.rows.length, 0)
+  assert.ok(bigState.text.includes('Sin coincidencias'), 'a protected student is not a change')
+  // will_update without a real state change is not a change.
+  await reviewSearch('QA-0005')
+  assert.equal((await reviewState()).rows.length, 0)
+  await reviewFilter('Todos')
+  bigState = await reviewState()
+  assert.deepEqual(bigState.rows.map((row) => row.slice(1, 4)), [['QA-0005', 'Habilitado', 'Habilitado']])
+  await openDetail('Estudiante QA 0005')
+  const rewritten = await dialogState()
+  assert.equal(rewritten.metrics['Cambia de estado'], 'No')
+  assert.equal(rewritten.metrics['Se actualizará el registro'], 'Sí')
+  await closeDialog()
+  // Detail per criterion and missing fields of a pending student.
+  await reviewSearch('QA-0004')
+  await openDetail('Estudiante QA 0004')
+  const pendingBig = await dialogState()
+  assert.equal(pendingBig.metrics['Estado final propuesto'], 'Pendiente')
+  assert.equal(pendingBig.criteria.length, 1)
+  assert.ok(pendingBig.criteria[0].includes('Resultado: Pendiente') && pendingBig.criteria[0].includes('Requerido: 25'), pendingBig.criteria[0])
+  assert.ok(pendingBig.text.includes('Información faltante: Datos del primer parcial'), pendingBig.text)
+  await closeDialog()
+  assert.equal(await evaluate(`document.activeElement?.getAttribute('aria-label')`), 'Ver detalle de Estudiante QA 0004')
+  // Applying confirms the whole snapshot, whatever filter and page are visible.
+  await reviewSearch('')
+  await reviewFilter('Protegidos')
+  await button('Siguiente')
+  await button('Aplicar habilitaciones')
+  await wait(`document.querySelector('dialog[open]')`)
+  const impact = await dialogState()
+  assert.deepEqual(impact.metrics, { 'Pasan a habilitado': '23', 'Pasan a inhabilitado': '23', 'Sin cambio de estado': '184', 'Decisiones protegidas': '23', Pendientes: '23' })
+  assert.ok(impact.text.includes('los resultados de los 230 estudiantes de esta revisión, no solo los que muestra la tabla'))
+  assert.deepEqual(await confirmCalls(), [], 'nothing is sent before confirming')
+  await button('Aplicar a 230 estudiantes')
+  await wait(`document.body.innerText.includes('Proceso confirmado')`)
+  assert.deepEqual(await confirmCalls(), [{ url: '/exams/17/eligibility-automation/evaluations/preview-big-90/confirm', payload: null }])
+  // Layout of the table, the detail panel and the confirmation at five widths.
+  for (const width of [320, 375, 640, 768, 1440]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 768 })
+    await openBigReview()
+    await noOverflow(`${width}: review, default filter`)
+    await reviewFilter('Todos')
+    await noOverflow(`${width}: review, all students`)
+    await openDetail('Estudiante QA 0001')
+    const panel = await dialogState()
+    assert.deepEqual([panel.modal, panel.inside, panel.focusInside], [true, true, true], `${width}px detail panel`)
+    if (width === 320 || width === 1440) await shot(`review-detail-${width}`)
+    await closeDialog()
+    await button('Aplicar habilitaciones')
+    await wait(`document.querySelector('dialog[open]')`)
+    await pause(120)
+    const confirmDialog = await dialogState()
+    assert.deepEqual([confirmDialog.modal, confirmDialog.inside, confirmDialog.focusInside], [true, true, true], `${width}px apply dialog`)
+    await closeDialog()
+    await noOverflow(`${width}: after dialogs`)
+    if (width === 320 || width === 1440) await shot(`review-table-${width}`)
+    // No cell content is clipped or squeezed: every badge and action fits its cell and the student
+    // name keeps a readable width (a page-level overflow check does not catch this).
+    const cells = await evaluate(
+      `(()=>{const row=${reviewSection}.querySelector('tbody tr');const out=[];for(const td of row.querySelectorAll('td')){const box=td.getBoundingClientRect();for(const el of td.querySelectorAll('span,button,strong')){const r=el.getBoundingClientRect();if(r.width>0&&(r.left<box.left-1||r.right>box.right+1))out.push(td.dataset.label+': '+el.textContent.trim().slice(0,24))}}const name=row.querySelector('strong').getBoundingClientRect();return {clipped:out,nameWidth:Math.round(name.width),nameLines:Math.round(name.height/parseFloat(getComputedStyle(row.querySelector('strong')).lineHeight))}})()`,
+    )
+    assert.deepEqual(cells.clipped, [], `${width}px clipped cell content`)
+    assert.ok(cells.nameWidth >= 90 && cells.nameLines <= 2, `${width}px student name ${JSON.stringify(cells)}`)
+    if (width === 320 || width === 375) {
+      // Readable evidence of the phone layout: only the first rows of the table.
+      await evaluate(`${reviewSection}.querySelector('tbody tr').scrollIntoView({block:'start'})`)
+      const rowsShot = await send('Page.captureScreenshot', { format: 'png' })
+      await writeFile(join(output, `review-rows-${width}.png`), Buffer.from(rowsShot.data, 'base64'))
+    }
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1024, height: 1000, deviceScaleFactor: 1, mobile: false })
+  // Expired snapshot: applying is blocked and nothing is sent.
+  await openBigReview('normal', true)
+  await wait(`document.body.innerText.includes('Esta revisión caducó')`)
+  assert.equal(await applyButtonDisabled(), true)
+  assert.deepEqual(await confirmCalls(), [])
+  assert.equal(await evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Generar nueva revisión').disabled`), false)
+  // 409 on confirm: the dialog closes, the snapshot can no longer be applied and a new review is required.
+  await openBigReview('confirm-conflict')
+  await button('Aplicar habilitaciones')
+  await wait(`document.querySelector('dialog[open]')`)
+  await button('Aplicar a 230 estudiantes')
+  await wait(`document.body.innerText.includes('La información cambió. Recarga los datos y genera una nueva revisión.')`)
+  await wait(`!document.querySelector('dialog[open]')`)
+  assert.equal((await confirmCalls()).length, 1)
+  assert.equal(await applyButtonDisabled(), true)
+  assert.ok(await evaluate(`document.body.innerText.replace(/\\s+/g,' ').includes('Debes generar una nueva revisión antes de aplicar.')&&!document.body.innerText.includes('Proceso confirmado')`))
+  // No criteria configured: the frontend adds no rule; it shows what the backend returns.
+  await reset(auto, 'no-criteria')
+  await evaluate(`hu34Ui.pages=page=>({...hu34Ui.evaluation,id:91,preview_id:'preview-empty-91',configuration:{...hu34Ui.evaluation.configuration,mandatory_criteria:[],selected_criteria:[],criteria:[],inactive_criteria:[]},results:{data:hu34Ui.evaluation.results.data.slice(0,2).map(item=>({...item,criteria_results:[]})),meta:{current_page:1,per_page:100,total:2,last_page:1}},summary:{total:2,eligible:0,ineligible:0,pending:2}});true`)
+  await wait(`document.getElementById('configuration-title')`)
+  await wait(`document.body.innerText.includes('Si no existen criterios automáticos aplicables')`)
+  await button('Revisar y aplicar')
+  await button('Generar revisión de habilitaciones')
+  await wait(`document.getElementById('review-summary-title')`)
+  assert.ok(await evaluate(`document.body.innerText.includes('No existen criterios automáticos aplicables para determinar una habilitación.')`))
+  assert.deepEqual(await reviewSummary(), { 'Total evaluado': 2, 'Habilitados propuestos': 0, 'Inhabilitados propuestos': 0, Pendientes: 2, 'Cambios de estado': 0, 'Decisiones protegidas': 0 })
+  await reviewFilter('Todos')
+  bigState = await reviewState()
+  assert.deepEqual(bigState.rows.map((row) => row.slice(2, 4)), [['Habilitado', 'Pendiente Se conserva el estado actual'], ['Habilitado', 'Pendiente Se conserva el estado actual']])
+  await openDetail('Estudiante de prueba')
+  assert.ok((await dialogState()).text.includes('Esta evaluación no incluye resultados por criterio.'))
+  await closeDialog()
+  assert.equal(await applyButtonDisabled(), false)
+  result.checks.push(
+    'review: three backend pages loaded, summary from final statuses',
+    'review: six filters, search and local pagination',
+    'review: will_update without state change, protected decisions, detail per criterion',
+    'review: whole snapshot applied, expired snapshot, 409 and no criteria',
+    'review: layout at 320/375/640/768/1440',
   )
   result.checks.push(
     'optional parameters/revision unchanged',

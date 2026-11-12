@@ -40,7 +40,9 @@ import { PageContainer } from '@/shared/components/ui/PageContainer/PageContaine
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useAcademicData } from '../hooks/useAcademicData'
 import { AcademicCsvImportPanel } from '../components/AcademicCsvImportPanel'
+import { CriterionResults, EvaluationReview } from '../components/EvaluationReview'
 import { getAcademicCsvLayout, getPersistedAcademicCriteria } from '../utils/academicCsv'
+import { displayStatus, displayValue } from '../utils/evaluationReview'
 import {
   academicActionLabel,
   academicHistoryChanges,
@@ -63,7 +65,7 @@ type Section = 'configuration' | 'academic' | 'evaluation' | 'history'
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'configuration', label: 'Configurar criterios' },
   { id: 'academic', label: 'Datos académicos' },
-  { id: 'evaluation', label: 'Vista previa' },
+  { id: 'evaluation', label: 'Revisar y aplicar' },
   { id: 'history', label: 'Historial' },
 ]
 
@@ -100,31 +102,6 @@ function criteriaValidationMessage(
       return false
     return true
   })
-}
-
-function displayStatus(status: string | null | undefined): string {
-  if (status === 'ELIGIBLE') return 'Habilitado'
-  if (status === 'INELIGIBLE') return 'Inhabilitado'
-  if (status === 'PENDING') return 'Pendiente'
-  return 'Sin decisión vigente'
-}
-
-function displayValue(
-  value: unknown,
-  assessmentLabels: Record<string, string> = {},
-): string {
-  if (value === null || value === undefined || value === '') return '—'
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No'
-  if (Array.isArray(value))
-    return value
-      .map((item) =>
-        typeof item === 'string'
-          ? assessmentLabel(item, assessmentLabels[item])
-          : String(item),
-      )
-      .join(' + ')
-  if (typeof value === 'object') return 'Dato compuesto'
-  return String(value)
 }
 
 function appliedParameterSummary(
@@ -707,41 +684,11 @@ function ResultRow({
       {result.criteria_results.length > 0 ? (
         <details>
           <summary>Resultados por criterio</summary>
-          <ul className={styles.criteriaResults}>
-            {result.criteria_results.map((item, index) => (
-              <li key={`${item.code}-${index}`}>
-                <strong>
-                  {criterionLabel(
-                    item.code,
-                    item.name ?? criterionLabels[item.code],
-                  )}
-                </strong>
-                <span>
-                  Resultado:{' '}
-                  {item.status === 'PASSED'
-                    ? 'Cumple'
-                    : item.status === 'FAILED'
-                      ? 'No cumple'
-                      : 'Pendiente'}
-                </span>
-                {'actual_value' in item ? (
-                  <span>
-                    {item.code === 'MIN_ATTENDANCE_PERCENTAGE'
-                      ? 'Asistencia'
-                      : 'Valor actual'}
-                    : {displayValue(item.actual_value, assessmentLabels)}
-                  </span>
-                ) : null}
-                {'required_value' in item ? (
-                  <span>
-                    Requerido:{' '}
-                    {displayValue(item.required_value, assessmentLabels)}
-                  </span>
-                ) : null}
-                {item.reason ? <span>{item.reason}</span> : null}
-              </li>
-            ))}
-          </ul>
+          <CriterionResults
+            results={result.criteria_results}
+            criterionLabels={criterionLabels}
+            assessmentLabels={assessmentLabels}
+          />
         </details>
       ) : null}
     </article>
@@ -1084,11 +1031,11 @@ export function EligibilityAutomationPage() {
         error instanceof EligibilityAutomationApiError ? error : null
       setEvaluationError(
         apiError?.status === 409
-          ? 'La información cambió. Recarga los datos y genera una nueva vista previa.'
+          ? 'La información cambió. Recarga los datos y genera una nueva revisión.'
           : apiError?.code === 'CRITERIA_CONFLICT'
             ? apiError.message ||
               'La combinación de criterios seleccionada es incompatible.'
-            : getErrorMessage(error, 'No se pudo generar la vista previa.'),
+            : getErrorMessage(error, 'No se pudo generar la revisión.'),
       )
       if (apiError?.status === 409) {
         setEvaluation(null)
@@ -1144,8 +1091,8 @@ export function EligibilityAutomationPage() {
         error instanceof EligibilityAutomationApiError ? error : null
       setEvaluationError(
         apiError?.status === 409
-          ? 'La información cambió. Recarga los datos y genera una nueva vista previa.'
-          : getErrorMessage(error, 'No se pudo confirmar la evaluación.'),
+          ? 'La información cambió. Recarga los datos y genera una nueva revisión.'
+          : getErrorMessage(error, 'No se pudo aplicar la evaluación.'),
       )
       if (apiError?.status === 409) {
         setEvaluationMustRefresh(true)
@@ -1169,20 +1116,6 @@ export function EligibilityAutomationPage() {
     }
   }
 
-  const eligibilitySummary = evaluation
-    ? {
-        updates: evaluation.results.data.filter((item) => item.will_update)
-          .length,
-        unchanged: evaluation.results.data.filter((item) => !item.will_update)
-          .length,
-        manual: evaluation.results.data.filter(
-          (item) => item.manual_override_preserved,
-        ).length,
-        pending: evaluation.results.data.filter(
-          (item) => item.computed_status === 'PENDING',
-        ).length,
-      }
-    : null
   const assessmentLabels = Object.fromEntries(
     (options?.assessments ?? []).map((assessment) => [
       assessment.key,
@@ -1631,10 +1564,11 @@ export function EligibilityAutomationPage() {
 
           {section === 'evaluation' ? (
             <section aria-labelledby="evaluation-title">
-              <h2 id="evaluation-title">Resultado de evaluación</h2>
+              <h2 id="evaluation-title">Revisar y aplicar</h2>
               <p>
-                Revisa los resultados antes de confirmar. Si falta información,
-                se conserva la habilitación vigente del estudiante.
+                Genera la revisión, comprueba los cambios y aplícala. Nada se
+                modifica hasta que confirmes. Si falta información, se conserva
+                la habilitación vigente del estudiante.
               </p>
               <button
                 type="button"
@@ -1646,15 +1580,15 @@ export function EligibilityAutomationPage() {
               >
                 {evaluationWorking
                   ? 'Procesando…'
-                  : 'Generar vista previa de habilitaciones'}
+                  : 'Generar revisión de habilitaciones'}
               </button>
               {evaluationError ? (
                 <div role="alert" className={styles.error}>
                   <p>{evaluationError}</p>
                   {evaluationMustRefresh ? (
                     <p>
-                      Los datos o la revisión cambiaron. Debes generar una nueva
-                      vista previa antes de confirmar.
+                      Los datos o la configuración cambiaron. Debes generar una
+                      nueva revisión antes de aplicar.
                     </p>
                   ) : null}
                   {configurationConflict || evaluationMustRefresh ? (
@@ -1673,76 +1607,27 @@ export function EligibilityAutomationPage() {
                 </div>
               ) : null}
               {evaluation ? (
-                <div className={styles.panel}>
-                  <h3>Resumen antes de confirmar</h3>
-                  <p className={styles.note}>
-                    Los contadores de decisiones manuales preservadas y
-                    pendientes pueden coincidir para una misma persona.
-                  </p>
-                  {eligibilitySummary ? (
-                    <dl className={styles.summary}>
-                      <div>
-                        <dt>Se actualizarán</dt>
-                        <dd>{eligibilitySummary.updates}</dd>
-                      </div>
-                      <div>
-                        <dt>Sin cambios</dt>
-                        <dd>{eligibilitySummary.unchanged}</dd>
-                      </div>
-                      <div>
-                        <dt>Decisiones manuales preservadas</dt>
-                        <dd>{eligibilitySummary.manual}</dd>
-                      </div>
-                      <div>
-                        <dt>Pendientes</dt>
-                        <dd>{eligibilitySummary.pending}</dd>
-                      </div>
-                      <div>
-                        <dt>Estudiantes totales</dt>
-                        <dd>{evaluation.summary.total}</dd>
-                      </div>
-                    </dl>
-                  ) : null}
-                  <AppliedCriteriaList
-                    title="Criterios aplicados"
-                    configuration={evaluation.configuration}
-                    catalog={evaluation.catalog}
-                    assessmentLabels={assessmentLabels}
-                  />
-                  <div className={styles.resultList}>
-                    {evaluation.results.data.map((item) => (
-                      <ResultRow
-                        key={item.student.id}
-                        result={item}
-                        criterionLabels={criterionLabels}
-                        assessmentLabels={assessmentLabels}
-                      />
-                    ))}
-                  </div>
-                  <div className={styles.actions}>
-                    <button
-                      type="button"
-                      className={sharedStyles.primaryButton}
-                      disabled={evaluationWorking || evaluationMustRefresh}
-                      onClick={() => void confirmEvaluation()}
-                    >
-                      {evaluationWorking
-                        ? 'Confirmando…'
-                        : 'Confirmar evaluación'}
-                    </button>
-                    <button
-                      type="button"
-                      className={sharedStyles.secondaryButton}
-                      disabled={evaluationWorking}
-                      onClick={() => {
-                        setEvaluation(null)
-                        void createEvaluationPreview()
-                      }}
-                    >
-                      Generar nuevo preview
-                    </button>
-                  </div>
-                </div>
+                <EvaluationReview
+                  key={evaluation.preview_id}
+                  evaluation={evaluation}
+                  criterionLabels={criterionLabels}
+                  assessmentLabels={assessmentLabels}
+                  working={evaluationWorking}
+                  mustRefresh={evaluationMustRefresh}
+                  criteria={
+                    <AppliedCriteriaList
+                      title="Criterios aplicados"
+                      configuration={evaluation.configuration}
+                      catalog={evaluation.catalog}
+                      assessmentLabels={assessmentLabels}
+                    />
+                  }
+                  onApply={confirmEvaluation}
+                  onRegenerate={() => {
+                    setEvaluation(null)
+                    void createEvaluationPreview()
+                  }}
+                />
               ) : null}
               {confirmation ? (
                 <div role="status" className={styles.panel}>
