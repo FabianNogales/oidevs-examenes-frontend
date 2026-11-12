@@ -4,20 +4,6 @@ import type {
 } from '../types/eligibilityAutomation.types'
 import { assessmentLabel } from './automationPresentation'
 
-// «Revisar y aplicar» (HU34 E1). Todo lo de este archivo es presentación sobre la instantánea que
-// calcula el backend: aquí no se evalúa ningún criterio ni se decide ninguna habilitación.
-//
-// Semántica usada por el resumen y por los filtros:
-// - Estado final propuesto: `effective_status`. Solo es una decisión si vale ELIGIBLE o INELIGIBLE;
-//   con cualquier otro valor (PENDING o nulo) no hay decisión nueva y se conserva la vigente.
-// - Cambio de estado: el estado final propuesto es una decisión y difiere de `current_status`.
-//   No equivale a `will_update`: el backend puede volver a registrar una habilitación sin
-//   cambiar su estado.
-// - Pendiente: `computed_status === 'PENDING'`; el backend no pudo resolver la evaluación.
-//   Un pendiente puede aparecer además en Habilitados o Inhabilitados si su estado final
-//   propuesto es una decisión.
-// - Protegido: `manual_override_preserved`. El contrato actual no indica el origen de la decisión.
-
 export function displayStatus(status: string | null | undefined): string {
   if (status === 'ELIGIBLE') return 'Habilitado'
   if (status === 'INELIGIBLE') return 'Inhabilitado'
@@ -44,12 +30,7 @@ export function displayValue(
 }
 
 export type ReviewFilter =
-  | 'all'
-  | 'changes'
-  | 'eligible'
-  | 'ineligible'
-  | 'pending'
-  | 'protected'
+  'all' | 'changes' | 'eligible' | 'ineligible' | 'pending' | 'protected'
 
 export const REVIEW_FILTERS: readonly { id: ReviewFilter; label: string }[] = [
   { id: 'all', label: 'Todos' },
@@ -69,8 +50,10 @@ function isDecision(status: unknown): status is 'ELIGIBLE' | 'INELIGIBLE' {
 
 export function isStateChange(result: EvaluationResult): boolean {
   return (
-    isDecision(result.effective_status) &&
-    result.effective_status !== result.current_status
+    result.state_will_change ??
+    (result.will_update &&
+      isDecision(result.effective_status) &&
+      result.effective_status !== result.current_status)
   )
 }
 
@@ -82,145 +65,64 @@ export function isProtectedResult(result: EvaluationResult): boolean {
   return result.manual_override_preserved === true
 }
 
-export function matchesReviewFilter(
-  result: EvaluationResult,
-  filter: ReviewFilter,
-): boolean {
-  switch (filter) {
-    case 'all':
-      return true
-    case 'changes':
-      return isStateChange(result)
-    case 'eligible':
-      return result.effective_status === 'ELIGIBLE'
-    case 'ineligible':
-      return result.effective_status === 'INELIGIBLE'
-    case 'pending':
-      return isPendingResult(result)
-    case 'protected':
-      return isProtectedResult(result)
-  }
-}
-
-function normalizeSearch(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
-}
-
-export function matchesReviewSearch(
-  result: EvaluationResult,
-  query: string,
-): boolean {
-  const needle = normalizeSearch(query)
-  if (!needle) return true
-  return (
-    normalizeSearch(result.student.display_name ?? '').includes(needle) ||
-    normalizeSearch(String(result.student.sis ?? '')).includes(needle)
+// Históricos sin motivo efectivo usan el motivo vigente y luego la explicación original.
+// Un null explícito se conserva: el servidor eliminó el motivo de la decisión final.
+export function effectiveReason(result: EvaluationResult): string | null {
+  if (result.effective_reason !== undefined) return result.effective_reason
+  if (
+    (isProtectedResult(result) || !result.will_update) &&
+    result.current_reason !== undefined
   )
+    return result.current_reason
+  return result.reason
 }
 
-/** El filtro y la búsqueda se aplican siempre antes de paginar. */
-export function filterReviewResults(
-  results: readonly EvaluationResult[],
-  filter: ReviewFilter,
-  query: string,
-): EvaluationResult[] {
-  return results.filter(
-    (result) =>
-      matchesReviewFilter(result, filter) && matchesReviewSearch(result, query),
-  )
-}
-
-export function countReviewFilters(
-  results: readonly EvaluationResult[],
-): Record<ReviewFilter, number> {
-  const counts: Record<ReviewFilter, number> = {
-    all: 0,
-    changes: 0,
-    eligible: 0,
-    ineligible: 0,
-    pending: 0,
-    protected: 0,
-  }
-  for (const result of results)
-    for (const { id } of REVIEW_FILTERS)
-      if (matchesReviewFilter(result, id)) counts[id] += 1
-  return counts
-}
-
-export function paginateReview<T>(
-  items: readonly T[],
-  page: number,
-  pageSize = REVIEW_PAGE_SIZE,
-) {
-  const total = items.length
-  const lastPage = Math.max(1, Math.ceil(total / pageSize))
-  const currentPage = Math.min(Math.max(1, Math.trunc(page) || 1), lastPage)
-  const start = (currentPage - 1) * pageSize
-  const pageItems = items.slice(start, start + pageSize)
-  return {
-    items: pageItems,
-    currentPage,
-    lastPage,
-    total,
-    from: total === 0 ? 0 : start + 1,
-    to: start + pageItems.length,
-  }
+export function protectedLabel(result: EvaluationResult): string {
+  if (result.protected_source === 'MANUAL') return 'Protegido · Manual'
+  if (result.protected_source === 'LEGACY') return 'Protegido · Heredado'
+  return 'Protegido'
 }
 
 export type ReviewSummary = {
-  /** Estudiantes evaluados según el backend. */
   total: number
-  /** Resultados efectivamente cargados en memoria. */
-  loaded: number
-  eligible: number
-  ineligible: number
+  eligible: number | undefined
+  ineligible: number | undefined
+  unset: number | undefined
   pending: number
-  changes: number
-  toEligible: number
-  toIneligible: number
-  protected: number
-  /** Registros que el backend volverá a escribir (`will_update`). */
-  recordUpdates: number
-  /** `will_update` sin cambio real de estado. */
-  updatesWithoutChange: number
+  changes: number | undefined
+  protected: number | undefined
+  traceability: number | undefined
 }
 
-/**
- * El backend aporta `total` y `pending`. Sus `eligible` e `ineligible` cuentan el estado
- * calculado, no el final propuesto, así que esos dos y los que no envía (cambios, protegidos,
- * registros que se reescriben) se cuentan aquí sobre todos los resultados cargados.
- */
+// Los contadores globales proceden exclusivamente del servidor, también para históricos.
 export function summarizeReview(
-  view: Pick<EvaluationView, 'results' | 'summary'>,
+  view: Pick<EvaluationView, 'summary'>,
 ): ReviewSummary {
-  const results = view.results.data
-  const changes = results.filter(isStateChange)
-  const updates = results.filter((result) => result.will_update)
+  const summary = view.summary
   return {
-    total: view.summary?.total ?? results.length,
-    loaded: results.length,
-    eligible: results.filter((result) => result.effective_status === 'ELIGIBLE')
-      .length,
-    ineligible: results.filter(
-      (result) => result.effective_status === 'INELIGIBLE',
-    ).length,
-    pending: view.summary?.pending ?? results.filter(isPendingResult).length,
-    changes: changes.length,
-    toEligible: changes.filter(
-      (result) => result.effective_status === 'ELIGIBLE',
-    ).length,
-    toIneligible: changes.filter(
-      (result) => result.effective_status === 'INELIGIBLE',
-    ).length,
-    protected: results.filter(isProtectedResult).length,
-    recordUpdates: updates.length,
-    updatesWithoutChange: updates.filter((result) => !isStateChange(result))
-      .length,
+    total: summary.total,
+    eligible: summary.effective_eligible,
+    ineligible: summary.effective_ineligible,
+    unset: summary.effective_unset,
+    pending: summary.pending,
+    changes: summary.state_changes,
+    protected: summary.protected,
+    traceability: summary.traceability_only,
   }
+}
+
+export function hasGlobalReviewSummary(view: EvaluationView): boolean {
+  return [
+    view.summary.effective_eligible,
+    view.summary.effective_ineligible,
+    view.summary.effective_unset,
+    view.summary.state_changes,
+    view.summary.traceability_only,
+    view.summary.protected,
+  ].every(
+    (value) =>
+      typeof value === 'number' && Number.isFinite(value) && value >= 0,
+  )
 }
 
 /** Una fecha de caducidad ausente o ilegible no bloquea: el backend sigue validando la instantánea. */
@@ -233,7 +135,10 @@ export function isSnapshotExpired(
   return Number.isFinite(limit) && now >= limit
 }
 
-export function briefReason(reason: string | null | undefined, max = 90): string {
+export function briefReason(
+  reason: string | null | undefined,
+  max = 90,
+): string {
   const text = (reason ?? '').replace(/\s+/g, ' ').trim()
   if (!text) return '—'
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text

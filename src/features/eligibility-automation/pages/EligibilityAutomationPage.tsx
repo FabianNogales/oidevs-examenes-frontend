@@ -617,8 +617,8 @@ function AppliedCriteriaList({
         </ul>
       ) : (
         <p>
-          No existen criterios automáticos aplicables para determinar una
-          habilitación.
+          No existen criterios automáticos aplicables. Revisa el resultado
+          calculado por el servidor y las decisiones protegidas.
         </p>
       )}
     </section>
@@ -1025,7 +1025,7 @@ export function EligibilityAutomationPage() {
         configuration.revision,
         configuration.catalog_revision,
       )
-      setEvaluation(await getAllEvaluationResults(examId, firstPage))
+      setEvaluation(firstPage)
     } catch (error) {
       const apiError =
         error instanceof EligibilityAutomationApiError ? error : null
@@ -1325,8 +1325,9 @@ export function EligibilityAutomationPage() {
               {configuration.mandatory_criteria.length === 0 &&
               selectedCriteria.length === 0 ? (
                 <p className={styles.note}>
-                  Si no existen criterios automáticos aplicables, la evaluación
-                  puede quedar pendiente y no modificar habilitaciones.
+                  Sin criterios automáticos aplicables, el servidor propone habilitar
+                  a los estudiantes inscritos activos y conserva las decisiones
+                  protegidas. Revisa y confirma para aplicar el resultado.
                 </p>
               ) : null}
               <section

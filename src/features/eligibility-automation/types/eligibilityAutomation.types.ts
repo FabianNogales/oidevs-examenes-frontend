@@ -167,11 +167,26 @@ export type CriterionResult = {
   missing_fields?: string[]
 }
 
+export type EvaluationFilter =
+  'ALL' | 'CHANGES' | 'ELIGIBLE' | 'INELIGIBLE' | 'PENDING' | 'PROTECTED'
+
+export type EvaluationQuery = {
+  filter: EvaluationFilter
+  search: string
+  page: number
+  per_page: number
+}
+
 export type EvaluationResult = {
   student: { id: number; display_name: string; sis: string }
   computed_status: 'ELIGIBLE' | 'INELIGIBLE' | 'PENDING'
   current_status: 'ELIGIBLE' | 'INELIGIBLE' | null
   effective_status: 'ELIGIBLE' | 'INELIGIBLE' | null
+  state_will_change?: boolean
+  traceability_only?: boolean
+  protected_source?: 'MANUAL' | 'LEGACY' | null
+  current_reason?: string | null
+  effective_reason?: string | null
   manual_override_preserved: boolean
   will_update: boolean
   reason: string
@@ -202,6 +217,12 @@ export type EvaluationView = {
     eligible: number
     ineligible: number
     pending: number
+    effective_eligible?: number
+    effective_ineligible?: number
+    effective_unset?: number
+    state_changes?: number
+    traceability_only?: number
+    protected?: number
   }
 }
 

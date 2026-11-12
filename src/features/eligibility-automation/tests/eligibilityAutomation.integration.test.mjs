@@ -656,7 +656,7 @@ test('evaluation preview preserves manual and non-override statuses from backend
   )
 })
 
-test('evaluation result pagination loads every backend snapshot page for confirmation summary', async () => {
+test('historical evaluation pagination can load every backend snapshot page', async () => {
   const first = {
     id: 31,
     results: {
@@ -904,8 +904,18 @@ test('academic records omit empty search and serialize a nonempty string without
 })
 
 // ── HU34 E1 — «Revisar y aplicar»: presentation rules over the backend snapshot ──
-const reviewResult = (id, computed, current, effective, { manual = false, will = false, name } = {}) => ({
-  student: { id, display_name: name ?? `Estudiante ${id}`, sis: `QA-${String(id).padStart(4, '0')}` },
+const reviewResult = (
+  id,
+  computed,
+  current,
+  effective,
+  { manual = false, will = false, name } = {},
+) => ({
+  student: {
+    id,
+    display_name: name ?? `Estudiante ${id}`,
+    sis: `QA-${String(id).padStart(4, '0')}`,
+  },
   computed_status: computed,
   current_status: current,
   effective_status: effective,
@@ -916,105 +926,126 @@ const reviewResult = (id, computed, current, effective, { manual = false, will =
   eligibility_revision: 1,
   criteria_results: [],
 })
-const reviewSet = [
-  reviewResult(1, 'ELIGIBLE', 'INELIGIBLE', 'ELIGIBLE', { will: true }), // becomes eligible
-  reviewResult(2, 'ELIGIBLE', 'ELIGIBLE', 'ELIGIBLE', { will: true }), // rewritten, same state
-  reviewResult(3, 'ELIGIBLE', 'INELIGIBLE', 'INELIGIBLE', { manual: true }), // protected
-  reviewResult(4, 'PENDING', 'ELIGIBLE', 'PENDING'), // pending, no decision
-  reviewResult(5, 'PENDING', 'ELIGIBLE', 'ELIGIBLE'), // pending, current state kept as final
-  reviewResult(6, 'INELIGIBLE', null, 'INELIGIBLE', { will: true }), // first decision
-  reviewResult(7, 'ELIGIBLE', 'ELIGIBLE', 'ELIGIBLE', { name: 'Ángela Núñez' }), // unchanged
-]
 const loadReview = () =>
   createHarness().load(resolve(featureRoot, 'utils/evaluationReview.ts'))
 
-test('review filters use the proposed final status and tell real changes from will_update', () => {
-  const review = loadReview()
-  const ids = (filter, query = '') =>
-    review.filterReviewResults(reviewSet, filter, query).map((item) => item.student.id)
-  assert.equal(review.DEFAULT_REVIEW_FILTER, 'changes')
-  assert.deepEqual(review.REVIEW_FILTERS.map(({ id, label }) => [id, label]), [
-    ['all', 'Todos'],
-    ['changes', 'Solo cambios'],
-    ['eligible', 'Habilitados'],
-    ['ineligible', 'Inhabilitados'],
-    ['pending', 'Pendientes'],
-    ['protected', 'Protegidos'],
-  ])
-  assert.deepEqual(ids('all'), [1, 2, 3, 4, 5, 6, 7])
-  // A change compares current and final status: will_update alone (2) is not a change, a
-  // protected decision (3) and a pending result (4, 5) keep their state.
-  assert.deepEqual(ids('changes'), [1, 6])
-  assert.deepEqual(reviewSet.filter((item) => item.will_update).map((item) => item.student.id), [1, 2, 6])
-  // Eligible and ineligible follow effective_status, not computed_status (3 is computed ELIGIBLE).
-  assert.deepEqual(ids('eligible'), [1, 2, 5, 7])
-  assert.deepEqual(ids('ineligible'), [3, 6])
-  // Pending is computed_status PENDING; 5 is also listed as eligible because its final status is.
-  assert.deepEqual(ids('pending'), [4, 5])
-  assert.deepEqual(ids('protected'), [3])
-  assert.deepEqual(review.countReviewFilters(reviewSet), {
-    all: 7, changes: 2, eligible: 4, ineligible: 2, pending: 2, protected: 1,
+test('remote review serializes all six filters and requests only the required snapshot page', async () => {
+  const { api, calls } = createHarness({
+    get: () => response({ data: { id: 31 } }),
+    post: () => response({ data: { id: 31 } }),
   })
-  // Search by name (case and accents ignored) or SIS, combined with the filter.
-  assert.deepEqual(ids('all', 'angela nunez'), [7])
-  assert.deepEqual(ids('all', '  QA-0003 '), [3])
-  assert.deepEqual(ids('changes', 'QA-0003'), [])
-  assert.deepEqual(ids('eligible', 'estudiante'), [1, 2, 5])
+  await api.previewEligibilityEvaluation(17, 4, 'catalog-r7')
+  assert.deepEqual(calls[0].args[2].params, {
+    page: 1,
+    per_page: 10,
+    filter: 'CHANGES',
+    search: '',
+  })
+  const signal = new AbortController().signal
+  for (const filter of [
+    'ALL',
+    'CHANGES',
+    'ELIGIBLE',
+    'INELIGIBLE',
+    'PENDING',
+    'PROTECTED',
+  ]) {
+    const query = { filter, search: 'Ángela', page: 2, per_page: 10 }
+    await api.getEvaluationDetail(17, 31, 2, query, signal)
+    const call = calls.at(-1)
+    assert.equal(
+      call.args[0],
+      '/exams/17/eligibility-automation/evaluations/31',
+    )
+    assert.deepEqual(call.args[1].params, query)
+    assert.equal(call.args[1].signal, signal)
+  }
+  assert.equal(calls.length, 7)
 })
 
-test('review summary takes total and pending from the backend and counts final statuses locally', () => {
+test('global review summary comes entirely from backend even on an empty filtered page', () => {
   const review = loadReview()
-  const summary = review.summarizeReview({
-    results: { data: reviewSet, meta: {} },
-    // The backend counts computed statuses: 5 eligible, 1 ineligible.
-    summary: { total: 7, eligible: 5, ineligible: 1, pending: 2 },
+  const view = {
+    results: { data: [], meta: { total: 0 } },
+    summary: {
+      total: 230,
+      eligible: 184,
+      ineligible: 23,
+      pending: 23,
+      effective_eligible: 161,
+      effective_ineligible: 46,
+      effective_unset: 23,
+      state_changes: 46,
+      traceability_only: 23,
+      protected: 23,
+    },
+  }
+  assert.deepEqual(review.summarizeReview(view), {
+    total: 230,
+    eligible: 161,
+    ineligible: 46,
+    unset: 23,
+    pending: 23,
+    changes: 46,
+    traceability: 23,
+    protected: 23,
   })
-  assert.deepEqual(summary, {
-    total: 7,
-    loaded: 7,
-    eligible: 4,
-    ineligible: 2,
-    pending: 2,
-    changes: 2,
-    toEligible: 1,
-    toIneligible: 1,
-    protected: 1,
-    recordUpdates: 3,
-    updatesWithoutChange: 1,
-  })
-  // A partially loaded snapshot is detectable: loaded differs from the backend total.
-  const partial = review.summarizeReview({
-    results: { data: reviewSet.slice(0, 3), meta: {} },
-    summary: { total: 7, eligible: 5, ineligible: 1, pending: 2 },
-  })
-  assert.deepEqual([partial.total, partial.loaded], [7, 3])
+  assert.equal(review.hasGlobalReviewSummary(view), true)
+  const historical = {
+    ...view,
+    summary: { total: 230, eligible: 184, ineligible: 23, pending: 23 },
+  }
+  assert.equal(review.summarizeReview(historical).eligible, undefined)
+  assert.equal(review.hasGlobalReviewSummary(historical), false)
 })
 
-test('review paginates locally after filtering and clamps the page', () => {
+test('review uses server flags and preserves effective reasons and historical fallbacks', () => {
   const review = loadReview()
-  const many = Array.from({ length: 230 }, (_, index) =>
-    index % 10 === 0
-      ? reviewResult(index + 1, 'ELIGIBLE', 'INELIGIBLE', 'ELIGIBLE', { will: true })
-      : reviewResult(index + 1, 'ELIGIBLE', 'ELIGIBLE', 'ELIGIBLE'),
+  const row = reviewResult(1, 'ELIGIBLE', 'INELIGIBLE', 'ELIGIBLE', {
+    will: true,
+  })
+  assert.equal(
+    review.isStateChange({
+      ...row,
+      state_will_change: false,
+      traceability_only: true,
+    }),
+    false,
   )
-  const changes = review.filterReviewResults(many, 'changes', '')
-  assert.equal(changes.length, 23)
-  const third = review.paginateReview(changes, 3)
-  assert.deepEqual(
-    [third.currentPage, third.lastPage, third.total, third.from, third.to, third.items.length],
-    [3, 3, 23, 21, 23, 3],
+  assert.equal(review.isStateChange({ ...row, state_will_change: true }), true)
+  assert.equal(review.isStateChange(row), true)
+  assert.equal(review.isStateChange({ ...row, will_update: false }), false)
+  assert.equal(review.effectiveReason({ ...row, effective_reason: null }), null)
+  assert.equal(
+    review.effectiveReason({
+      ...row,
+      effective_reason: 'Final',
+      current_reason: 'Actual',
+    }),
+    'Final',
   )
-  assert.deepEqual(third.items.map((item) => item.student.id), [201, 211, 221])
-  // Out-of-range pages are clamped; an empty set is page 1 of 1.
-  assert.equal(review.paginateReview(changes, 99).currentPage, 3)
-  assert.equal(review.paginateReview(changes, 0).currentPage, 1)
-  assert.deepEqual(
-    (({ currentPage, lastPage, total, from, to }) => [currentPage, lastPage, total, from, to])(
-      review.paginateReview([], 4),
-    ),
-    [1, 1, 0, 0, 0],
+  assert.equal(
+    review.effectiveReason({
+      ...row,
+      will_update: false,
+      current_reason: 'Actual',
+    }),
+    'Actual',
   )
-  assert.equal(review.paginateReview(many, 1).lastPage, 23)
+  assert.equal(review.effectiveReason(row), row.reason)
+  assert.equal(
+    review.effectiveReason({ ...row, will_update: false, current_reason: null }),
+    null,
+  )
+  assert.equal(
+    review.protectedLabel({ ...row, protected_source: 'MANUAL' }),
+    'Protegido · Manual',
+  )
+  assert.equal(
+    review.protectedLabel({ ...row, protected_source: 'LEGACY' }),
+    'Protegido · Heredado',
+  )
+  assert.equal(review.protectedLabel(row), 'Protegido')
 })
 
 test('review blocks an expired snapshot and labels statuses without inventing an origin', () => {
@@ -1030,47 +1061,70 @@ test('review blocks an expired snapshot and labels statuses without inventing an
     ['ELIGIBLE', 'INELIGIBLE', 'PENDING', null].map(review.displayStatus),
     ['Habilitado', 'Inhabilitado', 'Pendiente', 'Sin decisión vigente'],
   )
-  assert.equal(review.briefReason('  Motivo\n con   saltos  '), 'Motivo con saltos')
+  assert.equal(
+    review.briefReason('  Motivo\n con   saltos  '),
+    'Motivo con saltos',
+  )
   assert.equal(review.briefReason(''), '—')
   assert.equal(review.briefReason('x'.repeat(200)).length, 90)
-  const source = readFileSync(resolve(featureRoot, 'utils/evaluationReview.ts'), 'utf8')
-  assert.doesNotMatch(source, /['"](MANUAL|LEGACY)['"]/, 'the contract exposes no decision origin')
 })
 
-test('review over several backend pages loads the whole snapshot before summarizing', async () => {
+test('historical detail can still load all backend pages', async () => {
   const page = (number) => ({
     id: 31,
     preview_id: 'snapshot-31',
     results: {
       data: Array.from({ length: number === 3 ? 30 : 100 }, (_, index) =>
-        reviewResult((number - 1) * 100 + index + 1, 'ELIGIBLE', 'INELIGIBLE', 'ELIGIBLE', { will: true }),
+        reviewResult(
+          (number - 1) * 100 + index + 1,
+          'ELIGIBLE',
+          'INELIGIBLE',
+          'ELIGIBLE',
+          { will: true },
+        ),
       ),
       meta: { current_page: number, per_page: 100, total: 230, last_page: 3 },
     },
     summary: { total: 230, eligible: 230, ineligible: 0, pending: 0 },
   })
-  const { api, calls, load } = createHarness({
+  const { api, calls } = createHarness({
     get: (_url, config) => response({ data: page(config.params.page) }),
   })
   const complete = await api.getAllEvaluationResults(17, page(1))
-  assert.deepEqual(calls.map((call) => call.args[1].params), [
-    { page: 2, per_page: 100 },
-    { page: 3, per_page: 100 },
-  ])
-  const review = load(resolve(featureRoot, 'utils/evaluationReview.ts'))
-  const summary = review.summarizeReview(complete)
-  assert.deepEqual([summary.total, summary.loaded, summary.changes, summary.toEligible], [230, 230, 230, 230])
-  assert.equal(review.paginateReview(review.filterReviewResults(complete.results.data, 'changes', ''), 1).lastPage, 23)
+  assert.deepEqual(
+    calls.map((call) => call.args[1].params),
+    [
+      { page: 2, per_page: 100 },
+      { page: 3, per_page: 100 },
+    ],
+  )
+  assert.equal(complete.results.data.length, 230)
 })
 
 test('applying confirms the whole snapshot by preview id, without body, filters or page', async () => {
   const { api, calls } = createHarness({
-    post: () => response({ data: { evaluation_id: 31, updated: 46, unchanged: 184, manual_preserved: 23, pending: 23 } }),
+    post: () =>
+      response({
+        data: {
+          evaluation_id: 31,
+          updated: 46,
+          unchanged: 184,
+          manual_preserved: 23,
+          pending: 23,
+        },
+      }),
   })
   const confirmation = await api.confirmEligibilityEvaluation(17, 'snapshot-31')
   assert.equal(calls.length, 1)
-  assert.equal(calls[0].args[0], '/exams/17/eligibility-automation/evaluations/snapshot-31/confirm')
-  assert.equal(calls[0].args[1], undefined, 'no payload: nothing visible on screen is sent')
+  assert.equal(
+    calls[0].args[0],
+    '/exams/17/eligibility-automation/evaluations/snapshot-31/confirm',
+  )
+  assert.equal(
+    calls[0].args[1],
+    undefined,
+    'no payload: nothing visible on screen is sent',
+  )
   assert.deepEqual(calls[0].args[2], { params: undefined })
   assert.equal(confirmation.updated, 46)
 })

@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import {
+  getEvaluationDetail,
+  getAutomationError,
+} from '../api/eligibilityAutomationApi'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
@@ -9,6 +13,8 @@ import type {
   CriterionResult,
   EvaluationResult,
   EvaluationView,
+  EvaluationQuery,
+  EvaluationFilter,
 } from '../types/eligibilityAutomation.types'
 import {
   criterionLabel,
@@ -18,16 +24,17 @@ import {
 import {
   DEFAULT_REVIEW_FILTER,
   REVIEW_FILTERS,
+  REVIEW_PAGE_SIZE,
   briefReason,
-  countReviewFilters,
+  effectiveReason,
+  protectedLabel,
+  hasGlobalReviewSummary,
   displayStatus,
   displayValue,
-  filterReviewResults,
   isPendingResult,
   isProtectedResult,
   isSnapshotExpired,
   isStateChange,
-  paginateReview,
   summarizeReview,
 } from '../utils/evaluationReview'
 import type { ReviewFilter, ReviewSummary } from '../utils/evaluationReview'
@@ -47,7 +54,8 @@ const EMPTY_BY_FILTER: Record<ReviewFilter, string> = {
 
 function statusBadgeClass(status: string | null | undefined): string {
   if (status === 'ELIGIBLE') return `${styles.badge} ${styles.badgeEligible}`
-  if (status === 'INELIGIBLE') return `${styles.badge} ${styles.badgeIneligible}`
+  if (status === 'INELIGIBLE')
+    return `${styles.badge} ${styles.badgeIneligible}`
   return styles.badge
 }
 
@@ -97,10 +105,12 @@ export function CriterionResults({
 }
 
 function SummaryTiles({ summary }: { summary: ReviewSummary }) {
-  const tiles: [string, number][] = [
+  const tiles: [string, number | undefined][] = [
     ['Total evaluado', summary.total],
     ['Habilitados propuestos', summary.eligible],
     ['Inhabilitados propuestos', summary.ineligible],
+    ['Sin decisión propuesta', summary.unset],
+    ['Solo trazabilidad', summary.traceability],
     ['Pendientes', summary.pending],
     ['Cambios de estado', summary.changes],
     ['Decisiones protegidas', summary.protected],
@@ -110,7 +120,7 @@ function SummaryTiles({ summary }: { summary: ReviewSummary }) {
       {tiles.map(([label, value]) => (
         <div key={label}>
           <dt>{label}</dt>
-          <dd>{value}</dd>
+          <dd>{value ?? '—'}</dd>
         </div>
       ))}
     </dl>
@@ -149,13 +159,17 @@ function ResultDetailDialog({
       <div className={styles.detailBody}>
         {isProtectedResult(result) ? (
           <p className={pageStyles.manualNotice}>
-            Se conserva la decisión manual vigente.
+            Se conserva la decisión vigente. {protectedLabel(result)}.
           </p>
         ) : null}
         <dl className={pageStyles.resultDetails}>
           <div>
             <dt>Estado actual</dt>
             <dd>{displayStatus(result.current_status)}</dd>
+          </div>
+          <div>
+            <dt>Motivo actual</dt>
+            <dd>{result.current_reason ?? '—'}</dd>
           </div>
           <div>
             <dt>Estado final propuesto</dt>
@@ -175,8 +189,15 @@ function ResultDetailDialog({
           </div>
         </dl>
         <section aria-label="Motivo">
-          <h3>Motivo</h3>
-          <p className={pageStyles.reasonText}>{result.reason || '—'}</p>
+          <h3>Motivo final propuesto</h3>
+          <p className={pageStyles.reasonText}>
+            {effectiveReason(result) || '—'}
+          </p>
+        </section>
+        <section aria-label="Cálculo automático">
+          <h3>Cálculo automático</h3>
+          <p>{result.reason || '—'}</p>
+          <p>Solo trazabilidad: {result.traceability_only ? 'Sí' : 'No'}</p>
         </section>
         {result.missing_fields.length > 0 ? (
           <p className={pageStyles.note}>
@@ -214,10 +235,12 @@ function ApplyDialog({
   onCancel: () => void
   onConfirm: () => void
 }) {
-  const impact: [string, number][] = [
-    ['Pasan a habilitado', summary.toEligible],
-    ['Pasan a inhabilitado', summary.toIneligible],
-    ['Sin cambio de estado', summary.loaded - summary.changes],
+  const impact: [string, number | undefined][] = [
+    ['Habilitados propuestos', summary.eligible],
+    ['Inhabilitados propuestos', summary.ineligible],
+    ['Cambios de estado', summary.changes],
+    ['Solo trazabilidad', summary.traceability],
+    ['Sin decisión propuesta', summary.unset],
     ['Decisiones protegidas', summary.protected],
     ['Pendientes', summary.pending],
   ]
@@ -260,7 +283,7 @@ function ApplyDialog({
         {impact.map(([label, value]) => (
           <div key={label}>
             <dt>{label}</dt>
-            <dd>{value}</dd>
+            <dd>{value ?? '—'}</dd>
           </div>
         ))}
       </dl>
@@ -295,10 +318,17 @@ export function EvaluationReview({
   onApply: () => void | Promise<void>
   onRegenerate: () => void
 }) {
-  const results = evaluation.results.data
+  const [view, setView] = useState(evaluation)
+  const [request, setRequest] = useState<EvaluationQuery | null>(null)
+  const [loadedRequest, setLoadedRequest] = useState<EvaluationQuery | null>(
+    null,
+  )
+  const [queryError, setQueryError] = useState('')
+  const [queryConflict, setQueryConflict] = useState(false)
+  const results = view.results.data
   const [filter, setFilter] = useState<ReviewFilter>(DEFAULT_REVIEW_FILTER)
   const [query, setQuery] = useState('')
-  const [page, setPage] = useState(1)
+
   const [detail, setDetail] = useState<EvaluationResult | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -308,20 +338,104 @@ export function EvaluationReview({
     return () => window.clearInterval(timer)
   }, [])
 
-  const summary = useMemo(() => summarizeReview(evaluation), [evaluation])
-  const counts = useMemo(() => countReviewFilters(results), [results])
-  const filtered = useMemo(
-    () => filterReviewResults(results, filter, query),
-    [results, filter, query],
-  )
-  const current = paginateReview(filtered, page)
-  const rows: ReviewRow[] = current.items.map((result) => ({
+  useEffect(() => {
+    if (!request) return
+    const controller = new AbortController()
+    let active = true
+    getEvaluationDetail(
+      evaluation.exam_id,
+      evaluation.id,
+      request.page,
+      request,
+      controller.signal,
+    )
+      .then((next) => {
+        if (!active) return
+        if (
+          next.id !== evaluation.id ||
+          next.preview_id !== evaluation.preview_id
+        ) {
+          throw new Error(
+            'La respuesta pertenece a otra revisión. Genera una nueva revisión.',
+          )
+        }
+        setView(next)
+        setLoadedRequest(request)
+        setQueryError('')
+      })
+      .catch((error: unknown) => {
+        if (!active) return
+        const apiError = getAutomationError(error)
+        setQueryError(apiError.message)
+        if (apiError.status === 409) setQueryConflict(true)
+        setLoadedRequest(request)
+      })
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [request, evaluation.exam_id, evaluation.id, evaluation.preview_id])
+
+  function changeQuery(nextFilter: ReviewFilter, search: string, page: number) {
+    const next = {
+      filter: nextFilter.toUpperCase() as EvaluationFilter,
+      search,
+      page,
+      per_page: REVIEW_PAGE_SIZE,
+    }
+    const current = request ?? {
+      filter: 'CHANGES',
+      search: '',
+      page: 1,
+      per_page: REVIEW_PAGE_SIZE,
+    }
+    if (
+      next.filter === current.filter &&
+      next.search === current.search &&
+      next.page === current.page
+    )
+      return
+    setDetail(null)
+    setConfirming(false)
+    setQueryError('')
+    setRequest(next)
+  }
+
+  const querying = request !== loadedRequest
+  const summary = useMemo(() => summarizeReview(view), [view])
+  const counts = {
+    all: summary.total,
+    changes: summary.changes,
+    eligible: summary.eligible,
+    ineligible: summary.ineligible,
+    pending: summary.pending,
+    protected: summary.protected,
+  }
+  const meta = view.results.meta
+  const current = {
+    total: meta.total,
+    currentPage: meta.current_page,
+    lastPage: meta.last_page,
+    from: meta.total === 0 ? 0 : (meta.current_page - 1) * meta.per_page + 1,
+    to: Math.min(
+      meta.total,
+      (meta.current_page - 1) * meta.per_page + results.length,
+    ),
+  }
+  const rows: ReviewRow[] = results.map((result) => ({
     id: result.student.id,
     result,
   }))
   const expired = isSnapshotExpired(evaluation.expires_at, now)
-  const incomplete = summary.loaded !== summary.total
-  const applyBlocked = working || mustRefresh || expired || incomplete
+  const summaryMissing = !hasGlobalReviewSummary(view)
+  const applyBlocked =
+    working ||
+    mustRefresh ||
+    expired ||
+    querying ||
+    Boolean(queryError) ||
+    queryConflict ||
+    summaryMissing
 
   const columns: TableColumnDef<ReviewRow>[] = [
     {
@@ -356,7 +470,7 @@ export function EvaluationReview({
             <span className={styles.tag}>Cambia</span>
           ) : null}
           {isProtectedResult(result) ? (
-            <span className={styles.tag}>Protegido</span>
+            <span className={styles.tag}>{protectedLabel(result)}</span>
           ) : null}
           {isPendingResult(result) ? (
             <span className={styles.tag}>Se conserva el estado actual</span>
@@ -369,7 +483,9 @@ export function EvaluationReview({
       header: 'Motivo',
       width: '26%',
       cell: ({ result }) => (
-        <span className={styles.reason}>{briefReason(result.reason)}</span>
+        <span className={styles.reason}>
+          {briefReason(effectiveReason(result))}
+        </span>
       ),
     },
     {
@@ -392,7 +508,7 @@ export function EvaluationReview({
   async function apply() {
     // The snapshot may have expired while the confirmation was open.
     const moment = Date.now()
-    if (isSnapshotExpired(evaluation.expires_at, moment)) {
+    if (applyBlocked || isSnapshotExpired(evaluation.expires_at, moment)) {
       setNow(moment)
       setConfirming(false)
       return
@@ -406,11 +522,10 @@ export function EvaluationReview({
       <section aria-labelledby="review-summary-title">
         <h3 id="review-summary-title">Resumen de la evaluación</h3>
         <SummaryTiles summary={summary} />
-        {summary.updatesWithoutChange > 0 ? (
+        {(summary.traceability ?? 0) > 0 ? (
           <p className={pageStyles.note}>
-            El servidor volverá a registrar {summary.recordUpdates}{' '}
-            {summary.recordUpdates === 1 ? 'habilitación' : 'habilitaciones'};{' '}
-            {summary.updatesWithoutChange} de ellas no cambian de estado.
+            {summary.traceability} registros se actualizarán solo por
+            trazabilidad.
           </p>
         ) : null}
         <p className={styles.tableStatus}>
@@ -425,17 +540,28 @@ export function EvaluationReview({
         <p className={styles.tableStatus} role="status">
           {current.total === 0
             ? 'Sin estudiantes para este filtro.'
-            : `${current.total} de ${summary.loaded} estudiantes con el filtro «${REVIEW_FILTERS.find(({ id }) => id === filter)?.label}»${query ? ` y la búsqueda «${query}»` : ''}.`}
+            : `${current.total} de ${summary.total} estudiantes con el filtro «${REVIEW_FILTERS.find(({ id }) => id === filter)?.label}»${query ? ` y la búsqueda «${query}»` : ''}.`}
         </p>
         <DataTable<ReviewRow>
           columns={columns}
           data={rows}
-          loading={false}
+          loading={querying}
+          error={queryError || null}
+          onRetry={() =>
+            setRequest({
+              ...(request ?? {
+                filter: 'CHANGES',
+                search: '',
+                page: 1,
+                per_page: 10,
+              }),
+            })
+          }
           entityLabel="estudiantes"
           searchPlaceholder="Buscar por estudiante o SIS"
           onSearch={(value) => {
             setQuery(value)
-            setPage(1)
+            changeQuery(filter, value, 1)
           }}
           filters={
             <div className={styles.filters}>
@@ -445,12 +571,13 @@ export function EvaluationReview({
                   type="button"
                   className={styles.filter}
                   aria-pressed={filter === id}
+                  disabled={working}
                   onClick={() => {
                     setFilter(id)
-                    setPage(1)
+                    changeQuery(id, query, 1)
                   }}
                 >
-                  {label} ({counts[id]})
+                  {label} ({counts[id] ?? '—'})
                 </button>
               ))}
             </div>
@@ -462,7 +589,7 @@ export function EvaluationReview({
             from: current.from,
             to: current.to,
           }}
-          onPageChange={setPage}
+          onPageChange={(page) => changeQuery(filter, query, page)}
           emptyTitle={query ? 'Sin coincidencias' : EMPTY_BY_FILTER[filter]}
           emptyDescription={
             query
@@ -478,10 +605,15 @@ export function EvaluationReview({
           Genera una nueva revisión para poder aplicar las habilitaciones.
         </p>
       ) : null}
-      {incomplete ? (
+      {queryConflict ? (
+        <p role="alert">
+          La información cambió. Genera una nueva revisión antes de aplicar.
+        </p>
+      ) : null}
+      {summaryMissing ? (
         <p role="alert" className={pageStyles.error}>
-          Solo se cargaron {summary.loaded} de {summary.total} resultados.
-          Genera una nueva revisión antes de aplicar.
+          Esta revisión no incluye los contadores globales necesarios. Genera
+          una nueva revisión antes de aplicar.
         </p>
       ) : null}
       <div className={`${pageStyles.actions} ${styles.applyBar}`}>
