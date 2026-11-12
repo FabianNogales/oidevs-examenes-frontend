@@ -1,4 +1,4 @@
-import type { ImportSchema, SelectedCriterion } from '../types/eligibilityAutomation.types'
+import type { AutomationConfiguration, ImportSchema, SelectedCriterion } from '../types/eligibilityAutomation.types'
 
 export const ACADEMIC_CSV_COLUMNS = [
   { key: 'sis', label: 'SIS' },
@@ -36,11 +36,12 @@ export type AcademicCsvRow = {
   [Header in (typeof ACADEMIC_CSV_HEADERS)[number]]: string
 }
 
-type AcademicCsvColumn = (typeof ACADEMIC_CSV_COLUMNS)[number]
+type AcademicCsvColumn = { key: (typeof ACADEMIC_CSV_COLUMNS)[number]['key']; label: string }
 
 export function getAcademicCsvLayout(
   criteria: readonly SelectedCriterion[],
   schema: ImportSchema,
+  assessments: readonly { key: string; label: string }[] = [],
 ) {
   const activeCriteria = criteria.filter((criterion) => criterion.status !== 'INACTIVE')
   const keysFor = ({ parameters }: SelectedCriterion) => [
@@ -72,7 +73,20 @@ export function getAcademicCsvLayout(
     assessmentColumns.has(key) ||
     (includesAttendance && (key === 'asistencias' || key === 'total_clases')),
   )
-  return { assessmentKeys, columns, requiresAssessmentForAttendance }
+  const labeledColumns: AcademicCsvColumn[] = columns.map((column) => {
+    const assessment = assessments.find(({ key }) => ASSESSMENT_COLUMN_BY_KEY[key] === column.key || TAKEN_COLUMN_BY_KEY[key] === column.key)
+    return assessment ? { ...column, label: (column.key.startsWith('nota_') ? 'Nota ' : 'Rindió ') + assessment.label } : column
+  })
+  return {
+    assessmentKeys, columns: labeledColumns, requiresAssessmentForAttendance,
+    fields: assessmentKeys.filter((key) => ASSESSMENT_COLUMN_BY_KEY[key] !== undefined && (assessmentColumns.has(ASSESSMENT_COLUMN_BY_KEY[key]) || assessmentColumns.has(TAKEN_COLUMN_BY_KEY[key]))).map((key) => ({
+      key, label: assessments.find((item) => item.key === key)?.label ?? key,
+      scored: assessmentColumns.has(ASSESSMENT_COLUMN_BY_KEY[key]),
+      column: labeledColumns.find((column) => column.key === ASSESSMENT_COLUMN_BY_KEY[key] || column.key === TAKEN_COLUMN_BY_KEY[key])!,
+    })).sort((a, b) => labeledColumns.indexOf(a.column) - labeledColumns.indexOf(b.column)),
+    includesAttendance,
+    includesAverage: assessmentColumns.has('nota_pp') && assessmentColumns.has('nota_sp'),
+  }
 }
 
 export class AcademicCsvValidationError extends Error {
@@ -419,4 +433,10 @@ function formatSize(bytes: number): string {
   return bytes >= 1024 * 1024
     ? `${(bytes / (1024 * 1024)).toFixed(0)} MB`
     : `${(bytes / 1024).toFixed(0)} KB`
+}
+
+export function getPersistedAcademicCriteria(configuration: AutomationConfiguration): SelectedCriterion[] {
+  const inactive = new Set(configuration.inactive_criteria.map(({ code }) => code))
+  return [...configuration.mandatory_criteria, ...configuration.selected_criteria]
+    .filter(({ code, status }) => status !== 'INACTIVE' && !inactive.has(code))
 }

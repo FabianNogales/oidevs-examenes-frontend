@@ -332,6 +332,11 @@ try {
       windowsVirtualKeyCode: 32,
     })
     await wait(`!document.querySelectorAll('input[type=checkbox]')[1].checked`)
+    await button('Datos académicos')
+    await wait(`document.body.innerText.includes('Primero guarda')`)
+    assert.equal(await evaluate(`!!document.querySelector('[aria-labelledby="academic-import-title"]')`), false)
+    await reset(auto)
+    await wait(`document.getElementById('configuration-title')`)
     for (const label of ['Datos académicos', 'Vista previa', 'Historial']) {
       if (label === 'Datos académicos') await evaluate(`hu34Ui.mode='history'`)
       await button(label)
@@ -345,8 +350,8 @@ try {
         assert.deepEqual(importLayout.columns, [
           'SIS',
           'Nombre completo',
-          'Nota PP',
-          'Nota SP',
+          'Nota Primer parcial',
+          'Nota Segundo parcial',
           'Asistencias',
           'Total de clases',
         ])
@@ -645,15 +650,66 @@ try {
   await evaluate('hu34Ui.examError=null')
   result.contract = contractFailures
   assert.deepEqual(contractFailures, [], 'contrato de página de habilitaciones')
+  for (const onlyTaken of [false, true]) {
+    await evaluate(`(()=>{hu34Ui.reset(${JSON.stringify(auto)},'correction');hu34Ui.configuration={...hu34Ui.configuration,mandatory_criteria:[],inactive_criteria:[],selected_criteria:onlyTaken?hu34Ui.configuration.selected_criteria.filter(c=>c.code==='PREVIOUS_ASSESSMENTS_TAKEN'):[]}})()`.replace('onlyTaken?', `${onlyTaken}?`))
+    await wait(`document.getElementById('configuration-title')`)
+    await button('Datos académicos')
+    await wait(`document.body.innerText.includes('QA-081')`)
+    const headers = await evaluate(`[...document.querySelectorAll('table.'+hu34Ui.styles.academicRecordsTable+' th')].map(el=>el.textContent)`)
+    assert.deepEqual(headers, onlyTaken
+      ? ['Estudiante', 'SIS', 'Rindió Primer parcial', 'Rindió Segundo parcial', 'Revisión', 'Acción']
+      : ['Estudiante', 'SIS', 'Nota Primer parcial', 'Nota Segundo parcial', 'Asistencia', '% asistencia', 'Promedio', 'Revisión', 'Acción'])
+    await button('Corregir')
+    const correction = await evaluate(`'form.'+hu34Ui.styles.correction`)
+    assert.equal(await evaluate(`document.querySelectorAll(${JSON.stringify(correction)}+' input[type=number]').length`), onlyTaken ? 0 : 4)
+    if (onlyTaken) {
+      assert.ok(await evaluate(`[...document.querySelectorAll(${JSON.stringify(correction)}+' select')].every(el=>el.disabled)`))
+      assert.ok(await evaluate(`document.body.innerText.includes('nota oculta registrada')`))
+    }
+  }
+  result.checks.push('no-criteria fallback and taken-only corrections protect existing hidden scores')
+  // D1: one persisted score, inactive attendance, and hidden values survive correction.
+  await evaluate(`(()=>{hu34Ui.reset(${JSON.stringify(auto)},'correction');const saved=hu34Ui.configuration;hu34Ui.configuration={...saved,mandatory_criteria:[],selected_criteria:saved.selected_criteria.filter(c=>c.code==='MIN_ASSESSMENT_SCORE'||c.code==='MIN_ATTENDANCE_PERCENTAGE'),inactive_criteria:saved.selected_criteria.filter(c=>c.code==='MIN_ATTENDANCE_PERCENTAGE')}})()`)
+  await wait(`document.getElementById('configuration-title')`)
+  await button('Datos académicos')
+  await wait(`document.body.innerText.includes('QA-081')`)
+  const recordHeaders = () => evaluate(`[...document.querySelectorAll('table.'+hu34Ui.styles.academicRecordsTable+' th')].map(el=>el.textContent)`)
+  assert.deepEqual(await recordHeaders(), ['Estudiante','SIS','Nota Primer parcial','Revisión','Acción'])
+  await button('Corregir')
+  const dynamicForm = await evaluate(`'form.'+hu34Ui.styles.correction`)
+  assert.equal(await evaluate(`document.querySelectorAll(${JSON.stringify(dynamicForm)}+' fieldset').length`), 1)
+  assert.equal(await evaluate(`document.querySelectorAll(${JSON.stringify(dynamicForm)}+' input[type=number]').length`), 1)
+  await input(dynamicForm+' textarea', 'Conservar datos ocultos')
+  await button('Guardar corrección')
+  await wait(`hu34Ui.calls.some(c=>c.method==='patch')`)
+  const hiddenPayload = await evaluate(`hu34Ui.calls.find(c=>c.method==='patch').payload`)
+  assert.deepEqual(hiddenPayload.assessments, {FIRST_PARTIAL:{was_taken:true,score:25},SECOND_PARTIAL:{was_taken:true,score:25}})
+  assert.equal(hiddenPayload.attended_classes, 5)
+  assert.equal(hiddenPayload.total_classes, 10)
+  await button('Configurar criterios')
+  await wait(`document.getElementById('configuration-title')`)
+  await select('.'+await evaluate('hu34Ui.styles.optionalCriteria')+' select', 'SECOND_PARTIAL')
+  await button('Datos académicos')
+  await wait(`document.body.innerText.includes('Primero guarda')`)
+  assert.equal(await evaluate(`[...document.querySelectorAll('button')].some(b=>b.textContent.includes('Descargar plantilla CSV'))`), false)
+  assert.deepEqual(await recordHeaders(), ['Estudiante','SIS','Nota Primer parcial','Revisión','Acción'])
+  await button('Configurar criterios')
+  await button('Guardar configuración')
+  await wait(`document.body.innerText.includes('Configuración guardada')`)
+  await button('Datos académicos')
+  await wait(`[...document.querySelectorAll('th')].some(el=>el.textContent==='Nota Segundo parcial')`)
+  assert.deepEqual(await recordHeaders(), ['Estudiante','SIS','Nota Segundo parcial','Revisión','Acción'])
+  assert.ok(await evaluate(`!!document.querySelector('[aria-labelledby="academic-import-title"]')`))
+  result.checks.push('persisted columns, inactive attendance, hidden correction data and unsaved CSV block')
   await evaluate(
-    `(()=>{const saved=hu34Ui.configuration;hu34Ui.reset(${JSON.stringify(auto)});hu34Ui.configuration={...saved,mandatory_criteria:[],selected_criteria:saved.selected_criteria.filter(c=>c.code==='MIN_ATTENDANCE_PERCENTAGE')}})()`,
+    `(()=>{const saved=hu34Ui.configuration;hu34Ui.reset(${JSON.stringify(auto)});hu34Ui.configuration={...saved,mandatory_criteria:[],inactive_criteria:[],selected_criteria:saved.selected_criteria.filter(c=>c.code==='MIN_ATTENDANCE_PERCENTAGE')}})()`,
   )
   await wait(`document.querySelector('input[type=checkbox]')`)
   await button('Datos académicos')
   const csvGuide = `[...document.querySelectorAll('[aria-label="Columnas de la plantilla CSV"] span')].map(el=>el.textContent)`
   await wait(`${csvGuide}.length > 0`)
   assert.deepEqual(await evaluate(csvGuide), [
-    'SIS', 'Nombre completo', 'Rindió PP', 'Asistencias', 'Total de clases',
+    'SIS', 'Nombre completo', 'Rindió Primer parcial', 'Asistencias', 'Total de clases',
   ])
   const downloadedHeader = await evaluate(`(async () => {
     const createObjectURL = URL.createObjectURL
@@ -688,7 +744,7 @@ try {
     `[...document.querySelectorAll('[aria-labelledby="academic-preview-title"] ${selector}')].map(cell => cell.textContent.trim())`,
   )
   assert.deepEqual(await previewCells('thead th'), [
-    'SIS', 'Nombre completo', 'Rindió PP', 'Asistencia', '% asistencia', 'Estado de validación',
+    'SIS', 'Nombre completo', 'Rindió Primer parcial', 'Asistencia', '% asistencia', 'Estado de validación',
   ])
   assert.deepEqual((await previewCells('tbody tr:first-child td')).slice(0, 4), [
     '202600001', 'Juan Perez', 'Sí', '18 / 20',

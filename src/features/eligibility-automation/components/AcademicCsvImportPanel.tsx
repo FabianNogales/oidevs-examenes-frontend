@@ -357,10 +357,10 @@ function AcademicCsvPreview({
               <tr>
                 <th scope="col">SIS</th>
                 <th scope="col">Nombre completo</th>
-                {includesPP ? <th scope="col">Nota PP</th> : null}
-                {includesSP ? <th scope="col">Nota SP</th> : null}
-                {includesTakenPP ? <th scope="col">Rindió PP</th> : null}
-                {includesTakenSP ? <th scope="col">Rindió SP</th> : null}
+                {includesPP ? <th scope="col">{layout.columns.find((column) => column.key === 'nota_pp')?.label}</th> : null}
+                {includesSP ? <th scope="col">{layout.columns.find((column) => column.key === 'nota_sp')?.label}</th> : null}
+                {includesTakenPP ? <th scope="col">{layout.columns.find((column) => column.key === 'rindio_pp')?.label}</th> : null}
+                {includesTakenSP ? <th scope="col">{layout.columns.find((column) => column.key === 'rindio_sp')?.label}</th> : null}
                 {includesAttendance ? (
                   <>
                     <th scope="col">Asistencia</th>

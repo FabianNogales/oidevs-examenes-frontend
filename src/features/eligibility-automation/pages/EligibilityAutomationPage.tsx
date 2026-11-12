@@ -40,7 +40,7 @@ import { PageContainer } from '@/shared/components/ui/PageContainer/PageContaine
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useAcademicData } from '../hooks/useAcademicData'
 import { AcademicCsvImportPanel } from '../components/AcademicCsvImportPanel'
-import { getAcademicCsvLayout } from '../utils/academicCsv'
+import { getAcademicCsvLayout, getPersistedAcademicCriteria } from '../utils/academicCsv'
 import {
   academicActionLabel,
   academicHistoryChanges,
@@ -379,14 +379,14 @@ function CriterionEditor({
 function CorrectionForm({
   record,
   schema,
-  assessments,
+  layout,
   onCancel,
   onSave,
   onReload,
 }: {
   record: AcademicRecord
   schema: ImportSchema
-  assessments: { key: string; label: string }[]
+  layout: ReturnType<typeof getAcademicCsvLayout>
   onCancel: () => void
   onSave: (payload: AcademicRecordPayload) => Promise<void>
   onReload: () => void
@@ -440,15 +440,15 @@ function CorrectionForm({
         {record.first_names} {record.last_names} · SIS {record.sis_code} ·
         revisión {record.revision}
       </p>
-      {schema.assessment_keys.map((key) => {
+      {layout.fields.map(({ key, label, scored }) => {
         const assessment = values.assessments[key]
-        const label = assessments.find((item) => item.key === key)?.label ?? key
         return (
           <fieldset className={styles.assessmentFields} key={key}>
             <legend>{label}</legend>
             <label>
               Estado de la evaluación
               <select
+                disabled={!scored && assessment?.score != null}
                 value={
                   assessment
                     ? assessment.was_taken
@@ -480,7 +480,8 @@ function CorrectionForm({
                 <option value="not_taken">No rindió</option>
               </select>
             </label>
-            <label>
+            {!scored && assessment?.score != null ? <p>El estado se conserva porque esta evaluación tiene una nota oculta registrada.</p> : null}
+            {scored ? <label>
               Nota
               <input
                 type="number"
@@ -506,11 +507,11 @@ function CorrectionForm({
                   }))
                 }}
               />
-            </label>
+            </label> : null}
           </fieldset>
         )
       })}
-      <div className={styles.formGrid}>
+      {layout.includesAttendance ? <div className={styles.formGrid}>
         <label>
           Clases asistidas
           <input
@@ -541,7 +542,7 @@ function CorrectionForm({
             }}
           />
         </label>
-      </div>
+      </div> : null}
       <label>
         Motivo obligatorio
         <textarea
@@ -812,10 +813,16 @@ export function EligibilityAutomationPage() {
   } = useAcademicData(offeringId, section === 'academic')
   const csvLayout = schema && configuration
     ? getAcademicCsvLayout(
-        [...configuration.mandatory_criteria, ...selectedCriteria],
+        getPersistedAcademicCriteria(configuration),
         schema,
+        options?.assessments,
       )
     : null
+
+  const configurationDirty = configuration !== null && (
+    JSON.stringify(selectedCriteria) !== JSON.stringify(configuration.selected_criteria.filter((item) => !item.required && !item.locked)) ||
+    manualReviewConditions !== (configuration.manual_review_conditions ?? '')
+  )
 
   const loadConfiguration = useCallback(async () => {
     if (examId === null) return
@@ -1484,9 +1491,11 @@ export function EligibilityAutomationPage() {
                   </details>
                 </div>
               ) : null}
-              {schema && offeringId && csvLayout ? (
+              {configurationDirty || savingConfiguration ? (
+                <p role="status">Primero guarda la configuración para descargar la plantilla o importar CSV. Los registros muestran la configuración guardada.</p>
+              ) : schema && offeringId && csvLayout ? (
                 <AcademicCsvImportPanel
-                  key={`${offeringId}:${csvLayout.columns.map(({ key }) => key).join(',')}:${csvLayout.requiresAssessmentForAttendance}`}
+                  key={`${offeringId}:${configuration?.revision}:${csvLayout.columns.map(({ key }) => key).join(',')}:${csvLayout.requiresAssessmentForAttendance}`}
                   offeringId={offeringId}
                   schema={schema}
                   layout={csvLayout}
@@ -1556,11 +1565,9 @@ export function EligibilityAutomationPage() {
                         <tr>
                           <th>Estudiante</th>
                           <th>SIS</th>
-                          <th>Nota PP</th>
-                          <th>Nota SP</th>
-                          <th>Asistencia</th>
-                          <th>% asistencia</th>
-                          <th>Promedio</th>
+                          {csvLayout?.fields.map(({ key, column }) => <th key={key}>{column.label}</th>)}
+                          {csvLayout?.includesAttendance ? <><th>Asistencia</th><th>% asistencia</th></> : null}
+                          {csvLayout?.includesAverage ? <th>Promedio</th> : null}
                           <th>Revisión</th>
                           <th>Acción</th>
                         </tr>
@@ -1572,18 +1579,12 @@ export function EligibilityAutomationPage() {
                               {record.first_names} {record.last_names}
                             </td>
                             <td>{record.sis_code}</td>
-                            <td>{academicScore(record, 'FIRST_PARTIAL')}</td>
-                            <td>{academicScore(record, 'SECOND_PARTIAL')}</td>
-                            <td>
-                              {record.attended_classes === null ||
-                              record.attended_classes === undefined ||
-                              record.total_classes === null ||
-                              record.total_classes === undefined
-                                ? '—'
-                                : `${record.attended_classes} / ${record.total_classes}`}
-                            </td>
-                            <td>{academicAttendancePercentage(record)}</td>
-                            <td>{academicAverage(record)}</td>
+                            {csvLayout?.fields.map(({ key, scored }) => <td key={key}>{scored ? academicScore(record, key) : record.assessments?.[key] ? (record.assessments[key].was_taken ? 'Sí' : 'No') : '—'}</td>)}
+                            {csvLayout?.includesAttendance ? <>
+                              <td>{record.attended_classes == null || record.total_classes == null ? '—' : record.attended_classes + ' / ' + record.total_classes}</td>
+                              <td>{academicAttendancePercentage(record)}</td>
+                            </> : null}
+                            {csvLayout?.includesAverage ? <td>{academicAverage(record)}</td> : null}
                             <td>{record.revision}</td>
                             <td>
                               <button
@@ -1611,12 +1612,12 @@ export function EligibilityAutomationPage() {
                     No hay registros académicos para esta consulta.
                   </p>
                 ) : null}
-                {selectedRecord && schema ? (
+                {selectedRecord && schema && csvLayout ? (
                   <CorrectionForm
                     key={`${selectedRecord.id}:${selectedRecord.revision}`}
                     record={selectedRecord}
                     schema={schema}
-                    assessments={options?.assessments ?? []}
+                    layout={csvLayout}
                     onCancel={() => setSelectedRecord(null)}
                     onSave={(payload) =>
                       saveCorrection(selectedRecord, payload)

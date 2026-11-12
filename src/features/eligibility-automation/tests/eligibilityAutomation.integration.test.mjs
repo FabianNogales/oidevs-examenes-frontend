@@ -425,6 +425,31 @@ test('valid academic CSV validates teacher fields and adapts to the current back
   ])
 })
 
+test('persisted academic model combines mandatory and optional criteria, excludes inactive and uses assessment labels', () => {
+  const { load } = createHarness()
+  const csv = load(resolve(featureRoot, 'utils/academicCsv.ts'))
+  const criterion = (code, parameters = {}) => ({ code, parameters })
+  const mandatory = criterion('MIN_ASSESSMENT_SCORE', { assessment_key: 'SECOND_PARTIAL' })
+  const taken = criterion('PREVIOUS_ASSESSMENTS_TAKEN', { assessment_keys: ['FIRST_PARTIAL'] })
+  const attendance = criterion('MIN_ATTENDANCE_PERCENTAGE')
+  const configuration = { mandatory_criteria: [mandatory], selected_criteria: [taken, attendance], inactive_criteria: [attendance] }
+  const schema = { assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'] }
+  const labels = [{ key: 'FIRST_PARTIAL', label: 'Diagnóstico' }, { key: 'SECOND_PARTIAL', label: 'Defensa final' }]
+  const layout = csv.getAcademicCsvLayout(csv.getPersistedAcademicCriteria(configuration), schema, labels)
+  assert.deepEqual(layout.columns.map(({ key }) => key), ['sis', 'nombre_completo', 'nota_sp', 'rindio_pp'])
+  assert.deepEqual(layout.fields.map(({ key, scored, column }) => [key, scored, column.label]), [
+    ['SECOND_PARTIAL', true, 'Nota Defensa final'], ['FIRST_PARTIAL', false, 'Rindió Diagnóstico'],
+  ])
+  assert.equal(layout.includesAttendance, false)
+  assert.equal(layout.includesAverage, false)
+  const fallback = csv.getAcademicCsvLayout([], schema, labels)
+  assert.equal(fallback.fields.length, 2)
+  assert.equal(fallback.includesAttendance, true)
+  assert.equal(fallback.includesAverage, true)
+  const inactive = csv.getAcademicCsvLayout([{ ...mandatory, status: 'INACTIVE' }], schema)
+  assert.deepEqual(inactive.columns.map(({ key }) => key), fallback.columns.map(({ key }) => key))
+})
+
 test('academic CSV rejects invalid headers, row values, and file limits', async () => {
   const { load } = createHarness()
   const csv = load(resolve(featureRoot, 'utils/academicCsv.ts'))

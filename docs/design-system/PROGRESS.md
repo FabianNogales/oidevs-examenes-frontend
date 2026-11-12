@@ -3,6 +3,12 @@
 Registro compartido. Cada subetapa se asigna aquí **antes** de empezar y se actualiza
 al cerrarla. No marcar nada como hecho sin la validación de [validation.md](validation.md).
 
+## HU34 D1+D2 — Representación dinámica (2026-11-11)
+- Responsable: Codex, autorización explícita del usuario sobre D0 previo; `Dev_Erick`, base `78d98d9`. Trabajo funcional de HU34, sin modificar componentes compartidos ni G1–G7.
+- Tabla, corrección y CSV consumen el modelo de criterios persistidos de la feature y etiquetas reales. CSV bloqueado mientras exista borrador; datos ocultos preservados, con bloqueo del estado si cambiarlo borraría una nota oculta.
+- PASS: Node 29/29, TypeScript, ESLint focalizado, build, diff --check y HU34 browser a 320/390/768/1024/1440px con HTTP simulado. Evidencia `.validation.local/hu34-d1-d2-final/`.
+- Sin backend real ni ampliación del contrato; máximo dos evaluaciones, asistencia CSV con evaluación y `fixed_parameters` sin cambios. Sin commit, stage ni push.
+
 ## Cierre G1–G7 · Regresión consolidada
 
 - `Dev_Erick`, 2026-11-11. G1–G7 validado con una excepción preexistente.
