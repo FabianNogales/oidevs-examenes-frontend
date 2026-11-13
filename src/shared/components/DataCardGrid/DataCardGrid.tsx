@@ -1,4 +1,5 @@
 import { useState, useMemo, type FormEvent } from 'react'
+import { useRetryFocus } from '@/shared/hooks/useRetryFocus'
 import { SearchIcon } from '@/assets/icons/SearchIcon'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
 import type { DataCardGridProps } from './dataCardGrid.types'
@@ -26,6 +27,7 @@ export function DataCardGrid<T extends BaseTableEntity>({
   renderCustomActions,
   forcedModuleScope,
 }: DataCardGridProps<T>) {
+  const { retryRef, markRetry } = useRetryFocus(loading, Boolean(error))
   const [searchInput, setSearchInput] = useState(initialSearch)
   const [activeSearch, setActiveSearch] = useState(initialSearch)
   const [internalPage, setInternalPage] = useState(1)
@@ -160,8 +162,12 @@ export function DataCardGrid<T extends BaseTableEntity>({
           {onRetry && (
             <button
               type="button"
+              ref={retryRef}
               className={styles.retryButton}
-              onClick={onRetry}
+              onClick={() => {
+                markRetry()
+                onRetry()
+              }}
             >
               Reintentar
             </button>

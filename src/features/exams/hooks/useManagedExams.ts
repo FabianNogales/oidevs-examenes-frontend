@@ -4,7 +4,7 @@ import {
   type ExamListFilters,
   type ExamListResult,
 } from '@/features/exams/api/examManagementApi'
-import { getTeacherDashboardErrorMessage } from '@/shared/api/teacherDashboardError'
+import { getTeacherDashboardErrorMessage } from '@/features/home/api/teacherDashboardError'
 
 export function useManagedExams(filters: ExamListFilters) {
   const [attempt, setAttempt] = useState(0)

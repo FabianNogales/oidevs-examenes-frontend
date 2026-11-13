@@ -4,7 +4,7 @@ import { CollaborationModal } from '@/features/collaborations/components/Collabo
 import { deleteOfflineExam } from '../storage/offlineStore'
 import { offlineError } from '../api/offlineApi'
 import type { LocalEntry } from '../types/offline.types'
-import shared from './styles/OfflineShared.module.css'
+import shared from './OfflineShared.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export function OfflineDataDeletion({

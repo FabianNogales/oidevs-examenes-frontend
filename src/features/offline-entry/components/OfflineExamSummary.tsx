@@ -1,8 +1,8 @@
 import { CalendarClock, Clock, MapPin, Users } from 'lucide-react'
 import type { OfflinePackage } from '../types/offline.types'
 import { formatOfflineTime } from '../utils/offlineRules'
-import shared from './styles/OfflineShared.module.css'
-import workspace from './styles/OfflineWorkspace.module.css'
+import shared from './OfflineShared.module.css'
+import workspace from './OfflineWorkspace.module.css'
 
 export function OfflineExamSummary({ packet }: { packet: OfflinePackage }) {
   return (

@@ -6,7 +6,7 @@
   margin-top: var(--space-6);
 }
 
-.cameraControls button {
+.cameraControls button:where(:not([data-ds-button])) {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
@@ -89,7 +89,7 @@
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: var(--radius-md);
-  background: #0f172a;
+  background: var(--color-text-primary);
 }
 
 .viewport video {
@@ -104,9 +104,9 @@
 .guide {
   position: absolute;
   inset: 18% 20%;
-  border: 3px solid #fff;
+  border: 3px solid var(--color-on-primary);
   border-radius: var(--radius-md);
-  box-shadow: 0 0 0 999px rgb(15 23 42 / 35%);
+  box-shadow: 0 0 0 999px color-mix(in srgb, var(--color-text-primary) 35%, transparent);
   pointer-events: none;
 }
 
@@ -116,8 +116,8 @@
   position: absolute;
   inset: 0;
   padding: var(--space-6);
-  color: #fff;
-  background: #0f172a;
+  color: var(--color-on-primary);
+  background: var(--color-text-primary);
   text-align: center;
 }
 
@@ -128,8 +128,8 @@
   right: var(--space-4);
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  color: #fff;
-  background: rgb(15 23 42 / 85%);
+  color: var(--color-on-primary);
+  background: color-mix(in srgb, var(--color-text-primary) 85%, transparent);
   text-align: center;
 }
 
@@ -172,7 +172,7 @@
 }
 .lastScanIdentity h3 {
   margin: 0 0 var(--space-2);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-lg);
 }
 .lastScanIdentity p {
@@ -183,7 +183,7 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.cameraChoice select {
+.cameraChoice select:where(:not([data-ds-dropdown] select)) {
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -274,7 +274,7 @@
 .photo .photoLabel {
   margin-top: var(--space-1);
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: 0.625rem;
   line-height: 1.2;
 }
 
@@ -283,7 +283,7 @@
   justify-items: center;
   gap: 2px;
   padding: 3px;
-  font-size: 10px;
+  font-size: 0.625rem;
   line-height: 1.2;
 }
 
@@ -415,7 +415,7 @@
 
 .historyEmpty .historyEmptyTitle {
   margin-bottom: var(--space-2);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -483,7 +483,7 @@
   }
 
   .historyCard .historyStudentName {
-    color: var(--brand-navy);
+    color: var(--color-text-primary);
     font-weight: var(--font-weight-semibold);
   }
 
@@ -535,12 +535,12 @@
     gap: var(--space-1);
   }
 
-  .cameraChoice select {
+  .cameraChoice select:where(:not([data-ds-dropdown] select)) {
     min-height: 44px;
     box-sizing: border-box;
   }
 
-  .cameraControls button {
+  .cameraControls button:where(:not([data-ds-button])) {
     min-height: 44px;
   }
 
@@ -555,7 +555,7 @@
     max-width: 100%;
   }
 
-  .cameraControls button {
+  .cameraControls button:where(:not([data-ds-button])) {
     flex: 1 1 auto;
   }
 }

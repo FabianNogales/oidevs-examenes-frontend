@@ -1,4 +1,4 @@
-import type { Teacher } from '@/features/admin/types/teacher.types'
+import type { Teacher } from '@/features/teachers/types/teacher.types'
 import type { AcademicTerm } from '@/features/academic-terms/types/academicTerm.types'
 import type { AdminSubject } from '@/features/subjects/types/adminSubject.types'
 

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { RoomApiError, updateAdminRoomStatus } from '../api/adminRoomsApi'
 import type { Room } from '../types/room.types'
 import { RoomModal } from './RoomModal'
+import { Button } from '@/shared/components/ui/Button/Button'
 import styles from './RoomDialog.module.css'
 
 export function RoomStatusDialog({
@@ -70,18 +71,12 @@ export function RoomStatusDialog({
         </div>
       )}
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          disabled={saving}
-          onClick={close}
-        >
+        <Button variant="secondary" disabled={saving} onClick={close}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          disabled={saving || missing}
+        </Button>
+        <Button
+          loading={saving}
+          disabled={missing}
           onClick={() => void confirm()}
         >
           {saving
@@ -89,7 +84,7 @@ export function RoomStatusDialog({
             : activating
               ? 'Sí, activar'
               : 'Sí, desactivar'}
-        </button>
+        </Button>
       </footer>
     </RoomModal>
   )

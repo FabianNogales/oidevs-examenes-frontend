@@ -1,0 +1,295 @@
+.parametersRibbon {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr) minmax(0, 1.55fr);
+  /* Mayor separación entre Número de parcial, Tipo de examen y Duración */
+  gap: 44px;
+  align-items: center;
+}
+
+.parameterBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  position: relative;
+  min-width: 0;
+  transition: opacity var(--transition-fast);
+}
+
+/* Línea divisoria vertical bien marcada entre los 3 módulos */
+.parameterBlock:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -22px;
+  top: 6%;
+  height: 88%;
+  width: 1.5px;
+  background: var(--color-border-strong);
+}
+
+.parameterBlockDisabled {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.parameterLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.parameterLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.parameterHint {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-decorative);
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pista segmentada para Parcial (1, 2 + Input numérico) y Modalidad */
+.segmentedTrack {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--color-surface-muted);
+  border: 1.5px solid var(--color-border-strong);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  gap: 6px;
+  align-items: center;
+}
+
+.partialTrackWithCustom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.35fr;
+  background: var(--color-surface-muted);
+  border: 1.5px solid var(--color-border-strong);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  gap: 6px;
+  align-items: center;
+}
+
+.segmentedBtn {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.segmentedBtn:hover:not(.segmentedBtnActive):not(:disabled) {
+  background: var(--color-surface-soft);
+  color: var(--color-primary-hover);
+}
+
+/* Color Rojo Carmesí de EIDA cuando está seleccionado */
+.segmentedBtnActive {
+  background: var(--color-accent);
+  color: var(--color-on-primary);
+  border-color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+/* Input numérico para colocar cualquier número de parcial */
+.customPartialInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.customPartialInput {
+  width: 100% !important;
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 0 8px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1.5px solid var(--color-border-strong) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.customPartialInput:focus {
+  border-color: var(--color-accent) !important;
+  outline: none;
+}
+
+.customPartialInputActive {
+  background: var(--color-accent-soft) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent) !important;
+}
+
+/* Duración del Examen: Sin flechas nativas duplicadas */
+.durationRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.digitalDurationBox {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-surface-muted);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeWheelGroup {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Oculta por completo las flechas internas nativas del navegador */
+.wheelNumberInput {
+  width: 40px !important;
+  min-height: 30px !important;
+  height: 30px !important;
+  padding: 0 2px !important;
+  border: 1.5px solid var(--color-border-strong) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.wheelNumberInput::-webkit-outer-spin-button,
+.wheelNumberInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  display: none;
+}
+
+.wheelNumberInput:focus {
+  border-color: var(--color-accent) !important;
+  outline: none;
+}
+
+.wheelUnitLabel {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.wheelButtonsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.wheelStepBtn {
+  min-height: 14px !important;
+  width: 18px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 3px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.5rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.wheelStepBtn:hover:not(:disabled) {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-primary);
+}
+
+.durationColon {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+}
+
+.durationPresetList {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.durationPresetChip {
+  min-height: 34px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.durationPresetChip:hover:not(.durationPresetChipActive):not(:disabled) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-hover);
+}
+
+/* Rojo Carmesí EIDA cuando la duración rápida está seleccionada */
+.durationPresetChipActive {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: 1150px) {
+  .parametersRibbon {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  .parameterBlock::after {
+    display: none;
+  }
+}

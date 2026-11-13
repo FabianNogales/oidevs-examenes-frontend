@@ -30,11 +30,10 @@ test('HU30 list uses the shared table with infraction states, not catalog ACTIVE
       useSearchParams: () => [new URLSearchParams(), () => {}],
     },
   })
-  const { ExamInfractionsPage } = h.load(
+  const { InfractionRecords } = h.load(
     'features/infractions/pages/ExamInfractionsPage.tsx',
   )
-  const root = ExamInfractionsPage()
-  h.render(() => root.type(root.props))
+  h.render(() => InfractionRecords({ examId: 4, embedded: true }))
   await settle()
   const table = nodes(h.render(), (n) => n.type === 'data-table')[0]
   assert.equal('status' in table.props.data[0], false)

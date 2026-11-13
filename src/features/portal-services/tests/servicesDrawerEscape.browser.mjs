@@ -19,7 +19,7 @@ import {createRoot} from 'react-dom/client';
 import {MemoryRouter} from 'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
-import {AdminServicesPage} from '/src/features/portal-services/AdminServicesPage.tsx';
+import {AdminServicesPage} from '/src/features/portal-services/pages/AdminServicesPage.tsx';
 const e=React.createElement, root=createRoot(document.getElementById('root'));
 const rows=[
   {id:42,name:'WebSISS',description:'Acceso al sistema de información estudiantil.',icon:'link',url:'https://websiss.umss.edu.bo/',display_order:1,status:'ACTIVE',revision:7,needs_review:false},

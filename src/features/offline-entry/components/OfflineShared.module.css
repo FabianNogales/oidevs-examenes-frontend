@@ -1,0 +1,236 @@
+/* ==========================================================================
+   PRIMITIVAS BASE COMPARTIDAS — MÓDULO OFFLINE ENTRY (MAX-WIDTH: 1300PX)
+   ========================================================================== */
+
+.page {
+  flex: 1;
+}
+
+.muted {
+  color: var(--color-text-secondary);
+}
+
+.headerSubtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.eyebrow {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+}
+
+.panel {
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-5);
+  min-width: 0;
+}
+
+.panel h2 {
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xl);
+}
+
+.panel h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+}
+
+.panel p {
+  margin-top: var(--space-2);
+}
+
+.panelSubtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.sectionDivider {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-5) 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.actions a,
+.actions button {
+  min-height: 44px;
+}
+
+.actions a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+  margin-block: var(--space-4);
+}
+
+.details dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.details dd {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge[data-status='ACCEPTED'] {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.badge[data-status='DUPLICATE'] {
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.badge[data-status='CONFLICT'],
+.badge[data-status='PENDING'] {
+  background: var(--color-surface-accent);
+  color: var(--color-accent);
+}
+
+.badge[data-status='REJECTED'] {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+
+.notice,
+.error {
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-block: var(--space-4);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+}
+
+.notice p,
+.error p {
+  margin: 0 0 var(--space-2);
+}
+
+.notice p:last-child,
+.error p:last-child {
+  margin-bottom: 0;
+}
+
+.notice[data-warning='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-surface-accent);
+}
+
+.error {
+  border-color: var(--color-error);
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.empty p {
+  color: var(--color-text-secondary);
+  max-width: 55ch;
+  margin-inline: auto;
+}
+
+.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-block: var(--space-4);
+  cursor: pointer;
+}
+
+.checkbox input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding-inline: var(--space-3);
+  }
+  .panel {
+    padding: var(--space-4);
+  }
+  .actions > button,
+  .actions > a {
+    flex: 1;
+    justify-content: center;
+  }
+}

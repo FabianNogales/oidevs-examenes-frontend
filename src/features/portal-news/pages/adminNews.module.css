@@ -1,0 +1,242 @@
+/* Width and padding come from PageContainer. The doubled class beats portalBase .page
+   regardless of CSS load order, so padding is not applied twice. */
+.newsAdminPage.newsAdminPage {
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
+}
+
+.newsAdminPage table col:last-child {
+  width: 16% !important;
+}
+
+.newsAdminPage .statusFilter {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.newsAdminPage .statusFilter select {
+  flex: 1 1 auto;
+  width: auto;
+  min-height: 44px;
+}
+
+.categoriesLink {
+  margin: 0 0 12px;
+}
+
+.newsAdminPage .statusFilter [data-ds-dropdown] {
+  flex: 1 1 auto;
+  min-width: 184px;
+}
+
+.newsAdminPage .clearFilters {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+/* DataTable caps the inline filter group at 260px (flex: 0 1 260px), so
+   "Limpiar filtros" wrapped below Estado and pushed the search row out of line.
+   Let the group take its natural width and keep Estado + Limpiar on one row. */
+.newsAdminPage [role='group'][aria-label='Filtros'] {
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 600px) {
+  /* Narrow screens: the group takes its own full row; Limpiar may wrap below. */
+  .newsAdminPage [role='group'][aria-label='Filtros'] {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .newsAdminPage [role='group'][aria-label='Filtros'] > .statusFilter {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}
+
+.editor {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding-block: 16px;
+  overflow-wrap: anywhere;
+}
+
+.editorStatus {
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+}
+
+.editorStatusRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: var(--font-size-sm);
+}
+
+.editorRevision {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-block: 12px 0;
+  margin: 0;
+}
+
+.metadata dt {
+  font-weight: var(--font-weight-semibold);
+}
+
+.metadata dd {
+  margin: 4px 0 0;
+}
+
+.editorSection {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding-block: 16px;
+}
+
+.editorSection + .editorSection {
+  border-top: 1px solid var(--color-border);
+}
+
+.editorSectionHeading {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.editorSectionHeading h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.editorSectionHeading p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.imagePanel {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+}
+
+.imagePanel p {
+  margin: 0;
+}
+
+.editorActionsRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.editorInlineFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.confirmation {
+  display: grid;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-block: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+}
+
+.confirmation h3,
+.confirmation p {
+  margin: 0;
+}
+
+.confirmation h3 {
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.confirmation p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.confirmationActions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.confirmationActions button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.confirmationActions .confirmationPrimary {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.confirmationActions button:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+@media (max-width: 480px) {
+  .editorStatus {
+    padding: 10px 12px;
+  }
+
+  .metadata {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editorRevision {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .confirmation {
+    padding: 10px 12px;
+  }
+
+  .confirmationActions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

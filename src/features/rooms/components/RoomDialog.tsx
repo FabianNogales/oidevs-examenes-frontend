@@ -4,6 +4,7 @@ import type { Room, RoomDialogSelection } from '../types/room.types'
 import { RoomDetails } from './RoomDetails'
 import { RoomForm } from './RoomForm'
 import { RoomModal } from './RoomModal'
+import { Button } from '@/shared/components/ui/Button/Button'
 import styles from './RoomDialog.module.css'
 
 interface Props {
@@ -67,16 +68,15 @@ function ExistingRoom({
       <div className={styles.error} role="alert">
         <p>{state.message}</p>
         {!state.missing && (
-          <button
-            type="button"
-            className={styles.secondaryButton}
+          <Button
+            variant="secondary"
             onClick={() => {
               setState({ status: 'loading' })
               setRetry((value) => value + 1)
             }}
           >
             Reintentar
-          </button>
+          </Button>
         )}
       </div>
     )

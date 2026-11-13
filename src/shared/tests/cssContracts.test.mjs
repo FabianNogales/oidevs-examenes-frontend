@@ -27,23 +27,25 @@ test('CSV consumers and repaired components reference real CSS Module exports', 
     'src/features/rooms/pages/ImportRoomsPage.tsx',
     'src/features/subjects/pages/ImportSubjectsPage.tsx',
     'src/features/students/components/CsvDropzone.tsx',
-    'src/features/admin/profile/components/EntityProfileLayout.tsx',
+    'src/features/users/profile/components/EntityProfileLayout.tsx',
     'src/shared/components/DataTable/DataTable.tsx',
     'src/shared/components/PortalDialog/PortalDialog.tsx',
     'src/shared/components/ConfirmDialog/ConfirmDialog.tsx',
-    'src/features/portal-shared/PortalAdminCollection.tsx',
-    'src/features/portal-shared/PortalUi.tsx',
-    'src/features/portal-shared/AdminStatusBadge.tsx',
+    'src/features/portal-shared/components/PortalAdminCollection.tsx',
+    'src/features/portal-shared/components/PortalUi.tsx',
+    'src/features/portal-shared/components/AdminStatusBadge.tsx',
     'src/features/portal-calendar/components/CalendarModal.tsx',
     'src/features/portal-calendar/components/EventForm.tsx',
     'src/features/portal-calendar/pages/AdminCalendarPage.tsx',
-    'src/features/portal-information/AdminInformationPage.tsx',
-    'src/features/portal-information/InformationEditor.tsx',
-    'src/features/portal-news/AdminNewsPage.tsx',
-    'src/features/portal-news/NewsEditor.tsx',
-    'src/features/portal-services/AdminServicesPage.tsx',
-    'src/features/portal-services/ServiceEditor.tsx',
+    'src/features/portal-information/pages/AdminInformationPage.tsx',
+    'src/features/portal-information/components/InformationEditor.tsx',
+    'src/features/portal-news/pages/AdminNewsPage.tsx',
+    'src/features/portal-news/components/NewsEditor.tsx',
+    'src/features/portal-services/pages/AdminServicesPage.tsx',
+    'src/features/portal-services/components/ServiceEditor.tsx',
     'src/features/course-offerings/components/OfferingImportPanel.tsx',
+    'src/shared/components/ui/PageContainer/PageContainer.tsx',
+    'src/shared/components/ui/PageHeader/PageHeader.tsx',
   ]
   for (const feature of ['rooms', 'subjects']) {
     const folder = `src/features/${feature}/components/import`
@@ -163,29 +165,34 @@ test('tokens.css keeps the documented tokens and their current values', () => {
   const light = blocks.get(":root, [data-theme='light']")
   const dark = blocks.get("[data-theme='dark']")
   const expectedBase = {
-    '--brand-navy': '#172554', '--brand-blue': '#2563eb', '--brand-cobalt': '#0049a8', '--brand-crimson': '#8b1e3f',
-    '--brand-pink': '#d67a8c', '--brand-pink-light': '#f7e9ed', '--brand-blue-light': '#eaf3ff',
-    '--brand-azure-mist': '#e9f9f6', '--brand-white-warm': '#fafafa',
-    '--font-size-xs': '0.75rem', '--font-size-sm': '0.875rem', '--font-size-md': '1rem', '--font-size-lg': '1.125rem',
-    '--font-size-xl': '1.25rem', '--font-size-2xl': '1.5rem', '--font-size-3xl': '2rem', '--font-size-4xl': '2.5rem',
-    '--font-weight-regular': '400', '--font-weight-medium': '500', '--font-weight-semibold': '600', '--font-weight-bold': '700',
-    '--line-height-tight': '1.25', '--line-height-normal': '1.5', '--line-height-relaxed': '1.6',
+    '--text-primary': '#172554', '--text-secondary': '#68778f', '--bg-primary': '#eaf3ff', '--bg-secondary': '#dff1ff', '--bg-tertiary': '#f9fcff',
+    '--btn-primary': '#2563eb', '--btn-secondary': '#8b1e3f', '--btn-secondary-accent': '#d67a8c', '--btn-secondary-soft': '#f7e9ed',
+    '--destructive': '#d32f2f', '--destructive-soft': '#fcd2d2', '--success': '#2e7d32', '--success-soft': '#c2f2c4',
+    '--warning': '#ffc107', '--warning-soft': '#fff1c8',
+    '--brand-navy': 'var(--text-primary)', '--brand-blue': 'var(--btn-primary)', '--brand-cobalt': 'var(--btn-primary)', '--brand-crimson': 'var(--btn-secondary)',
+    '--brand-pink': 'var(--btn-secondary-accent)', '--brand-pink-light': 'var(--btn-secondary-soft)', '--brand-blue-light': 'var(--bg-primary)',
+    '--brand-azure-mist': 'var(--bg-secondary)', '--brand-white-warm': 'var(--bg-tertiary)',
+    '--font-size-xs': '0.875rem', '--font-size-sm': '0.875rem', '--font-size-md': '1rem', '--font-size-lg': '1rem',
+    '--font-size-xl': '1.25rem', '--font-size-2xl': '1.5rem', '--font-size-3xl': '2.5rem', '--font-size-4xl': '2.5rem',
+    '--font-weight-regular': '400', '--font-weight-medium': 'var(--font-weight-regular)', '--font-weight-semibold': '600',
+    '--font-weight-bold': 'var(--font-weight-semibold)', '--font-weight-extrabold': '800',
+    '--line-height-tight': '1.25', '--line-height-normal': '1.5', '--line-height-relaxed': '1.5',
     '--space-1': '4px', '--space-2': '8px', '--space-3': '12px', '--space-4': '16px', '--space-5': '20px',
     '--space-6': '24px', '--space-8': '32px', '--space-10': '40px', '--space-12': '48px', '--space-16': '64px',
-    '--radius-sm': '6px', '--radius-md': '10px', '--radius-lg': '16px', '--radius-xl': '20px', '--radius-pill': '9999px',
-    '--button-height': '44px', '--input-height': '44px', '--button-radius': 'var(--radius-md)', '--input-radius': 'var(--radius-md)',
-    '--content-max-width': '1280px', '--content-gutter': 'var(--space-4)', '--header-height': '7rem', '--footer-height': '3rem',
-    '--transition-fast': '150ms ease', '--transition-normal': '250ms ease', '--focus-width': '3px', '--focus-offset': '4px',
+    '--radius-sm': '4px', '--radius-md': '8px', '--radius-lg': '16px', '--radius-xl': '20px', '--radius-pill': '9999px',
+    '--button-height': '44px', '--input-height': '44px', '--button-radius': 'var(--radius-sm)', '--input-radius': 'var(--radius-sm)',
+    '--content-max-width': '1300px', '--content-gutter': 'var(--space-4)', '--header-height': '7rem', '--footer-height': '3rem',
+    '--transition-fast': '150ms ease', '--transition-normal': '250ms ease', '--focus-width': '2px', '--focus-offset': '2px',
   }
   for (const [name, value] of Object.entries(expectedBase)) assert.equal(base.get(name), value, `:root ${name}`)
-  for (const name of ['--font-family', '--font-family-base', '--app-header-height']) assert.ok(base.has(name), `:root ${name}`)
+  for (const name of ['--font-family', '--font-family-base', '--app-header-height', '--type-h1', '--type-h2', '--type-h3', '--type-body', '--type-small', '--type-interactive']) assert.ok(base.has(name), `:root ${name}`)
   const expectedLight = {
-    '--color-primary': 'var(--brand-cobalt)', '--color-on-primary': '#ffffff', '--color-accent': '#d9153b',
-    '--color-background': 'var(--brand-blue-light)', '--color-surface': '#ffffff', '--color-text': 'var(--brand-navy)',
-    '--color-text-secondary': '#52627a', '--color-text-muted': '#5b6a80', '--color-border': '#dce5f2',
-    '--color-success': '#15803d', '--color-success-soft': '#dcfce7', '--color-warning': '#b45309', '--color-warning-soft': '#fef3c7',
-    '--color-error': '#b91c1c', '--color-error-soft': '#fee2e2', '--color-info': 'var(--color-primary-hover)', '--color-info-soft': '#dbeafe',
-    '--color-focus': 'var(--color-primary)',
+    '--color-primary': 'var(--btn-primary)', '--color-on-primary': '#ffffff', '--color-accent': 'var(--btn-secondary)',
+    '--color-background': 'var(--bg-primary)', '--color-surface': 'var(--bg-tertiary)', '--color-text': 'var(--text-primary)',
+    '--color-text-secondary': 'var(--text-secondary)', '--color-text-muted': 'var(--text-secondary)', '--color-border': 'rgb(104 119 143 / 25%)',
+    '--color-success': 'var(--success)', '--color-success-soft': 'var(--success-soft)', '--color-warning': 'var(--warning)', '--color-warning-soft': 'var(--warning-soft)',
+    '--color-error': 'var(--destructive)', '--color-error-soft': 'var(--destructive-soft)', '--color-info': 'var(--btn-primary)', '--color-info-soft': 'var(--bg-secondary)',
+    '--color-focus': 'var(--btn-secondary)',
   }
   for (const [name, value] of Object.entries(expectedLight)) assert.equal(light.get(name), value, `light ${name}`)
   // Every semantic colour and shadow of the light theme stays redefined by the (inactive) dark theme.
@@ -230,19 +237,26 @@ test('DS1.4b z-index tokens exist only in :root with their approved values', () 
   }
 })
 
-test('DS1.4 tokens have no consumers yet and the dark theme block is unchanged', () => {
+// Closed list of authorized DS1.4 token consumers (DS2.2a: the Button primitive uses the control heights).
+// Patterns are stored as source strings and compiled per use, so no RegExp state (lastIndex) is shared.
+const ds14Consumers = { 'src/shared/components/ui/Button/Button.module.css': String.raw`--control-height(-sm)?(?![\w-])` }
+
+test('DS1.4 tokens are consumed only by authorized files and the dark theme block is unchanged', () => {
   const tokensFile = `${globalStyles}/tokens.css`
   const sources = readdirSync(resolve(root, 'src'), { recursive: true })
     .map((file) => `src/${String(file).replaceAll('\\', '/')}`)
     .filter((file) => /\.(css|tsx|jsx|ts|js)$/.test(file) && file !== tokensFile)
   for (const file of sources) {
-    assert.doesNotMatch(read(file), /--(status|control-height|z-)[\w-]*/, `${file} must not consume DS1.4 tokens yet`)
+    const allowed = ds14Consumers[file]
+    const content = allowed ? read(file).replaceAll(new RegExp(allowed, 'g'), '') : read(file)
+    assert.doesNotMatch(content, /--(status|control-height|z-)[\w-]*/, `${file} must not consume DS1.4 tokens yet`)
   }
+  for (const [file, pattern] of Object.entries(ds14Consumers)) assert.match(read(file), new RegExp(pattern), `${file} is an authorized consumer`)
   const css = stripComments(read(tokensFile))
   const [, darkBody] = /\[data-theme='dark'\]\s*\{([^{}]*)\}/.exec(css)
   const declarations = [...darkBody.matchAll(/(--[\w-]+|color-scheme)\s*:\s*([^;]+);/g)].map(([, name, value]) => `${name}:${value.trim()}`)
-  assert.equal(declarations.length, 50)
-  assert.equal(createHash('sha256').update(declarations.join(';')).digest('hex'), '2fe73df5325679a1d4778c40e23f7400f0edeccfddacb729c67789329f1f87bc', 'dark theme block changed')
+  assert.equal(declarations.length, 52)
+  assert.equal(createHash('sha256').update(declarations.join(';')).digest('hex'), '4bc59914125ce842b2d8dd5975576dcc4559e5a99dd8033e908854fe2ed5ad95', 'dark theme block changed')
 })
 
 test('no component activates a data-theme', () => {

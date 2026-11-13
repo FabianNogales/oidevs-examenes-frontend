@@ -10,7 +10,7 @@ import {
 test('administrative badges expose domain labels without changing the input state', () => {
   const h = sourceHarness()
   const { AdminStatusBadge } = h.load(
-    'features/portal-shared/AdminStatusBadge.tsx',
+    'features/portal-shared/components/AdminStatusBadge.tsx',
   )
   for (const [status, label] of Object.entries({
     PUBLISHED: 'Publicado',
@@ -39,7 +39,7 @@ test('administrative badges expose domain labels without changing the input stat
 test('collection keeps rows mounted only while a save refresh reloads the same query', async () => {
   const h = sourceHarness({ 'react-router': { Link: 'link' } })
   const { PortalAdminCollection } = h.load(
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
   )
   const pending = []
   const requests = []
@@ -146,7 +146,7 @@ test('collection opt-in filter slot retains search and resets pagination without
     'react-router': { Link: 'link' },
   })
   const { PortalAdminCollection } = h.load(
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
   )
   let resetPageKey = 'DRAFT'
   let tree

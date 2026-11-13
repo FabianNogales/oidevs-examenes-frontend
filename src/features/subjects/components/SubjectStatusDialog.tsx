@@ -6,6 +6,7 @@ import {
 import type { AdminSubject } from '../types/adminSubject.types'
 import { SubjectModal } from './SubjectModal'
 import styles from './SubjectDialog.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function SubjectStatusDialog({
   subject,
@@ -73,17 +74,14 @@ export function SubjectStatusDialog({
         </div>
       )}
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           disabled={saving}
           onClick={close}
         >
           Cancelar
-        </button>
-        <button
-          type="button"
-          className={styles.primaryButton}
+        </Button>
+        <Button
           disabled={saving || missing}
           onClick={() => void confirm()}
         >
@@ -92,7 +90,7 @@ export function SubjectStatusDialog({
             : activating
               ? 'Sí, activar'
               : 'Sí, desactivar'}
-        </button>
+        </Button>
       </footer>
     </SubjectModal>
   )

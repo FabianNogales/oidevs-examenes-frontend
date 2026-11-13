@@ -73,9 +73,13 @@ El detalle por módulo está en [PROGRESS.md](PROGRESS.md).
 
 - **Ramas:** `test/design-system-global` es la rama de integración y no se trabaja
   directamente en ella. Cada trabajo va en `ds/<etapa>-<iniciales>` creada desde la
-  de integración e integrada mediante PR revisada por el otro desarrollador.
+  de integración e integrada mediante PR revisada por el otro desarrollador (o, en
+  desarrollo individual, con la excepción documentada de [rules.md](rules.md) §9).
 - **Propiedad:** cualquier cambio en tokens o en componentes compartidos
   (`src/shared/components/**`, `src/features/portal-shared/**`) requiere revisión cruzada.
+  La revisión humana por el otro desarrollador es la opción preferida; si no hay otro
+  desarrollador disponible, se aplica la revisión asistida por IA de [rules.md](rules.md) §9,
+  que nunca se registra como revisión humana.
 - **Reparto:** cada subetapa se asigna en [PROGRESS.md](PROGRESS.md) antes de empezar,
   para no tocar los mismos archivos a la vez.
 - **Estado compartido:** el progreso vive en [PROGRESS.md](PROGRESS.md) (versionado).

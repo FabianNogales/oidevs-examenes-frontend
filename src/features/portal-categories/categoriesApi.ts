@@ -1,5 +1,5 @@
 import { httpClient } from '@/shared/api/httpClient'
-import type { PortalPage } from '@/features/portal-shared/portalApi'
+import type { PortalPage } from '@/features/portal-shared/api/portalApi'
 import type {
   CategoryCatalog,
   CategoryHistoryEntry,

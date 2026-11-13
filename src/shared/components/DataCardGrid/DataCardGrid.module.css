@@ -3,13 +3,14 @@
    ========================================================================== */
 
 .gridContainerCard {
+  --card-label-width: 96px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgb(var(--shadow-card-rgb, 23 37 84) / 5%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   font-family: var(--font-family);
   overflow: hidden;
 }
@@ -21,11 +22,11 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 16px 24px;
-  gap: 12px;
+  padding: var(--space-4) var(--space-6);
+  gap: var(--space-3);
   width: 100%;
-  background: var(--color-surface, #ffffff);
-  border-bottom: 1px solid var(--color-border, #dce5f2);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .searchInputWrapper {
@@ -33,26 +34,26 @@
   flex-grow: 1;
   display: flex;
   align-items: center;
-  height: 44px;
-  padding: 0 16px;
+  height: var(--input-height);
+  padding: 0 var(--space-4);
   gap: 10px;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-text-secondary, #52627a);
-  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
   transition:
-    border-color var(--transition-fast, 150ms ease),
-    box-shadow var(--transition-fast, 150ms ease);
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .searchInputWrapper:focus-within {
-  border-color: var(--brand-blue, #2563eb);
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 15%);
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 
 .searchIcon {
   width: 18px;
   height: 18px;
-  color: var(--color-text-secondary, #52627a);
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
@@ -62,14 +63,13 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--brand-navy, #172554);
-  font-size: 15px;
-  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  font: var(--type-body);
   outline: none;
 }
 
 .searchInput::placeholder {
-  color: var(--color-text-muted, #5b6a80);
+  color: var(--color-text-muted);
 }
 
 .searchButton,
@@ -78,44 +78,42 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  padding: 0 24px;
-  border-radius: 10px;
-  font-family: var(--font-family);
-  font-size: 15px;
-  font-weight: 600;
+  height: var(--button-height);
+  padding: 0 var(--space-6);
+  border-radius: var(--button-radius);
+  font: var(--type-interactive);
   cursor: pointer;
-  transition: all var(--transition-fast, 150ms ease);
+  transition: all var(--transition-fast);
 }
 
 .searchButton {
-  background: var(--brand-blue, #2563eb);
-  color: var(--color-on-primary, #ffffff);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   border: none;
 }
 
 .searchButton:hover:not(:disabled) {
-  background: var(--color-primary-hover, #1d4ed8);
+  background: var(--color-primary-hover);
 }
 
 .clearButton,
 .retryButton {
-  background: var(--color-surface, #ffffff);
-  color: var(--brand-navy, #172554);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
 }
 
 .clearButton:hover:not(:disabled),
 .retryButton:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
+  background: var(--color-surface-soft);
 }
 
 .searchResultBanner {
-  padding: 8px 24px;
-  background: var(--color-surface-muted, #f5fbff);
-  border-bottom: 1px solid var(--color-border, #dce5f2);
-  color: var(--color-text-secondary, #52627a);
-  font-size: 13px;
+  padding: var(--space-2) var(--space-6);
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font: var(--type-small);
 }
 
 /* ==========================================================================
@@ -124,29 +122,29 @@
 .cardsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 20px;
-  padding: 20px 24px;
-  background: var(--color-surface-muted, #f5fbff);
+  gap: 18px var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  background: var(--color-surface-muted);
 }
 
 .cardItem {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgb(23 37 84 / 4%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   transition:
-    transform var(--transition-fast, 150ms ease),
-    box-shadow var(--transition-fast, 150ms ease),
-    border-color var(--transition-fast, 150ms ease);
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .cardItem:hover {
-  border-color: #93b4db;
-  box-shadow: 0 6px 16px rgb(23 37 84 / 8%);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .cardFieldsList {
@@ -164,14 +162,14 @@
 .fieldRow,
 .cardActionsRow {
   display: grid;
-  grid-template-columns: var(--card-label-width, 96px) minmax(0, 1fr);
+  grid-template-columns: var(--card-label-width) minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
+  gap: var(--space-3);
+  padding: 11px var(--space-4);
 }
 
 .fieldRow {
-  border-bottom: 1px solid #eceff4;
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .fieldRow:last-child {
@@ -179,17 +177,17 @@
 }
 
 .fieldLabel {
-  color: var(--color-text-secondary, #52627a);
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.3;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
   overflow-wrap: break-word;
 }
 
 .fieldValue {
-  color: var(--brand-navy, #172554);
-  font-size: 14px;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   line-height: 1.35;
   min-width: 0;
   overflow-wrap: break-word;
@@ -203,24 +201,24 @@
   align-items: center;
   width: 100%;
   min-height: 30px;
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .fullWidthPillGray {
   justify-content: center;
-  border-radius: 6px;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: var(--brand-navy, #172554);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .fullWidthPillBlue,
 .fullWidthPillBlueCentered {
-  border-radius: 8px;
-  background: var(--brand-blue-light, #eaf3ff);
-  color: var(--brand-cobalt, #0049a8);
+  border-radius: var(--radius-md);
+  background: var(--color-info-soft);
+  color: var(--color-primary);
 }
 
 .fullWidthPillBlue {
@@ -237,16 +235,16 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
 }
 
 .inlineSecondaryLabel {
-  color: var(--color-text-secondary, #52627a);
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.3;
-  padding-left: 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  padding-left: var(--space-2);
   white-space: nowrap;
 }
 
@@ -254,8 +252,8 @@
    PIE DE ACCIONES EXTENSIBLE EN LA TARJETA
    ========================================================================== */
 .cardActionsRow {
-  background: #fafcff;
-  border-top: 1px solid #eceff4;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-soft);
 }
 
 .cardActionsGroup {
@@ -263,7 +261,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .actionBtn {
@@ -273,56 +271,54 @@
   gap: 6px;
   min-height: 34px;
   padding: 0 14px;
-  border-radius: 8px;
-  font-family: var(--font-family);
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: var(--button-radius);
+  font: var(--type-interactive);
   cursor: pointer;
-  transition: all var(--transition-fast, 150ms ease);
+  transition: all var(--transition-fast);
 }
 
 .actionBtnPrimary {
-  background: var(--brand-blue, #2563eb);
-  border: 1px solid var(--brand-blue, #2563eb);
-  color: #ffffff;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .actionBtnPrimary:hover:not(:disabled) {
-  background: var(--color-primary-hover, #1d4ed8);
+  background: var(--color-primary-hover);
 }
 
 .actionBtnSecondary,
 .actionBtnOutline {
-  background: #ffffff;
-  border: 1px solid #dce6f5;
-  color: var(--brand-blue, #2563eb);
-  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .actionBtnSecondary:hover:not(:disabled),
 .actionBtnOutline:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
-  border-color: var(--brand-blue, #2563eb);
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary);
 }
 
 .actionBtnSuccess {
-  background: #ccf5d3;
-  border: 1.5px solid #2e7d32;
-  color: #14532d;
+  background: var(--color-success-soft);
+  border: 1.5px solid var(--color-success);
+  color: var(--color-success);
 }
 
 .actionBtnSuccess:hover:not(:disabled) {
-  background: #b5eec0;
+  background: color-mix(in srgb, var(--color-success-soft) 85%, var(--color-success));
 }
 
 .actionBtnDanger {
-  background: #ffd8dc;
-  border: 1.5px solid #d9384a;
-  color: #9e1c2e;
+  background: var(--color-error-soft);
+  border: 1.5px solid var(--color-error);
+  color: var(--color-error);
 }
 
 .actionBtnDanger:hover:not(:disabled) {
-  background: #ffc2c9;
+  background: color-mix(in srgb, var(--color-error-soft) 85%, var(--color-error));
 }
 
 /* ==========================================================================
@@ -334,15 +330,14 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 14px 24px;
-  background: #ffffff;
-  border-top: 1px solid #e6ebf2;
+  padding: 14px var(--space-6);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-soft);
 }
 
 .paginationSummary {
-  color: #7c8ba1;
-  font-size: 13.5px;
-  font-weight: 400;
+  color: var(--color-text-secondary);
+  font: var(--type-small);
 }
 
 .paginationControls {
@@ -352,9 +347,8 @@
 }
 
 .pageIndicator {
-  color: var(--brand-navy, #172554);
-  font-size: 13.5px;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font: var(--type-small);
 }
 
 .pageButton {
@@ -364,28 +358,26 @@
   min-height: 32px;
   height: 32px;
   padding: 0 14px;
-  background: #ffffff;
-  border: 1px solid #edf2f9;
-  border-radius: 6px;
-  color: var(--brand-blue, #2563eb);
-  font-family: var(--font-family);
-  font-size: 13.5px;
-  font-weight: 600;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--button-radius);
+  color: var(--color-primary);
+  font: var(--type-interactive);
   cursor: pointer;
-  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
-  transition: all var(--transition-fast, 150ms ease);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
 }
 
 .pageButton:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
-  border-color: #cfe2ff;
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary);
 }
 
 .pageButton:disabled {
-  background: #ffffff;
-  border-color: #f1f5f9;
-  color: #64748b;
-  font-weight: 500;
+  background: var(--color-surface);
+  border-color: var(--color-border-soft);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-regular);
   box-shadow: none;
   opacity: 0.75;
   cursor: not-allowed;
@@ -400,43 +392,43 @@
   align-items: center;
   justify-content: center;
   min-height: 240px;
-  padding: 40px 20px;
+  padding: var(--space-10) var(--space-5);
   text-align: center;
-  background: var(--brand-white-warm, #fafafa);
+  background: var(--color-surface);
 }
 
 .spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid var(--color-border-soft, #dce8ff);
-  border-top-color: var(--brand-blue, #2563eb);
+  border: 3px solid var(--color-border-soft);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: cardGridSpin 0.75s linear infinite;
 }
 
 .emptyTitle {
-  color: var(--brand-navy, #172554);
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .stateText {
   margin: 6px 0 0;
-  color: var(--color-text-secondary, #52627a);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font: var(--type-small);
 }
 
 .errorBanner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin: 16px 24px;
+  gap: var(--space-4);
+  margin: var(--space-4) var(--space-6);
   padding: 14px 18px;
-  border: 1px solid var(--brand-pink, #d67a8c);
-  border-radius: 10px;
-  background: var(--brand-pink-light, #f7e9ed);
-  color: var(--brand-crimson, #8b1e3f);
+  border: 1px solid var(--color-decorative);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .visuallyHidden {
@@ -459,12 +451,12 @@
 @media (max-width: 900px) {
   .cardsGrid {
     grid-template-columns: 1fr;
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .searchBar {
     flex-wrap: wrap;
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .searchInputWrapper {
@@ -479,7 +471,7 @@
   .paginationFooter {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .paginationControls {

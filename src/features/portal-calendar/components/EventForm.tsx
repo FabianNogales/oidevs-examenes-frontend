@@ -11,11 +11,12 @@ import type {
   EventCategory,
   EventInput,
   EventStatus,
-} from '../types'
-import { AdminStatusBadge } from '@/features/portal-shared/AdminStatusBadge'
-import { STATUS_LABELS, VISIBILITY_LABELS } from '../types'
+} from '../types/calendar.types'
+import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
+import { STATUS_LABELS, VISIBILITY_LABELS } from '../types/calendar.types'
 import { boliviaInput, inputToIso } from '../utils/calendarDates'
-import styles from '../portalCalendar.module.css'
+import styles from '../pages/portalCalendar.module.css'
 
 const STATUS_ACTIONS: Record<EventStatus, string> = {
   DRAFT: 'Despublicar',
@@ -334,46 +335,51 @@ export function EventForm({
           {fieldError('description')}
           <label className={styles.field}>
             Categoría
-            <select
+            <Dropdown
               name="category_id"
               value={draft.category_id}
               required
               {...accessibility('category_id')}
-              onChange={(event) => update('category_id', event.target.value)}
-            >
-              <option value="">Selecciona una categoría</option>
-              {snapshot &&
-              !categories.some(
-                (category) => category.id === snapshot.category.id,
-              ) ? (
-                <option value={snapshot.category.id} disabled>
-                  {snapshot.category.name} (categoría actual)
-                </option>
-              ) : null}
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Selecciona una categoría"
+              options={[
+                { value: '', label: 'Selecciona una categoría' },
+                ...(snapshot &&
+                !categories.some(
+                  (category) => category.id === snapshot.category.id,
+                )
+                  ? [
+                      {
+                        value: String(snapshot.category.id),
+                        label: `${snapshot.category.name} (categoría actual)`,
+                        disabled: true,
+                      },
+                    ]
+                  : []),
+                ...categories.map((category) => ({
+                  value: String(category.id),
+                  label: category.name,
+                })),
+              ]}
+              onChange={(nextValue) => update('category_id', nextValue)}
+            />
           </label>
           {fieldError('category_id')}
           <label className={styles.field}>
             Visibilidad
-            <select
+            <Dropdown
               name="visibility"
               value={draft.visibility}
               required
               {...accessibility('visibility')}
-              onChange={(event) => {
-                const value = event.target.value
-                if (value === 'PUBLIC' || value === 'PRIVATE')
-                  update('visibility', value)
+              options={[
+                { value: 'PUBLIC', label: 'Público' },
+                { value: 'PRIVATE', label: 'Privado — solo administradores' },
+              ]}
+              onChange={(nextValue) => {
+                if (nextValue === 'PUBLIC' || nextValue === 'PRIVATE')
+                  update('visibility', nextValue)
               }}
-            >
-              <option value="PUBLIC">Público</option>
-              <option value="PRIVATE">Privado — solo administradores</option>
-            </select>
+            />
           </label>
           {fieldError('visibility')}
           <p className={styles.help}>

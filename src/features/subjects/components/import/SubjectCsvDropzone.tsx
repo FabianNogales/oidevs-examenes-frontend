@@ -1,6 +1,7 @@
 import { useId, useRef, useState, type DragEvent } from 'react'
 import { formatSubjectFileSize } from '../../utils/subjectCsv'
 import defaultStyles from '@/shared/styles/CsvImport.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function SubjectCsvDropzone({
   file,
@@ -83,14 +84,14 @@ export function SubjectCsvDropzone({
             <strong>{file.name}</strong>
             <span>{formatSubjectFileSize(file.size)}</span>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             className={styles.removeFileButton}
             disabled={disabled}
             onClick={onRemove}
           >
             Quitar archivo
-          </button>
+          </Button>
         </div>
       ) : (
         <>
@@ -103,14 +104,13 @@ export function SubjectCsvDropzone({
       {file && (
         <span id={descriptionId}>Archivo seleccionado para validar.</span>
       )}
-      <button
-        type="button"
+      <Button
         className={styles.selectFileButton}
         onClick={openPicker}
         disabled={disabled}
       >
         {file ? 'Cambiar archivo' : 'Seleccionar archivo'}
-      </button>
+      </Button>
       <small>Formato admitido: .csv · Máximo 10 MB</small>
     </div>
   )

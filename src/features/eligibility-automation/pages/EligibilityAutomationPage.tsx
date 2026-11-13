@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
 import pageStyles from '@/features/exams/pages/TeacherExamsPage.module.css'
 import {
@@ -37,12 +37,19 @@ import type {
   SelectedCriterion,
 } from '../types/eligibilityAutomation.types'
 import styles from './EligibilityAutomation.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useAcademicData } from '../hooks/useAcademicData'
 import { AcademicCsvImportPanel } from '../components/AcademicCsvImportPanel'
+import { CriterionResults, EvaluationReview } from '../components/EvaluationReview'
+import { getAcademicCsvLayout, getPersistedAcademicCriteria } from '../utils/academicCsv'
+import { displayStatus, displayValue } from '../utils/evaluationReview'
 import {
-  academicActionLabel,
   academicHistoryChanges,
   academicHistoryReason,
+  academicHistorySummary,
+  academicScoreLabel,
+  isAcademicRecordEvent,
   assessmentLabel,
   combinationLabel,
   conditionLabel,
@@ -54,12 +61,14 @@ import {
   parameterLabel,
 } from '../utils/automationPresentation'
 
+const titleId = 'eligibility-automation-title'
+
 type Section = 'configuration' | 'academic' | 'evaluation' | 'history'
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'configuration', label: 'Configurar criterios' },
   { id: 'academic', label: 'Datos académicos' },
-  { id: 'evaluation', label: 'Vista previa' },
+  { id: 'evaluation', label: 'Revisar y aplicar' },
   { id: 'history', label: 'Historial' },
 ]
 
@@ -96,31 +105,6 @@ function criteriaValidationMessage(
       return false
     return true
   })
-}
-
-function displayStatus(status: string | null | undefined): string {
-  if (status === 'ELIGIBLE') return 'Habilitado'
-  if (status === 'INELIGIBLE') return 'Inhabilitado'
-  if (status === 'PENDING') return 'Pendiente'
-  return 'Sin decisión vigente'
-}
-
-function displayValue(
-  value: unknown,
-  assessmentLabels: Record<string, string> = {},
-): string {
-  if (value === null || value === undefined || value === '') return '—'
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No'
-  if (Array.isArray(value))
-    return value
-      .map((item) =>
-        typeof item === 'string'
-          ? assessmentLabel(item, assessmentLabels[item])
-          : String(item),
-      )
-      .join(' + ')
-  if (typeof value === 'object') return 'Dato compuesto'
-  return String(value)
 }
 
 function appliedParameterSummary(
@@ -169,9 +153,7 @@ function isPage<T>(value: ApiPage<T> | null): value is ApiPage<T> {
 }
 
 function academicScore(record: AcademicRecord, key: string): string {
-  const assessment = record.assessments?.[key]
-  if (!assessment?.was_taken || assessment.score === null) return 'No rendido'
-  return String(assessment.score)
+  return academicScoreLabel(record.assessments?.[key])
 }
 
 function academicAttendancePercentage(record: AcademicRecord): string {
@@ -219,22 +201,18 @@ function CriterionParameter({
         aria-describedby={`${id}-hint`}
       >
         <legend>{label}</legend>
-        {(schema.options ?? []).map((option) => (
-          <label className={styles.criterionHeading} key={option}>
-            <input
-              type="checkbox"
-              checked={selected.includes(option)}
-              onChange={(event) =>
-                onChange(
-                  event.currentTarget.checked
-                    ? [...selected, option]
-                    : selected.filter((item) => item !== option),
-                )
-              }
-            />
-            <span>{assessmentLabel(option, assessmentLabels[option])}</span>
-          </label>
-        ))}
+        <Dropdown
+          id={id}
+          multiple
+          value={selected}
+          placeholder="Selecciona las evaluaciones"
+          aria-describedby={`${id}-hint`}
+          options={(schema.options ?? []).map((option) => ({
+            value: option,
+            label: assessmentLabel(option, assessmentLabels[option]),
+          }))}
+          onChange={(nextValues) => onChange(nextValues)}
+        />
         <small id={`${id}-hint`}>
           Marca las evaluaciones que deseas incluir.
           {schema.min_items ? ` Selecciona al menos ${schema.min_items}.` : ''}
@@ -246,18 +224,19 @@ function CriterionParameter({
     return (
       <div className={styles.parameter}>
         <label htmlFor={id}>{label}</label>
-        <select
+        <Dropdown
           id={id}
           value={typeof value === 'string' ? value : ''}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        >
-          <option value="">Selecciona una opción</option>
-          {(schema.options ?? []).map((option) => (
-            <option key={option} value={option}>
-              {assessmentLabel(option, assessmentLabels[option])}
-            </option>
-          ))}
-        </select>
+          placeholder="Selecciona una opción"
+          options={[
+            { value: '', label: 'Selecciona una opción' },
+            ...(schema.options ?? []).map((option) => ({
+              value: option,
+              label: assessmentLabel(option, assessmentLabels[option]),
+            })),
+          ]}
+          onChange={(nextValue) => onChange(nextValue)}
+        />
       </div>
     )
   }
@@ -375,14 +354,14 @@ function CriterionEditor({
 function CorrectionForm({
   record,
   schema,
-  assessments,
+  layout,
   onCancel,
   onSave,
   onReload,
 }: {
   record: AcademicRecord
   schema: ImportSchema
-  assessments: { key: string; label: string }[]
+  layout: ReturnType<typeof getAcademicCsvLayout>
   onCancel: () => void
   onSave: (payload: AcademicRecordPayload) => Promise<void>
   onReload: () => void
@@ -436,15 +415,15 @@ function CorrectionForm({
         {record.first_names} {record.last_names} · SIS {record.sis_code} ·
         revisión {record.revision}
       </p>
-      {schema.assessment_keys.map((key) => {
+      {layout.fields.map(({ key, label, scored }) => {
         const assessment = values.assessments[key]
-        const label = assessments.find((item) => item.key === key)?.label ?? key
         return (
           <fieldset className={styles.assessmentFields} key={key}>
             <legend>{label}</legend>
             <label>
               Estado de la evaluación
-              <select
+              <Dropdown
+                disabled={!scored && assessment?.score != null}
                 value={
                   assessment
                     ? assessment.was_taken
@@ -452,8 +431,12 @@ function CorrectionForm({
                       : 'not_taken'
                     : ''
                 }
-                onChange={(event) => {
-                  const status = event.currentTarget.value
+                options={[
+                  { value: '', label: 'Sin dato' },
+                  { value: 'taken', label: 'Rindió' },
+                  { value: 'not_taken', label: 'No rindió' },
+                ]}
+                onChange={(status) => {
                   setValues((current) => {
                     const nextAssessments = { ...current.assessments }
                     if (!status) {
@@ -470,13 +453,10 @@ function CorrectionForm({
                     return { ...current, assessments: nextAssessments }
                   })
                 }}
-              >
-                <option value="">Sin dato</option>
-                <option value="taken">Rindió</option>
-                <option value="not_taken">No rindió</option>
-              </select>
+              />
             </label>
-            <label>
+            {!scored && assessment?.score != null ? <p>El estado se conserva porque esta evaluación tiene una nota oculta registrada.</p> : null}
+            {scored ? <label>
               Nota
               <input
                 type="number"
@@ -502,11 +482,11 @@ function CorrectionForm({
                   }))
                 }}
               />
-            </label>
+            </label> : null}
           </fieldset>
         )
       })}
-      <div className={styles.formGrid}>
+      {layout.includesAttendance || Object.keys(record.assessments ?? {}).length === 0 ? <div className={styles.formGrid}>
         <label>
           Clases asistidas
           <input
@@ -537,7 +517,7 @@ function CorrectionForm({
             }}
           />
         </label>
-      </div>
+      </div> : null}
       <label>
         Motivo obligatorio
         <textarea
@@ -583,7 +563,8 @@ function CorrectionForm({
           className={sharedStyles.primaryButton}
           disabled={
             saving ||
-            Object.keys(values.assessments).length === 0 ||
+            (Object.keys(values.assessments).length === 0 &&
+              (values.attended_classes === null || values.total_classes === null)) ||
             !values.reason.trim()
           }
         >
@@ -635,8 +616,8 @@ function AppliedCriteriaList({
         </ul>
       ) : (
         <p>
-          No existen criterios automáticos aplicables para determinar una
-          habilitación.
+          No existen criterios automáticos aplicables. Revisa el resultado
+          calculado por el servidor y las decisiones protegidas.
         </p>
       )}
     </section>
@@ -702,41 +683,11 @@ function ResultRow({
       {result.criteria_results.length > 0 ? (
         <details>
           <summary>Resultados por criterio</summary>
-          <ul className={styles.criteriaResults}>
-            {result.criteria_results.map((item, index) => (
-              <li key={`${item.code}-${index}`}>
-                <strong>
-                  {criterionLabel(
-                    item.code,
-                    item.name ?? criterionLabels[item.code],
-                  )}
-                </strong>
-                <span>
-                  Resultado:{' '}
-                  {item.status === 'PASSED'
-                    ? 'Cumple'
-                    : item.status === 'FAILED'
-                      ? 'No cumple'
-                      : 'Pendiente'}
-                </span>
-                {'actual_value' in item ? (
-                  <span>
-                    {item.code === 'MIN_ATTENDANCE_PERCENTAGE'
-                      ? 'Asistencia'
-                      : 'Valor actual'}
-                    : {displayValue(item.actual_value, assessmentLabels)}
-                  </span>
-                ) : null}
-                {'required_value' in item ? (
-                  <span>
-                    Requerido:{' '}
-                    {displayValue(item.required_value, assessmentLabels)}
-                  </span>
-                ) : null}
-                {item.reason ? <span>{item.reason}</span> : null}
-              </li>
-            ))}
-          </ul>
+          <CriterionResults
+            results={result.criteria_results}
+            criterionLabels={criterionLabels}
+            assessmentLabels={assessmentLabels}
+          />
         </details>
       ) : null}
     </article>
@@ -806,6 +757,28 @@ export function EligibilityAutomationPage() {
     loadSchema,
     loadRecords,
   } = useAcademicData(offeringId, section === 'academic')
+  const csvLayout = schema && configuration
+    ? getAcademicCsvLayout(
+        getPersistedAcademicCriteria(configuration),
+        schema,
+        options?.assessments,
+      )
+    : null
+
+  const configurationDirty = configuration !== null && (
+    JSON.stringify(selectedCriteria) !== JSON.stringify(configuration.selected_criteria.filter((item) => !item.required && !item.locked)) ||
+    manualReviewConditions !== (configuration.manual_review_conditions ?? '')
+  )
+  // El servidor solo evalúa una configuración guardada (revisión >= 1) y sin
+  // cambios locales pendientes; se bloquea aquí con una explicación.
+  const evaluationBlockedReason =
+    configuration === null
+      ? null
+      : configuration.revision < 1
+        ? 'Primero guarda la configuración de criterios en «Configurar criterios». Puedes guardarla sin seleccionar criterios opcionales.'
+        : configurationDirty
+          ? 'Tienes cambios sin guardar en la configuración. Guárdalos en «Configurar criterios» antes de generar la revisión.'
+          : null
 
   const loadConfiguration = useCallback(async () => {
     if (examId === null) return
@@ -1050,6 +1023,7 @@ export function EligibilityAutomationPage() {
 
   async function createEvaluationPreview() {
     if (examId === null || configuration === null) return
+    if (evaluationBlockedReason) return
     setEvaluationWorking(true)
     setEvaluationError('')
     setEvaluationMustRefresh(false)
@@ -1061,17 +1035,17 @@ export function EligibilityAutomationPage() {
         configuration.revision,
         configuration.catalog_revision,
       )
-      setEvaluation(await getAllEvaluationResults(examId, firstPage))
+      setEvaluation(firstPage)
     } catch (error) {
       const apiError =
         error instanceof EligibilityAutomationApiError ? error : null
       setEvaluationError(
         apiError?.status === 409
-          ? 'La información cambió. Recarga los datos y genera una nueva vista previa.'
+          ? 'La información cambió. Recarga los datos y genera una nueva revisión.'
           : apiError?.code === 'CRITERIA_CONFLICT'
             ? apiError.message ||
               'La combinación de criterios seleccionada es incompatible.'
-            : getErrorMessage(error, 'No se pudo generar la vista previa.'),
+            : getErrorMessage(error, 'No se pudo generar la revisión.'),
       )
       if (apiError?.status === 409) {
         setEvaluation(null)
@@ -1127,8 +1101,8 @@ export function EligibilityAutomationPage() {
         error instanceof EligibilityAutomationApiError ? error : null
       setEvaluationError(
         apiError?.status === 409
-          ? 'La información cambió. Recarga los datos y genera una nueva vista previa.'
-          : getErrorMessage(error, 'No se pudo confirmar la evaluación.'),
+          ? 'La información cambió. Recarga los datos y genera una nueva revisión.'
+          : getErrorMessage(error, 'No se pudo aplicar la evaluación.'),
       )
       if (apiError?.status === 409) {
         setEvaluationMustRefresh(true)
@@ -1152,20 +1126,6 @@ export function EligibilityAutomationPage() {
     }
   }
 
-  const eligibilitySummary = evaluation
-    ? {
-        updates: evaluation.results.data.filter((item) => item.will_update)
-          .length,
-        unchanged: evaluation.results.data.filter((item) => !item.will_update)
-          .length,
-        manual: evaluation.results.data.filter(
-          (item) => item.manual_override_preserved,
-        ).length,
-        pending: evaluation.results.data.filter(
-          (item) => item.computed_status === 'PENDING',
-        ).length,
-      }
-    : null
   const assessmentLabels = Object.fromEntries(
     (options?.assessments ?? []).map((assessment) => [
       assessment.key,
@@ -1185,20 +1145,32 @@ export function EligibilityAutomationPage() {
 
   if (examId === null) {
     return (
-      <main className={pageStyles.page}>
-        <section className={pageStyles.content}>
-          <h1>Habilitación automática</h1>
-          <p role="alert">El identificador del examen no es válido.</p>
-        </section>
+      <main>
+        <PageContainer labelledBy={titleId}>
+          <PageHeader title="Habilitación automática" titleId={titleId} />
+          <section
+            className={`${pageStyles.content} ${pageStyles.contentFull}`}
+          >
+            <p role="alert">El identificador del examen no es válido.</p>
+          </section>
+        </PageContainer>
       </main>
     )
   }
 
   return (
-    <main className={pageStyles.page}>
-      <section className={pageStyles.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Habilitación automática"
+          titleId={titleId}
+          description={
+            <>
+              {examState.exam?.name ?? `Examen #${examId}`}: configura los
+              criterios, revisa los datos académicos y confirma los resultados.
+            </>
+          }
+          breadcrumbs={[
             { label: 'Mis exámenes', to: `/teacher/exams${search}` },
             {
               label: 'Habilitaciones',
@@ -1206,661 +1178,633 @@ export function EligibilityAutomationPage() {
             },
             { label: 'Habilitación automática' },
           ]}
+          actions={
+            <Link to={`/teacher/exams/${examId}/eligibilities${search}`}>
+              Volver a Habilitaciones
+            </Link>
+          }
         />
-        <header className={pageStyles.pageHeader}>
-          <h1>Habilitación automática</h1>
-          <p>
-            {examState.exam?.name ?? `Examen #${examId}`}: configura los
-            criterios, revisa los datos académicos y confirma los resultados.
-          </p>
-          <Link to={`/teacher/exams/${examId}/eligibilities${search}`}>
-            Volver a Habilitaciones
-          </Link>
-        </header>
-        {examState.isLoading ? <p role="status">Cargando examen…</p> : null}
-        {examState.errorMessage ? (
-          <p role="alert" className={styles.error}>
-            {examState.errorMessage}
-          </p>
-        ) : null}
-        {!offeringId && !examState.isLoading ? (
-          <p role="alert" className={styles.error}>
-            No se pudo identificar la oferta académica del examen. Recarga la
-            página para consultar sus registros.
-          </p>
-        ) : null}
-        <nav
-          className={styles.sectionNav}
-          aria-label="Secciones de habilitación automática"
-        >
-          {SECTIONS.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              className={section === item.id ? styles.activeSection : ''}
-              aria-current={section === item.id ? 'step' : undefined}
-              onClick={() => setSection(item.id)}
-            >
-              <span>{index + 1}</span>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        {initialLoading ? (
-          <p role="status">Cargando catálogo y configuración…</p>
-        ) : null}
-        {initialError ? (
-          <div role="alert" className={styles.error}>
-            <p>{initialError}</p>
-            <button
-              type="button"
-              className={sharedStyles.secondaryButton}
-              onClick={() => void reloadConfiguration()}
-            >
-              Reintentar
-            </button>
-          </div>
-        ) : null}
-
-        {section === 'configuration' && options && configuration ? (
-          <section aria-labelledby="configuration-title">
-            <h2 id="configuration-title">Configuración</h2>
-            <dl className={styles.configurationMetadata}>
-              <div>
-                <dt>Tipo de evaluación</dt>
-                <dd>{evaluationTypeLabel(configuration.evaluation_type)}</dd>
-              </div>
-              <div>
-                <dt>Revisión de configuración</dt>
-                <dd>{configuration.revision}</dd>
-              </div>
-              <div>
-                <dt>Combinación</dt>
-                <dd>{combinationLabel(configuration.combination)}</dd>
-              </div>
-            </dl>
-            <p className={styles.note}>
-              Selecciona los criterios opcionales que deseas aplicar. Los
-              requisitos institucionales obligatorios siempre se mantienen
-              activos.
+        <section className={`${pageStyles.content} ${pageStyles.contentFull}`}>
+          {examState.isLoading ? <p role="status">Cargando examen…</p> : null}
+          {examState.errorMessage ? (
+            <p role="alert" className={styles.error}>
+              {examState.errorMessage}
             </p>
-            {unavailableSelectedCriteria.length > 0 ? (
-              <p role="alert" className={styles.error}>
-                El servidor reportó criterios configurados que no están
-                disponibles en el catálogo actual. No se enviará una
-                configuración incompleta.
+          ) : null}
+          {!offeringId && !examState.isLoading ? (
+            <p role="alert" className={styles.error}>
+              No se pudo identificar la oferta académica del examen. Recarga la
+              página para consultar sus registros.
+            </p>
+          ) : null}
+          <nav
+            className={styles.sectionNav}
+            aria-label="Secciones de habilitación automática"
+          >
+            {SECTIONS.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                className={section === item.id ? styles.activeSection : ''}
+                aria-current={section === item.id ? 'step' : undefined}
+                onClick={() => setSection(item.id)}
+              >
+                <span>{index + 1}</span>
+                {item.label}
+              </button>
+            ))}
+          </nav>
+          {initialLoading ? (
+            <p role="status">Cargando catálogo y configuración…</p>
+          ) : null}
+          {initialError ? (
+            <div role="alert" className={styles.error}>
+              <p>{initialError}</p>
+              <button
+                type="button"
+                className={sharedStyles.secondaryButton}
+                onClick={() => void reloadConfiguration()}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : null}
+
+          {section === 'configuration' && options && configuration ? (
+            <section aria-labelledby="configuration-title">
+              <h2 id="configuration-title">Configuración</h2>
+              <dl className={styles.configurationMetadata}>
+                <div>
+                  <dt>Tipo de evaluación</dt>
+                  <dd>{evaluationTypeLabel(configuration.evaluation_type)}</dd>
+                </div>
+                <div>
+                  <dt>Revisión de configuración</dt>
+                  <dd>{configuration.revision}</dd>
+                </div>
+                <div>
+                  <dt>Combinación</dt>
+                  <dd>{combinationLabel(configuration.combination)}</dd>
+                </div>
+              </dl>
+              <p className={styles.note}>
+                Selecciona los criterios opcionales que deseas aplicar. Los
+                requisitos institucionales obligatorios siempre se mantienen
+                activos.
               </p>
-            ) : null}
-            <h3>Criterios obligatorios</h3>
-            <div className={styles.requiredCriteria}>
-              {options.criteria
-                .filter((criterion) => criterion.required || criterion.locked)
-                .map((criterion) => (
+              {unavailableSelectedCriteria.length > 0 ? (
+                <p role="alert" className={styles.error}>
+                  El servidor reportó criterios configurados que no están
+                  disponibles en el catálogo actual. No se enviará una
+                  configuración incompleta.
+                </p>
+              ) : null}
+              <h3>Criterios obligatorios</h3>
+              <div className={styles.requiredCriteria}>
+                {options.criteria
+                  .filter((criterion) => criterion.required || criterion.locked)
+                  .map((criterion) => (
+                    <CriterionEditor
+                      key={criterion.code}
+                      criterion={criterion}
+                      selected={configuration.mandatory_criteria.find(
+                        (item) => item.code === criterion.code,
+                      )}
+                      onToggle={() => undefined}
+                      onParameterChange={() => undefined}
+                      assessmentLabels={Object.fromEntries(
+                        options.assessments.map((item) => [
+                          item.key,
+                          item.label,
+                        ]),
+                      )}
+                    />
+                  ))}
+              </div>
+              <h3>Criterios opcionales</h3>
+              {optionalCriteria.length === 0 ? (
+                <p>
+                  No hay criterios opcionales disponibles para esta
+                  configuración.
+                </p>
+              ) : null}
+              <div
+                className={`${styles.criterionList} ${styles.optionalCriteria}`}
+              >
+                {optionalCriteria.map((criterion) => (
                   <CriterionEditor
                     key={criterion.code}
                     criterion={criterion}
-                    selected={configuration.mandatory_criteria.find(
+                    selected={selectedCriteria.find(
                       (item) => item.code === criterion.code,
                     )}
-                    onToggle={() => undefined}
-                    onParameterChange={() => undefined}
+                    onToggle={toggleCriterion}
+                    onParameterChange={changeCriterionParameter}
                     assessmentLabels={Object.fromEntries(
                       options.assessments.map((item) => [item.key, item.label]),
                     )}
+                    fieldErrors={Object.entries(configurationFieldErrors)
+                      .filter(
+                        ([field]) =>
+                          configurationErrorCodes[field] === criterion.code,
+                      )
+                      .map(([field, message]) => ({ field, message }))}
                   />
                 ))}
-            </div>
-            <h3>Criterios opcionales</h3>
-            {optionalCriteria.length === 0 ? (
-              <p>
-                No hay criterios opcionales disponibles para esta configuración.
-              </p>
-            ) : null}
-            <div
-              className={`${styles.criterionList} ${styles.optionalCriteria}`}
-            >
-              {optionalCriteria.map((criterion) => (
-                <CriterionEditor
-                  key={criterion.code}
-                  criterion={criterion}
-                  selected={selectedCriteria.find(
-                    (item) => item.code === criterion.code,
-                  )}
-                  onToggle={toggleCriterion}
-                  onParameterChange={changeCriterionParameter}
-                  assessmentLabels={Object.fromEntries(
-                    options.assessments.map((item) => [item.key, item.label]),
-                  )}
-                  fieldErrors={Object.entries(configurationFieldErrors)
-                    .filter(
-                      ([field]) =>
-                        configurationErrorCodes[field] === criterion.code,
-                    )
-                    .map(([field, message]) => ({ field, message }))}
-                />
-              ))}
-            </div>
-            {configuration.inactive_criteria.length > 0 ? (
-              <section className={styles.inactiveCriteria}>
-                <h3>Criterios actualmente inactivos</h3>
-                <ul>
-                  {configuration.inactive_criteria.map((criterion) => (
-                    <li key={criterion.code}>
-                      <strong>
-                        {criterionLabel(criterion.code, criterion.name)}
-                      </strong>
-                      <p>
-                        Este criterio estaba configurado previamente, pero
-                        actualmente se encuentra desactivado por administración
-                        y no se aplicará en una nueva evaluación.
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-            {configuration.mandatory_criteria.length === 0 &&
-            selectedCriteria.length === 0 ? (
-              <p className={styles.note}>
-                Si no existen criterios automáticos aplicables, la evaluación
-                puede quedar pendiente y no modificar habilitaciones.
-              </p>
-            ) : null}
-            <section
-              className={styles.manualReviewConditions}
-              aria-labelledby="manual-review-title"
-            >
-              <h3 id="manual-review-title">Condiciones de revisión manual</h3>
-              <label htmlFor="manual-review-conditions">
-                Condiciones que el docente verificará manualmente
-              </label>
-              <textarea
-                id="manual-review-conditions"
-                maxLength={500}
-                value={manualReviewConditions}
-                onChange={(event) => {
-                  setManualReviewConditions(event.currentTarget.value)
-                  setConfigurationSaved(false)
-                  setEvaluation(null)
-                  setEvaluationMustRefresh(false)
-                }}
-              />
-              <small>
-                Estas condiciones son recordatorios. EIDA no las evalúa
-                automáticamente. El docente debe verificarlas y gestionar la
-                habilitación manualmente.
-              </small>
-              <small>{manualReviewConditions.length}/500 caracteres</small>
-            </section>
-            {Object.entries(configurationFieldErrors)
-              .filter(([field]) => !configurationErrorCodes[field])
-              .map(([field, message]) => (
-                <p className={styles.fieldError} key={field}>
-                  {field.startsWith('criteria')
-                    ? 'Criterios seleccionados'
-                    : parameterLabel(field.split('.').at(-1) ?? field)}
-                  : {message}
-                </p>
-              ))}
-            {configurationError ? (
-              <div role="alert" className={styles.error}>
-                <p>{configurationError}</p>
-                {configurationConflict ? (
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    onClick={() => void reloadConfiguration()}
-                  >
-                    Recargar configuración del servidor
-                  </button>
-                ) : null}
               </div>
-            ) : null}
-            {configurationSaved ? (
-              <p role="status" className={styles.success}>
-                Configuración guardada. La revisión vigente es{' '}
-                {configuration.revision}.
-              </p>
-            ) : null}
-            <div className={styles.configurationSave}>
-              <button
-                type="button"
-                className={sharedStyles.primaryButton}
-                disabled={savingConfiguration || !criteriaAreValid}
-                onClick={() => void saveConfiguration()}
-              >
-                {savingConfiguration ? 'Guardando…' : 'Guardar configuración'}
-              </button>
-              <p>
-                Guardar no modifica las habilitaciones. Los resultados se
-                aplican al confirmar la vista previa.
-              </p>
-            </div>
-          </section>
-        ) : null}
-
-        {section === 'academic' ? (
-          <section aria-labelledby="academic-title">
-            <h2 id="academic-title">Datos académicos</h2>
-            {schemaLoading ? <p role="status">Cargando esquema CSV…</p> : null}
-            {schemaError ? (
-              <div role="alert" className={styles.error}>
-                <p>{schemaError}</p>
-                <button
-                  type="button"
-                  className={sharedStyles.secondaryButton}
-                  onClick={() => void loadSchema()}
-                >
-                  Reintentar esquema CSV
-                </button>
-                <details>
-                  <summary>Diagnóstico técnico</summary>
-                  <pre>{schemaDiagnostic}</pre>
-                </details>
-              </div>
-            ) : null}
-            {schema && offeringId ? (
-              <AcademicCsvImportPanel
-                key={offeringId}
-                offeringId={offeringId}
-                schema={schema}
-                onConfirmed={async () => {
-                  await loadRecords(1, '')
-                  setRecordSearch('')
-                  notify(
-                    'success',
-                    'La importación académica fue confirmada y los registros se actualizaron.',
-                  )
-                }}
-              />
-            ) : null}
-            <div className={styles.panel}>
-              <h3 className={styles.recordsHeading}>Registros académicos</h3>
-              <div className={styles.recordsToolbar}>
-                <form
-                  onSubmit={(event) => {
-                    event.preventDefault()
-                    void loadRecords(1, recordSearch)
-                  }}
-                >
-                  <label>
-                    Buscar por SIS o estudiante
-                    <input
-                      type="search"
-                      placeholder="SIS o nombre del estudiante"
-                      value={recordSearch}
-                      onChange={(event) =>
-                        setRecordSearch(event.currentTarget.value)
-                      }
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className={sharedStyles.secondaryButton}
-                  >
-                    Buscar
-                  </button>
-                </form>
-              </div>
-              {recordsError ? (
-                <div role="alert" className={styles.error}>
-                  <p>{recordsError}</p>
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    onClick={() => void loadRecords()}
-                  >
-                    Recargar registros
-                  </button>
-                  <details>
-                    <summary>Diagnóstico técnico</summary>
-                    <pre>{recordsDiagnostic}</pre>
-                  </details>
-                </div>
+              {configuration.inactive_criteria.length > 0 ? (
+                <section className={styles.inactiveCriteria}>
+                  <h3>Criterios actualmente inactivos</h3>
+                  <ul>
+                    {configuration.inactive_criteria.map((criterion) => (
+                      <li key={criterion.code}>
+                        <strong>
+                          {criterionLabel(criterion.code, criterion.name)}
+                        </strong>
+                        <p>
+                          Este criterio estaba configurado previamente, pero
+                          actualmente se encuentra desactivado por
+                          administración y no se aplicará en una nueva
+                          evaluación.
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               ) : null}
-              {recordsLoading ? <p role="status">Cargando registros…</p> : null}
-              {isPage(records) && records.data.length > 0 ? (
-                <div className={styles.tableWrap}>
-                  <table
-                    className={`${sharedStyles.table} ${styles.academicRecordsTable}`}
-                  >
-                    <thead>
-                      <tr>
-                        <th>Estudiante</th>
-                        <th>SIS</th>
-                        <th>Nota PP</th>
-                        <th>Nota SP</th>
-                        <th>Asistencia</th>
-                        <th>% asistencia</th>
-                        <th>Promedio</th>
-                        <th>Revisión</th>
-                        <th>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {records.data.map((record) => (
-                        <tr key={record.id}>
-                          <td>
-                            {record.first_names} {record.last_names}
-                          </td>
-                          <td>{record.sis_code}</td>
-                          <td>{academicScore(record, 'FIRST_PARTIAL')}</td>
-                          <td>{academicScore(record, 'SECOND_PARTIAL')}</td>
-                          <td>
-                            {record.attended_classes === null ||
-                            record.attended_classes === undefined ||
-                            record.total_classes === null ||
-                            record.total_classes === undefined
-                              ? '—'
-                              : `${record.attended_classes} / ${record.total_classes}`}
-                          </td>
-                          <td>{academicAttendancePercentage(record)}</td>
-                          <td>{academicAverage(record)}</td>
-                          <td>{record.revision}</td>
-                          <td>
-                            <button
-                              type="button"
-                              className={sharedStyles.secondaryButton}
-                              onClick={() => setSelectedRecord(record)}
-                            >
-                              Corregir
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <PageControls
-                    meta={records.meta}
-                    onPage={(page) => void loadRecords(page)}
-                  />
-                </div>
-              ) : null}
-              {isPage(records) &&
-              records.data.length === 0 &&
-              !recordsLoading ? (
-                <p role="status">
-                  No hay registros académicos para esta consulta.
-                </p>
-              ) : null}
-              {selectedRecord && schema ? (
-                <CorrectionForm
-                  key={`${selectedRecord.id}:${selectedRecord.revision}`}
-                  record={selectedRecord}
-                  schema={schema}
-                  assessments={options?.assessments ?? []}
-                  onCancel={() => setSelectedRecord(null)}
-                  onSave={(payload) => saveCorrection(selectedRecord, payload)}
-                  onReload={() => void loadRecords()}
-                />
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
-        {section === 'evaluation' ? (
-          <section aria-labelledby="evaluation-title">
-            <h2 id="evaluation-title">Resultado de evaluación</h2>
-            <p>
-              Revisa los resultados antes de confirmar. Si falta información, se
-              conserva la habilitación vigente del estudiante.
-            </p>
-            <button
-              type="button"
-              className={sharedStyles.primaryButton}
-              disabled={
-                !configuration || savingConfiguration || evaluationWorking
-              }
-              onClick={() => void createEvaluationPreview()}
-            >
-              {evaluationWorking
-                ? 'Procesando…'
-                : 'Generar vista previa de habilitaciones'}
-            </button>
-            {evaluationError ? (
-              <div role="alert" className={styles.error}>
-                <p>{evaluationError}</p>
-                {evaluationMustRefresh ? (
-                  <p>
-                    Los datos o la revisión cambiaron. Debes generar una nueva
-                    vista previa antes de confirmar.
-                  </p>
-                ) : null}
-                {configurationConflict || evaluationMustRefresh ? (
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    onClick={() => {
-                      void reloadConfiguration()
-                      setEvaluation(null)
-                      setEvaluationMustRefresh(true)
-                    }}
-                  >
-                    Recargar configuración
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
-            {evaluation ? (
-              <div className={styles.panel}>
-                <h3>Resumen antes de confirmar</h3>
+              {configuration.mandatory_criteria.length === 0 &&
+              selectedCriteria.length === 0 ? (
                 <p className={styles.note}>
-                  Los contadores de decisiones manuales preservadas y pendientes
-                  pueden coincidir para una misma persona.
+                  Sin criterios automáticos aplicables, el servidor propone habilitar
+                  a los estudiantes inscritos activos y conserva las decisiones
+                  protegidas. Guarda la configuración y después genera la
+                  revisión para comprobar y aplicar el resultado.
                 </p>
-                {eligibilitySummary ? (
-                  <dl className={styles.summary}>
-                    <div>
-                      <dt>Se actualizarán</dt>
-                      <dd>{eligibilitySummary.updates}</dd>
-                    </div>
-                    <div>
-                      <dt>Sin cambios</dt>
-                      <dd>{eligibilitySummary.unchanged}</dd>
-                    </div>
-                    <div>
-                      <dt>Decisiones manuales preservadas</dt>
-                      <dd>{eligibilitySummary.manual}</dd>
-                    </div>
-                    <div>
-                      <dt>Pendientes</dt>
-                      <dd>{eligibilitySummary.pending}</dd>
-                    </div>
-                    <div>
-                      <dt>Estudiantes totales</dt>
-                      <dd>{evaluation.summary.total}</dd>
-                    </div>
-                  </dl>
-                ) : null}
-                <AppliedCriteriaList
-                  title="Criterios aplicados"
-                  configuration={evaluation.configuration}
-                  catalog={evaluation.catalog}
-                  assessmentLabels={assessmentLabels}
+              ) : null}
+              <section
+                className={styles.manualReviewConditions}
+                aria-labelledby="manual-review-title"
+              >
+                <h3 id="manual-review-title">Condiciones de revisión manual</h3>
+                <label htmlFor="manual-review-conditions">
+                  Condiciones que el docente verificará manualmente
+                </label>
+                <textarea
+                  id="manual-review-conditions"
+                  maxLength={500}
+                  value={manualReviewConditions}
+                  onChange={(event) => {
+                    setManualReviewConditions(event.currentTarget.value)
+                    setConfigurationSaved(false)
+                    setEvaluation(null)
+                    setEvaluationMustRefresh(false)
+                  }}
                 />
-                <div className={styles.resultList}>
-                  {evaluation.results.data.map((item) => (
-                    <ResultRow
-                      key={item.student.id}
-                      result={item}
-                      criterionLabels={criterionLabels}
-                      assessmentLabels={assessmentLabels}
-                    />
-                  ))}
-                </div>
-                <div className={styles.actions}>
-                  <button
-                    type="button"
-                    className={sharedStyles.primaryButton}
-                    disabled={evaluationWorking || evaluationMustRefresh}
-                    onClick={() => void confirmEvaluation()}
-                  >
-                    {evaluationWorking
-                      ? 'Confirmando…'
-                      : 'Confirmar evaluación'}
-                  </button>
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    disabled={evaluationWorking}
-                    onClick={() => {
-                      setEvaluation(null)
-                      void createEvaluationPreview()
-                    }}
-                  >
-                    Generar nuevo preview
-                  </button>
-                </div>
-              </div>
-            ) : null}
-            {confirmation ? (
-              <div role="status" className={styles.panel}>
-                <h3>Proceso confirmado</h3>
-                <p>
-                  Actualizadas: {confirmation.updated} · Sin cambios:{' '}
-                  {confirmation.unchanged} · Decisiones manuales preservadas:{' '}
-                  {confirmation.manual_preserved} · Pendientes:{' '}
-                  {confirmation.pending}
-                </p>
-                {confirmation.updated === 0 ? (
-                  <p>No se modificaron habilitaciones</p>
-                ) : null}
-                {confirmation.pending > 0 ? (
-                  <p className={styles.note}>
-                    Hay estudiantes pendientes por información insuficiente. Sus
-                    habilitaciones vigentes se conservan
+                <small>
+                  Estas condiciones son recordatorios. EIDA no las evalúa
+                  automáticamente. El docente debe verificarlas y gestionar la
+                  habilitación manualmente.
+                </small>
+                <small>{manualReviewConditions.length}/500 caracteres</small>
+              </section>
+              {Object.entries(configurationFieldErrors)
+                .filter(([field]) => !configurationErrorCodes[field])
+                .map(([field, message]) => (
+                  <p className={styles.fieldError} key={field}>
+                    {field.startsWith('criteria')
+                      ? 'Criterios seleccionados'
+                      : parameterLabel(field.split('.').at(-1) ?? field)}
+                    : {message}
                   </p>
-                ) : null}
-                {hu12Counts ? (
-                  <p>
-                    Habilitaciones vigentes: habilitados {hu12Counts.eligible} ·
-                    inhabilitados {hu12Counts.ineligible}.
-                  </p>
-                ) : (
-                  <p>
-                    La confirmación se completó; no se pudo actualizar la
-                    consulta de habilitaciones. Usa el enlace para volver a
-                    consultar.
-                  </p>
-                )}
-                <Link to={`/teacher/exams/${examId}/eligibilities${search}`}>
-                  Volver a Habilitaciones
-                </Link>
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-
-        {section === 'history' ? (
-          <section aria-labelledby="history-title">
-            <h2 id="history-title">Historial consultivo</h2>
-            <p className={styles.note}>
-              Las fechas con zona horaria se muestran en horario de Bolivia. Si
-              no se indica una zona, se conserva el valor recibido.
-            </p>
-            {historyError ? (
-              <p role="alert" className={styles.error}>
-                {historyError}
-              </p>
-            ) : null}
-            {historyLoading ? (
-              <p role="status">Consultando historial…</p>
-            ) : null}
-            <div className={styles.historyGrid}>
-              <div className={styles.panel}>
-                <h3>Importaciones y correcciones académicas</h3>
-                {academicHistory?.data.map((entry) => (
-                  <HistoryCard key={entry.id} entry={entry} records={records} />
                 ))}
-                {academicHistory?.data.length === 0 ? (
-                  <p>No hay actividad académica registrada.</p>
-                ) : null}
-              </div>
-              <div className={styles.panel}>
-                <h3>Evaluaciones de habilitación</h3>
-                {evaluationHistory?.data.map((entry) => (
-                  <article className={styles.historyItem} key={entry.id}>
-                    <h4>Evaluación de habilitación</h4>
-                    <p>
-                      <time dateTime={entry.created_at}>
-                        {evaluationDateLabel(entry.created_at)}
-                      </time>
-                    </p>
-                    <p>
-                      Estado:{' '}
-                      <strong>
-                        {entry.confirmed_at
-                          ? 'Confirmada'
-                          : 'Pendiente de confirmación'}
-                      </strong>
-                    </p>
-                    {entry.confirmation ? (
-                      <EvaluationHistorySummary
-                        confirmation={entry.confirmation}
-                      />
-                    ) : null}
-                    {entry.created_by ? (
-                      <p>
-                        Responsable:{' '}
-                        {entry.created_by_name?.trim() ||
-                          `Usuario #${entry.created_by}`}
-                      </p>
-                    ) : null}
+              {configurationError ? (
+                <div role="alert" className={styles.error}>
+                  <p>{configurationError}</p>
+                  {configurationConflict ? (
                     <button
                       type="button"
                       className={sharedStyles.secondaryButton}
-                      onClick={() => void openEvaluationHistory(entry)}
+                      onClick={() => void reloadConfiguration()}
                     >
-                      Ver resultados
+                      Recargar configuración del servidor
                     </button>
-                  </article>
-                ))}
-                {evaluationHistory?.data.length === 0 ? (
-                  <p>No hay evaluaciones registradas.</p>
+                  ) : null}
+                </div>
+              ) : null}
+              {configurationSaved ? (
+                <p role="status" className={styles.success}>
+                  Configuración guardada. La revisión vigente es{' '}
+                  {configuration.revision}.
+                </p>
+              ) : null}
+              <div className={styles.configurationSave}>
+                <button
+                  type="button"
+                  className={sharedStyles.primaryButton}
+                  disabled={savingConfiguration || !criteriaAreValid}
+                  onClick={() => void saveConfiguration()}
+                >
+                  {savingConfiguration ? 'Guardando…' : 'Guardar configuración'}
+                </button>
+                <p>
+                  Guardar no modifica las habilitaciones. Los resultados se
+                  aplican al confirmar la vista previa.
+                </p>
+              </div>
+            </section>
+          ) : null}
+
+          {section === 'academic' ? (
+            <section aria-labelledby="academic-title">
+              <h2 id="academic-title">Datos académicos</h2>
+              {schemaLoading ? (
+                <p role="status">Cargando esquema CSV…</p>
+              ) : null}
+              {schemaError ? (
+                <div role="alert" className={styles.error}>
+                  <p>{schemaError}</p>
+                  <button
+                    type="button"
+                    className={sharedStyles.secondaryButton}
+                    onClick={() => void loadSchema()}
+                  >
+                    Reintentar esquema CSV
+                  </button>
+                  <details>
+                    <summary>Diagnóstico técnico</summary>
+                    <pre>{schemaDiagnostic}</pre>
+                  </details>
+                </div>
+              ) : null}
+              {configurationDirty || savingConfiguration ? (
+                <p role="status">Primero guarda la configuración para descargar la plantilla o importar CSV. Los registros muestran la configuración guardada.</p>
+              ) : schema && offeringId && csvLayout ? (
+                <AcademicCsvImportPanel
+                  key={`${offeringId}:${configuration?.revision}:${csvLayout.columns.map(({ key }) => key).join(',')}:${csvLayout.requiresAssessmentForAttendance}`}
+                  offeringId={offeringId}
+                  schema={schema}
+                  layout={csvLayout}
+                  onConfirmed={async () => {
+                    await loadRecords(1, '')
+                    setRecordSearch('')
+                    notify(
+                      'success',
+                      'La importación académica fue confirmada y los registros se actualizaron.',
+                    )
+                  }}
+                />
+              ) : null}
+              <div className={styles.panel}>
+                <h3 className={styles.recordsHeading}>Registros académicos</h3>
+                <div className={styles.recordsToolbar}>
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      void loadRecords(1, recordSearch)
+                    }}
+                  >
+                    <label>
+                      Buscar por SIS o estudiante
+                      <input
+                        type="search"
+                        placeholder="SIS o nombre del estudiante"
+                        value={recordSearch}
+                        onChange={(event) =>
+                          setRecordSearch(event.currentTarget.value)
+                        }
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      className={sharedStyles.secondaryButton}
+                    >
+                      Buscar
+                    </button>
+                  </form>
+                </div>
+                {recordsError ? (
+                  <div role="alert" className={styles.error}>
+                    <p>{recordsError}</p>
+                    <button
+                      type="button"
+                      className={sharedStyles.secondaryButton}
+                      onClick={() => void loadRecords()}
+                    >
+                      Recargar registros
+                    </button>
+                    <details>
+                      <summary>Diagnóstico técnico</summary>
+                      <pre>{recordsDiagnostic}</pre>
+                    </details>
+                  </div>
+                ) : null}
+                {recordsLoading ? (
+                  <p role="status">Cargando registros…</p>
+                ) : null}
+                {isPage(records) && records.data.length > 0 ? (
+                  <div className={styles.tableWrap}>
+                    <table
+                      className={`${sharedStyles.table} ${styles.academicRecordsTable}`}
+                    >
+                      <thead>
+                        <tr>
+                          <th>Estudiante</th>
+                          <th>SIS</th>
+                          {csvLayout?.fields.map(({ key, column }) => <th key={key}>{column.label}</th>)}
+                          {csvLayout?.includesAttendance ? <><th>Asistencia</th><th>% asistencia</th></> : null}
+                          {csvLayout?.includesAverage ? <th>Promedio</th> : null}
+                          <th>Revisión</th>
+                          <th>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {records.data.map((record) => (
+                          <tr key={record.id}>
+                            <td>
+                              {record.first_names} {record.last_names}
+                            </td>
+                            <td>{record.sis_code}</td>
+                            {csvLayout?.fields.map(({ key, scored }) => <td key={key}>{scored ? academicScore(record, key) : record.assessments?.[key] ? (record.assessments[key].was_taken ? 'Sí' : 'No') : '—'}</td>)}
+                            {csvLayout?.includesAttendance ? <>
+                              <td>{record.attended_classes == null || record.total_classes == null ? '—' : record.attended_classes + ' / ' + record.total_classes}</td>
+                              <td>{academicAttendancePercentage(record)}</td>
+                            </> : null}
+                            {csvLayout?.includesAverage ? <td>{academicAverage(record)}</td> : null}
+                            <td>{record.revision}</td>
+                            <td>
+                              <button
+                                type="button"
+                                className={sharedStyles.secondaryButton}
+                                onClick={() => setSelectedRecord(record)}
+                              >
+                                Corregir
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <PageControls
+                      meta={records.meta}
+                      onPage={(page) => void loadRecords(page)}
+                    />
+                  </div>
+                ) : null}
+                {isPage(records) &&
+                records.data.length === 0 &&
+                !recordsLoading ? (
+                  <p role="status">
+                    No hay registros académicos para esta consulta.
+                  </p>
+                ) : null}
+                {selectedRecord && schema && csvLayout ? (
+                  <CorrectionForm
+                    key={`${selectedRecord.id}:${selectedRecord.revision}`}
+                    record={selectedRecord}
+                    schema={schema}
+                    layout={csvLayout}
+                    onCancel={() => setSelectedRecord(null)}
+                    onSave={(payload) =>
+                      saveCorrection(selectedRecord, payload)
+                    }
+                    onReload={() => void loadRecords()}
+                  />
                 ) : null}
               </div>
-            </div>
-            {academicHistory || evaluationHistory ? (
-              <div className={styles.actions}>
-                <PageControls
-                  meta={academicHistory?.meta ?? evaluationHistory?.meta}
-                  onPage={setHistoryPage}
-                />
-              </div>
-            ) : null}
-            {historyDetail ? (
-              <div className={styles.panel}>
-                <h3>Detalle histórico de la evaluación</h3>
-                {historyDetail.confirmation ? (
-                  <p>
-                    Resultado de confirmación: actualizadas{' '}
-                    {historyDetail.confirmation.updated}, sin cambios{' '}
-                    {historyDetail.confirmation.unchanged}.
-                  </p>
-                ) : (
-                  <p>Esta evaluación no fue confirmada.</p>
-                )}
-                <AppliedCriteriaList
-                  title="Criterios utilizados"
-                  configuration={historyDetail.configuration}
-                  catalog={historyDetail.catalog}
+            </section>
+          ) : null}
+
+          {section === 'evaluation' ? (
+            <section aria-labelledby="evaluation-title">
+              <h2 id="evaluation-title">Revisar y aplicar</h2>
+              <p>
+                Genera la revisión, comprueba los cambios y aplícala. Nada se
+                modifica hasta que confirmes. Si falta información, se conserva
+                la habilitación vigente del estudiante.
+              </p>
+              <button
+                type="button"
+                className={sharedStyles.primaryButton}
+                disabled={
+                  !configuration ||
+                  savingConfiguration ||
+                  evaluationWorking ||
+                  evaluationBlockedReason !== null
+                }
+                aria-describedby={
+                  evaluationBlockedReason ? 'evaluation-blocked' : undefined
+                }
+                onClick={() => void createEvaluationPreview()}
+              >
+                {evaluationWorking
+                  ? 'Procesando…'
+                  : 'Generar revisión de habilitaciones'}
+              </button>
+              {evaluationBlockedReason ? (
+                <p id="evaluation-blocked" role="status">
+                  {evaluationBlockedReason}
+                </p>
+              ) : null}
+              {evaluationError ? (
+                <div role="alert" className={styles.error}>
+                  <p>{evaluationError}</p>
+                  {evaluationMustRefresh ? (
+                    <p>
+                      Los datos o la configuración cambiaron. Debes generar una
+                      nueva revisión antes de aplicar.
+                    </p>
+                  ) : null}
+                  {configurationConflict || evaluationMustRefresh ? (
+                    <button
+                      type="button"
+                      className={sharedStyles.secondaryButton}
+                      onClick={() => {
+                        void reloadConfiguration()
+                        setEvaluation(null)
+                        setEvaluationMustRefresh(true)
+                      }}
+                    >
+                      Recargar configuración
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+              {evaluation ? (
+                <EvaluationReview
+                  key={evaluation.preview_id}
+                  evaluation={evaluation}
+                  criterionLabels={criterionLabels}
                   assessmentLabels={assessmentLabels}
-                />
-                <div className={styles.resultList}>
-                  {historyDetail.results.data.map((result) => (
-                    <ResultRow
-                      key={result.student.id}
-                      result={result}
-                      criterionLabels={criterionLabels}
+                  working={evaluationWorking}
+                  mustRefresh={evaluationMustRefresh}
+                  criteria={
+                    <AppliedCriteriaList
+                      title="Criterios aplicados"
+                      configuration={evaluation.configuration}
+                      catalog={evaluation.catalog}
                       assessmentLabels={assessmentLabels}
                     />
+                  }
+                  onApply={confirmEvaluation}
+                  onRegenerate={() => {
+                    setEvaluation(null)
+                    void createEvaluationPreview()
+                  }}
+                />
+              ) : null}
+              {confirmation ? (
+                <div role="status" className={styles.panel}>
+                  <h3>Proceso confirmado</h3>
+                  <p>
+                    Actualizadas: {confirmation.updated} · Sin cambios:{' '}
+                    {confirmation.unchanged} · Decisiones manuales preservadas:{' '}
+                    {confirmation.manual_preserved} · Pendientes:{' '}
+                    {confirmation.pending}
+                  </p>
+                  {confirmation.updated === 0 ? (
+                    <p>No se modificaron habilitaciones</p>
+                  ) : null}
+                  {confirmation.pending > 0 ? (
+                    <p className={styles.note}>
+                      Hay estudiantes pendientes por información insuficiente.
+                      Sus habilitaciones vigentes se conservan
+                    </p>
+                  ) : null}
+                  {hu12Counts ? (
+                    <p>
+                      Habilitaciones vigentes: habilitados {hu12Counts.eligible}{' '}
+                      · inhabilitados {hu12Counts.ineligible}.
+                    </p>
+                  ) : (
+                    <p>
+                      La confirmación se completó; no se pudo actualizar la
+                      consulta de habilitaciones. Usa el enlace para volver a
+                      consultar.
+                    </p>
+                  )}
+                  <Link to={`/teacher/exams/${examId}/eligibilities${search}`}>
+                    Volver a Habilitaciones
+                  </Link>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {section === 'history' ? (
+            <section aria-labelledby="history-title">
+              <h2 id="history-title">Historial consultivo</h2>
+              <p className={styles.note}>
+                Las fechas con zona horaria se muestran en horario de Bolivia.
+                Si no se indica una zona, se conserva el valor recibido.
+              </p>
+              {historyError ? (
+                <p role="alert" className={styles.error}>
+                  {historyError}
+                </p>
+              ) : null}
+              {historyLoading ? (
+                <p role="status">Consultando historial…</p>
+              ) : null}
+              <div className={styles.historyGrid}>
+                <div className={styles.panel}>
+                  <h3>Importaciones y correcciones académicas</h3>
+                  {academicHistory?.data.map((entry) => (
+                    <HistoryCard
+                      key={entry.id}
+                      entry={entry}
+                      records={records}
+                    />
                   ))}
+                  {academicHistory?.data.length === 0 ? (
+                    <p>No hay actividad académica registrada.</p>
+                  ) : null}
+                </div>
+                <div className={styles.panel}>
+                  <h3>Evaluaciones de habilitación</h3>
+                  {evaluationHistory?.data.map((entry) => (
+                    <article className={styles.historyItem} key={entry.id}>
+                      <h4>Evaluación de habilitación</h4>
+                      <p>
+                        <time dateTime={entry.created_at}>
+                          {evaluationDateLabel(entry.created_at)}
+                        </time>
+                      </p>
+                      <p>
+                        Estado:{' '}
+                        <strong>
+                          {entry.confirmed_at
+                            ? 'Confirmada'
+                            : 'Pendiente de confirmación'}
+                        </strong>
+                      </p>
+                      {entry.confirmation ? (
+                        <EvaluationHistorySummary
+                          confirmation={entry.confirmation}
+                        />
+                      ) : null}
+                      {entry.created_by ? (
+                        <p>
+                          Responsable:{' '}
+                          {entry.created_by_name?.trim() ||
+                            `Usuario #${entry.created_by}`}
+                        </p>
+                      ) : null}
+                      <button
+                        type="button"
+                        className={sharedStyles.secondaryButton}
+                        onClick={() => void openEvaluationHistory(entry)}
+                      >
+                        Ver resultados
+                      </button>
+                    </article>
+                  ))}
+                  {evaluationHistory?.data.length === 0 ? (
+                    <p>No hay evaluaciones registradas.</p>
+                  ) : null}
                 </div>
               </div>
-            ) : null}
-          </section>
-        ) : null}
-      </section>
+              {academicHistory || evaluationHistory ? (
+                <div className={styles.actions}>
+                  <PageControls
+                    meta={academicHistory?.meta ?? evaluationHistory?.meta}
+                    onPage={setHistoryPage}
+                  />
+                </div>
+              ) : null}
+              {historyDetail ? (
+                <div className={styles.panel}>
+                  <h3>Detalle histórico de la evaluación</h3>
+                  {historyDetail.confirmation ? (
+                    <p>
+                      Resultado de confirmación: actualizadas{' '}
+                      {historyDetail.confirmation.updated}, sin cambios{' '}
+                      {historyDetail.confirmation.unchanged}.
+                    </p>
+                  ) : (
+                    <p>Esta evaluación no fue confirmada.</p>
+                  )}
+                  <AppliedCriteriaList
+                    title="Criterios utilizados"
+                    configuration={historyDetail.configuration}
+                    catalog={historyDetail.catalog}
+                    assessmentLabels={assessmentLabels}
+                  />
+                  <div className={styles.resultList}>
+                    {historyDetail.results.data.map((result) => (
+                      <ResultRow
+                        key={result.student.id}
+                        result={result}
+                        criterionLabels={criterionLabels}
+                        assessmentLabels={assessmentLabels}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+        </section>
+      </PageContainer>
     </main>
   )
 }
@@ -1952,11 +1896,19 @@ function HistoryCard({
   entry: AcademicHistoryEntry
   records: ApiPage<AcademicRecord> | null
 }) {
-  const studentId = entry.new_values?.student_id ?? entry.old_values?.student_id
-  const student = records?.data.find(
-    (record) =>
-      record.student_id === studentId || record.id === entry.entity_id,
-  )
+  // Los eventos de la oferta (vista previa, confirmación) no pertenecen a un
+  // estudiante: su entity_id es el de la oferta y no debe cruzarse con registros.
+  const forRecord = isAcademicRecordEvent(entry.entity_type)
+  const studentId = forRecord
+    ? (entry.new_values?.student_id ?? entry.old_values?.student_id)
+    : undefined
+  const student = forRecord
+    ? records?.data.find(
+        (record) =>
+          record.student_id === studentId || record.id === entry.entity_id,
+      )
+    : undefined
+  const summary = academicHistorySummary(entry)
   const auditName =
     [entry.new_values?.first_names, entry.new_values?.last_names]
       .filter(
@@ -1971,33 +1923,31 @@ function HistoryCard({
       )
       .join(' ')
   const auditSis = entry.new_values?.sis_code ?? entry.old_values?.sis_code
-  const studentName = student
-    ? `${student.first_names} ${student.last_names}`.trim()
-    : auditName
-  const studentSis =
-    student?.sis_code ?? (typeof auditSis === 'string' ? auditSis : null)
-  const changes = academicHistoryChanges(entry.old_values, entry.new_values)
+  const studentName = !forRecord
+    ? ''
+    : student
+      ? `${student.first_names} ${student.last_names}`.trim()
+      : auditName
+  const studentSis = !forRecord
+    ? null
+    : (student?.sis_code ?? (typeof auditSis === 'string' ? auditSis : null))
+  const changes = forRecord
+    ? academicHistoryChanges(entry.old_values, entry.new_values)
+    : []
   const reason = academicHistoryReason(entry.old_values, entry.new_values)
   const isImport = entry.action.includes('IMPORT')
-  const importedCount = academicImportCount(entry)
 
   return (
     <article className={styles.historyItem}>
-      <h4>
-        {isImport
-          ? 'Importación de datos académicos'
-          : academicActionLabel(entry.action)}
-      </h4>
+      <h4>{summary.title}</h4>
       <p>
         <time dateTime={entry.created_at}>
           {evaluationDateLabel(entry.created_at)}
         </time>
       </p>
-      <p className={styles.historyLead}>
-        {isImport
-          ? `${importedCount} ${importedCount === 1 ? 'registro académico creado' : 'registros académicos importados'}`
-          : '1 registro académico actualizado'}
-      </p>
+      {summary.lead ? (
+        <p className={styles.historyLead}>{summary.lead}</p>
+      ) : null}
       {studentName || studentSis ? (
         <p>
           {studentName || 'Estudiante'}
@@ -2034,13 +1984,4 @@ function HistoryCard({
       ) : null}
     </article>
   )
-}
-
-function academicImportCount(entry: AcademicHistoryEntry): number {
-  const candidates = [entry.new_values?.created_records]
-  const count = candidates.find(
-    (value): value is number =>
-      typeof value === 'number' && Number.isInteger(value) && value > 0,
-  )
-  return count ?? 1
 }

@@ -3,6 +3,8 @@ import type { SubjectImportRow } from '../../types/subjectImport.types'
 import { SUBJECT_CSV_COLUMNS } from '../../utils/subjectCsv'
 import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 
 const PAGE_SIZE = 20
 export function SubjectImportTable({
@@ -31,20 +33,22 @@ export function SubjectImportTable({
         </h3>
         <label className={local.filter}>
           Mostrar registros
-          <select
+          <Dropdown
             value={filter}
-            onChange={(event) => {
-              setFilter(event.target.value)
+            options={[
+              { value: 'ALL', label: 'Todos' },
+              {
+                value: confirmed ? 'IMPORTED' : 'VALID',
+                label: confirmed ? 'Importados' : 'Listos para importar',
+              },
+              { value: 'ERROR', label: 'Con errores' },
+              { value: 'OMITTED', label: 'Omitidos' },
+            ]}
+            onChange={(nextValue) => {
+              setFilter(nextValue)
               setPage(1)
             }}
-          >
-            <option value="ALL">Todos</option>
-            <option value={confirmed ? 'IMPORTED' : 'VALID'}>
-              {confirmed ? 'Importados' : 'Listos para importar'}
-            </option>
-            <option value="ERROR">Con errores</option>
-            <option value="OMITTED">Omitidos</option>
-          </select>
+          />
         </label>
       </div>
       {visible.length ? (
@@ -122,25 +126,25 @@ export function SubjectImportTable({
             {filtered.length} filas
           </span>
           <div>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               disabled={current === 1}
               onClick={() => setPage(current - 1)}
             >
               Anterior
-            </button>
+            </Button>
             <span>
               Página {current} de {lastPage}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               disabled={current === lastPage}
               onClick={() => setPage(current + 1)}
             >
               Siguiente
-            </button>
+            </Button>
           </div>
         </nav>
       )}

@@ -1,0 +1,49 @@
+/* Shared by TextInput, Select and Textarea. base.css already sets the native defaults with the same
+   tokens; this class adds full width, focus, hover, invalid and disabled states. */
+.control {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--input-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  transition: border-color var(--transition-fast);
+}
+
+.control::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.control:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+/* Invalid state: error border, plus the error text the Field links with aria-describedby. */
+.control[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.control:disabled {
+  border-color: var(--color-border-strong);
+  background-color: var(--color-disabled-background);
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.textarea {
+  min-height: calc(var(--input-height) * 2);
+  resize: vertical;
+}

@@ -1,65 +1,5 @@
 @import './CsvImportReport.module.css';
 
-:global(html):has(.page),
-:global(body):has(.page),
-:global(#root):has(.page) {
-  min-width: 0;
-}
-
-.page {
-  min-height: calc(100vh - 136px);
-  padding: var(--space-8) var(--content-gutter) var(--space-10);
-  background: linear-gradient(
-    120deg,
-    color-mix(in srgb, var(--color-surface-soft) 74%, transparent),
-    var(--color-background) 48%,
-    color-mix(in srgb, var(--color-surface-accent) 36%, transparent)
-  );
-}
-
-.content {
-  width: min(100%, 1120px);
-  margin-inline: auto;
-}
-
-.breadcrumb {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-  margin-bottom: var(--space-3);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-}
-
-.breadcrumb a {
-  color: var(--color-primary);
-}
-
-.breadcrumb a:hover {
-  color: var(--color-accent);
-}
-
-.pageHeader {
-  margin-bottom: var(--space-6);
-}
-
-.pageHeader h1 {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: clamp(var(--font-size-3xl), 3vw, 2.25rem);
-  font-weight: var(--font-weight-bold);
-  line-height: 1.12;
-}
-
-.pageHeader p {
-  margin: var(--space-2) 0 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-normal);
-}
-
 .panel {
   display: grid;
   gap: var(--space-4);
@@ -84,32 +24,14 @@
   line-height: var(--line-height-tight);
 }
 
+/* Look and states come from Button (DS4.2a); these classes only keep the panel layout. */
 .templateButton,
 .cancelButton,
 .continueButton,
 .selectFileButton,
 .removeFileButton,
 .changeFileButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
   white-space: nowrap;
-}
-
-.templateButton {
-  min-height: var(--button-height);
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-primary);
-  background: var(--color-surface);
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
-}
-
-.templateButton:hover {
-  border-color: var(--color-primary-hover);
-  background: var(--color-surface-soft);
-  color: var(--color-primary-hover);
 }
 
 .templateButton svg,
@@ -139,7 +61,7 @@
   padding: var(--space-2) var(--space-3);
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   text-align: center;
 }
 
@@ -197,21 +119,12 @@
   margin: 0;
   color: var(--color-text-primary);
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 .selectFileButton {
   min-width: min(100%, 12rem);
-  min-height: var(--button-height);
   margin-top: var(--space-1);
-  padding: 0 var(--space-4);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  font-size: var(--font-size-sm);
-}
-
-.selectFileButton:hover {
-  background: var(--color-primary-hover);
 }
 
 .fileState {
@@ -231,20 +144,6 @@
   margin-top: var(--space-1);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-}
-
-.removeFileButton {
-  min-height: 2.5rem;
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
-}
-
-.removeFileButton:hover {
-  border-color: var(--color-primary);
-  background: var(--color-surface-soft);
 }
 
 .selectedFileBar {
@@ -279,18 +178,6 @@
 
 .changeFileButton {
   flex: 0 0 auto;
-  min-height: 2.5rem;
-  padding: 0 var(--space-4);
-  border: 1px solid var(--color-primary);
-  background: var(--color-surface);
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
-}
-
-.changeFileButton:hover:not(:disabled) {
-  background: var(--color-surface);
-  color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
 }
 
 .infoBanner {
@@ -303,7 +190,7 @@
   background: var(--color-info-soft);
   color: var(--color-primary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 
 .infoBanner svg {
@@ -324,40 +211,9 @@
 .cancelButton,
 .continueButton {
   min-width: 10rem;
-  min-height: var(--button-height);
-  padding: 0 var(--space-5);
-  font-size: var(--font-size-sm);
 }
 
-.cancelButton {
-  border: 1px solid var(--color-primary);
-  background: var(--color-surface);
-  color: var(--color-primary);
-}
-
-.cancelButton:hover:not(:disabled) {
-  background: var(--color-surface-soft);
-}
-
-.continueButton {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-
-.continueButton:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-}
-
-.continueButton:disabled {
-  background: var(--color-border-strong);
-  color: var(--color-surface);
-}
-
-@media (max-width: 900px) {
-  .page {
-    padding-block: var(--space-6);
-  }
-
+@media (max-width: 1024px) {
   .panelHeader {
     align-items: stretch;
     flex-direction: column;
@@ -373,22 +229,6 @@
 }
 
 @media (max-width: 640px) {
-  .page {
-    padding-block: var(--space-5);
-  }
-
-  .pageHeader {
-    margin-bottom: var(--space-5);
-  }
-
-  .pageHeader h1 {
-    font-size: var(--font-size-3xl);
-  }
-
-  .pageHeader p {
-    font-size: var(--font-size-sm);
-  }
-
   .panel {
     padding: var(--space-4);
   }

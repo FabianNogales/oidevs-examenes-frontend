@@ -4,7 +4,8 @@ import {
   searchCollaborationUsers,
 } from '../api/collaborationsApi'
 import type { CollaborationUsersResponse } from '../types/collaboration.types'
-import { CollaborationModal } from './CollaborationModal'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
 import styles from '../pages/Collaborations.module.css'
 import modalStyles from './AssignCollaboratorModal.module.css'
 
@@ -119,8 +120,16 @@ export function AssignCollaboratorModal({
   }
 
   return (
-    <div className={modalStyles.modalScope}>
-      <CollaborationModal title="Asignar colaborador" onClose={close} busy={busy}>
+    <PortalDialog
+      title="Asignar colaborador"
+      onClose={close}
+      busy={busy}
+      closeOnBackdrop
+      className={modalStyles.assignDialog}
+      bodyClassName={modalStyles.assignBody}
+      closeClassName={dialogBase.closeButton}
+      initialFocusSelector='input[type="search"]'
+    >
         <p className={modalStyles.description}>
           Busca y selecciona un usuario para autorizarlo temporalmente en este examen.
         </p>
@@ -241,7 +250,6 @@ export function AssignCollaboratorModal({
             {busy ? 'Asignando…' : 'Confirmar asignación'}
           </button>
         </div>
-      </CollaborationModal>
-    </div>
+    </PortalDialog>
   )
 }

@@ -1,4 +1,6 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+
 import { Link, useSearchParams } from 'react-router'
 import { useCallback, useState } from 'react'
 import { CourseOfferingsPanel } from '../components/CourseOfferingsPanel'
@@ -29,28 +31,11 @@ export function AdminCourseOfferingsPage() {
       : undefined
   const invalidTeacher = rawTeacher !== null && teacherId === undefined
   return (
-    <section className={styles.page}>
-      <div className={styles.container}>
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', to: '/admin' },
-            { label: 'Docentes', to: '/admin/teachers' },
-            { label: 'Asignación de materias' },
-          ]}
-        />
-        <Link to="/admin/teachers" className={styles.backLink}>
-          ← Volver a Gestión de docentes
-        </Link>
-        <header className={styles.pageHeader}>
-          <div>
-            <p className={styles.eyebrow}>Administración</p>
-            <h1>Materias asignadas a docentes</h1>
-            <p className={styles.description}>
-              Consulta y administra las asignaciones de materias por docente y
-              periodo académico.
-            </p>
-          </div>
-          <div className={styles.headerActions}>
+    <section>
+      <PageContainer>
+        <PageHeader title="Materias asignadas a docentes" eyebrow="Administración" description="Consulta y administra las asignaciones de materias por docente y periodo académico."
+          breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Docentes', to: '/admin/teachers' }, { label: 'Asignación de materias' }]}
+          actions={<div className={styles.headerActions}>
             <button
               type="button"
               className={styles.secondaryButton}
@@ -65,8 +50,10 @@ export function AdminCourseOfferingsPage() {
             >
               + Importar asignaciones (CSV)
             </Link>
-          </div>
-        </header>
+          </div>} />
+        <Link to="/admin/teachers" className={styles.backLink}>
+          ← Volver a Gestión de docentes
+        </Link>
         {invalidTeacher ? (
           <p role="alert">
             El identificador del docente no es válido. Vuelve a Gestión de
@@ -114,7 +101,7 @@ export function AdminCourseOfferingsPage() {
             </fieldset>
           </>
         )}
-      </div>
+      </PageContainer>
     </section>
   )
 }

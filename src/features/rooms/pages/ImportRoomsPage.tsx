@@ -1,24 +1,21 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { RoomImportPanel } from '../components/import/RoomImportPanel'
-import styles from '@/shared/styles/CsvImport.module.css'
 
 export function ImportRoomsPage() {
   return (
-    <section className={styles.page}>
-      <div className={styles.content}>
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', to: '/admin' },
-            { label: 'Aulas', to: '/admin/rooms' },
-            { label: 'Importar aulas' },
-          ]}
-        />
-        <header className={styles.pageHeader}>
-          <h1>Importar aulas</h1>
-          <p>Carga el catálogo de aulas mediante un archivo CSV.</p>
-        </header>
-        <RoomImportPanel />
-      </div>
-    </section>
+    <PageContainer labelledBy="import-rooms-title">
+      <PageHeader
+        title="Importar aulas"
+        titleId="import-rooms-title"
+        description="Carga el catálogo de aulas mediante un archivo CSV."
+        breadcrumbs={[
+          { label: 'Inicio', to: '/admin' },
+          { label: 'Aulas', to: '/admin/rooms' },
+          { label: 'Importar aulas' },
+        ]}
+      />
+      <RoomImportPanel />
+    </PageContainer>
   )
 }

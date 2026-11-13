@@ -9,8 +9,8 @@ import { CollaborationModal } from '@/features/collaborations/components/Collabo
 import { readOfflineIdentity, subscribeOfflineIdentity, type OfflineIdentity,} from '../services/offlineIdentity'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { OfflineConnectionStatus } from './OfflineConnectionStatus'
-import shared from './styles/OfflineShared.module.css'
-import workspace from './styles/OfflineWorkspace.module.css'
+import shared from './OfflineShared.module.css'
+import workspace from '@/features/offline-entry/components/OfflineWorkspace.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export function OfflineAccessGate({
@@ -81,7 +81,7 @@ export function OfflineAccessGate({
             <ShieldAlert
               size={36}
               strokeWidth={1.65}
-              color="var(--brand-crimson)"
+              color="var(--color-accent)"
               style={{ marginInline: 'auto', marginBottom: '12px' }}
               aria-hidden="true"
             />

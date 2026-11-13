@@ -1,0 +1,183 @@
+/* «Revisar y aplicar» (HU34 E1). Los estilos comunes de la feature siguen en
+   pages/EligibilityAutomation.module.css; aquí solo va lo propio de la revisión. */
+.review {
+  display: grid;
+  /* minmax(0, 1fr): a wide table or a long filter row must not widen the column. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.review > * {
+  min-width: 0;
+}
+
+.review h3 {
+  margin: 0;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filter {
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.filter[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.filter:focus-visible,
+.detailButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.tableStatus {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.studentName {
+  overflow-wrap: anywhere;
+}
+
+.statusCell {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+}
+
+.badge {
+  display: inline-block;
+  justify-self: start;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.badgeEligible {
+  background: var(--color-success-soft, #e8f5e9);
+  color: var(--color-success, #2e7d32);
+}
+
+.badgeIneligible {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+
+.tag {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.reason {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.detailButton {
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.applyBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Diálogos (PortalDialog): la clase duplicada gana a las reglas genéricas del componente sin
+   depender del orden del CSS. */
+.confirmDialog.confirmDialog {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.impact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.detailBody {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+}
+
+.detailBody h3,
+.detailBody p,
+.detailBody dl,
+.detailBody ul {
+  margin: 0;
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  /* The review already sits inside the page card: a second padded frame leaves no room on phones. */
+  .review.review {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .applyBar > button,
+  .dialogActions > button {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  /* DataTable shows each cell as «label | value» with a 110px label column. Inside the nested
+     cards of this page that leaves the value too narrow to read, so the label goes above it. */
+  .review td {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}

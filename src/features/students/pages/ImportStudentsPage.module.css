@@ -1,96 +1,3 @@
-/* ==================================================
-   CONTENEDOR PRINCIPAL (Homologado a AdminManageStudentsPage)
-   ================================================== */
-.pageContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: var(--space-8) 50px;
-  gap: var(--space-6); 
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
-.mainContent {
-  width: 100%;
-}
-
-/* ==================================================
-   BREADCRUMBS
-   ================================================== */
-.breadcrumbs {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.breadcrumbLink {
-  color: var(--brand-blue, #2563EB);
-  font-size: 16px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color var(--transition-fast);
-}
-
-.breadcrumbLink:hover {
-  text-decoration: underline;
-}
-
-.breadcrumbSeparator {
-  color: var(--brand-blue, #2563EB);
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.breadcrumbSeparatorActive {
-  color: var(--brand-pink, #D67A8C);
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.breadcrumbCurrent {
-  color: var(--brand-pink, #D67A8C);
-  font-size: 16px;
-  font-weight: 400;
-}
-
-/* ==================================================
-   ENCABEZADO DE PÁGINA
-   ================================================== */
-.pageHeader {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.headerTitles {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.headerTitles h1 {
-  margin: 0;
-  color: var(--brand-navy, #172554);
-  font-size: var(--font-size-2xl, 1.5rem);
-  font-weight: 600;
-  line-height: var(--line-height-tight);
-}
-
-.headerTitles p {
-  margin: 0;
-  color: var(--color-text-secondary, #68778F);
-  font-size: var(--font-size-md, 1rem);
-  line-height: var(--line-height-normal);
-}
-
-/* ====================================
-   PANEL DE IMPORTACIÓN DE ESTUDIANTES
-   ==================================== */
 .panel {
   box-sizing: border-box;
   display: flex;
@@ -98,12 +5,12 @@
   gap: 16px;
   width: 100%;
   max-width: none;
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(23, 37, 84, 0.04);
+  box-shadow: var(--shadow-sm);
   padding: 24px;
-  color: var(--brand-navy, #172554);
+  color: var(--color-text);
 }
 
 .panelHeader {
@@ -121,38 +28,26 @@
 
 .panelTitle {
   margin: 0;
-  color: var(--brand-navy, #092D73);
-  font-size: 20px;
-  line-height: 25px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
 }
 
 .columnsIntro {
   margin: 0;
-  color: var(--color-text-secondary, #68778F);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   line-height: 21px;
 }
 
+/* Look and states come from Button (DS4.2a); these classes only keep the panel layout. */
 .templateButton,
 .changeFileButton,
 .downloadViewButton,
 .cancelButton,
 .continueButton {
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 45px;
-  padding: 0 24px;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 15px; 
-  font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .templateButton svg,
@@ -163,15 +58,6 @@
   height: 20px;
   flex-shrink: 0;
   stroke-width: 2;
-}
-
-.templateButton,
-.changeFileButton,
-.downloadViewButton,
-.cancelButton {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--brand-blue, #2563EB);
-  color: var(--brand-blue, #2563EB);
 }
 
 .templateButton,
@@ -187,36 +73,12 @@
   min-width: 160px;
 }
 
-.templateButton:hover:not(:disabled),
-.changeFileButton:hover:not(:disabled),
-.downloadViewButton:hover:not(:disabled),
-.cancelButton:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
-}
-
 .continueButton {
   min-width: 217px;
-  background: var(--brand-blue, #2563EB);
-  border: 1px solid var(--brand-blue, #2563EB);
-  color: var(--color-surface, #FFFFFF);
-  border-radius: 10px;
 }
 
 .confirmButton {
   min-width: 260px;
-}
-
-.continueButton:hover:not(:disabled) {
-  background: var(--color-primary-hover, #1d4ed8);
-}
-
-.templateButton:disabled,
-.changeFileButton:disabled,
-.downloadViewButton:disabled,
-.cancelButton:disabled,
-.continueButton:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 .panelActions {
@@ -232,10 +94,10 @@
   align-items: center;
   gap: 8px;
   padding: 14px 16px;
-  background: var(--brand-blue-light, #EAF3FF);
+  background: var(--color-surface-soft);
   border-radius: 8px;
-  color: var(--brand-blue, #2563EB);
-  font-size: 15px;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
   line-height: 24px;
 }
 
@@ -252,33 +114,33 @@
   gap: 2px;
   padding: 12px 14px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   line-height: 21px;
 }
 
 .reviewMessage strong {
-  font-size: 16px;
+  font-size: var(--font-size-md);
   line-height: 24px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
-.reviewMessage[data-tone='ready'] { background: #E8F5E9; color: #115E28; }
-.reviewMessage[data-tone='mixed'] { background: #F7E9ED; color: #8B1E3F; }
-.reviewMessage[data-tone='warning'] { background: #FCD2D2; color: #D32F2F; }
+.reviewMessage[data-tone='ready'] { background: var(--color-success-soft); color: var(--color-success); }
+.reviewMessage[data-tone='mixed'] { background: var(--color-accent-soft); color: var(--color-accent-strong); }
+.reviewMessage[data-tone='warning'] { background: var(--color-error-soft); color: var(--color-error); }
 
 .fileObservations {
   padding: 12px 14px;
-  background: #FCD2D2;
+  background: var(--color-error-soft);
   border-radius: 8px;
-  color: #D32F2F;
-  font-size: 14px;
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
   line-height: 21px;
 }
 
 .fileObservations strong {
-  font-size: 16px;
+  font-size: var(--font-size-md);
   line-height: 24px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .fileObservations ul {
@@ -292,7 +154,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 16px;
-  background: var(--brand-blue-light, #EAF3FF);
+  background: var(--color-surface-soft);
   border-radius: 8px;
 }
 
@@ -305,16 +167,16 @@
 
 .selectedFileBar span,
 .selectedFileBar small {
-  color: var(--color-text-secondary, #68778F);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   line-height: 21px;
 }
 
 .selectedFileBar strong {
-  color: var(--brand-navy, #172554);
-  font-size: 16px;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
   line-height: 24px;
-  font-weight: 500;
+  font-weight: var(--font-weight-regular);
   overflow-wrap: anywhere;
 }
 
@@ -327,12 +189,12 @@
   flex-wrap: wrap;
   min-height: 40px;
   padding: 0 24px;
-  background: var(--color-surface, #FFFFFF);
+  background: var(--color-surface);
 }
 
 .pagerSummary {
-  color: var(--color-text-secondary, #68778F);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   line-height: 21px;
 }
 
@@ -343,31 +205,16 @@
 }
 
 .pagerPage {
-  color: var(--brand-navy, #172554);
-  font-size: 14px;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
   line-height: 21px;
 }
 
 .pagerButton {
-  box-sizing: border-box;
   min-width: 88px;
-  height: 34px;
-  min-height: 34px;
-  padding: 0 12px;
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--brand-blue-light, #EAF3FF);
-  border-radius: 8px;
-  color: var(--brand-blue, #2563EB);
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 16px;
-  font-weight: 600;
-  cursor: pointer;
 }
 
-.pagerButton:first-child { color: var(--color-text-secondary, #68778F); }
 .pagerButton:last-child { min-width: 94px; }
-.pagerButton:disabled { color: var(--color-text-secondary, #68778F); opacity: 0.7; cursor: not-allowed; }
 .reviewActions {
   display: flex;
   align-items: center;
@@ -385,12 +232,17 @@
   margin: 0;
   padding: 24px;
   text-align: center;
-  color: var(--color-text-secondary, #68778F);
+  color: var(--color-text-secondary);
 }
 
-@media (max-width: 820px) {
-  .pageContainer {
-    padding: var(--space-6) 24px;
+@media (max-width: 768px) {
+  /* Button text is 16px: let long labels wrap on narrow panels, as CsvImport.module.css does. */
+  .templateButton,
+  .changeFileButton,
+  .downloadViewButton,
+  .cancelButton,
+  .continueButton {
+    white-space: normal;
   }
   .panelHeader,
   .selectedFileBar {

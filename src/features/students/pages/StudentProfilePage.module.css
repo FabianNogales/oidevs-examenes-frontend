@@ -1,22 +1,13 @@
 .page {
-  width: 100%;
-  padding: var(--space-10) var(--content-gutter) var(--space-12);
   color: var(--color-text);
   font-family: var(--font-family);
   overflow-wrap: anywhere;
 }
 
-.header {
-  margin-bottom: var(--space-8);
-}
-
-.header h1 {
-  margin: 0;
-  font-size: clamp(var(--font-size-3xl), 4vw, var(--font-size-4xl));
-  font-weight: var(--font-weight-bold);
-}
-
-.header h1::after {
+/* U2: decorative accent under the page heading, kept provisionally: no Figma reference could confirm or
+   remove it (pending design decision). Layout and heading scale come from PageContainer/PageHeader. */
+.page h1::after,
+.page h2::after {
   content: '';
   display: block;
   width: var(--space-12);
@@ -26,9 +17,8 @@
   background: var(--color-accent);
 }
 
-.header p {
-  margin: var(--space-3) 0 0;
-  color: var(--color-text-secondary);
+.panel h2::after {
+  content: none;
 }
 
 .content,
@@ -114,10 +104,6 @@
 }
 
 @media (max-width: 639px) {
-  .page {
-    padding-block: var(--space-6) var(--space-8);
-  }
-
   .panelHeading {
     align-items: flex-start;
     flex-direction: column;

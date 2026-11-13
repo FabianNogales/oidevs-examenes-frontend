@@ -1,40 +1,59 @@
-import { useState } from 'react'
-import { createPortal } from 'react-dom'
-import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
-import { IncidentForm } from './IncidentForm'
-import { IncidentDetails } from './IncidentDetails'
-import { useIncidents } from '../hooks/useIncidents'
-import { useIncidentDetail } from '../hooks/useIncidentDetail'
-import type { Incident } from '../types/incident.types'
+import { useCallback, useState } from 'react'
+import { Link } from 'react-router'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { useInfractionResource } from '@/features/infractions/hooks/useInfractionResource'
+import { CaseForm } from '@/features/discipline/CaseForm'
+import { CaseDetails } from '@/features/discipline/CaseDetails'
+import {
+  listCases,
+  resolveCase,
+  type CaseDetail,
+} from '@/features/discipline/disciplineApi'
 import type { IncidentEntryContext } from '../utils/incidentEntryContext'
-import styles from './IncidentControlDialog.module.css'
-
 export type IncidentControlMode =
   { context: IncidentEntryContext } | { incidentId: number }
-
-function ExistingIncident({
+function Existing({
   examId,
-  incidentId,
+  id,
+  onBusyChange,
 }: {
   examId: number
-  incidentId: number
+  id: number
+  onBusyChange: (busy: boolean) => void
 }) {
-  const detail = useIncidentDetail(examId, incidentId)
-  return detail.loading ? (
-    <p role="status">Consultando incidencia…</p>
-  ) : detail.error ? (
+  const source = String(id).startsWith('qr-') ? 'QR' : 'INCIDENT'
+  const sourceId = Number(String(id).replace(/^qr-/, ''))
+  const query = useInfractionResource(
+    `case-reference:${examId}:${id}`,
+    useCallback(
+      (signal) => resolveCase(examId, source, sourceId, signal),
+      [examId, source, sourceId],
+    ),
+  )
+  return query.loading ? (
+    <p role="status">Consultando caso…</p>
+  ) : query.error ? (
     <div role="alert">
-      <p>{detail.error}</p>
-      <button type="button" onClick={detail.retry}>
-        Reintentar
-      </button>
+      <p>{query.error}</p>
+      <Button onClick={query.retry}>Reintentar</Button>
     </div>
-  ) : detail.incident ? (
-    <IncidentDetails incident={detail.incident} />
-  ) : null
+  ) : (
+    query.data && (
+      <>
+        <CaseDetails
+          record={query.data.data}
+          onRefresh={query.retry}
+          onBusyChange={onBusyChange}
+        />
+        <Link to={`/exams/${examId}/cases/${query.data.data.id}`}>
+          Ver caso y seguimiento
+        </Link>
+      </>
+    )
+  )
 }
-
-function RegisterFromControl({
+function Register({
   examId,
   context,
   onClose,
@@ -45,55 +64,65 @@ function RegisterFromControl({
   onClose: () => void
   onBusyChange: (busy: boolean) => void
 }) {
-  const authorization = useIncidents(examId)
-  const [saved, setSaved] = useState<Incident | null>(null)
+  const query = useInfractionResource(
+    `case-control:${examId}`,
+    useCallback(
+      (signal) => listCases(examId, { per_page: 1 }, signal),
+      [examId],
+    ),
+  )
+  const [refreshError, setRefreshError] = useState<string | null>(null)
+  const [saved, setSaved] = useState<CaseDetail | null>(null)
   if (saved)
     return (
       <>
-        <p role="status">
-          Incidencia #{saved.id} registrada. Puedes continuar con el control de
-          ingreso.
-        </p>
-        <IncidentDetails incident={saved} />
+        {refreshError && <p role="alert">{refreshError}</p>}
+        <p role="status">Caso #{saved.data.id} registrado.</p>
+        <CaseDetails
+          record={saved.data}
+          onRefresh={() => {
+            void resolveCase(
+              examId,
+              saved.data.source_type,
+              saved.data.source_id,
+            )
+              .then((result) => {
+                setSaved(result)
+                setRefreshError(null)
+              })
+              .catch(() =>
+                setRefreshError(
+                  'No se pudo actualizar el caso. Abre su detalle para consultar el estado vigente.',
+                ),
+              )
+          }}
+          onBusyChange={onBusyChange}
+        />
+        <Link to={`/exams/${examId}/cases/${saved.data.id}`}>
+          Ver caso y seguimiento
+        </Link>
       </>
     )
-  if (authorization.loading)
-    return <p role="status">Comprobando autorización vigente…</p>
-  if (authorization.error)
-    return (
-      <div role="alert">
-        <p>{authorization.error}</p>
-        <button type="button" onClick={authorization.retry}>
-          Reintentar
-        </button>
-      </div>
-    )
-  const data = authorization.response
-  if (!data?.permissions.can_create)
-    return (
-      <p role="alert">
-        No tienes autorización vigente para registrar incidencias en este
-        examen.
-      </p>
-    )
-  return (
-    <>
-      <p>
-        <strong>{data.exam.name}</strong> · {data.exam.subject_name}
-      </p>
-      <IncidentForm
-        examId={examId}
-        backTo={`/exams/${examId}/incidents`}
-        initialStudent={context.student}
-        initialType={context.type}
-        onCreated={setSaved}
-        onCancel={onClose}
-        onBusyChange={onBusyChange}
-      />
-    </>
+  return query.loading ? (
+    <p role="status">Comprobando autorización…</p>
+  ) : query.error ? (
+    <div role="alert">
+      <p>{query.error}</p>
+      <Button onClick={query.retry}>Reintentar</Button>
+    </div>
+  ) : query.data?.permissions.can_create ? (
+    <CaseForm
+      context={query.data}
+      initialStudent={context.student}
+      initialType={context.type}
+      onSaved={setSaved}
+      onCancel={onClose}
+      onBusyChange={onBusyChange}
+    />
+  ) : (
+    <p role="alert">No tienes autorización vigente para registrar casos.</p>
   )
 }
-
 export function IncidentControlDialog({
   examId,
   mode,
@@ -104,31 +133,26 @@ export function IncidentControlDialog({
   onClose: () => void
 }) {
   const [busy, setBusy] = useState(false)
-  return createPortal(
-    <div className={styles.layer}>
-      <CollaborationModal
-        title={
-          'incidentId' in mode
-            ? 'Detalle de incidencia'
-            : 'Registrar incidencia'
-        }
-        busy={busy}
-        onClose={() => {
-          if (!busy) onClose()
-        }}
-      >
-        {'incidentId' in mode ? (
-          <ExistingIncident examId={examId} incidentId={mode.incidentId} />
-        ) : (
-          <RegisterFromControl
-            examId={examId}
-            context={mode.context}
-            onClose={onClose}
-            onBusyChange={setBusy}
-          />
-        )}
-      </CollaborationModal>
-    </div>,
-    document.body,
+  return (
+    <PortalDialog
+      title={
+        'incidentId' in mode
+          ? 'Detalle del caso'
+          : 'Registrar incidencia o infracción'
+      }
+      busy={busy}
+      onClose={onClose}
+    >
+      {'incidentId' in mode ? (
+        <Existing examId={examId} id={mode.incidentId} onBusyChange={setBusy} />
+      ) : (
+        <Register
+          examId={examId}
+          context={mode.context}
+          onClose={onClose}
+          onBusyChange={setBusy}
+        />
+      )}
+    </PortalDialog>
   )
 }

@@ -48,7 +48,7 @@ function editor(handlers = {}, initial = section, kind = 'sections', props = {})
   const stateChanges = []
   const ui = component(
     c,
-    'features/portal-information/InformationEditor.tsx',
+    'features/portal-information/components/InformationEditor.tsx',
     'InformationEditor',
     {
       kind,
@@ -83,7 +83,7 @@ test('HU42 renders public sections and FAQ without an index or synthesized conte
         },
       }),
     }),
-    'features/portal-information/InformationPage.tsx',
+    'features/portal-information/pages/InformationPage.tsx',
     'InformationPage',
   )
   await ui.ready()
@@ -121,7 +121,7 @@ test('HU42 renders public sections and FAQ without an index or synthesized conte
 test('HU42 unpublished sections and empty FAQ produce only compact empty states', async () => {
   const ui = component(
     client({ get: () => ({ data: { data: { sections: [], faqs: [] } } }) }),
-    'features/portal-information/InformationPage.tsx',
+    'features/portal-information/pages/InformationPage.tsx',
     'InformationPage',
   )
   await ui.ready()
@@ -141,7 +141,7 @@ test('F2.2 administration labels: search text and FAQ-only "Crear pregunta frecu
   )
   const ui = component(
     c,
-    'features/portal-information/AdminInformationPage.tsx',
+    'features/portal-information/pages/AdminInformationPage.tsx',
     'AdminInformationPage',
   )
   const collection = () =>
@@ -168,7 +168,7 @@ test('F2.3 "Limpiar filtros" resets only Visibilidad and keeps the Secciones/FAQ
   )
   const ui = component(
     c,
-    'features/portal-information/AdminInformationPage.tsx',
+    'features/portal-information/pages/AdminInformationPage.tsx',
     'AdminInformationPage',
   )
   const collection = () =>
@@ -217,7 +217,7 @@ test('HU43 administration consults existing sections and does not offer section 
   )
   const ui = component(
     c,
-    'features/portal-information/AdminInformationPage.tsx',
+    'features/portal-information/pages/AdminInformationPage.tsx',
     'AdminInformationPage',
   )
   const collection = () =>
@@ -281,12 +281,12 @@ test('HU43 information Drawer protects dirty close and native Escape preserves t
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
-    '@/features/portal-shared/usePortalResource': {
+    '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: () => ({ data: section, loading: false, error: null }),
     },
   })
   const { AdminInformationPage } = h.load(
-    'features/portal-information/AdminInformationPage.tsx',
+    'features/portal-information/pages/AdminInformationPage.tsx',
   )
   let pageTree, dialogTree
   const render = () =>
@@ -372,12 +372,12 @@ test('HU43 created FAQ keeps its Drawer session, adopts its ID and refreshes its
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
-    '@/features/portal-shared/usePortalResource': {
+    '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: () => ({ data: null, loading: false, error: null }),
     },
   })
   const { AdminInformationPage } = h.load(
-    'features/portal-information/AdminInformationPage.tsx',
+    'features/portal-information/pages/AdminInformationPage.tsx',
   )
   let pageTree, dialogTree
   const render = () =>
@@ -541,10 +541,10 @@ test('HU43 save never publishes and only explicit publish updates the public ver
       },
     }),
   })
-  const api = c.h.load('features/portal-information/informationApi.ts')
+  const api = c.h.load('features/portal-information/api/informationApi.ts')
   const ui = component(
     c,
-    'features/portal-information/InformationEditor.tsx',
+    'features/portal-information/components/InformationEditor.tsx',
     'InformationEditor',
     { kind: 'sections', initial: section, onSaved() {}, onBusy() {} },
   )
@@ -667,7 +667,7 @@ test('HU43 editing an existing FAQ sends only its draft fields and revision', as
 
 test('HU43 empty administrative FAQ list remains empty without seed requests', async () => {
   const c = client({ get: () => ({ data: page([]) }) })
-  const api = c.h.load('features/portal-information/informationApi.ts')
+  const api = c.h.load('features/portal-information/api/informationApi.ts')
   const result = await api.listInformation('faqs', { page: 1 })
   assert.deepEqual(result.data, [])
   assert.equal(c.calls.length, 1)

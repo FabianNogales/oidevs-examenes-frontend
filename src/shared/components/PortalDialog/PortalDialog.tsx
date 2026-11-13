@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 import styles from './PortalDialog.module.css'
 
@@ -15,6 +15,14 @@ export interface PortalDialogProps {
   className?: string
   headerClassName?: string
   bodyClassName?: string
+  /** Element focused when the dialog opens. Defaults to the close button (unchanged behaviour). */
+  initialFocus?: RefObject<HTMLElement | null>
+  closeClassName?: string
+  subtitle?: string
+  initialFocusSelector?: string
+  restoreFocusId?: string
+  /** Opt-in: a press on the backdrop closes the dialog (never while busy or blocked). Default: stays open. */
+  closeOnBackdrop?: boolean
 }
 
 export function PortalDialog({
@@ -28,10 +36,17 @@ export function PortalDialog({
   className = '',
   headerClassName = '',
   bodyClassName = '',
+  initialFocus,
+  closeClassName,
+  subtitle,
+  initialFocusSelector,
+  restoreFocusId,
+  closeOnBackdrop = false,
 }: PortalDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null)
   const close = useRef<HTMLButtonElement>(null)
   const mounted = useRef(false)
+  const focusOptions = useRef({ initialFocusSelector, restoreFocusId })
   const titleId = useId()
   useBodyScrollLock(true)
   useEffect(() => {
@@ -42,12 +57,21 @@ export function PortalDialog({
         : null
     mounted.current = true
     element?.showModal()
-    close.current?.focus()
+    const { initialFocusSelector, restoreFocusId } = focusOptions.current
+    const selectedFocus = initialFocusSelector
+      ? element?.querySelector<HTMLElement>(initialFocusSelector)
+      : null
+    const target = initialFocus?.current ?? selectedFocus ?? close.current
+    target?.focus()
     return () => {
       mounted.current = false
       element?.close()
       if (previous?.isConnected) previous.focus({ preventScroll: true })
+      else if (restoreFocusId)
+        document.getElementById(restoreFocusId)?.focus({ preventScroll: true })
     }
+    // Runs once per mount: the dialog opens when it is rendered; initialFocus is read on open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const requestClose = () => {
     if (!busy && !closeBlocked) onClose()
@@ -56,10 +80,26 @@ export function PortalDialog({
     <dialog
       ref={dialog}
       className={`${styles.dialog} ${drawer ? styles.drawer : ''} ${className}`}
+      data-custom-controls={closeClassName ? 'true' : undefined}
       data-has-footer={footer != null ? 'true' : undefined}
       aria-labelledby={titleId}
       aria-modal="true"
       aria-busy={busy}
+      onClick={
+        closeOnBackdrop
+          ? (event) => {
+              // The ::backdrop belongs to the dialog element: only a press outside its box counts.
+              if (event.target !== event.currentTarget) return
+              const box = event.currentTarget.getBoundingClientRect()
+              const outside =
+                event.clientX < box.left ||
+                event.clientX > box.right ||
+                event.clientY < box.top ||
+                event.clientY > box.bottom
+              if (outside) requestClose()
+            }
+          : undefined
+      }
       onKeyDown={(event) => {
         // Handle Escape before it becomes a native close request: without user
         // activation Chrome may ignore preventDefault() on cancel or close a whole
@@ -102,9 +142,15 @@ export function PortalDialog({
       }}
     >
       <header className={`${styles.dialogHeader} ${headerClassName}`}>
-        <h2 id={titleId}>{title}</h2>
+        {subtitle ? (
+          <div>
+            <p>{subtitle}</p>
+            <h2 id={titleId}>{title}</h2>
+          </div>
+        ) : <h2 id={titleId}>{title}</h2>}
         <button
           ref={close}
+          className={closeClassName}
           type="button"
           onClick={onClose}
           disabled={busy || closeBlocked}

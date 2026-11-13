@@ -413,8 +413,8 @@ test('D1.2 every CSS module class referenced by the new screens exists', async (
   }
   // Classes added for the "Gestionar categorías" links. Shared classes that
   // resolve through @import are covered by shared/tests/cssContracts.test.mjs.
-  assert.match(await read('../../portal-news/adminNews.module.css'), /\.categoriesLink\b/)
-  assert.match(await read('../../portal-calendar/portalCalendar.module.css'), /\.categoriesLink\b/)
+  assert.match(await read('../../portal-news/pages/adminNews.module.css'), /\.categoriesLink\b/)
+  assert.match(await read('../../portal-calendar/pages/portalCalendar.module.css'), /\.categoriesLink\b/)
 })
 
 test('D1.2 admin routes exist for both catalogs without touching the Contenidos menu', async () => {
@@ -432,7 +432,7 @@ test('D1.2 admin routes exist for both catalogs without touching the Contenidos 
 test('D1.2 news and calendar admin pages link to their category management', async () => {
   const news = component(
     client({ get: () => ({ data: { data: [] } }) }, auth),
-    'features/portal-news/AdminNewsPage.tsx',
+    'features/portal-news/pages/AdminNewsPage.tsx',
     'AdminNewsPage',
   )
   const newsCollection = nodes(news.tree, (node) => node.props?.load && node.props?.onSelect)[0]

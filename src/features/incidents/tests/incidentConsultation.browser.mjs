@@ -1,10 +1,11 @@
 // Node20: node --experimental-websocket src/features/incidents/tests/incidentConsultation.browser.mjs
 // Actual pages/header/table/downloads, local HTTP only; no backend mutations.
 import assert from 'node:assert/strict'
-import { mkdtemp, readdir, readFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { tmpdir } from 'node:os'
 import { browserFixture, pause } from '../../../shared/tests/browserHarness.mjs'
+import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
+import { cleanupBrowserProfile, createBrowserProfile } from '../../../shared/tests/browserProfile.mjs'
 
 const types = [
   'IDENTIFICATION',
@@ -43,15 +44,19 @@ let role = 'teacher',
   listFailure = false,
   exportFailure = '',
   delay = 0
-const downloadDir = await mkdtemp(join(tmpdir(), 'eida-hu29-downloads-'))
+// Marked temporary directory (removed in `finally`); downloads go to a sub-folder so the marker
+// file never counts as a download.
+const downloads = await createBrowserProfile('hu29-downloads')
+const downloadDir = join(downloads.dir, 'files')
+await mkdir(downloadDir)
 const moduleSource = `import React from 'react';import {createRoot} from 'react-dom/client';import {createMemoryRouter,RouterProvider,Outlet} from 'react-router';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';import '@fontsource/poppins/500.css';import '@fontsource/poppins/600.css';import '@fontsource/poppins/700.css';
-import '/src/features/exams/components/CreateExamModal.module.css';
+
 import {Header} from '/src/shared/components/Header/Header.tsx';import {Footer} from '/src/shared/components/Footer/Footer.tsx';
 import {httpClient} from '/src/shared/api/httpClient.ts';import {ExamIncidentsPage} from '/src/features/incidents/pages/ExamIncidentsPage.tsx';import {IncidentDetailPage} from '/src/features/incidents/pages/IncidentDetailPage.tsx';import {AdminIncidentsPage} from '/src/features/incidents/pages/AdminIncidentsPage.tsx';
 httpClient.defaults.baseURL='/__browser-api';httpClient.defaults.headers.common.Authorization='Bearer hu29-fixture';
 function Layout(){const[role,setRole]=React.useState('teacher');window.__setRole=setRole;return React.createElement(React.Fragment,null,React.createElement(Header,{user:{name:'Usuario de prueba',role}}),React.createElement(Outlet),React.createElement(Footer))}
-const router=createMemoryRouter([{Component:Layout,children:[{path:'/exams/:examId/incidents',Component:ExamIncidentsPage},{path:'/exams/:examId/incidents/:incidentId',Component:IncidentDetailPage},{path:'/admin/incidents',Component:AdminIncidentsPage},{path:'/admin/incidents/:examId/:incidentId',Component:IncidentDetailPage},{path:'/other',element:React.createElement('p',null,'Otra página')}]}],{initialEntries:['/exams/4/incidents?from=teacher']});window.__router=router;createRoot(document.getElementById('root')).render(React.createElement(RouterProvider,{router}));`
+const router=createMemoryRouter([{Component:Layout,children:[{path:'/exams/:examId/incidents',Component:ExamIncidentsPage},{path:'/exams/:examId/incidents/:incidentId',Component:IncidentDetailPage},{path:'/admin/incidents',element:React.createElement('main',null,React.createElement(AdminIncidentsPage))},{path:'/admin/incidents/:examId/:incidentId',element:React.createElement('main',null,React.createElement(IncidentDetailPage))},{path:'/other',element:React.createElement('p',null,'Otra página')}]}],{initialEntries:['/exams/4/incidents?from=teacher']});window.__router=router;createRoot(document.getElementById('root')).render(React.createElement(RouterProvider,{router}));`
 
 function filtered(examId, params) {
   const search = (params.get('search') ?? '').trim().toLowerCase()
@@ -476,6 +481,34 @@ try {
     requests.every((request) => request.method === 'GET'),
     true,
   )
+  const contractStates = [
+    { name: 'docente consulta', role: 'teacher', path: '/exams/4/incidents?from=teacher', title: 'Incidencias e ingresos irregulares', crumbs: ['Mis exámenes', 'Incidencias'], ready: "!!document.querySelector('table')" },
+    { name: 'docente error', role: 'teacher', path: '/exams/5/incidents?from=teacher', title: 'Incidencias e ingresos irregulares', crumbs: ['Mis exámenes', 'Incidencias'], ready: "!!document.querySelector('main [role=alert]')" },
+    { name: 'docente detalle', role: 'teacher', path: '/exams/4/incidents/1?from=teacher', title: 'Detalle de incidencia', crumbs: ['Incidencias', 'Incidencia #1'], ready: "!!document.querySelector('article')" },
+    { name: 'docente id no válido', role: 'teacher', path: '/exams/abc/incidents?from=teacher', title: 'Incidencias', crumbs: [] },
+    { name: 'admin sin examen', role: 'admin', path: '/admin/incidents', title: 'Incidencias e ingresos irregulares', crumbs: ['Administración', 'Incidencias'], ready: "!!document.querySelector('[aria-label=\"Seleccionar examen para consultar incidencias\"]')" },
+    { name: 'admin con examen', role: 'admin', path: '/admin/incidents?from=admin&exam_id=5', title: 'Incidencias e ingresos irregulares', crumbs: ['Administración', 'Incidencias'], ready: "!!document.querySelector('table')" },
+    { name: 'admin detalle', role: 'admin', path: '/admin/incidents/5/101?from=admin&exam_id=5', title: 'Detalle de incidencia', crumbs: ['Incidencias', 'Incidencia #101'], ready: "!!document.querySelector('article')" },
+  ]
+  // U3.4b: shared page contract (PageContainer + PageHeader) for every incident state at 320-1440px.
+  const contractFailures = []
+  for (const state of contractStates) {
+    role = state.role
+    listFailure = false
+    await evaluate(`window.__setRole(${JSON.stringify(state.role)})`)
+    await navigate(state.path)
+    await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(state.title)} && (${state.ready ?? 'true'})`)
+    await pause(200)
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
+      await pause(120)
+      const problems = pageContractProblems(await evaluate(pageContractScript), { width, ...state })
+      if (problems.length) contractFailures.push(`${state.name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} contrato ${state.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+  }
+  assert.deepEqual(contractFailures, [], 'contrato de página de incidencias')
   assert.deepEqual(browser.errors, [])
   await browser.report({ checks, requests, downloadDir })
   console.log(
@@ -487,4 +520,5 @@ try {
   )
 } finally {
   await browser.close()
+  await cleanupBrowserProfile(downloads)
 }

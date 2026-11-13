@@ -40,14 +40,14 @@ test('HU41 news Escape confirmation uses the native top layer and preserves the 
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
-    '@/features/portal-shared/usePortalResource': {
+    '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: (load) =>
         load.name === 'loadAdminNewsCategories'
           ? categoryOptions()
           : { data: draft, loading: false, error: null },
     },
   })
-  const { AdminNewsPage } = h.load('features/portal-news/AdminNewsPage.tsx')
+  const { AdminNewsPage } = h.load('features/portal-news/pages/AdminNewsPage.tsx')
   let pageTree, drawerTree
   const render = () => h.render(() => {
     pageTree = AdminNewsPage()
@@ -65,7 +65,7 @@ test('HU41 news Escape confirmation uses the native top layer and preserves the 
     const node = nodes(drawerTree, (node) => node.type?.name === 'UnsavedNewsDialog')[0]
     return node.type(node.props)
   }
-  const ui = component(client(), 'features/portal-news/NewsEditor.tsx', 'NewsEditor', editorNode().props)
+  const ui = component(client(), 'features/portal-news/components/NewsEditor.tsx', 'NewsEditor', editorNode().props)
   ui.edit('title', 'Cambio sin guardar')
   render()
   const formId = editorNode().props.formId
@@ -139,7 +139,7 @@ function editor(handlers, initial = draft, categories = categoryOptions()) {
   const saved = []
   const ui = component(
     client(handlers),
-    'features/portal-news/NewsEditor.tsx',
+    'features/portal-news/components/NewsEditor.tsx',
     'NewsEditor',
     {
       initial,
@@ -307,7 +307,7 @@ test('HU41 state filter no longer remounts the collection or drops the search', 
       {},
       { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
     ),
-    'features/portal-news/AdminNewsPage.tsx',
+    'features/portal-news/pages/AdminNewsPage.tsx',
     'AdminNewsPage',
   )
   const collection = () =>
@@ -342,7 +342,7 @@ test('HU41 collection combines retained search, new state and first-page reset; 
   }
   const ui = component(
     client(),
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
     'PortalAdminCollection',
     props,
   )
@@ -383,7 +383,7 @@ test('HU41 collection combines retained search, new state and first-page reset; 
 
   const unchanged = component(
     client(),
-    'features/portal-shared/PortalAdminCollection.tsx',
+    'features/portal-shared/components/PortalAdminCollection.tsx',
     'PortalAdminCollection',
     { ...props, resetPageKey: undefined },
   )
@@ -464,7 +464,7 @@ test('F2.5 News inline filter group keeps Estado and "Limpiar filtros" on one ro
   const { resolve } = await import('node:path')
   const { sourceRoot } = await import('../../../shared/tests/sourceHarness.mjs')
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-news/adminNews.module.css'),
+    resolve(sourceRoot, 'features/portal-news/pages/adminNews.module.css'),
     'utf8',
   )
   const group = String.raw`\.newsAdminPage \[role='group'\]\[aria-label='Filtros'\]`

@@ -1,0 +1,7 @@
+/* Páginas offline (G6). Viven fuera de AppLayout: OfflineAccessGate es una columna flexible de
+   altura completa y este <main> ocupa el espacio libre para que el pie quede al final.
+   El ancho, el centrado y el relleno los aporta PageContainer. */
+.main {
+  flex: 1;
+  min-width: 0;
+}

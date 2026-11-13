@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import type {
   AcademicTermsQuery,
   AcademicTermStatus,
 } from '../types/academicTerm.types'
 import styles from '../pages/AdminAcademicTermsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function AcademicTermsFilters({
   query,
@@ -48,35 +50,35 @@ export function AcademicTermsFilters({
       </div>
       <label className={styles.filter}>
         Estado
-        <select
+        <Dropdown<AcademicTermStatus | ''>
           value={query.status}
-          onChange={(event) =>
+          options={[
+            { value: '', label: 'Todos los estados' },
+            { value: 'ACTIVE', label: 'Activos' },
+            { value: 'INACTIVE', label: 'Inactivos' },
+          ]}
+          onChange={(status) =>
             onChange({
               ...query,
-              status: event.target.value as AcademicTermStatus | '',
+              status,
               page: 1,
             })
           }
-        >
-          <option value="">Todos los estados</option>
-          <option value="ACTIVE">Activos</option>
-          <option value="INACTIVE">Inactivos</option>
-        </select>
+        />
       </label>
-      <button type="submit" className={styles.primaryButton}>
+      <Button type="submit">
         Buscar
-      </button>
+      </Button>
       {(query.search || query.status || search) && (
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           onClick={() => {
             setSearch('')
             onChange({ page: 1, search: '', status: '' })
           }}
         >
           Limpiar filtros
-        </button>
+        </Button>
       )}
     </form>
   )

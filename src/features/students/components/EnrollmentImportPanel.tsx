@@ -5,6 +5,7 @@ import { importStudentsCsv } from '../api/teacherStudentsApi'
 import type { CsvImportSummary } from '../types/student.types'
 import { EnrollmentImportReport } from './EnrollmentImportReport'
 import styles from '@/shared/styles/CsvImport.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 function downloadTemplate() {
   const url = URL.createObjectURL(
@@ -84,14 +85,14 @@ export function EnrollmentImportPanel({
             Una fila por estudiante. El SIS debe estar registrado en el sistema.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={styles.templateButton}
           disabled={processing}
           onClick={downloadTemplate}
         >
           Descargar plantilla CSV
-        </button>
+        </Button>
       </header>
       {(blocked || processing) && (
         <p role="status">Espera a que termine la operación antes de salir.</p>
@@ -126,27 +127,26 @@ export function EnrollmentImportPanel({
         <EnrollmentImportReport summary={summary} confirmed={confirmed} />
       )}
       <footer className={styles.panelActions}>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={styles.cancelButton}
           disabled={processing}
           onClick={onReturn}
         >
           {confirmed || uncertain ? 'Ver estudiantes inscritos' : 'Cancelar'}
-        </button>
+        </Button>
         {summary && !confirmed && !uncertain && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             className={styles.cancelButton}
             disabled={processing}
             onClick={() => reset()}
           >
             Cambiar archivo
-          </button>
+          </Button>
         )}
         {!confirmed && !uncertain && (
-          <button
-            type="button"
+          <Button
             className={styles.continueButton}
             disabled={
               processing ||
@@ -160,16 +160,15 @@ export function EnrollmentImportPanel({
               : summary
                 ? 'Confirmar importación'
                 : 'Validar y continuar'}
-          </button>
+          </Button>
         )}
         {confirmed && (
-          <button
-            type="button"
+          <Button
             className={styles.continueButton}
             onClick={() => reset()}
           >
             Importar otro archivo
-          </button>
+          </Button>
         )}
       </footer>
     </section>

@@ -29,8 +29,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
 }
 
 .searchToolbar .searchBar {
@@ -59,10 +59,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgb(var(--shadow-card-rgb, 23 37 84) / 5%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   font-family: var(--font-family);
   overflow: hidden;
 }
@@ -74,10 +74,10 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 16px 24px;
-  gap: 12px;
+  padding: var(--space-4) var(--space-6);
+  gap: var(--space-3);
   width: 100%;
-  background: var(--color-surface, #ffffff);
+  background: var(--color-surface);
 }
 
 .searchInputWrapper {
@@ -85,26 +85,26 @@
   flex-grow: 1;
   display: flex;
   align-items: center;
-  height: 44px;
-  padding: 0 16px;
+  height: var(--input-height);
+  padding: 0 var(--space-4);
   gap: 10px;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-text-secondary, #52627a);
-  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
   transition:
-    border-color var(--transition-fast, 150ms ease),
-    box-shadow var(--transition-fast, 150ms ease);
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .searchInputWrapper:focus-within {
-  border-color: var(--brand-blue, #2563eb);
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 15%);
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 
 .searchIcon {
   width: 18px;
   height: 18px;
-  color: var(--color-text-secondary, #52627a);
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
@@ -114,14 +114,13 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--brand-navy, #172554);
-  font-size: 15px;
-  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  font: var(--type-body);
   outline: none;
 }
 
 .searchInput::placeholder {
-  color: var(--color-text-muted, #5b6a80);
+  color: var(--color-text-muted);
 }
 
 .searchButton,
@@ -130,44 +129,42 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  padding: 0 24px;
-  border-radius: 10px;
-  font-family: var(--font-family);
-  font-size: 15px;
-  font-weight: 600;
+  height: var(--button-height);
+  padding: 0 var(--space-6);
+  border-radius: var(--button-radius);
+  font: var(--type-interactive);
   cursor: pointer;
-  transition: all var(--transition-fast, 150ms ease);
+  transition: all var(--transition-fast);
 }
 
 .searchButton {
-  background: var(--brand-blue, #2563eb);
-  color: var(--color-on-primary, #ffffff);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   border: none;
 }
 
 .searchButton:hover:not(:disabled) {
-  background: var(--color-primary-hover, #1d4ed8);
+  background: var(--color-primary-hover);
 }
 
 .clearButton,
 .retryButton {
-  background: var(--color-surface, #ffffff);
-  color: var(--brand-navy, #172554);
-  border: 1px solid var(--color-border-strong, #b8c9e1);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
 }
 
 .clearButton:hover:not(:disabled),
 .retryButton:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
+  background: var(--color-surface-soft);
 }
 
 .searchResultBanner {
-  padding: 8px 24px;
-  background: var(--color-surface-muted, #f5fbff);
-  border-top: 1px solid var(--color-border, #dce5f2);
-  color: var(--color-text-secondary, #52627a);
-  font-size: 13px;
+  padding: var(--space-2) var(--space-6);
+  background: var(--color-surface-muted);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font: var(--type-small);
 }
 
 /* ==========================================================================
@@ -186,31 +183,31 @@
 }
 
 .table th {
-  background: var(--color-soft-blue, #dff1ff);
-  color: var(--brand-navy, #172554);
-  font-size: 14px;
-  font-weight: 600;
-  padding: 14px 24px;
-  border-top: 1px solid #d0dfef;
-  border-bottom: 1.5px solid #6b7d99;
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  padding: 14px var(--space-6);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1.5px solid var(--color-border-strong);
 }
 
 .tableRow {
-  background: var(--brand-white-warm, #fafafa);
-  transition: background-color var(--transition-fast, 150ms ease);
+  background: var(--color-surface);
+  transition: background-color var(--transition-fast);
 }
 
 .tableRow:hover {
-  background-color: #f2f7ff;
+  background-color: var(--color-surface-muted);
 }
 
 .tableCell {
-  padding: 12px 24px;
-  border-bottom: 1px solid #eceff4;
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--color-border-soft);
   vertical-align: middle;
-  color: var(--brand-navy, #172554);
-  font-size: 14px;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   overflow-wrap: break-word;
 }
 
@@ -229,18 +226,17 @@
 /* Utilidades listas para celdas compuestas (Nombre + CI) */
 .primaryText {
   display: block;
-  color: var(--brand-navy, #172554);
-  font-size: 14px;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   line-height: 1.35;
 }
 
 .secondaryText {
   display: block;
   margin-top: 2px;
-  color: var(--color-text-secondary, #52627a);
-  font-size: 13px;
-  font-weight: 400;
+  color: var(--color-text-secondary);
+  font: var(--type-small);
 }
 
 /* ==========================================================================
@@ -252,9 +248,9 @@
   justify-content: center;
   gap: 6px;
   padding: 5px 14px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
 }
 
@@ -267,13 +263,13 @@
 }
 
 .statusActive {
-  background: #ccf5d3;
-  color: #157333;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .statusInactive {
-  background: #ffd8dc;
-  color: #b91c1c;
+  background: var(--color-error-soft);
+  color: var(--color-error);
 }
 
 /* ==========================================================================
@@ -298,29 +294,27 @@
   justify-content: center;
   min-height: 34px;
   height: 34px;
-  border-radius: 8px;
-  font-family: var(--font-family);
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: var(--button-radius);
+  font: var(--type-interactive);
   cursor: pointer;
   transition:
-    background-color var(--transition-fast, 150ms ease),
-    border-color var(--transition-fast, 150ms ease),
-    transform var(--transition-fast, 150ms ease);
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 /* Botón "Ver perfil" (Blanco con borde suave y texto azul brillante) */
 .btnViewProfile {
-  padding: 0 16px;
-  background: #ffffff;
-  border: 1px solid #dce6f5;
-  color: var(--brand-blue, #2563eb);
-  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
+  padding: 0 var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .btnViewProfile:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
-  border-color: var(--brand-blue, #2563eb);
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary);
 }
 
 /* Botones de Estado: Ancho idéntico y relleno de color como en el Mockup */
@@ -332,24 +326,24 @@
 
 /* Botón "Desactivar" (Fondo rosa suave y borde rojo carmesí) */
 .btnDeactivate {
-  background: #ffd8dc;
-  border: 1.5px solid #d9384a;
-  color: #9e1c2e;
+  background: var(--color-error-soft);
+  border: 1.5px solid var(--color-error);
+  color: var(--color-error);
 }
 
 .btnDeactivate:hover:not(:disabled) {
-  background: #ffc2c9;
+  background: color-mix(in srgb, var(--color-error-soft) 85%, var(--color-error));
 }
 
 /* Botón "Activar" (Fondo verde suave y borde verde intenso) */
 .btnActivate {
-  background: #ccf5d3;
-  border: 1.5px solid #2e7d32;
-  color: #14532d;
+  background: var(--color-success-soft);
+  border: 1.5px solid var(--color-success);
+  color: var(--color-success);
 }
 
 .btnActivate:hover:not(:disabled) {
-  background: #b5eec0;
+  background: color-mix(in srgb, var(--color-success-soft) 85%, var(--color-success));
 }
 
 /* ==========================================================================
@@ -361,15 +355,14 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 14px 24px;
-  background: #ffffff;
-  border-top: 1px solid #e6ebf2;
+  padding: 14px var(--space-6);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-soft);
 }
 
 .paginationSummary {
-  color: #7c8ba1;
-  font-size: 13.5px;
-  font-weight: 400;
+  color: var(--color-text-secondary);
+  font: var(--type-small);
 }
 
 .paginationControls {
@@ -379,9 +372,8 @@
 }
 
 .pageIndicator {
-  color: var(--brand-navy, #172554);
-  font-size: 13.5px;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font: var(--type-small);
 }
 
 .pageButton {
@@ -391,28 +383,26 @@
   min-height: 32px;
   height: 32px;
   padding: 0 14px;
-  background: #ffffff;
-  border: 1px solid #edf2f9;
-  border-radius: 6px;
-  color: var(--brand-blue, #2563eb);
-  font-family: var(--font-family);
-  font-size: 13.5px;
-  font-weight: 600;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--button-radius);
+  color: var(--color-primary);
+  font: var(--type-interactive);
   cursor: pointer;
-  box-shadow: 0 1px 2px rgb(23 37 84 / 4%);
-  transition: all var(--transition-fast, 150ms ease);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
 }
 
 .pageButton:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
-  border-color: #cfe2ff;
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary);
 }
 
 .pageButton:disabled {
-  background: #ffffff;
-  border-color: #f1f5f9;
-  color: #64748b;
-  font-weight: 500;
+  background: var(--color-surface);
+  border-color: var(--color-border-soft);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-regular);
   box-shadow: none;
   opacity: 0.75;
   cursor: not-allowed;
@@ -427,43 +417,50 @@
   align-items: center;
   justify-content: center;
   min-height: 240px;
-  padding: 40px 20px;
+  padding: var(--space-10) var(--space-5);
   text-align: center;
-  background: var(--brand-white-warm, #fafafa);
+  background: var(--color-surface);
 }
 
 .spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid var(--color-border-soft, #dce8ff);
-  border-top-color: var(--brand-blue, #2563eb);
+  border: 3px solid var(--color-border-soft);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: tableSpin 0.75s linear infinite;
 }
 
 .emptyTitle {
-  color: var(--brand-navy, #172554);
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .stateText {
   margin: 6px 0 0;
-  color: var(--color-text-secondary, #52627a);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font: var(--type-small);
 }
 
 .errorBanner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin: 16px 24px;
+  gap: var(--space-4);
+  margin: var(--space-4) var(--space-6);
   padding: 14px 18px;
-  border: 1px solid var(--brand-pink, #d67a8c);
-  border-radius: 10px;
-  background: var(--brand-pink-light, #f7e9ed);
-  color: var(--brand-crimson, #8b1e3f);
+  border: 1px solid var(--color-decorative);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* DS5-F3: on phones «Reintentar» moves below the message instead of being clipped (unchanged from 480px). */
+@media (max-width: 479px) {
+  .errorBanner {
+    flex-wrap: wrap;
+  }
 }
 
 .visuallyHidden {
@@ -488,7 +485,7 @@
 @media (max-width: 768px) {
   .searchBar {
     flex-wrap: wrap;
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .searchInputWrapper {
@@ -503,7 +500,7 @@
   .searchToolbar {
     flex-direction: column;
     align-items: stretch;
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .searchToolbar .searchBar {
@@ -543,26 +540,26 @@
   }
 
   .tableRow {
-    margin: 12px;
+    margin: var(--space-3);
     width: calc(100% - 24px);
-    border: 1px solid var(--color-border-strong, #b8c9e1);
-    border-radius: 10px;
-    background: #ffffff;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
   }
 
   .tableCell {
     display: grid;
     grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
-    gap: 12px;
+    gap: var(--space-3);
     padding: 10px 14px;
     text-align: left !important;
   }
 
   .tableCell::before {
     content: attr(data-label);
-    color: var(--color-text-secondary, #52627a);
-    font-size: 12px;
-    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
   }
 
   .actionButtons {
@@ -573,7 +570,7 @@
   .paginationFooter {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .paginationControls {
@@ -585,7 +582,7 @@
 @media (min-width: 601px) and (max-width: 768px) {
   .searchBarWide {
     flex-wrap: nowrap;
-    padding-inline: 24px;
+    padding-inline: var(--space-6);
   }
 
   .searchBarWide .searchInputWrapper {

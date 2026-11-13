@@ -1,5 +1,6 @@
 import type { AdminSubject } from '../types/adminSubject.types'
 import styles from './SubjectDialog.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function SubjectDetails({
   subject,
@@ -40,16 +41,15 @@ export function SubjectDetails({
         </div>
       </dl>
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           onClick={onClose}
         >
           Cerrar
-        </button>
-        <button type="button" className={styles.primaryButton} onClick={onEdit}>
+        </Button>
+        <Button onClick={onEdit}>
           Editar materia
-        </button>
+        </Button>
       </footer>
     </>
   )

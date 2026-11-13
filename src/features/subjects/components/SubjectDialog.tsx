@@ -8,6 +8,7 @@ import { SubjectDetails } from './SubjectDetails'
 import { SubjectForm } from './SubjectForm'
 import { SubjectModal } from './SubjectModal'
 import styles from './SubjectDialog.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 interface Props {
   selection: SubjectDialogSelection
@@ -70,16 +71,15 @@ function ExistingSubject({
       <div className={styles.error} role="alert">
         <p>{state.message}</p>
         {!state.missing && (
-          <button
-            type="button"
-            className={styles.secondaryButton}
+          <Button
+            variant="secondary"
             onClick={() => {
               setState({ status: 'loading' })
               setRetry((value) => value + 1)
             }}
           >
             Reintentar
-          </button>
+          </Button>
         )}
       </div>
     )

@@ -16,7 +16,7 @@ import {createRoot} from 'react-dom/client';
 import {MemoryRouter} from 'react-router';
 import '/src/assets/styles/global.css';
 import '@fontsource/poppins/400.css';
-import {AdminNewsPage} from '/src/features/portal-news/AdminNewsPage.tsx';
+import {AdminNewsPage} from '/src/features/portal-news/pages/AdminNewsPage.tsx';
 const e=React.createElement, root=createRoot(document.getElementById('root'));
 const now='2026-11-05T10:00:00-04:00';
 const rows=[

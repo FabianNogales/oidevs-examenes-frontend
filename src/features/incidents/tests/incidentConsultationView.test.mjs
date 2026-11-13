@@ -46,6 +46,7 @@ function setup(handler = async () => page) {
   let search = 'from=teacher',
     examId = 4
   const h = sourceHarness({
+    '@/features/discipline/LegacyCaseRedirect': {LegacyCaseRedirect: 'legacy-case'},
     '../components/IncidentExportActions': {
       IncidentExportActions: 'export-actions',
     },
@@ -62,7 +63,7 @@ function setup(handler = async () => page) {
       Link: 'link',
       NavLink: 'nav-link',
       useParams: () => ({ examId: String(examId), incidentId: '9' }),
-      useLocation: () => ({ state: {} }),
+      useLocation: () => ({ pathname: '/admin/incidents/9', state: {} }),
       useSearchParams: () => [
         new URLSearchParams(search),
         (next) => {
@@ -325,7 +326,10 @@ test('HU29 admin query reuses the consultation but has no teacher controls and e
   ui.h.render(() => ExamIncidentConsultation({ examId: 4, mode: 'admin' }))
   await settle()
   const tree = ui.h.render()
-  assert.equal(tree.type, 'section')
+  // U3.4b: the admin root is PageContainer (a labelled <section>), never a <main> inside AdminLayout.
+  assert.equal(tree.type?.name, 'PageContainer')
+  assert.equal(tree.props.labelledBy, 'incident-consultation-title')
+  assert.equal(nodes(tree, (n) => n.type === 'main').length, 0)
   assert.equal(
     nodes(
       tree,

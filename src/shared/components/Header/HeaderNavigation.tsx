@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { ChevronDownIcon } from '@/assets/icons/ChevronDownIcon'
+import { ChevronDown } from 'lucide-react'
 
 import type {
   HeaderNavigationItem,
@@ -124,7 +124,8 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
                   aria-controls={dropdownId}
                 >
                   {item.label}
-                  <ChevronDownIcon
+                  <ChevronDown
+                    aria-hidden="true"
                     className={`${styles.dropdownIcon} ${
                       openDropdown === item.label ? styles.dropdownIconOpen : ''
                     }`}

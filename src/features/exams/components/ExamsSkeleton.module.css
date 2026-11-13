@@ -39,9 +39,9 @@
   border-radius: var(--radius-sm);
   background: linear-gradient(
     90deg,
-    rgba(148, 163, 184, 0.2) 0%,
-    rgba(148, 163, 184, 0.35) 35%,
-    rgba(148, 163, 184, 0.2) 100%
+    color-mix(in srgb, var(--color-text-muted) 20%, transparent) 0%,
+    color-mix(in srgb, var(--color-text-muted) 35%, transparent) 35%,
+    color-mix(in srgb, var(--color-text-muted) 20%, transparent) 100%
   );
 }
 

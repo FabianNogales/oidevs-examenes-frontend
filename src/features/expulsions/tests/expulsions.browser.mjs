@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { browserFixture, pause } from '../../../shared/tests/browserHarness.mjs'
+import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
 const exam = {
     id: 4,
     name: 'Primer parcial de Redes',
@@ -28,7 +29,7 @@ let saved = null,
   historyDenied = false
 const requests = [],
   checks = []
-const moduleSource = `import React from 'react';import{createRoot}from'react-dom/client';import{createMemoryRouter,RouterProvider,Outlet}from'react-router';import'/src/assets/styles/global.css';import'@fontsource/poppins/400.css';import'@fontsource/poppins/500.css';import'@fontsource/poppins/600.css';import'@fontsource/poppins/700.css';import'/src/features/exams/components/CreateExamModal.module.css';import{Header}from'/src/shared/components/Header/Header.tsx';import{Footer}from'/src/shared/components/Footer/Footer.tsx';import{httpClient}from'/src/shared/api/httpClient.ts';import{ExamExpulsionsPage}from'/src/features/expulsions/pages/ExamExpulsionsPage.tsx';import{CreateExpulsionPage}from'/src/features/expulsions/pages/CreateExpulsionPage.tsx';import{ExpulsionDetailPage}from'/src/features/expulsions/pages/ExpulsionDetailPage.tsx';httpClient.defaults.baseURL='/__browser-api';function Layout(){return React.createElement(React.Fragment,null,React.createElement(Header,{user:{name:'Docente de prueba',role:'teacher'}}),React.createElement(Outlet),React.createElement(Footer))}const router=createMemoryRouter([{Component:Layout,children:[{path:'/teacher/exams/:examId/expulsions',Component:ExamExpulsionsPage},{path:'/teacher/exams/:examId/expulsions/create',Component:CreateExpulsionPage},{path:'/teacher/exams/:examId/expulsions/:expulsionId',Component:ExpulsionDetailPage},{path:'/other',element:React.createElement('p',null,'Otra página')}]}],{initialEntries:['/teacher/exams/4/expulsions']});window.__router=router;createRoot(document.getElementById('root')).render(React.createElement(RouterProvider,{router}));`
+const moduleSource = `import React from 'react';import{createRoot}from'react-dom/client';import{createMemoryRouter,RouterProvider,Outlet}from'react-router';import'/src/assets/styles/global.css';import'@fontsource/poppins/400.css';import'@fontsource/poppins/500.css';import'@fontsource/poppins/600.css';import'@fontsource/poppins/700.css';import{Header}from'/src/shared/components/Header/Header.tsx';import{Footer}from'/src/shared/components/Footer/Footer.tsx';import{httpClient}from'/src/shared/api/httpClient.ts';import{ExamExpulsionsPage}from'/src/features/expulsions/pages/ExamExpulsionsPage.tsx';import{CreateExpulsionPage}from'/src/features/expulsions/pages/CreateExpulsionPage.tsx';import{ExpulsionDetailPage}from'/src/features/expulsions/pages/ExpulsionDetailPage.tsx';httpClient.defaults.baseURL='/__browser-api';function Layout(){return React.createElement(React.Fragment,null,React.createElement(Header,{user:{name:'Docente de prueba',role:'teacher'}}),React.createElement(Outlet),React.createElement(Footer))}const router=createMemoryRouter([{Component:Layout,children:[{path:'/teacher/exams/:examId/expulsions',Component:ExamExpulsionsPage},{path:'/teacher/exams/:examId/expulsions/create',Component:CreateExpulsionPage},{path:'/teacher/exams/:examId/expulsions/:expulsionId',Component:ExpulsionDetailPage},{path:'/other',element:React.createElement('p',null,'Otra página')}]}],{initialEntries:['/teacher/exams/4/expulsions']});window.__router=router;createRoot(document.getElementById('root')).render(React.createElement(RouterProvider,{router}));`
 const b = await browserFixture({
   name: 'hu31-browser',
   moduleSource,
@@ -111,7 +112,8 @@ async function link(text) {
   )
   await pause(100)
 }
-async function view(name) {
+const contractFailures = []
+async function view(name, contract) {
   for (const width of [1440, 1024, 768, 390, 320]) {
     await resize(width)
     await evaluate('window.scrollTo(0,0)')
@@ -119,6 +121,12 @@ async function view(name) {
       await evaluate('document.documentElement.scrollWidth<=innerWidth'),
       true,
     )
+    // U3.4: shared page contract (PageContainer + PageHeader) for this state.
+    if (contract) {
+      const problems = pageContractProblems(await evaluate(pageContractScript), { width, ...contract })
+      if (problems.length) contractFailures.push(`${name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} contrato ${name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
     await shot(`${name}-${width}`)
   }
 }
@@ -136,9 +144,20 @@ try {
   await wait(
     "document.body.innerText.includes('No hay expulsiones registradas')",
   )
+  // U3.4a: list and error states (another exam answers 403) under the shared page contract.
+  await view('listado-vacio', { title: 'Expulsiones del examen', crumbs: ['Mis exámenes', 'Expulsiones del examen'] })
+  await resize(1440)
+  await nav('/teacher/exams/5/expulsions')
+  await wait("!!document.querySelector('main [role=alert]')")
+  await view('error', { title: 'Expulsiones del examen', crumbs: ['Mis exámenes', 'Expulsiones del examen'] })
+  await resize(1440)
+  await nav('/teacher/exams/4/expulsions')
+  await wait(
+    "document.body.innerText.includes('No hay expulsiones registradas')",
+  )
   await link('Registrar expulsión')
   await wait("document.querySelector('form')")
-  await view('registro')
+  await view('registro', { title: 'Registrar expulsión', crumbs: ['Mis exámenes', 'Expulsiones', 'Registrar expulsión'] })
   await click('Confirmar expulsión')
   assert.equal(posts().length, 0)
   assert.equal(await evaluate('document.activeElement.tagName'), 'FIELDSET')
@@ -170,7 +189,7 @@ try {
   await click(
     'Vincular #8 · Copia · ReportadaUso de apuntes durante la evaluación.',
   )
-  await view('registro-seleccionado')
+  await view('registro-seleccionado', { title: 'Registrar expulsión', crumbs: ['Mis exámenes', 'Expulsiones', 'Registrar expulsión'] })
   await fill(
     'textarea',
     'Decisión disciplinaria justificada.',
@@ -220,7 +239,7 @@ try {
     reason: 'Decisión disciplinaria justificada.',
     infraction_id: 8,
   })
-  await view('detalle')
+  await view('detalle', { title: 'Detalle de expulsión', crumbs: ['Mis exámenes', 'Expulsiones', 'Detalle de expulsión'] })
   await click('Consultar historial')
   await wait("document.querySelector('table')")
   assert.equal(
@@ -237,7 +256,7 @@ try {
     ),
     true,
   )
-  await view('listado')
+  await view('listado', { title: 'Expulsiones del examen', crumbs: ['Mis exámenes', 'Expulsiones del examen'] })
   await nav('/teacher/exams/4/expulsions/create')
   await wait("document.querySelector('form')")
   await choose()
@@ -290,6 +309,19 @@ try {
     'Required student/reason/confirmation; related infraction remains reported; 422 keeps draft; serialized POST and navigation guard; validated detail and server actor/time; EXPELLED table; scoped history; duplicate409 blocks retries; denied create/history and cross-exam reads; no overflow 1440/1024/768/390/320; checkbox18px',
   )
   assert.deepEqual(b.errors, [])
+  // R2: invalid-id states render one main and one h1 (PageContainer + PageHeader), no breadcrumbs,
+  // and keep their exact role="alert" message.
+  for (const state of [
+    { name: 'id no válido lista', path: '/teacher/exams/abc/expulsions', title: 'Expulsiones del examen', alertText: 'El identificador del examen no es válido.' },
+    { name: 'id no válido alta', path: '/teacher/exams/abc/expulsions/create', title: 'Registrar expulsión', alertText: 'El identificador del examen no es válido.' },
+    { name: 'id no válido detalle', path: '/teacher/exams/4/expulsions/abc', title: 'Detalle de expulsión', alertText: 'El identificador solicitado no es válido.' },
+  ]) {
+    await resize(1440)
+    await nav(state.path)
+    await wait("!!document.querySelector('[role=alert]')")
+    await view(state.name, { title: state.title, crumbs: [], alertText: state.alertText })
+  }
+  assert.deepEqual(contractFailures, [], 'contrato de página de expulsiones')
   await b.report({ checks, requests })
   console.log(JSON.stringify({ checks, errors: b.errors, output: b.output }))
 } finally {

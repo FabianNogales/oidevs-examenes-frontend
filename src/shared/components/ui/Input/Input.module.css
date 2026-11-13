@@ -1,0 +1,19 @@
+.wrapper {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.hint,
+.error {
+  margin: 0;
+  font: var(--type-small);
+}
+
+.hint {
+  color: var(--color-text-secondary);
+}
+
+.error {
+  color: var(--color-error);
+}

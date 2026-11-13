@@ -9,6 +9,8 @@ function setup(importer) {
     '@/features/course-offerings/hooks/useOfferingNavigationGuard': { useOfferingNavigationGuard: () => false },
     '../api/teacherStudentsApi': { importStudentsCsv: importer },
     './EnrollmentImportReport': { EnrollmentImportReport: () => null },
+    // DS4.2a: the Design System Button renders a native <button>; keep inspecting it as one.
+    '@/shared/components/ui/Button/Button': { Button: 'button' },
   })
   const { EnrollmentImportPanel } = h.load('features/students/components/EnrollmentImportPanel.tsx')
   let tree = h.render(() => EnrollmentImportPanel({ offeringId: '37', onReturn() {} }))

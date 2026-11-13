@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { ExamIncidentNavigation } from '@/features/incidents/components/ExamIncidentNavigation'
 import type { InfractionExam } from '../types/infraction.types'
-import styles from '@/features/incidents/pages/Incidents.module.css'
+
+// U3.4a: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
+const titleId = 'infraction-page-title'
 
 export function InfractionLayout({
   examId,
@@ -10,41 +13,43 @@ export function InfractionLayout({
   title,
   children,
   detail = false,
+  embedded = false,
 }: {
   examId: number
   exam?: InfractionExam
   title: string
   children: ReactNode
   detail?: boolean
+  embedded?: boolean
 }) {
+  if (embedded) return <>{children}</>
   return (
-    <main className={styles.page}>
-      <section className={styles.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title={title}
+          titleId={titleId}
+          description={
+            exam
+              ? `${exam.name} · ${exam.subject_name}`
+              : 'Consulta y seguimiento de faltas del examen.'
+          }
+          breadcrumbs={[
             { label: 'Mis exámenes', to: '/teacher/exams' },
             ...(detail
               ? [
                   {
-                    label: 'Infracciones',
-                    to: `/teacher/exams/${examId}/infractions`,
+                    label: 'Incidencias e infracciones',
+                    to: `/exams/${examId}/incidents?from=teacher&kind=infractions`,
                   },
                 ]
               : []),
             { label: title },
           ]}
         />
-        <header className={styles.heading}>
-          <h1>{title}</h1>
-          <p>
-            {exam
-              ? `${exam.name} · ${exam.subject_name}`
-              : 'Consulta y seguimiento de faltas del examen.'}
-          </p>
-        </header>
         <ExamIncidentNavigation examId={examId} />
         {children}
-      </section>
+      </PageContainer>
     </main>
   )
 }

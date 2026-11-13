@@ -9,6 +9,7 @@ import type { ExamEligibility } from '@/features/eligibilities/types/eligibility
 import { httpClient } from '@/shared/api/httpClient'
 import type {
   AcademicHistoryEntry,
+  AcademicImportMode,
   AcademicRecord,
   AcademicRecordPayload,
   ApiPage,
@@ -24,6 +25,7 @@ import type {
   EvaluationConfirmation,
   EvaluationHistoryEntry,
   EvaluationView,
+  EvaluationQuery,
   ImportSchema,
 } from '../types/eligibilityAutomation.types'
 
@@ -162,9 +164,14 @@ export async function getImportSchema(
 export async function previewAcademicImport(
   offeringId: number,
   file: File,
+  options?: { mode: AcademicImportMode; reason?: string },
 ): Promise<CsvImportPreview> {
   const formData = new FormData()
   formData.append('file', file)
+  if (options) {
+    formData.append('mode', options.mode)
+    if (options.reason !== undefined) formData.append('reason', options.reason)
+  }
   try {
     const response = await httpClient.post<{ data: CsvImportPreview }>(
       `/academic-offerings/${offeringId}/academic-records/imports/preview`,
@@ -241,7 +248,7 @@ export async function previewEligibilityEvaluation(
         configuration_revision: revision,
         catalog_revision: catalogRevision,
       },
-      { params: { page: 1, per_page: 100 } },
+      { params: { page: 1, per_page: 10, filter: 'CHANGES', search: '' } },
     )
     return response.data.data
   } catch (error) {
@@ -299,11 +306,14 @@ export async function getEvaluationDetail(
   examId: number,
   evaluationId: number,
   page = 1,
+  query?: EvaluationQuery,
+  signal?: AbortSignal,
 ): Promise<EvaluationView> {
   return (
     await get<{ data: EvaluationView }>(
       `/exams/${examId}/eligibility-automation/evaluations/${evaluationId}`,
-      { page, per_page: 100 },
+      query ? { ...query } : { page, per_page: 100 },
+      signal,
     )
   ).data
 }

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import type { AcademicTerm } from '@/features/academic-terms/types/academicTerm.types'
 import type { CourseOffering } from '../types/courseOffering.types'
 import { getSubjectChoices, getTeacherChoices } from '../api/offeringChoicesApi'
@@ -110,29 +111,29 @@ export function OfferingEditForm({
       />
       <label className={styles.filter}>
         Periodo académico *
-        <select
+        <Dropdown<string | number>
           value={termId}
           disabled={busy || locked}
-          onChange={(event) => setTermId(event.target.value)}
-        >
-          {!periods.some(
-            (period) => period.id === offering.academic_term.id,
-          ) && (
-            <option value={offering.academic_term.id} disabled>
-              {offering.academic_term.name}
-            </option>
-          )}
-          {periods.map((period) => (
-            <option
-              key={period.id}
-              value={period.id}
-              disabled={period.status !== 'ACTIVE'}
-            >
-              {period.name}
-              {period.status !== 'ACTIVE' ? ' — Inactivo' : ''}
-            </option>
-          ))}
-        </select>
+          options={[
+            ...(!periods.some(
+              (period) => period.id === offering.academic_term.id,
+            )
+              ? [
+                  {
+                    value: offering.academic_term.id,
+                    label: offering.academic_term.name,
+                    disabled: true,
+                  },
+                ]
+              : []),
+            ...periods.map((period) => ({
+              value: period.id,
+              label: `${period.name}${period.status !== 'ACTIVE' ? ' — Inactivo' : ''}`,
+              disabled: period.status !== 'ACTIVE',
+            })),
+          ]}
+          onChange={(nextTermId) => setTermId(String(nextTermId))}
+        />
       </label>
       <div className={styles.formActions}>
         <button

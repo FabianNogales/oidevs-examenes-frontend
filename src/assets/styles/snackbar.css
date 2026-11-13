@@ -1,3 +1,6 @@
+/* ==========================================================================
+   Snackbar
+   ========================================================================== */
 .snackbar {
   position: fixed;
   right: 1.25rem;
@@ -7,14 +10,14 @@
   width: min(calc(100vw - 2rem), 26rem);
   grid-template-columns: 0.35rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.8rem;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 0.9rem 0.95rem;
   background: var(--color-surface);
-  box-shadow: 0 1rem 2.5rem rgb(var(--shadow-card-rgb) / 18%);
+  box-shadow: 0 10px 30px rgb(var(--shadow-card-rgb) / 20%);
+  font: var(--type-small);
   color: var(--color-text-primary);
-  font-size: 0.85rem;
-  line-height: 1.4;
 }
 
 .snackbar::before {
@@ -39,13 +42,18 @@
 
 .snackbar button {
   display: grid;
-  width: 1.8rem;
-  height: 1.8rem;
-  min-height: 1.8rem;
+  width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
   place-items: center;
   border-radius: 50%;
-  background: var(--color-surface-muted);
+  background: var(--color-surface-soft);
   color: var(--color-text-secondary);
   font-size: 1rem;
   line-height: 1;
+}
+
+.snackbar button:hover {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
 }

@@ -12,6 +12,7 @@ import { RoomCsvDropzone } from './RoomCsvDropzone'
 import { RoomImportReport } from './RoomImportReport'
 import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportRoomsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function RoomImportPanel() {
   const navigate = useNavigate()
@@ -44,8 +45,8 @@ export function RoomImportPanel() {
         <h2 id="rooms-import-panel-title" ref={heading} tabIndex={-1}>
           Archivo de aulas
         </h2>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={styles.templateButton}
           onClick={downloadRoomCsvTemplate}
           disabled={processing}
@@ -54,7 +55,7 @@ export function RoomImportPanel() {
             <path d="M12 3v12m-5-5 5 5 5-5M5 21h14" />
           </svg>
           Descargar plantilla CSV
-        </button>
+        </Button>
       </div>
       {error && (
         <div className={styles.fileObservations} role="alert">
@@ -93,8 +94,8 @@ export function RoomImportPanel() {
             </span>
           </div>
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               disabled={processing}
               onClick={() => {
@@ -103,15 +104,14 @@ export function RoomImportPanel() {
               }}
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               disabled={!flow.file || processing}
               onClick={() => void validate()}
             >
               {processing ? 'Validando…' : 'Validar y continuar'}
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -123,14 +123,14 @@ export function RoomImportPanel() {
               <strong>{flow.file.name}</strong>
               <small>{formatRoomFileSize(flow.file.size)}</small>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               onClick={reset}
               disabled={processing}
             >
               Cambiar archivo
-            </button>
+            </Button>
           </div>
           <div
             className={styles.reviewMessage}
@@ -160,16 +160,15 @@ export function RoomImportPanel() {
           </div>
           <RoomImportReport report={flow.preview} />
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               onClick={reset}
               disabled={processing}
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               disabled={
                 processing ||
@@ -179,7 +178,7 @@ export function RoomImportPanel() {
               onClick={() => void confirm()}
             >
               {processing ? 'Confirmando…' : 'Confirmar importación'}
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -203,20 +202,19 @@ export function RoomImportPanel() {
             <RoomImportReport report={flow.result} confirmed />
           </div>
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               onClick={() => navigate('/admin/rooms')}
             >
               Volver a aulas
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               onClick={reset}
             >
               Importar otro archivo
-            </button>
+            </Button>
           </div>
         </>
       )}

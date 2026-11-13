@@ -17,8 +17,16 @@
 //   } finally {
 //     await cleanupBrowserProfile(browserProfile, chrome)
 //   }
-import { execFile } from 'node:child_process'
+//
+// Interruptions (maintenance 2026-11-08): every profile created here is registered until its cleanup.
+// On SIGINT/SIGTERM (Ctrl+C) the registered profiles are cleaned before the process exits, and the
+// 'exit' event removes whatever is left synchronously. Only the Chrome launched with that exact
+// --user-data-dir is stopped (trackBrowser() or a command-line lookup of the unique directory); other
+// Chrome processes are never touched. A forced termination from outside (TerminateProcess, `timeout`)
+// runs no handler: sweepBrowserProfiles.mjs reports and, with explicit opt-in, removes those leftovers.
+import { execFile, execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { readFileSync, rmSync } from 'node:fs'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, isAbsolute, join, relative, resolve } from 'node:path'
@@ -43,7 +51,108 @@ export async function createBrowserProfile(name, { root = tmpdir() } = {}) {
       createdAt: new Date().toISOString(),
     }),
   )
-  return Object.freeze({ dir, token, root: base, name })
+  const profile = Object.freeze({ dir, token, root: base, name })
+  registerActiveProfile(profile)
+  return profile
+}
+
+// --- Active profiles and interruption handling -------------------------------------------------------
+
+const active = new Map() // profile.dir -> { profile, chrome }
+let handlersInstalled = false
+
+function registerActiveProfile(profile) {
+  active.set(profile.dir, { profile, chrome: null })
+  installInterruptionHandlers()
+}
+
+/** Associates the Chrome child process launched with this profile (optional, faster cleanup). */
+export function trackBrowser(profile, chrome) {
+  const entry = profile && active.get(profile.dir)
+  if (entry) entry.chrome = chrome
+  return chrome
+}
+
+/** Profiles created by this process and not cleaned up yet (read-only copy). */
+export function activeProfiles() {
+  return [...active.values()].map((entry) => entry.profile)
+}
+
+/**
+ * PIDs of processes whose command line contains this exact --user-data-dir (Windows only).
+ * The directory is a unique mkdtemp path, so no foreign Chrome can match.
+ */
+export function findChromeUsingProfile(dir, { run = execFileSync } = {}) {
+  if (process.platform !== 'win32') return []
+  const needle = `--user-data-dir=${dir}`.replaceAll("'", "''")
+  try {
+    const output = run(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-Command',
+        `$ErrorActionPreference='Stop'; Get-CimInstance Win32_Process -Filter "Name='chrome.exe' OR Name='msedge.exe'" | Where-Object { $_.CommandLine -and ($_.CommandLine.Contains('${needle}"') -or $_.CommandLine.Contains('${needle} ') -or $_.CommandLine.EndsWith('${needle}')) } | ForEach-Object { $_.ProcessId }`],
+      { encoding: 'utf8', windowsHide: true, timeout: 15000 },
+    )
+    return String(output).split(/\s+/).map(Number).filter((pid) => Number.isSafeInteger(pid) && pid > 0)
+  } catch (error) {
+    throw new Error('No se pudo comprobar si el navegador usa el perfil', { cause: error })
+  }
+}
+
+function ownsProfileDir(profile) {
+  if (!isInsideRoot(profile.dir, profile.root)) return false
+  try {
+    return JSON.parse(readFileSync(join(profile.dir, PROFILE_MARKER), 'utf8'))?.token === profile.token
+  } catch {
+    return false
+  }
+}
+
+function stopTreeSync(pid) {
+  try {
+    if (process.platform === 'win32')
+      execFileSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore', timeout: 15000 })
+    else process.kill(pid, 'SIGKILL')
+  } catch {
+    // Already gone.
+  }
+}
+
+/**
+ * Synchronous best-effort cleanup of every registered profile (used on 'exit' and after signals).
+ * Never throws. Returns the directories that were removed.
+ */
+export function cleanupActiveProfilesSync({ find = findChromeUsingProfile, stop = stopTreeSync, remove = (dir) => rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) } = {}) {
+  const removed = []
+  for (const [dir, { profile, chrome }] of [...active]) {
+    try {
+      const pids = new Set(find(dir))
+      if (running(chrome) && chrome.pid) pids.add(chrome.pid)
+      for (const pid of pids) stop(pid)
+      if (ownsProfileDir(profile)) {
+        remove(dir)
+        removed.push(dir)
+      }
+    } catch {
+      // Keep going: the sweep script reports anything left behind.
+    }
+    active.delete(dir)
+  }
+  return removed
+}
+
+function installInterruptionHandlers() {
+  if (handlersInstalled) return
+  handlersInstalled = true
+  const onSignal = (signal) => {
+    if (active.size) console.warn(`[browserProfile] ${signal}: limpiando ${active.size} perfil(es) temporal(es)`)
+    cleanupActiveProfilesSync()
+    process.exit(signal === 'SIGINT' ? 130 : 143)
+  }
+  process.once('SIGINT', onSignal)
+  process.once('SIGTERM', onSignal)
+  process.once('exit', () => {
+    if (active.size) cleanupActiveProfilesSync()
+  })
 }
 
 /** True when `dir` is a direct child of `root` named with the EIDA prefix. */
@@ -109,6 +218,12 @@ export async function cleanupBrowserProfile(
   } = {},
 ) {
   if (!profile) return { removed: false, reason: 'no-profile' }
+  const result = await cleanupProfile(profile, chrome, { timeoutMs, killTree, removeDir, warn })
+  active.delete(profile.dir)
+  return result
+}
+
+async function cleanupProfile(profile, chrome, { timeoutMs, killTree, removeDir, warn }) {
   const keep = (reason, detail) => {
     warn(`perfil conservado (${reason}): ${profile.dir}${detail ? ` — ${detail}` : ''}`)
     return { removed: false, reason }

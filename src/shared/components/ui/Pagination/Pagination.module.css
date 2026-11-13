@@ -1,0 +1,85 @@
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.summary {
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+}
+
+.controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pageList {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navButton,
+.pageButton,
+.pagination button.navButton,
+.pagination button.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: var(--space-10);
+  min-height: var(--space-10);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font: var(--type-interactive);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.navButton:hover:not(:disabled),
+.pageButton:hover:not(:disabled),
+.pagination button.navButton:hover:not(:disabled),
+.pagination button.pageButton:hover:not(:disabled) {
+  border-color: var(--color-decorative);
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.pageButtonActive,
+.pagination button.pageButton.pageButtonActive {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.navButton:disabled,
+.pageButton:disabled,
+.pagination button.navButton:disabled,
+.pagination button.pageButton:disabled {
+  border-color: var(--color-border);
+  background-color: var(--color-disabled-background);
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.ellipsis {
+  padding: 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+}

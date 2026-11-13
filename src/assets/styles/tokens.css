@@ -1,40 +1,85 @@
-:root {
-  /* Official EIDA palette. Components should consume semantic tokens below. */
-  --brand-navy: #172554;
-  --brand-blue: #2563eb;
-  --brand-cobalt: #0049a8;
-  --brand-crimson: #8b1e3f;
-  --brand-pink: #d67a8c;
-  --brand-pink-light: #f7e9ed;
-  --brand-blue-light: #eaf3ff;
-  --brand-azure-mist: #e9f9f6;
-  --brand-white-warm: #fafafa;
+/* ==========================================================================
+   Global styles — Flat Design 2.0 (Semi-Flat)
+   Source of truth: SKILL SEMI FLAT.md
+   - Typography: Poppins only (400 / 600 / 800), six tokens (H1…Interactive)
+   - Palette: navy text, blue primary actions, burgundy secondary/active/focus
+   - Shadows and borders are tinted with #68778F, never pure black
+   Components must consume the semantic tokens (--color-*, --type-*), not the
+   raw palette values.
+   ========================================================================== */
 
+:root {
+  /* ---------- Palette (Semi-Flat) ---------- */
+  --text-primary: #172554;
+  --text-secondary: #68778f; /* secondary text, card shadows and borders */
+  --bg-primary: #eaf3ff; /* page */
+  --bg-secondary: #dff1ff; /* sections, sidebars */
+  --bg-tertiary: #f9fcff; /* cards, inputs, modals */
+
+  --btn-primary: #2563eb;
+  --btn-secondary: #8b1e3f; /* hover, active filters, tabs, focus */
+  --btn-secondary-accent: #d67a8c;
+  --btn-secondary-soft: #f7e9ed;
+
+  --destructive: #d32f2f;
+  --destructive-soft: #fcd2d2;
+  --success: #2e7d32;
+  --success-soft: #c2f2c4;
+  --warning: #ffc107; /* never use as text color or with white text */
+  --warning-soft: #fff1c8;
+
+  /* Legacy brand names kept so existing components keep working */
+  --brand-navy: var(--text-primary);
+  --brand-blue: var(--btn-primary);
+  --brand-cobalt: var(--btn-primary);
+  --brand-crimson: var(--btn-secondary);
+  --brand-pink: var(--btn-secondary-accent);
+  --brand-pink-light: var(--btn-secondary-soft);
+  --brand-blue-light: var(--bg-primary);
+  --brand-azure-mist: var(--bg-secondary);
+  --brand-white-warm: var(--bg-tertiary);
+
+  /* ---------- Typography ---------- */
   --font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', sans-serif;
   --font-family-base: var(--font-family);
-  --font-size-xs: 0.75rem;
+
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-extrabold: 800;
+  /* Deprecated aliases (the system has no Medium/Bold). Do not use in new code. */
+  --font-weight-medium: var(--font-weight-regular);
+  --font-weight-bold: var(--font-weight-semibold);
+
+  /* font shorthand: weight size/line-height family (rem = 16px base) */
+  --type-h1: 800 2.5rem/2.5rem var(--font-family); /* 40 / 40 */
+  --type-h2: 600 1.5rem/1.875rem var(--font-family); /* 24 / 30 */
+  --type-h3: 600 1.25rem/1.5625rem var(--font-family); /* 20 / 25 */
+  --type-body: 400 1rem/1.5rem var(--font-family); /* 16 / 24 */
+  --type-small: 400 0.875rem/1.3125rem var(--font-family); /* 14 / 21 */
+  --type-interactive: 600 0.875rem/1rem var(--font-family); /* 14 / 16 */
+
+  /* Legacy size scale, snapped to the six official sizes */
+  --font-size-xs: 0.875rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
+  --font-size-lg: 1rem;
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
+  --font-size-3xl: 2.5rem;
   --font-size-4xl: 2.5rem;
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
-  --line-height-relaxed: 1.6;
+  --line-height-relaxed: 1.5;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  /* ---------- Shape ---------- */
+  --radius-sm: 4px; /* buttons, inputs */
+  --radius-md: 8px; /* cards, alerts */
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-pill: 9999px;
 
+  /* ---------- Spacing ---------- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -46,13 +91,14 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  --button-height: 44px;
-  --button-radius: var(--radius-md);
+  /* ---------- Layout / controls ---------- */
+  --button-height: 44px; /* 44px minimum touch target */
+  --button-radius: var(--radius-sm);
   --input-height: 44px;
-  --input-radius: var(--radius-md);
+  --input-radius: var(--radius-sm);
   --control-height: var(--button-height);
   --control-height-sm: 36px;
-  --content-max-width: 1280px;
+  --content-max-width: 1300px;
   --content-gutter: var(--space-4);
   --header-height: 7rem;
   --app-header-height: 7rem;
@@ -60,8 +106,8 @@
 
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
-  --focus-width: 3px;
-  --focus-offset: 4px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
 
   /* Stacking scale (DS1.4b). Not consumed yet; native <dialog> uses the top layer instead. */
   --z-sticky: 50;
@@ -70,63 +116,84 @@
   --z-toast: 1100;
 }
 
+/* ==========================================================================
+   Light theme (default)
+   ========================================================================== */
 :root,
 [data-theme='light'] {
   color-scheme: light;
 
-  --color-cobalt-blue: var(--brand-cobalt);
-  --color-azure-mist: var(--brand-azure-mist);
-  --color-primary: var(--brand-cobalt);
-  --color-primary-hover: #1d4ed8;
-  --color-primary-active: #1e40af;
-  --color-primary-deep: #002f7a;
+  /* Legacy aliases */
+  --color-cobalt-blue: var(--color-primary);
+  --color-azure-mist: var(--bg-secondary);
+
+  /* Actions: blue = primary */
+  --color-primary: var(--btn-primary);
+  --color-primary-hover: color-mix(in srgb, var(--btn-primary) 85%, var(--text-primary));
+  --color-primary-active: color-mix(in srgb, var(--btn-primary) 70%, var(--text-primary));
+  --color-primary-deep: color-mix(in srgb, var(--btn-primary) 60%, var(--text-primary));
   --color-on-primary: #ffffff;
-  --color-accent: #d9153b;
-  --color-accent-hover: #c40f35;
-  --color-accent-strong: #c40f35;
-  --color-accent-soft: var(--brand-pink-light);
+
+  /* Actions: burgundy = secondary / active / focus */
+  --color-accent: var(--btn-secondary);
+  --color-accent-hover: color-mix(in srgb, var(--btn-secondary) 85%, var(--text-primary));
+  --color-accent-strong: var(--color-accent-hover);
+  --color-accent-soft: var(--btn-secondary-soft);
   --color-on-accent: #ffffff;
-  --color-decorative: var(--brand-pink);
+  --color-decorative: var(--btn-secondary-accent);
 
-  --color-background: var(--brand-blue-light);
-  --color-surface: #ffffff;
-  --color-surface-soft: var(--brand-blue-light);
-  --color-surface-muted: #f5fbff;
-  --color-surface-accent: var(--brand-pink-light);
-  --color-text: var(--brand-navy);
-  --color-text-primary: #062772;
-  --color-text-secondary: #52627a;
-  --color-text-muted: #5b6a80;
-  --color-border: #dce5f2;
-  --color-border-soft: #dce8ff;
-  --color-border-strong: #b8c9e1;
-  --color-input-border: var(--color-text-muted);
-  --color-disabled-background: var(--color-surface-soft);
-  --color-disabled-text: var(--color-text-secondary);
+  /* Surfaces: page → sections → cards/inputs */
+  --color-background: var(--bg-primary);
+  --color-surface: var(--bg-tertiary);
+  --color-surface-soft: var(--bg-secondary);
+  --color-surface-muted: var(--bg-primary);
+  --color-surface-accent: var(--btn-secondary-soft);
+  --gradient-surface: linear-gradient(180deg, var(--bg-tertiary), var(--bg-primary));
 
-  --color-success: #15803d;
-  --color-success-soft: #dcfce7;
-  --color-warning: #b45309;
-  --color-warning-soft: #fef3c7;
-  --color-error: #b91c1c;
-  --color-error-soft: #fee2e2;
-  --color-info: var(--color-primary-hover);
-  --color-info-soft: #dbeafe;
-  --color-footer: var(--brand-navy);
-  --color-footer-deep: #002f72;
-  --color-soft-red: #ffe1e7;
-  --color-soft-blue: #dff1ff;
-  --color-soft-cyan: #dffdf8;
+  /* Text */
+  --color-text: var(--text-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-secondary);
 
-  --color-focus: var(--color-primary);
-  --color-selection-background: var(--color-accent);
-  --color-selection-text: var(--color-on-accent);
-  --shadow-soft-rgb: 0 33 85;
-  --shadow-card-rgb: 5 47 117;
-  --shadow-sm: 0 1px 3px rgb(23 37 84 / 6%);
-  --shadow-md: 0 4px 12px rgb(23 37 84 / 8%);
-  --shadow-lg: 0 8px 24px rgb(23 37 84 / 10%);
+  /* Borders: #68778F at low opacity */
+  --color-border: rgb(104 119 143 / 25%);
+  --color-border-soft: rgb(104 119 143 / 15%);
+  --color-border-strong: rgb(104 119 143 / 40%);
+  /* Solid #68778F keeps form fields at ≥3:1 non-text contrast */
+  --color-input-border: var(--text-secondary);
+  --color-disabled-background: var(--bg-secondary);
+  --color-disabled-text: var(--text-secondary);
 
+  /* Alerts (UI standard) */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-error: var(--destructive);
+  --color-error-soft: var(--destructive-soft);
+  --color-info: var(--btn-primary);
+  --color-info-soft: var(--bg-secondary);
+
+  --color-footer: var(--text-primary);
+  --color-footer-deep: color-mix(in srgb, var(--text-primary) 70%, var(--btn-primary));
+  --color-soft-red: var(--destructive-soft);
+  --color-soft-blue: var(--bg-secondary);
+  --color-soft-cyan: var(--bg-secondary);
+
+  --color-focus: var(--btn-secondary);
+  --color-selection-background: var(--btn-secondary);
+  --color-selection-text: #ffffff;
+
+  /* Shadows: tinted with #68778F, very soft */
+  --shadow-soft-rgb: 104 119 143;
+  --shadow-card-rgb: 104 119 143;
+  --shadow-sm: 0 1px 3px rgb(104 119 143 / 10%);
+  --shadow-md: 0 4px 12px rgb(104 119 143 / 12%);
+  --shadow-lg: 0 10px 30px rgb(104 119 143 / 12%);
+  --shadow-lg-hover: 0 20px 40px rgb(104 119 143 / 20%);
+
+  /* Semantic status tokens (DS1.4a) */
   --status-neutral-bg: var(--color-surface-soft);
   --status-neutral-fg: var(--color-text-secondary);
   --status-info-bg: var(--color-info-soft);
@@ -139,11 +206,16 @@
   --status-danger-fg: var(--color-error);
 }
 
+/* ==========================================================================
+   Dark theme (not defined by the Semi-Flat skill; kept for compatibility
+   with existing screens. Same roles: blue = primary, rose = secondary.)
+   ========================================================================== */
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --color-cobalt-blue: #60a5fa;
+  --color-cobalt-blue: var(--color-primary);
   --color-azure-mist: #1b2942;
+
   --color-primary: #60a5fa;
   --color-primary-hover: #93c5fd;
   --color-primary-active: #3b82f6;
@@ -154,17 +226,20 @@
   --color-accent-strong: #f2a4b2;
   --color-accent-soft: #44202b;
   --color-on-accent: #0d1424;
-  --color-decorative: var(--brand-pink);
+  --color-decorative: var(--btn-secondary-accent);
 
   --color-background: #0d1424;
   --color-surface: #151f33;
   --color-surface-soft: #1b2942;
   --color-surface-muted: #0d1424;
   --color-surface-accent: #33202a;
+  --gradient-surface: linear-gradient(180deg, #151f33, #0d1424);
+
   --color-text: #f5f7fb;
   --color-text-primary: #f5f7fb;
   --color-text-secondary: #aebbd0;
   --color-text-muted: #8c9bb2;
+
   --color-border: #2b3952;
   --color-border-soft: #2b3952;
   --color-border-strong: #40516e;
@@ -186,12 +261,14 @@
   --color-soft-blue: #1b2942;
   --color-soft-cyan: #123436;
 
-  --color-focus: var(--color-primary);
+  --color-focus: var(--color-accent);
   --color-selection-background: var(--color-accent);
   --color-selection-text: var(--color-on-accent);
+
   --shadow-soft-rgb: 5 10 20;
   --shadow-card-rgb: 5 10 20;
   --shadow-sm: 0 1px 3px rgb(5 10 20 / 16%);
   --shadow-md: 0 4px 12px rgb(5 10 20 / 20%);
-  --shadow-lg: 0 8px 24px rgb(5 10 20 / 24%);
+  --shadow-lg: 0 10px 30px rgb(5 10 20 / 24%);
+  --shadow-lg-hover: 0 20px 40px rgb(5 10 20 / 32%);
 }

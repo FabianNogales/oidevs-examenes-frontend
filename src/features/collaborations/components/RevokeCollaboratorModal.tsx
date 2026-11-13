@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
 import { getCollaborationError } from '../api/collaborationsApi'
 import type { ExamCollaborator } from '../types/collaboration.types'
-import { CollaborationModal } from './CollaborationModal'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
 import styles from '../pages/Collaborations.module.css'
+import dialogStyles from './CollaboratorDialog.module.css'
 
 type Props = {
   collaborator: ExamCollaborator
@@ -35,12 +37,15 @@ export function RevokeCollaboratorModal({
     }
   }
   return (
-    <CollaborationModal
+    <PortalDialog
       title="Revocar autorización"
       onClose={() => {
         if (!submitting.current) onClose()
       }}
       busy={busy}
+      closeOnBackdrop
+      className={dialogStyles.dialog}
+      closeClassName={dialogBase.closeButton}
     >
       <p>
         ¿Estás seguro de que deseas revocar la autorización de{' '}
@@ -69,6 +74,6 @@ export function RevokeCollaboratorModal({
           {busy ? 'Revocando…' : 'Revocar'}
         </button>
       </div>
-    </CollaborationModal>
+    </PortalDialog>
   )
 }

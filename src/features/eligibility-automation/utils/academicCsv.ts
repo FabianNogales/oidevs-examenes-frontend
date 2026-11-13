@@ -1,10 +1,12 @@
-import type { ImportSchema } from '../types/eligibilityAutomation.types'
+import type { AutomationConfiguration, ImportSchema, SelectedCriterion } from '../types/eligibilityAutomation.types'
 
 export const ACADEMIC_CSV_COLUMNS = [
   { key: 'sis', label: 'SIS' },
   { key: 'nombre_completo', label: 'Nombre completo' },
   { key: 'nota_pp', label: 'Nota PP' },
   { key: 'nota_sp', label: 'Nota SP' },
+  { key: 'rindio_pp', label: 'Rindió PP' },
+  { key: 'rindio_sp', label: 'Rindió SP' },
   { key: 'asistencias', label: 'Asistencias' },
   { key: 'total_clases', label: 'Total de clases' },
 ] as const
@@ -25,9 +27,66 @@ const ASSESSMENT_COLUMN_BY_KEY: Record<string, 'nota_pp' | 'nota_sp'> = {
   FIRST_PARTIAL: 'nota_pp',
   SECOND_PARTIAL: 'nota_sp',
 }
+const TAKEN_COLUMN_BY_KEY: Record<string, 'rindio_pp' | 'rindio_sp'> = {
+  FIRST_PARTIAL: 'rindio_pp',
+  SECOND_PARTIAL: 'rindio_sp',
+}
 
 export type AcademicCsvRow = {
   [Header in (typeof ACADEMIC_CSV_HEADERS)[number]]: string
+}
+
+type AcademicCsvColumn = { key: (typeof ACADEMIC_CSV_COLUMNS)[number]['key']; label: string }
+
+export function getAcademicCsvLayout(
+  criteria: readonly SelectedCriterion[],
+  schema: ImportSchema,
+  assessments: readonly { key: string; label: string }[] = [],
+) {
+  const activeCriteria = criteria.filter((criterion) => criterion.status !== 'INACTIVE')
+  const keysFor = ({ parameters }: SelectedCriterion) => [
+    parameters.assessment_key,
+    ...(Array.isArray(parameters.assessment_keys) ? parameters.assessment_keys : []),
+  ]
+  const selectedKeys = new Set(activeCriteria.flatMap(keysFor))
+  const selectedAssessments = schema.assessment_keys.filter((key) => selectedKeys.has(key))
+  const includesAttendance = activeCriteria.length === 0 ||
+    activeCriteria.some(({ code }) => code === 'MIN_ATTENDANCE_PERCENTAGE')
+  // The import endpoint requires an assessment on every row, even for attendance.
+  const requiresAssessmentForAttendance = activeCriteria.length > 0 &&
+    activeCriteria.every(({ code }) => code === 'MIN_ATTENDANCE_PERCENTAGE')
+  const assessmentKeys = activeCriteria.length === 0
+    ? schema.assessment_keys
+    : requiresAssessmentForAttendance
+      ? schema.assessment_keys.slice(0, 1)
+      : selectedAssessments
+  const scoredKeys = new Set(activeCriteria
+    .filter(({ code }) => code !== 'PREVIOUS_ASSESSMENTS_TAKEN')
+    .flatMap(keysFor))
+  const assessmentColumns = new Set<string>(assessmentKeys.map((key) =>
+    activeCriteria.length === 0 || scoredKeys.has(key)
+      ? ASSESSMENT_COLUMN_BY_KEY[key]
+      : TAKEN_COLUMN_BY_KEY[key],
+  ))
+  const columns = ACADEMIC_CSV_COLUMNS.filter(({ key }) =>
+    key === 'sis' || key === 'nombre_completo' ||
+    assessmentColumns.has(key) ||
+    (includesAttendance && (key === 'asistencias' || key === 'total_clases')),
+  )
+  const labeledColumns: AcademicCsvColumn[] = columns.map((column) => {
+    const assessment = assessments.find(({ key }) => ASSESSMENT_COLUMN_BY_KEY[key] === column.key || TAKEN_COLUMN_BY_KEY[key] === column.key)
+    return assessment ? { ...column, label: (column.key.startsWith('nota_') ? 'Nota ' : 'Rindió ') + assessment.label } : column
+  })
+  return {
+    assessmentKeys, columns: labeledColumns, requiresAssessmentForAttendance,
+    fields: assessmentKeys.filter((key) => ASSESSMENT_COLUMN_BY_KEY[key] !== undefined && (assessmentColumns.has(ASSESSMENT_COLUMN_BY_KEY[key]) || assessmentColumns.has(TAKEN_COLUMN_BY_KEY[key]))).map((key) => ({
+      key, label: assessments.find((item) => item.key === key)?.label ?? key,
+      scored: assessmentColumns.has(ASSESSMENT_COLUMN_BY_KEY[key]),
+      column: labeledColumns.find((column) => column.key === ASSESSMENT_COLUMN_BY_KEY[key] || column.key === TAKEN_COLUMN_BY_KEY[key])!,
+    })).sort((a, b) => labeledColumns.indexOf(a.column) - labeledColumns.indexOf(b.column)),
+    includesAttendance,
+    includesAverage: assessmentColumns.has('nota_pp') && assessmentColumns.has('nota_sp'),
+  }
 }
 
 export class AcademicCsvValidationError extends Error {
@@ -37,12 +96,14 @@ export class AcademicCsvValidationError extends Error {
   }
 }
 
-export function getAcademicCsvTemplate(): string {
-  return `${ACADEMIC_CSV_HEADERS.join(',')}\r\n`
+export function getAcademicCsvTemplate(
+  columns: readonly AcademicCsvColumn[] = ACADEMIC_CSV_COLUMNS.filter(({ key }) => !key.startsWith('rindio_')),
+): string {
+  return `${columns.map(({ key }) => key).join(',')}\r\n`
 }
 
-export function downloadAcademicCsvTemplate(): void {
-  const blob = new Blob([getAcademicCsvTemplate()], {
+export function downloadAcademicCsvTemplate(columns: readonly AcademicCsvColumn[]): void {
+  const blob = new Blob([getAcademicCsvTemplate(columns)], {
     type: 'text/csv;charset=utf-8',
   })
   const objectUrl = URL.createObjectURL(blob)
@@ -56,7 +117,13 @@ export function downloadAcademicCsvTemplate(): void {
 export async function prepareAcademicCsv(
   file: Pick<File, 'name' | 'size' | 'arrayBuffer'>,
   schema: ImportSchema,
-): Promise<{ csv: string; rows: AcademicCsvRow[] }> {
+  layout = getAcademicCsvLayout([], schema),
+): Promise<{ csv: string; rows: AcademicCsvRow[]; sourceRows: number[] }> {
+  const expectedHeaders = layout.columns.map(({ key }) => key)
+  const { assessmentKeys } = layout
+  if (assessmentKeys.length === 0) {
+    throw new AcademicCsvValidationError('Selecciona una evaluación válida en los criterios marcados.')
+  }
   if (!file.name.toLowerCase().endsWith('.csv')) {
     throw new AcademicCsvValidationError(
       'Selecciona un archivo con formato .csv.',
@@ -101,23 +168,27 @@ export async function prepareAcademicCsv(
     (index === 0 ? header.replace(/^\uFEFF/, '') : header).trim(),
   )
   if (
-    headers.length !== ACADEMIC_CSV_HEADERS.length ||
-    headers.some((header, index) => header !== ACADEMIC_CSV_HEADERS[index])
+    headers.length !== expectedHeaders.length ||
+    headers.some((header, index) => header !== expectedHeaders[index])
   ) {
     throw new AcademicCsvValidationError(
-      `Las columnas deben estar en este orden: ${ACADEMIC_CSV_HEADERS.join(', ')}.`,
+      `Las columnas deben estar en este orden: ${expectedHeaders.join(', ')}.`,
     )
   }
 
   const rows = records.slice(1).map((cells, index) => {
     const rowNumber = index + 2
-    if (cells.length !== ACADEMIC_CSV_HEADERS.length) {
+    if (cells.length !== expectedHeaders.length) {
       throw new AcademicCsvValidationError(
-        `La fila ${rowNumber} debe contener ${ACADEMIC_CSV_HEADERS.length} columnas.`,
+        `La fila ${rowNumber} debe contener ${expectedHeaders.length} columnas.`,
       )
     }
-    const row = {} as AcademicCsvRow
-    ACADEMIC_CSV_HEADERS.forEach((header, columnIndex) => {
+    const row: AcademicCsvRow = {
+      sis: '', nombre_completo: '', nota_pp: '', nota_sp: '',
+      rindio_pp: '', rindio_sp: '',
+      asistencias: '', total_clases: '',
+    }
+    expectedHeaders.forEach((header, columnIndex) => {
       row[header] = cells[columnIndex].trim()
     })
     return row
@@ -161,25 +232,19 @@ export async function prepareAcademicCsv(
 
     const ppScore = validateScore(row.nota_pp, 'Nota PP', rowNumber, schema)
     const spScore = validateScore(row.nota_sp, 'Nota SP', rowNumber, schema)
-    const attended = parseNonNegativeNumber(
-      row.asistencias,
-      'Asistencias',
-      rowNumber,
-    )
-    const total = parseNonNegativeNumber(
-      row.total_clases,
-      'Total de clases',
-      rowNumber,
-    )
-    if (attended > total) {
-      throw new AcademicCsvValidationError(
-        `La fila ${rowNumber}: las asistencias no pueden superar el total de clases.`,
-      )
-    }
-    if (!Number.isInteger(attended) || !Number.isInteger(total) || total < 1) {
-      throw new AcademicCsvValidationError(
-        `La fila ${rowNumber}: asistencias y total de clases deben ser enteros, y el total debe ser mayor que cero.`,
-      )
+    if (expectedHeaders.includes('asistencias')) {
+      const attended = parseNonNegativeNumber(row.asistencias, 'Asistencias', rowNumber)
+      const total = parseNonNegativeNumber(row.total_clases, 'Total de clases', rowNumber)
+      if (attended > total) {
+        throw new AcademicCsvValidationError(
+          `La fila ${rowNumber}: las asistencias no pueden superar el total de clases.`,
+        )
+      }
+      if (!Number.isInteger(attended) || !Number.isInteger(total) || total < 1) {
+        throw new AcademicCsvValidationError(
+          `La fila ${rowNumber}: asistencias y total de clases deben ser enteros, y el total debe ser mayor que cero.`,
+        )
+      }
     }
     const grades = { nota_pp: ppScore, nota_sp: spScore }
     if (ppScore !== '' && !schema.assessment_keys.includes('FIRST_PARTIAL')) {
@@ -193,13 +258,21 @@ export async function prepareAcademicCsv(
       )
     }
 
-    return schema.assessment_keys.map((assessmentKey) => {
+    return assessmentKeys.map((assessmentKey) => {
       const scoreColumn = ASSESSMENT_COLUMN_BY_KEY[assessmentKey]
       const score = scoreColumn ? grades[scoreColumn] : ''
+      const takenColumn = TAKEN_COLUMN_BY_KEY[assessmentKey]
+      const explicitTaken = expectedHeaders.includes(takenColumn)
+      const taken = row[takenColumn]?.toLowerCase()
+      if (explicitTaken && taken !== 'si' && taken !== 'sí' && taken !== 'no') {
+        throw new AcademicCsvValidationError(
+          `La fila ${rowNumber}: escribe «Sí» o «No» para indicar si rindió el parcial.`,
+        )
+      }
       const values: Record<string, string> = {
         sis: row.sis,
         assessment_key: assessmentKey,
-        was_taken: score ? trueValue : falseValue,
+        was_taken: (explicitTaken ? taken !== 'no' : score !== '') ? trueValue : falseValue,
         score,
         attended_classes: row.asistencias,
         total_classes: row.total_clases,
@@ -210,10 +283,10 @@ export async function prepareAcademicCsv(
 
   if (schema.max_rows > 0 && backendRows.length > schema.max_rows) {
     const maxStudents = Math.floor(
-      schema.max_rows / schema.assessment_keys.length,
+      schema.max_rows / assessmentKeys.length,
     )
     throw new AcademicCsvValidationError(
-      `La conversión al formato de importación requiere ${schema.assessment_keys.length} filas por estudiante y supera el límite de ${schema.max_rows} filas CSV (máximo ${maxStudents} estudiantes con el esquema actual).`,
+      `La conversión al formato de importación requiere ${assessmentKeys.length} filas por estudiante y supera el límite de ${schema.max_rows} filas CSV (máximo ${maxStudents} estudiantes con el esquema actual).`,
     )
   }
 
@@ -234,6 +307,7 @@ export async function prepareAcademicCsv(
   return {
     csv: backendCsv,
     rows,
+    sourceRows: rows.flatMap((_, index) => assessmentKeys.map(() => index + 2)),
   }
 }
 
@@ -308,11 +382,179 @@ function parseNonNegativeNumber(
   return value
 }
 
-function parseCsv(content: string): string[][] {
+export function getAcademicMergeTemplates(schema: ImportSchema) {
+  if (!schema.modes?.includes('MERGE') || !schema.merge) return []
+  const merge = schema.merge
+  return [
+    {
+      id: 'attendance',
+      label: 'Solo asistencia',
+      columns: merge.attendance_columns,
+    },
+    {
+      id: 'assessment',
+      label: 'Evaluación individual',
+      columns: merge.assessment_columns,
+    },
+    {
+      id: 'combined',
+      label: 'Evaluaciones y asistencia',
+      columns: merge.allowed_columns,
+    },
+  ].filter(
+    ({ columns }) =>
+      merge.required_columns.every((column) => columns.includes(column)) &&
+      columns.every((column) => merge.allowed_columns.includes(column)),
+  )
+}
+
+export function downloadAcademicMergeTemplate(columns: readonly string[]) {
+  const blob = new Blob([columns.join(',') + '\r\n'], {
+    type: 'text/csv;charset=utf-8',
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'plantilla_actualizacion_academica.csv'
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+export type PreparedAcademicMerge = {
+  csv: string
+  rows: Record<string, string>[]
+  sourceRows: number[]
+}
+
+export async function prepareAcademicMergeCsv(
+  file: Pick<File, 'name' | 'size' | 'arrayBuffer'>,
+  schema: ImportSchema,
+): Promise<PreparedAcademicMerge> {
+  const merge = schema.merge
+  if (
+    !schema.modes?.includes('MERGE') ||
+    !merge ||
+    merge.empty_values !== 'PRESERVE'
+  )
+    throw new AcademicCsvValidationError(
+      'El esquema no admite la importación parcial.',
+    )
+  if (!file.name.toLowerCase().endsWith('.csv') || file.size === 0)
+    throw new AcademicCsvValidationError('Selecciona un archivo CSV con datos.')
+  if (file.size > schema.max_file_kb * 1024)
+    throw new AcademicCsvValidationError(
+      'El archivo supera el tamaño permitido.',
+    )
+  if (
+    schema.delimiter !== ',' ||
+    schema.encoding.replace(/[-_]/g, '').toUpperCase() !== 'UTF8'
+  )
+    throw new AcademicCsvValidationError(
+      'El esquema requiere un formato CSV no compatible.',
+    )
+  let content: string
+  try {
+    content = new TextDecoder('utf-8', { fatal: true }).decode(
+      await file.arrayBuffer(),
+    )
+  } catch {
+    throw new AcademicCsvValidationError(
+      'El archivo no contiene texto UTF-8 válido.',
+    )
+  }
+  if (content.includes('\0'))
+    throw new AcademicCsvValidationError(
+      'El archivo contiene caracteres nulos.',
+    )
+  const records = parseCsv(content, true)
+  const headers = (records.shift() ?? []).map((header, index) =>
+    index === 0 ? header.replace(/^\uFEFF/, '') : header,
+  )
+  if (
+    new Set(headers).size !== headers.length ||
+    headers.some((header) => !merge.allowed_columns.includes(header)) ||
+    !merge.required_columns.every((header) => headers.includes(header))
+  )
+    throw new AcademicCsvValidationError(
+      'Encabezados desconocidos, duplicados o incompletos para MERGE.',
+    )
+  if (!records.length || records.length > schema.max_rows)
+    throw new AcademicCsvValidationError(
+      'El archivo debe contener entre 1 y ' + schema.max_rows + ' filas.',
+    )
+  const seen = new Set<string>()
+  const rows = records.map((cells, index) => {
+    const rowNumber = index + 2
+    const fail = (message: string): never => {
+      throw new AcademicCsvValidationError('Fila ' + rowNumber + ': ' + message)
+    }
+    if (cells.length !== headers.length)
+      fail('cantidad incorrecta de columnas.')
+    const row = Object.fromEntries(
+      headers.map((header, column) => [header, cells[column].trim()]),
+    )
+    if (!row.sis || row.sis.length > 50) fail('indica un SIS válido.')
+    const key = row.assessment_key ?? ''
+    const taken = row.was_taken ?? ''
+    const score = row.score ?? ''
+    const attended = row.attended_classes ?? ''
+    const total = row.total_classes ?? ''
+    if (key && !schema.assessment_keys.includes(key))
+      fail('evaluación no admitida.')
+    if (taken && !schema.was_taken_values.includes(taken))
+      fail('was_taken debe ser true o false.')
+    if (!key && (taken !== '' || score !== ''))
+      fail('indica assessment_key para la evaluación.')
+    if ((attended === '') !== (total === ''))
+      fail('proporciona ambas cantidades de asistencia.')
+    const targets = []
+    if (key && (taken !== '' || score !== '')) {
+      validateScore(score, 'Nota', rowNumber, schema)
+      if (taken === 'false' && score !== '')
+        fail('una evaluación no rendida no puede tener nota.')
+      targets.push('assessment:' + key)
+    }
+    if (total !== '') {
+      const a = Number(attended),
+        t = Number(total)
+      if (
+        !Number.isInteger(a) ||
+        !Number.isInteger(t) ||
+        a < 0 ||
+        t < 1 ||
+        a > t ||
+        t > 1000000
+      )
+        fail('cantidades de asistencia inválidas.')
+      targets.push('attendance')
+    }
+    if (!targets.length) fail('la fila no aporta datos para modificar.')
+    for (const target of targets) {
+      const identity = row.sis + ':' + target
+      if (seen.has(identity))
+        fail('datos duplicados para el mismo SIS y ' + target + '.')
+      seen.add(identity)
+    }
+    return row
+  })
+  // Cada registro lógico se envía una sola vez. Vacíos y columnas omitidas se conservan.
+  const csv = [
+    headers.join(','),
+    ...rows.map((row) =>
+      headers.map((header) => escapeCsv(row[header])).join(','),
+    ),
+    '',
+  ].join('\r\n')
+  return { csv, rows, sourceRows: rows.map((_, index) => index + 2) }
+}
+
+function parseCsv(content: string, includeEmptyRecords = false): string[][] {
   const rows: string[][] = []
   let row: string[] = []
   let cell = ''
   let quoted = false
+  let recordStarted = false
+  let afterQuote = false
 
   for (let index = 0; index < content.length; index += 1) {
     const character = content[index]
@@ -322,24 +564,47 @@ function parseCsv(content: string): string[][] {
         index += 1
       } else if (character === '"') {
         quoted = false
+        afterQuote = true
       } else {
         cell += character
       }
       continue
     }
+    if (
+      includeEmptyRecords &&
+      afterQuote &&
+      ![',', '\n', '\r'].includes(character)
+    ) {
+      throw new AcademicCsvValidationError(
+        'CSV con caracteres después de una comilla de cierre.',
+      )
+    }
+    if (includeEmptyRecords && character === '"' && cell.length !== 0) {
+      throw new AcademicCsvValidationError('CSV con comillas inválidas.')
+    }
     if (character === '"' && cell.length === 0) {
       quoted = true
+      recordStarted = true
     } else if (character === ',') {
       row.push(cell)
       cell = ''
+      afterQuote = false
+      recordStarted = true
     } else if (character === '\n' || character === '\r') {
       row.push(cell)
-      if (row.some((value) => value.trim() !== '')) rows.push(row)
+      if (
+        row.some((value) => value.trim() !== '') ||
+        (includeEmptyRecords && recordStarted)
+      )
+        rows.push(row)
       row = []
       cell = ''
+      afterQuote = false
+      recordStarted = false
       if (character === '\r' && content[index + 1] === '\n') index += 1
     } else {
       cell += character
+      recordStarted = true
     }
   }
   if (quoted) {
@@ -348,10 +613,13 @@ function parseCsv(content: string): string[][] {
     )
   }
   row.push(cell)
-  if (row.some((value) => value.trim() !== '')) rows.push(row)
+  if (
+    row.some((value) => value.trim() !== '') ||
+    (includeEmptyRecords && recordStarted)
+  )
+    rows.push(row)
   return rows
 }
-
 function escapeCsv(value: string): string {
   return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
 }
@@ -360,4 +628,10 @@ function formatSize(bytes: number): string {
   return bytes >= 1024 * 1024
     ? `${(bytes / (1024 * 1024)).toFixed(0)} MB`
     : `${(bytes / 1024).toFixed(0)} KB`
+}
+
+export function getPersistedAcademicCriteria(configuration: AutomationConfiguration): SelectedCriterion[] {
+  const inactive = new Set(configuration.inactive_criteria.map(({ code }) => code))
+  return [...configuration.mandatory_criteria, ...configuration.selected_criteria]
+    .filter(({ code, status }) => status !== 'INACTIVE' && !inactive.has(code))
 }

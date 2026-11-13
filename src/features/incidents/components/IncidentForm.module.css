@@ -15,10 +15,10 @@
 }
 .panel label,
 .panel legend {
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
-.panel input[type='search'],
-.panel select,
+.panel input[type='search']:where(:not([data-ds-dropdown] input)),
+.panel select:where(:not([data-ds-dropdown] select)),
 .panel textarea {
   width: 100%;
   min-height: var(--input-height);
@@ -36,7 +36,7 @@
 .panel small + p {
   color: var(--color-text-secondary);
 }
-.panel button,
+.panel button:where(:not([data-ds-button])),
 .actions a {
   min-height: var(--button-height);
   padding: var(--space-2) var(--space-4);
@@ -47,7 +47,7 @@
   font: inherit;
   text-decoration: none;
 }
-.panel button:disabled {
+.panel button:where(:not([data-ds-button])):disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
