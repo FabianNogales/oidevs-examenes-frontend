@@ -36,7 +36,7 @@ function setup(
       Link: 'link',
       useParams: () => params,
       useSearchParams: () => [new URLSearchParams('from=teacher')],
-      useLocation: () => ({ state: { createdIncidentId: 9 } }),
+      useLocation: () => ({ pathname: '/admin/incidents/9', state: { createdIncidentId: 9 } }),
     },
     '@/shared/components/Breadcrumbs/Breadcrumbs': {
       Breadcrumbs: 'breadcrumbs',

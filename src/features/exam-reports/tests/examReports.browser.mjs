@@ -200,7 +200,7 @@ async function views(name) {
 const resultSelector = '[aria-label="Reporte generado"]'
 async function generate(kind) {
   await fill('select', kind, 'HTMLSelectElement')
-  await click('Generar reporte')
+  await click('Generar informe')
   await wait(`document.querySelector('${resultSelector}')`)
 }
 try {
@@ -210,7 +210,7 @@ try {
   await views('catalogo-docente')
   await click('Seleccionar examen')
   await wait("document.querySelector('form')")
-  await click('Generar reporte')
+  await click('Generar informe')
   await wait(`document.querySelector('${resultSelector}')`)
   await views('inscritos')
   const firstId = await evaluate(
@@ -255,7 +255,7 @@ try {
     ),
   )
   classification = 'ABSENT'
-  await click('Generar reporte')
+  await click('Generar informe')
   await wait(
     `document.querySelector('${resultSelector}')?.innerText.includes('Ausentes según la finalización')`,
   )
@@ -275,32 +275,13 @@ try {
   checks.push(
     'QR/manual dates and actors; server pending versus absent; automatic wrong-exam incidence; reported infraction and linked expulsion remain separate readonly records',
   )
-  await fill('input[type=date]', '2026-11-04')
-  await fill('input[type=date]:last-of-type', '2026-11-04')
-  await click('Generar reporte')
-  await wait(
-    `document.querySelector('${resultSelector}')?.innerText.includes('El reporte no tiene registros')`,
-  )
-  assert.equal(
-    await evaluate(
-      "document.querySelector('table')?.innerText.includes('Ana')??false",
-    ),
-    false,
-  )
-  await fill('input[type=date]', '2026-11-05')
-  await evaluate(
-    "(()=>{const es=document.querySelectorAll('input[type=date]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(es[1],'2026-11-04');es[1].dispatchEvent(new Event('input',{bubbles:true}));es[1].dispatchEvent(new Event('change',{bubbles:true}))})()",
-  )
-  const beforeInvalid = requests.length
-  await click('Generar reporte')
-  await wait(
-    "document.body.innerText.includes('La fecha final debe ser igual o posterior')",
-  )
-  assert.equal(requests.length, beforeInvalid)
+  assert.equal(await evaluate("document.querySelectorAll('input[type=date]').length"), 0)
+  assert.ok(requests.filter(r => r.query).every(r => !r.query.includes('date_from=') && !r.query.includes('date_to=')))
+  checks.push('Exam reports include the complete selected exam without date inputs or hidden date filters')
   await nav('/other')
   await nav('/teacher/exams/4/reports')
   await wait("document.querySelector('form')")
-  await click('Generar reporte')
+  await click('Generar informe')
   await wait(`document.querySelector('${resultSelector}')`)
   downloadMode = 'mismatch'
   const downloads = await evaluate('window.__downloads.length')
@@ -319,7 +300,7 @@ try {
     true,
   )
   downloadMode = 'ok'
-  await click('Generar reporte')
+  await click('Generar informe')
   await wait(`document.querySelector('${resultSelector}')`)
   downloadMode = 'expired'
   await click('Exportar PDF')
@@ -350,7 +331,7 @@ try {
   )
   await click('Seleccionar examen')
   await wait("document.querySelector('form')")
-  await click('Generar reporte')
+  await click('Generar informe')
   await wait(
     `document.querySelector('${resultSelector}')?.innerText.includes('Final de Bases de Datos')`,
   )
@@ -380,12 +361,12 @@ try {
     'Admin filters authorized exams by subject/period without teacher actions; other exam/denied catalog never show previous data or a fake empty result; no overflow320-1440px',
   )
   const contractStates = [
-    { name: 'docente catálogo', mode: 'teacher', path: '/teacher/exam-reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'] },
-    { name: 'docente examen', mode: 'teacher', path: '/teacher/exams/4/reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'], ready: "!document.body.innerText.includes('Consultando el examen')" },
-    { name: 'docente error', mode: 'teacher', path: '/teacher/exams/99/reports', title: 'Reportes de exámenes', crumbs: ['Mis exámenes', 'Reportes de exámenes'], ready: "!!document.querySelector('main [role=alert]')" },
-    { name: 'admin catálogo', mode: 'admin', path: '/admin/exam-reports', title: 'Reportes de exámenes', crumbs: ['Administración', 'Reportes de exámenes'] },
+    { name: 'docente catálogo', mode: 'teacher', path: '/teacher/exam-reports', title: 'Informes de exámenes', crumbs: ['Mis exámenes', 'Informes de exámenes'] },
+    { name: 'docente examen', mode: 'teacher', path: '/teacher/exams/4/reports', title: 'Informes de exámenes', crumbs: ['Mis exámenes', 'Informes de exámenes'], ready: "!document.body.innerText.includes('Consultando el examen')" },
+    { name: 'docente error', mode: 'teacher', path: '/teacher/exams/99/reports', title: 'Informes de exámenes', crumbs: ['Mis exámenes', 'Informes de exámenes'], ready: "!!document.querySelector('main [role=alert]')" },
+    { name: 'admin catálogo', mode: 'admin', path: '/admin/exam-reports', title: 'Informes de exámenes', crumbs: ['Administración', 'Informes de exámenes'] },
     // R2: invalid id keeps its exact message, one main and one h1, no breadcrumbs.
-    { name: 'docente id no válido', mode: 'teacher', path: '/teacher/exams/abc/reports', title: 'Reportes de exámenes', crumbs: [], alertText: 'El identificador del examen no es válido.', ready: "!!document.querySelector('[role=alert]')" },
+    { name: 'docente id no válido', mode: 'teacher', path: '/teacher/exams/abc/reports', title: 'Informes de exámenes', crumbs: [], alertText: 'El identificador del examen no es válido.', ready: "!!document.querySelector('[role=alert]')" },
   ]
   // U3.4c: shared page contract (PageContainer + PageHeader) for every state at 320-1440px.
   const contractFailures = []

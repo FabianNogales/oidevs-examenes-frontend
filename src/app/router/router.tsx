@@ -111,6 +111,13 @@ export const router = createBrowserRouter([
                 element: <EntryControlPage />,
               },
               {
+                path: 'exams/:examId/cases/:caseId',
+                lazy: async () => {
+                  const { CaseDetailPage } = await import('@/features/discipline/CaseDetailPage')
+                  return { Component: CaseDetailPage }
+                },
+              },
+              {
                 path: 'exams/:examId/incidents',
                 lazy: async () => {
                   const { ExamIncidentsPage } = await import('@/features/incidents/pages/ExamIncidentsPage')

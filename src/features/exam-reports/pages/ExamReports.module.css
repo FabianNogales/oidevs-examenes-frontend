@@ -70,6 +70,12 @@
   margin-block: var(--space-5);
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
 }
+.filters {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.filters .actions {
+  margin: 0;
+}
 .catalogFilters {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) auto;
 }

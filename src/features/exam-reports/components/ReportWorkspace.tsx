@@ -60,7 +60,7 @@ export function ReportWorkspace({
           <form ref={form} onSubmit={submit} noValidate>
             <div className={styles.filters}>
               <label htmlFor={`${id}-type`}>
-                Tipo de reporte
+                Tipo de informe
                 <Dropdown<ReportKind>
                   id={`${id}-type`}
                   disabled={report.busy}
@@ -81,63 +81,20 @@ export function ReportWorkspace({
                   </small>
                 )}
               </label>
-              <label htmlFor={`${id}-from`}>
-                Desde
-                <input
-                  id={`${id}-from`}
-                  type="date"
+              <div className={styles.actions}>
+                <button
+                  type="submit"
+                  className={styles.primaryButton}
                   disabled={report.busy}
-                  value={filters.date_from}
-                  onChange={(e) => change({ date_from: e.target.value })}
-                  aria-invalid={!!errors.date_from}
-                  aria-describedby={
-                    errors.date_from ? `${id}-from-error` : undefined
-                  }
-                />
-                {errors.date_from && (
-                  <small id={`${id}-from-error`} className={styles.error}>
-                    {errors.date_from}
-                  </small>
-                )}
-              </label>
-              <label htmlFor={`${id}-to`}>
-                Hasta
-                <input
-                  id={`${id}-to`}
-                  type="date"
-                  disabled={report.busy}
-                  value={filters.date_to}
-                  onChange={(e) => change({ date_to: e.target.value })}
-                  aria-invalid={!!errors.date_to}
-                  aria-describedby={
-                    errors.date_to ? `${id}-to-error` : undefined
-                  }
-                />
-                {errors.date_to && (
-                  <small id={`${id}-to-error`} className={styles.error}>
-                    {errors.date_to}
-                  </small>
-                )}
-              </label>
-            </div>
-            <p>
-              El intervalo se aplica a la fecha del examen para inscritos y
-              pendientes, y a la fecha del registro para ingresos, incidencias e
-              información disciplinaria.
-            </p>
-            <div className={styles.actions}>
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={report.busy}
-              >
-                {report.busy ? 'Generando reporte…' : 'Generar reporte'}
-              </button>
+                >
+                  {report.busy ? 'Generando informe…' : 'Generar informe'}
+                </button>
+              </div>
             </div>
           </form>
         ) : (
           <p role="alert">
-            No hay tipos de reporte autorizados para este examen.
+            No hay tipos de informe autorizados para este examen.
           </p>
         )}
       </section>
@@ -152,7 +109,7 @@ export function ReportWorkspace({
             Reintentar consulta
           </button>
           <p>
-            Puedes generar un reporte nuevo si el anterior venció o cambió tu
+            Puedes generar un informe nuevo si el anterior venció o cambió tu
             autorización.
           </p>
         </div>

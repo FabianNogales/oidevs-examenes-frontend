@@ -27,7 +27,7 @@ function Layout({
   const content = (
     <PageContainer labelledBy={titleId}>
       <PageHeader
-        title="Reportes de exámenes"
+        title="Informes de exámenes"
         titleId={titleId}
         description="Consulta y descarga información oficial con el alcance autorizado de tu cuenta."
         breadcrumbs={[
@@ -35,7 +35,7 @@ function Layout({
             label: role === 'admin' ? 'Administración' : 'Mis exámenes',
             to: role === 'admin' ? '/admin' : '/teacher/exams',
           },
-          { label: 'Reportes de exámenes' },
+          { label: 'Informes de exámenes' },
         ]}
       />
       {role === 'teacher' && examId && (
@@ -102,7 +102,7 @@ export function TeacherExamReportsPage() {
       <Fixed key={examId} examId={Number(examId)} />
     ) : (
       <InvalidExamPage
-        title="Reportes de exámenes"
+        title="Informes de exámenes"
         message="El identificador del examen no es válido."
       />
     )

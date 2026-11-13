@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Navigate, useParams, useSearchParams } from 'react-router'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { formatIncidentDate } from '@/features/incidents/utils/incidentDisplay'
@@ -49,24 +49,24 @@ const columns: TableColumnDef<Row>[] = [
     cell: (item) => formatIncidentDate(item.occurred_at),
   },
 ]
-function List({ examId }: { examId: number }) {
+export function InfractionRecords({
+  examId,
+  embedded = false,
+}: {
+  examId: number
+  embedded?: boolean
+}) {
   const [params, setParams] = useSearchParams()
   const page = params.has('page') ? Number(params.get('page')) : 1
   const list = useInfractions(examId, page)
   const response = list.data
   return (
     <InfractionLayout
+      embedded={embedded}
       examId={examId}
       exam={response?.exam}
       title="Infracciones del examen"
     >
-      {response?.permissions.can_create && (
-        <div className={styles.access}>
-          <Link to={`/teacher/exams/${examId}/infractions/create`}>
-            Registrar infracción
-          </Link>
-        </div>
-      )}
       <p className={styles.note}>
         Una infracción reportada no está confirmada. Los cambios de estado
         requieren una decisión autorizada y conservan su historial.
@@ -97,7 +97,11 @@ function List({ examId }: { examId: number }) {
             : null
         }
         onPageChange={(value) =>
-          setParams(value === 1 ? {} : { page: String(value) })
+          setParams((current) => {
+            const next = new URLSearchParams(current)
+            next.set('page', String(value))
+            return next
+          })
         }
       />
     </InfractionLayout>
@@ -107,7 +111,10 @@ export function ExamInfractionsPage() {
   const { examId } = useParams()
   const id = Number(examId)
   return positiveId(id) ? (
-    <List key={id} examId={id} />
+    <Navigate
+      replace
+      to={`/exams/${id}/incidents?from=teacher&kind=INFRACTION`}
+    />
   ) : (
     <InvalidExamPage
       title="Infracciones del examen"
