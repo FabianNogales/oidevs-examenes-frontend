@@ -2,18 +2,21 @@
 // Only that item is edited; its optional image is removed at the end. No seeding.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 import { randomUUID } from 'node:crypto'
 
 const output = '.validation.local/hu41'
 await mkdir(output, { recursive: true })
-const profile = await mkdtemp(join(tmpdir(), 'eida-hu41-'))
 const tag = `QA HU41 ${Date.now()} ${randomUUID().slice(0, 6)}`
 const results = { tag, checks: [], responses: [], errors: [], gaps: [] }
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
-let chrome,
+let browserProfile,
+  chrome,
   main,
   second,
   secondTarget,
@@ -215,6 +218,9 @@ async function state(page, action, expected) {
 }
 
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('hu41')
+  const profile = browserProfile.dir
   chrome = spawn(
     process.env.EIDA_QA_CHROME ??
       'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -662,7 +668,7 @@ try {
   }
   second?.close()
   main?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(browserProfile, chrome)
   await writeFile(
     join(output, 'browser-results.json'),
     JSON.stringify(results, null, 2) + '\n',

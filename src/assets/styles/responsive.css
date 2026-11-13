@@ -1,0 +1,115 @@
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 640px) {
+  :root {
+    --content-gutter: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-gutter: var(--space-8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0s;
+    --transition-normal: 0s;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --header-height: auto;
+  }
+
+  .auth-shell__body {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .auth-card {
+    justify-self: center;
+    order: 1;
+  }
+
+  .auth-info {
+    min-height: auto;
+    order: 2;
+  }
+
+  .auth-info__content {
+    width: min(100%, 42rem);
+    padding-top: 0;
+    margin: 0 auto;
+  }
+
+  .auth-info__benefits {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .auth-info__benefits li {
+    align-items: start;
+    grid-template-columns: 2.7rem minmax(0, 1fr);
+  }
+
+  .auth-info__campus {
+    right: 0;
+    width: 44%;
+    height: 8rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .auth-shell__body {
+    padding: 1rem;
+  }
+
+  .auth-card {
+    padding: 1.2rem;
+  }
+
+  .auth-card__header h2,
+  .auth-info h1 {
+    font-size: 1.65rem;
+  }
+
+  .auth-info__summary {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .auth-info__benefits {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .auth-info__academic {
+    margin-top: 1rem;
+  }
+
+  .auth-info__campus {
+    display: none;
+  }
+
+  .snackbar {
+    right: 1rem;
+    bottom: 1rem;
+  }
+}

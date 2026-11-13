@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 import { createServer } from 'vite'
 
 const output = process.env.HU42_QA_OUTPUT ?? '.validation.local/hu42-hu43-ui'
 await mkdir(output, { recursive: true })
-const profile = await mkdtemp(join(tmpdir(), 'hu42-hu43-ui-'))
 const result = { widths: [], checks: [], errors: [] }
 const published = {
   title: 'Objetivos y beneficios',
@@ -85,8 +87,11 @@ e(PortalHistoryPanel,{resource:'information/sections',id:144})));
 `
 
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('hu42-hu43-ui')
+  const profile = browserProfile.dir
   vite = await createServer({
     root: process.cwd(),
     logLevel: 'error',
@@ -443,12 +448,15 @@ try {
   result.failure = error.stack
   throw error
 } finally {
-  await writeFile(
-    join(output, 'browser-results.json'),
-    JSON.stringify(result, null, 2) + '\n',
-  )
-  ws?.close()
-  chrome?.kill()
-  await vite?.close()
-  await rm(profile, { recursive: true, force: true })
+  try {
+    await writeFile(
+      join(output, 'browser-results.json'),
+      JSON.stringify(result, null, 2) + '\n',
+    )
+  } finally {
+    // Runs even if writing the results fails.
+    ws?.close()
+    await cleanupBrowserProfile(browserProfile, chrome)
+    await vite?.close()
+  }
 }

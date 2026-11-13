@@ -1,14 +1,16 @@
 // Presentation QA with the real pages and simulated transport. No backend writes.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import {
+  cleanupBrowserProfile,
+  createBrowserProfile,
+} from '../../../shared/tests/browserProfile.mjs'
 import { createServer } from 'vite'
 
 const output = process.env.HU34_QA_OUTPUT ?? '.validation.local/hu34-fixes'
 await mkdir(output, { recursive: true })
-const profile = await mkdtemp(join(tmpdir(), 'hu34-ui-'))
 const result = { widths: [], checks: [], errors: [] }
 const demo = `
 import React from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter,Routes,Route}from'react-router';import{AxiosError}from'axios';
@@ -63,8 +65,11 @@ async post(url,payload){hu34Ui.calls.push({method:'post',url,payload});if(url.en
 }};hu34Ui.reset();`
 
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
-let vite, chrome, ws
+let vite, chrome, ws, browserProfile
 try {
+  // Own temporary Chrome profile, removed in `finally` (success or failure).
+  browserProfile = await createBrowserProfile('hu34-ui')
+  const profile = browserProfile.dir
   process.env.EIDA_DEV_HTTPS_KEY = ''
   process.env.EIDA_DEV_HTTPS_CERT = ''
   vite = await createServer({
@@ -1034,11 +1039,15 @@ try {
   result.failure = error.stack
   throw error
 } finally {
-  await writeFile(
-    join(output, 'browser-results.json'),
-    JSON.stringify(result, null, 2) + '\n',
-  )
-  ws?.close()
-  chrome?.kill()
-  await vite?.close()
+  try {
+    await writeFile(
+      join(output, 'browser-results.json'),
+      JSON.stringify(result, null, 2) + '\n',
+    )
+  } finally {
+    // Runs even if writing the results fails.
+    ws?.close()
+    await cleanupBrowserProfile(browserProfile, chrome)
+    await vite?.close()
+  }
 }
