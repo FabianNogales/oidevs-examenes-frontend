@@ -5,7 +5,6 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import { ExamInformation } from '@/features/exams/components/ExamInformation'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
@@ -86,9 +85,12 @@ function DistributionContent({ examId }: { examId: number }) {
 
     return (
       <main>
-        <PageContainer>
-          <Breadcrumbs
-            items={[
+        <PageContainer labelledBy={titleId}>
+          <PageHeader
+            title={`Lista ${selectedListIndex + 1} de estudiantes`}
+            titleId={titleId}
+            description={`${subjectName} · ${examTitle}`}
+            breadcrumbs={[
               { label: 'Mis exámenes', to: '/teacher/exams' },
               { label: 'Examen', to: `/teacher/exams/${examId}` },
               {

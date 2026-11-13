@@ -1,3 +1,4 @@
+import { Badge } from '@/shared/components/ui/index'
 import { EntityInfoGrid } from '../components/EntityProfileLayout'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type {
@@ -49,7 +50,9 @@ export function ProfileOverviewTab({ entity }: ProfileTabComponentProps) {
       id: 'status',
       label: 'Estado de la cuenta',
       value: (
-        <span
+        <Badge
+          tone={isActive ? 'success' : 'danger'}
+          size="sm"
           className={`${layoutStyles.accountStatusPill} ${
             isActive
               ? layoutStyles.accountStatusActive
@@ -57,7 +60,7 @@ export function ProfileOverviewTab({ entity }: ProfileTabComponentProps) {
           }`}
         >
           {isActive ? 'Activo' : 'Inactivo'}
-        </span>
+        </Badge>
       ),
       icon: 'info',
     },

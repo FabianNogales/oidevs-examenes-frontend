@@ -1,7 +1,18 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import { CheckCircle2, Save, X, XCircle } from 'lucide-react'
+import {
+  Alert,
+  Button,
+  Card,
+  Dropdown,
+  FormField,
+  Heading,
+  Icon,
+  Input,
+  Text,
+} from '@/shared/components/ui/index'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
-import { ChevronDownIcon } from '@/assets/icons/ChevronDownIcon'
 
 export function ProfileEditTab({
   entity,
@@ -12,9 +23,10 @@ export function ProfileEditTab({
   const [lastNames, setLastNames] = useState(entity.last_names)
   const [email, setEmail] = useState(entity.email)
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>(entity.status)
-  const [institutionalCode, setInstitutionalCode] = useState('')
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  
+  const [institutionalCode, setInstitutionalCode] = useState(
+    entity.institutional_code ?? '',
+  )
+
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error'
@@ -26,6 +38,7 @@ export function ProfileEditTab({
     setLastNames(entity.last_names)
     setEmail(entity.email)
     setStatus(entity.status)
+    setInstitutionalCode(entity.institutional_code ?? '')
   }, [entity])
 
   const handleSubmit = async (event: FormEvent) => {
@@ -44,13 +57,20 @@ export function ProfileEditTab({
       return
     }
 
-    if (entity.role === 'TEACHER' && (
-      !institutionalCode.trim() || institutionalCode.trim().length > 50 ||
-      trimmedFirst.length > 100 || trimmedLast.length > 100 ||
-      !trimmedEmail || trimmedEmail.length > 255 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
-    )) {
-      setFeedback({ type: 'error', text: 'Revisa los campos obligatorios, sus longitudes y el formato del correo.' })
+    if (
+      entity.role === 'TEACHER' &&
+      (!institutionalCode.trim() ||
+        institutionalCode.trim().length > 50 ||
+        trimmedFirst.length > 100 ||
+        trimmedLast.length > 100 ||
+        !trimmedEmail ||
+        trimmedEmail.length > 255 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
+    ) {
+      setFeedback({
+        type: 'error',
+        text: 'Revisa los campos obligatorios, sus longitudes y el formato del correo.',
+      })
       return
     }
 
@@ -62,6 +82,9 @@ export function ProfileEditTab({
         last_names: trimmedLast,
         email: trimmedEmail,
         status: status,
+        ...(entity.role === 'TEACHER'
+          ? { institutional_code: institutionalCode.trim() }
+          : {}),
       })
       setFeedback({
         type: 'success',
@@ -81,14 +104,17 @@ export function ProfileEditTab({
   }
 
   return (
-    <section className={layoutStyles.sectionCard}>
-      <h2>Editar datos del perfil</h2>
-      <p>Modifica los nombres, correo y el estado de habilitación de la cuenta.</p>
+    <Card as="section" className={layoutStyles.sectionCard}>
+      <Heading level={2}>Editar datos del perfil</Heading>
+      <Text variant="small" tone="secondary">
+        Modifica los nombres, correo y el estado de habilitación de la cuenta.
+      </Text>
 
       <form className={layoutStyles.editForm} onSubmit={handleSubmit}>
         {feedback && (
-          <p
+          <Alert
             role="alert"
+            tone={feedback.type === 'success' ? 'success' : 'danger'}
             className={`${layoutStyles.feedbackMsg} ${
               feedback.type === 'success'
                 ? layoutStyles.feedbackSuccess
@@ -96,12 +122,16 @@ export function ProfileEditTab({
             }`}
           >
             {feedback.text}
-          </p>
+          </Alert>
         )}
 
-        <div className={layoutStyles.formGroup}>
-          <label htmlFor="edit-first-names">Nombre(s)</label>
-          <input
+        <FormField
+          label="Nombre(s)"
+          htmlFor="edit-first-names"
+          required
+          className={layoutStyles.formGroup}
+        >
+          <Input
             id="edit-first-names"
             type="text"
             className={layoutStyles.formInput}
@@ -110,11 +140,15 @@ export function ProfileEditTab({
             disabled={saving}
             required
           />
-        </div>
+        </FormField>
 
-        <div className={layoutStyles.formGroup}>
-          <label htmlFor="edit-last-names">Apellidos</label>
-          <input
+        <FormField
+          label="Apellidos"
+          htmlFor="edit-last-names"
+          required
+          className={layoutStyles.formGroup}
+        >
+          <Input
             id="edit-last-names"
             type="text"
             className={layoutStyles.formInput}
@@ -123,11 +157,15 @@ export function ProfileEditTab({
             disabled={saving}
             required
           />
-        </div>
+        </FormField>
 
-        <div className={layoutStyles.formGroup}>
-          <label htmlFor="edit-email">Correo electrónico</label>
-          <input
+        <FormField
+          label="Correo electrónico"
+          htmlFor="edit-email"
+          required
+          className={layoutStyles.formGroup}
+        >
+          <Input
             id="edit-email"
             type="email"
             className={layoutStyles.formInput}
@@ -136,24 +174,31 @@ export function ProfileEditTab({
             disabled={saving}
             required
           />
-        </div>
+        </FormField>
 
         {entity.role === 'STUDENT' && (
-          <div className={layoutStyles.formGroup}>
-            <label htmlFor="edit-career">Carrera</label>
-            <input
+          <FormField
+            label="Carrera"
+            htmlFor="edit-career"
+            className={layoutStyles.formGroup}
+          >
+            <Input
               id="edit-career"
               type="text"
               className={layoutStyles.formInput}
               value={entity.career_name || 'No registrada'}
               disabled
             />
-          </div>
+          </FormField>
         )}
 
-        <div className={layoutStyles.formGroup}>
-          <label htmlFor="edit-sis">Código institucional (SIS)</label>
-          <input
+        <FormField
+          label="Código institucional (SIS)"
+          htmlFor="edit-sis"
+          required={entity.role === 'TEACHER'}
+          className={layoutStyles.formGroup}
+        >
+          <Input
             id="edit-sis"
             type="text"
             className={layoutStyles.formInput}
@@ -163,81 +208,59 @@ export function ProfileEditTab({
             required={entity.role === 'TEACHER'}
             disabled={entity.role !== 'TEACHER' || saving}
           />
-        </div>
+        </FormField>
 
-        {/* CAMPO DE ESTADO - CUSTOM DROPDOWN*/}
+        {/* CAMPO DE ESTADO - UNIVERSAL DROPDOWN */}
         <div className={layoutStyles.formGroup}>
-          <label id="edit-status-label">Estado de la cuenta</label>
-          <div className={layoutStyles.customSelectWrapper}>
-            <button
-              type="button"
-              aria-labelledby="edit-status-label"
-              className={`${layoutStyles.formInput} ${layoutStyles.statusSelect} ${layoutStyles.customSelectButton} ${
-                status === 'ACTIVE'
-                  ? layoutStyles.statusSelectActive
-                  : layoutStyles.statusSelectInactive
-              }`}
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              disabled={saving}
-            >
-              <span>
-                {status === 'ACTIVE' ? 'Activo (Habilitado)' : 'Inactivo (Inhabilitado)'}
-              </span>
-              
-              <ChevronDownIcon 
-                className={`${layoutStyles.customSelectIcon} ${
-                  isDropdownOpen ? layoutStyles.customSelectIconOpen : ''
-                }`} 
-              />
-            </button>
-
-            {isDropdownOpen && !saving && (
-              <ul className={layoutStyles.customOptionsList}>
-                <li
-                  className={`${layoutStyles.customOption} ${
-                    status === 'ACTIVE' ? layoutStyles.customOptionActiveSuccess : ''
-                  }`}
-                  onClick={() => {
-                    setStatus('ACTIVE')
-                    setIsDropdownOpen(false)
-                  }}
-                >
-                  Activo
-                </li>
-                <li
-                  className={`${layoutStyles.customOption} ${
-                    status === 'INACTIVE' ? layoutStyles.customOptionActiveDanger : ''
-                  }`}
-                  onClick={() => {
-                    setStatus('INACTIVE')
-                    setIsDropdownOpen(false)
-                  }}
-                >
-                  Inactivo
-                </li>
-              </ul>
-            )}
-          </div>
+          <label id="edit-status-label" htmlFor="edit-status">
+            Estado de la cuenta
+          </label>
+          <Dropdown<'ACTIVE' | 'INACTIVE'>
+            id="edit-status"
+            aria-labelledby="edit-status-label"
+            disabled={saving}
+            value={status}
+            tone={status === 'ACTIVE' ? 'success' : 'danger'}
+            options={[
+              {
+                value: 'ACTIVE',
+                label: 'Activo (Habilitado)',
+                tone: 'success',
+                icon: CheckCircle2,
+              },
+              {
+                value: 'INACTIVE',
+                label: 'Inactivo (Inhabilitado)',
+                tone: 'danger',
+                icon: XCircle,
+              },
+            ]}
+            onChange={(nextStatus) => setStatus(nextStatus)}
+          />
         </div>
 
         <div className={layoutStyles.formActions}>
-          <button
+          <Button
             type="button"
+            variant="secondary"
             className={layoutStyles.cancelBtn}
             onClick={() => onNavigateTab('perfil')}
             disabled={saving}
           >
-            Cancelar
-          </button>
-          <button
+            <Icon icon={X} size="sm" />
+            <span>Cancelar</span>
+          </Button>
+          <Button
             type="submit"
+            variant="primary"
             className={layoutStyles.saveBtn}
-            disabled={saving}
+            loading={saving}
           >
-            {saving ? 'Guardando...' : 'Guardar cambios'}
-          </button>
+            <Icon icon={Save} size="sm" />
+            <span>{saving ? 'Guardando...' : 'Guardar cambios'}</span>
+          </Button>
         </div>
       </form>
-    </section>
+    </Card>
   )
 }

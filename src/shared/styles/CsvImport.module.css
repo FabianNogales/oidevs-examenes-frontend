@@ -61,7 +61,7 @@
   padding: var(--space-2) var(--space-3);
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   text-align: center;
 }
 
@@ -119,7 +119,7 @@
   margin: 0;
   color: var(--color-text-primary);
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 .selectFileButton {
@@ -190,7 +190,7 @@
   background: var(--color-info-soft);
   color: var(--color-primary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 
 .infoBanner svg {

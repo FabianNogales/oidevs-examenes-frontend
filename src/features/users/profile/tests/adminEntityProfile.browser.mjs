@@ -84,7 +84,7 @@ const errorStates = [
   { name: 'docente error', path: '/admin/teachers/99', title: 'Error al cargar docente', backLabel: 'Regresar a gestión de docentes', back: '/admin/teachers' },
 ]
 const inspectError = `(()=>{
-  const vw=document.documentElement.clientWidth,h1s=[...document.querySelectorAll('h1')],alert=document.querySelector('main [role=alert]');
+  const vw=document.documentElement.clientWidth,h1s=[...document.querySelectorAll('h1,h2')],alert=document.querySelector('main [role=alert]');
   const button=alert?.querySelector('button'),b=button?.getBoundingClientRect();
   return {mains:document.querySelectorAll('main').length,h1s:h1s.length,title:h1s[0]?.textContent.trim(),
     labelled:!!(h1s[0]?.id&&document.querySelector('section[aria-labelledby="'+h1s[0].id+'"]')?.contains(alert)),

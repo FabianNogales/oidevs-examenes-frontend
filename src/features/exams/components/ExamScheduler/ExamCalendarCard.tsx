@@ -158,7 +158,7 @@ export function ExamCalendarCard({
           <span className={styles.legendItem}>
             <span
               className={styles.legendSwatch}
-              style={{ background: 'var(--brand-crimson)' }}
+              style={{ background: 'var(--color-accent)' }}
             />
             <span>Día elegido</span>
           </span>

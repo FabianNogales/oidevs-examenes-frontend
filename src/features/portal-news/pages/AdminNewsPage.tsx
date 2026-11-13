@@ -1,4 +1,5 @@
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { useCallback, useId, useState } from 'react'
 import { Link } from 'react-router'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
@@ -221,18 +222,18 @@ export function AdminNewsPage() {
           <>
             <label className={`${styles.field} ${adminStyles.statusFilter}`}>
               Estado
-              <select
+              <Dropdown
                 name="news_status"
                 value={status}
-                onChange={(event) => setStatus(event.target.value)}
-              >
-                <option value="">Todos los estados</option>
-                {Object.entries(NEWS_STATUS_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: 'Todos los estados' },
+                  ...Object.entries(NEWS_STATUS_LABELS).map(([value, label]) => ({
+                    value,
+                    label,
+                  })),
+                ]}
+                onChange={(nextValue) => setStatus(nextValue)}
+              />
             </label>
             {activeCategories.length ? (
               <label className={`${styles.field} ${adminStyles.statusFilter}`}>

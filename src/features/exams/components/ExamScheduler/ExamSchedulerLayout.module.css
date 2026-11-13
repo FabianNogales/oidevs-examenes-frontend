@@ -1,8 +1,5 @@
 .schedulerPage {
-  width: min(1300px, calc(100vw - 64px));
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: var(--space-5) 0 128px;
+  padding-bottom: 128px;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -28,7 +25,7 @@
 .titleGroup h1 {
   margin: 0 0 var(--space-1);
   font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
 }
 
@@ -48,7 +45,7 @@
   padding: var(--space-4) var(--space-6);
   background: var(--color-surface);
   border: 1.5px solid var(--color-border-strong);
-  border-left: 6px solid var(--brand-crimson);
+  border-left: 6px solid var(--color-accent);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
@@ -70,18 +67,18 @@
 .subjectTitleRow h2 {
   margin: 0;
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
 }
 
 .codePill {
   padding: 3px 12px;
   border-radius: var(--radius-pill);
-  background: var(--brand-pink-light);
-  border: 1px solid var(--brand-pink);
-  color: var(--brand-crimson);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-decorative);
+  color: var(--color-accent);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 .subjectTermText {
@@ -108,7 +105,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--brand-crimson);
+  background: var(--color-accent);
 }
 
 .statusDotValid {
@@ -143,7 +140,7 @@
   border: 1.5px solid var(--color-error);
   color: var(--color-error);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -156,9 +153,9 @@
 .navigationGuardBanner {
   width: 100%;
   padding: var(--space-4) var(--space-5);
-  border: 1.5px solid var(--brand-crimson);
+  border: 1.5px solid var(--color-accent);
   border-radius: var(--radius-md);
-  background: var(--brand-pink-light);
+  background: var(--color-accent-soft);
   box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
@@ -171,7 +168,7 @@
   margin: 0;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--brand-crimson);
+  color: var(--color-accent);
 }
 
 .inlineActionRow {
@@ -206,7 +203,7 @@
   padding: 0 var(--space-4);
   border-radius: var(--radius-sm);
   border: none;
-  background: var(--brand-crimson);
+  background: var(--color-accent);
   color: var(--color-on-primary);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);

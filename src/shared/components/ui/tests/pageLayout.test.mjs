@@ -56,16 +56,24 @@ test('PageContainer renders a div by default and a labelled section, never main'
   for (const html of [plain, labelled]) assert.doesNotMatch(html, /<main\b|role="main"/)
 })
 
-test('PageContainer width variants and extra className', () => {
+test('PageContainer width variants, extra className and direct universal header props', () => {
   assert.match(render(React.createElement(PageContainer, { width: 'default' }, 'x')), /^<div class="container">/)
   assert.match(render(React.createElement(PageContainer, { width: 'narrow' }, 'x')), /^<div class="container narrow">/)
   assert.match(render(React.createElement(PageContainer, { width: 'narrow', className: 'extra' }, 'x')), /^<div class="container narrow extra">/)
+  const universal = render(React.createElement(PageContainer, {
+    breadcrumbs: [{ label: 'Inicio', to: '/' }, { label: 'Mis materias' }],
+    subtitle: 'Mis materias',
+    description: 'Gestiona tus materias, crea examenes y administra estudiantes.',
+  }, React.createElement('div', null, 'contenido')))
+  assert.match(universal, /<nav aria-label="Ruta de navegación"/)
+  assert.match(universal, /<h2 class="title">Mis materias<\/h2>/)
+  assert.match(universal, /<p class="description">Gestiona tus materias, crea examenes y administra estudiantes\.<\/p>/)
 })
 
-test('PageHeader minimal: one h1, no optional parts and no focus attributes', () => {
+test('PageHeader minimal: one h2, no optional parts and no focus attributes', () => {
   const html = render(React.createElement(PageHeader, { title: 'Gestión de aulas' }))
-  assert.equal(count(html, /<h1\b/g), 1)
-  assert.match(html, /<h1 class="title">Gestión de aulas<\/h1>/)
+  assert.equal(count(html, /<h2\b/g), 1)
+  assert.match(html, /<h2 class="title">Gestión de aulas<\/h2>/)
   assert.doesNotMatch(html, /tabindex|<nav\b|class="actions"|class="eyebrow"|class="description"|<main\b/)
 })
 
@@ -79,8 +87,8 @@ test('PageHeader full: titleId, tabIndex=-1, eyebrow, description, breadcrumbs a
     breadcrumbs: [{ label: 'Inicio', to: '/admin' }, { label: 'Aulas' }],
     actions: React.createElement('button', { type: 'button' }, '+ Registrar aula'),
   }))
-  assert.equal(count(html, /<h1\b/g), 1)
-  assert.match(html, /<h1 id="rooms-title" tabindex="-1" class="title">Gestión de aulas<\/h1>/)
+  assert.equal(count(html, /<h2\b/g), 1)
+  assert.match(html, /<h2 id="rooms-title" tabindex="-1" class="title">Gestión de aulas<\/h2>/)
   assert.match(html, /<p class="eyebrow">Administrador<\/p>/)
   assert.match(html, /<p class="description">Administra las aulas disponibles\.<\/p>/)
   assert.match(html, /<nav aria-label="Ruta de navegación"[^>]*><ol><li><a href="\/admin"[^>]*>Inicio<\/a><\/li><li[^>]*><span aria-current="page">Aulas<\/span><\/li><\/ol><\/nav>/)
@@ -108,14 +116,14 @@ test('PageContainer and PageHeader CSS use tokens and canonical breakpoints only
     assert.doesNotMatch(source, /:global|!important/)
   }
   assert.match(container, /\.container \{[^}]*box-sizing: border-box;[^}]*max-width: var\(--content-max-width\);[^}]*padding: var\(--space-8\) var\(--content-gutter\);/)
-  assert.match(container, /\.narrow \{\s*max-width: 960px;\s*\}/)
+  assert.match(container, /\.narrow \{\s*max-width: var\(--content-max-width\);\s*\}/)
   assert.match(container, /@media \(max-width: 640px\) \{\s*\.container \{\s*padding-block: var\(--space-5\);/)
   assert.doesNotMatch(container, /background|box-shadow|border(-radius)?:/, 'PageContainer is not a card')
-  assert.match(header, /\.title \{[^}]*font-size: var\(--font-size-3xl\);[^}]*font-weight: var\(--font-weight-bold\);/)
-  assert.match(header, /\.description \{[^}]*font-size: var\(--font-size-md\);/)
+  assert.match(header, /\.title \{[^}]*font: var\(--type-h2\);[^}]*font-size: var\(--font-size-2xl\);[^}]*font-weight: var\(--font-weight-semibold\);/)
+  assert.match(header, /\.description \{[^}]*font: var\(--type-body\);[^}]*font-size: var\(--font-size-md\);/)
   assert.match(header, /\.header \{[^}]*margin-bottom: var\(--space-6\);/)
   const mobile = /@media \(max-width: 640px\) \{([\s\S]*)\}\s*$/.exec(header)[1]
-  assert.match(mobile, /\.title \{\s*font-size: var\(--font-size-2xl\);/)
+  assert.match(mobile, /\.title \{\s*font-size: var\(--font-size-xl\);/)
   assert.match(mobile, /\.description \{\s*font-size: var\(--font-size-sm\);/)
   assert.match(mobile, /\.actions \{\s*flex-direction: column;/)
 })
@@ -132,6 +140,7 @@ const authorizedConsumers = [
   'features/eligibility-automation/pages/AdminEligibilityPoliciesPage.tsx',
   'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
   'features/exam-reports/pages/ExamReportsPage.tsx',
+  'features/exams/components/ExamScheduler/ExamPageStateSection.tsx',
   'features/exams/components/InvalidExamPage.tsx',
   'features/exams/pages/EntryControlPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
@@ -171,6 +180,7 @@ const authorizedConsumers = [
   'features/subjects/pages/TeacherSubjectsPage.tsx',
   'features/teachers/pages/AdminTeachersPage.tsx',
   'features/users/pages/AdminManageUsersPage.tsx',
+  'features/users/pages/AdminModulePage.tsx',
   'features/users/pages/AdminNotFoundPage.tsx',
   'features/users/pages/AdminReadPage.tsx',
   'features/users/pages/AdminUserHistoryPage.tsx',
@@ -187,6 +197,7 @@ const ownsMain = [
   'features/eligibilities/pages/ExamEligibilitiesPage.tsx',
   'features/eligibility-automation/pages/EligibilityAutomationPage.tsx',
   'features/exam-reports/pages/ExamReportsPage.tsx',
+  'features/exams/components/ExamScheduler/ExamPageStateSection.tsx',
   'features/exams/components/InvalidExamPage.tsx',
   'features/exams/pages/EntryControlPage.tsx',
   'features/exams/pages/TeacherExamDetailPage.tsx',
@@ -211,7 +222,7 @@ const ownsMain = [
   'features/subjects/pages/TeacherSubjectsPage.tsx',
 ]
 // Pages whose invalid-id branch returns early with its own PageHeader (and <main>): the branches are mutually
-// exclusive, so one main landmark and one h1 are rendered at runtime (checked by the feature browser scripts).
+// exclusive, so one main landmark and one h2 are rendered at runtime (checked by the feature browser scripts).
 const exclusiveBranches = {
   'features/exams/pages/EntryControlPage.tsx': { main: 2, headers: 2 },
   'features/eligibilities/pages/ExamEligibilitiesPage.tsx': { main: 2, headers: 2 },
@@ -222,8 +233,8 @@ const exclusiveBranches = {
   'features/incidents/pages/IncidentDetailPage.tsx': { main: 1, headers: 2 },
   // G6: the workspace and the invalid-id branch (h1 «Control de ingreso sin conexión»).
   'features/offline-entry/pages/OfflineEntryPage.tsx': { main: 2, headers: 2 },
-  // Selected-list view (h1 from AssignedListStudentsView), main view and invalid id.
-  'features/offline-entry/pages/TeacherDistributionPage.tsx': { main: 3, headers: 2 },
+  // Selected-list view, main view and invalid id.
+  'features/offline-entry/pages/TeacherDistributionPage.tsx': { main: 3, headers: 3 },
 }
 // Portal administration pages get their PageHeader through PortalAdminCollection headerVariant="page".
 const portalAdmin = [
@@ -284,8 +295,8 @@ test('PortalAdminCollection legacy default header markup is unchanged since e4f5
 test('PortalAdminCollection headerVariant="page" renders PageHeader with the same title, crumbs and action', () => {
   const { PortalAdminCollection } = load(resolve(srcRoot, 'features/portal-shared/components/PortalAdminCollection.tsx'))
   const html = render(React.createElement(PortalAdminCollection, { ...collectionProps(true), headerVariant: 'page' }))
-  assert.equal(count(html, /<h1\b/g), 1)
-  assert.match(html, /<h1 class="title">Gestión de servicios<\/h1>/)
+  assert.equal(count(html, /<h2\b/g), 1)
+  assert.match(html, /<h2 class="title">Gestión de servicios<\/h2>/)
   assert.match(html, /<p class="description">Administra los servicios del portal\.<\/p>/)
   assert.match(html, /<a href="\/"[^>]*>Inicio<\/a>/)
   assert.match(html, /<div class="actions"><button type="button" class="primary">Crear servicio<\/button><\/div>/)

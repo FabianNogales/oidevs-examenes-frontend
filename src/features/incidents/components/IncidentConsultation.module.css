@@ -18,7 +18,7 @@
   grid-column: span 2;
 }
 .filters label {
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 .filters :is(input, select) {
   width: 100%;
@@ -86,7 +86,7 @@
 .summary h2 span {
   color: var(--color-text-secondary);
   font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 .summary dl {
   display: grid;

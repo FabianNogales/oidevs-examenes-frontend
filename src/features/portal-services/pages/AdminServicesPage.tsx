@@ -15,6 +15,7 @@ import { getAdminService, listAdminServices } from '../api/servicesApi'
 import { ServiceEditor } from '../components/ServiceEditor'
 import type { AdminService, ServiceStatus } from '../types/services.types'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import styles from '@/features/portal-shared/components/portalShared.module.css'
 import adminStyles from './adminServices.module.css'
 
@@ -131,7 +132,7 @@ export function AdminServicesPage() {
   const { notify } = useAuth()
   const [version, setVersion] = useState(0)
   const [status, setStatus] = useState<ServiceStatus | ''>('')
-  const statusSelect = useRef<HTMLSelectElement>(null)
+  const statusSelect = useRef<HTMLElement>(null)
   const [selected, setSelected] = useState<{ id: number | null } | null>(null)
   const load = useCallback(
     (query: PortalQuery, signal: AbortSignal) =>
@@ -158,17 +159,18 @@ export function AdminServicesPage() {
           <>
             <label className={`${styles.field} ${adminStyles.statusFilter}`}>
               Estado
-              <select
-                ref={statusSelect}
+              <Dropdown
+                triggerRef={statusSelect}
                 value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as ServiceStatus | '')
+                options={[
+                  { value: '', label: 'Todos' },
+                  { value: 'ACTIVE', label: 'Activos' },
+                  { value: 'INACTIVE', label: 'Inactivos' },
+                ]}
+                onChange={(nextValue) =>
+                  setStatus(nextValue as ServiceStatus | '')
                 }
-              >
-                <option value="">Todos</option>
-                <option value="ACTIVE">Activos</option>
-                <option value="INACTIVE">Inactivos</option>
-              </select>
+              />
             </label>
             {/* Clears only the filter; the search keeps DataTable's own "Limpiar". */}
             {status ? (

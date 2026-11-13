@@ -7,7 +7,7 @@
 }
 
 .container {
-  width: min(100%, 1400px);
+  width: min(100%, var(--content-max-width));
   margin-inline: auto;
 }
 
@@ -26,24 +26,24 @@
 .modalEyebrow,
 .formDialog .modalHeader p {
   margin: 0 0 5px;
-  color: #66768f;
+  color: var(--color-text-secondary);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .pageHeader h1 {
   margin: 0;
-  color: #0c2d6c;
+  color: var(--color-text-primary);
   font-size: clamp(1.7rem, 2vw, 2.25rem);
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
 }
 
 .description {
   max-width: 680px;
   margin: 7px 0 0;
-  color: #66768f;
+  color: var(--color-text-secondary);
   font-size: 0.86rem;
   line-height: 1.5;
 }
@@ -55,13 +55,13 @@
   gap: 7px;
   min-height: 41px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--button-radius);
   padding: 0 16px;
-  color: #ffffff;
-  background: #0c2d6c;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
   font: inherit;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition:
     background-color 120ms ease,
@@ -120,7 +120,7 @@
 }
 
 .registerButton:hover:not(:disabled) {
-  background: #173f82;
+  background: var(--color-primary-hover);
 }
 
 .registerButton:active:not(:disabled) {
@@ -136,13 +136,13 @@
   width: min(680px, calc(100vw - 32px));
   padding: 0;
   border: 0;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 24px 70px rgb(3 15 35 / 28%);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
 }
 
 .formDialog.formDialog::backdrop {
-  background: rgb(7 23 48 / 52%);
+  background: color-mix(in srgb, var(--color-text-primary) 52%, transparent);
 }
 
 .formDialog .modalHeader {
@@ -152,9 +152,9 @@
 .detailModal {
   width: min(100%, 680px);
   overflow: hidden;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 24px 70px rgb(3 15 35 / 28%);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
 }
 
 .detailModal {
@@ -167,12 +167,12 @@
   justify-content: space-between;
   gap: 18px;
   padding: 21px 24px 17px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modalHeader h2 {
   margin: 0;
-  color: #0c2d6c;
+  color: var(--color-text-primary);
   font-size: 1.3rem;
 }
 
@@ -183,14 +183,14 @@
   height: 34px;
   border: 0;
   border-radius: 50%;
-  color: #52627a;
+  color: var(--color-text-secondary);
   background: transparent;
   font-size: 1.45rem;
   cursor: pointer;
 }
 
 .closeButton:hover:not(:disabled) {
-  background: #edf2f7;
+  background: var(--color-surface-soft);
 }
 
 .modalLoading,
@@ -205,12 +205,12 @@
 .modalLoading p,
 .modalError p {
   margin: 10px 0 0;
-  color: #66768f;
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
 }
 
 .modalError strong {
-  color: #8c243b;
+  color: var(--color-accent);
 }
 
 .modalError .closeDetailButton {
@@ -229,7 +229,7 @@
   align-items: center;
   gap: 14px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e6ebf2;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .avatar {
@@ -239,15 +239,15 @@
   height: 54px;
   flex-shrink: 0;
   border-radius: 50%;
-  color: #ffffff;
-  background: #0c2d6c;
+  color: var(--color-on-primary);
+  background: var(--color-text-primary);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
 }
 
 .teacherIdentity h3 {
   margin: 0 0 7px;
-  color: #172b4d;
+  color: var(--color-text-primary);
   font-size: 1rem;
 }
 
@@ -259,17 +259,17 @@
   border-radius: 999px;
   padding: 5px 9px;
   font-size: 0.67rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
 }
 
 .activeBadge {
-  color: #17663b;
-  background: #e7f7ee;
+  color: var(--color-success);
+  background: var(--color-success-soft);
 }
 
 .inactiveBadge {
-  color: #8f2b3f;
-  background: #fdecef;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .detailGrid {
@@ -285,9 +285,9 @@
 
 .detailGrid dt {
   margin-bottom: 5px;
-  color: #8795a8;
+  color: var(--color-text-muted);
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
@@ -295,9 +295,9 @@
 .detailGrid dd {
   margin: 0;
   overflow-wrap: anywhere;
-  color: #263950;
+  color: var(--color-text-primary);
   font-size: 0.82rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-regular);
 }
 
 .detailFullWidth {
@@ -310,7 +310,7 @@
   gap: 10px;
   margin-top: 23px;
   padding-top: 18px;
-  border-top: 1px solid #e6ebf2;
+  border-top: 1px solid var(--color-border);
 }
 
 .editFromDetailButton,
@@ -318,36 +318,36 @@
 .cancelButton,
 .saveButton {
   min-height: 40px;
-  border-radius: 7px;
+  border-radius: var(--button-radius);
   padding: 0 15px;
   font-family: inherit;
   font-size: 0.73rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
 .editFromDetailButton,
 .saveButton {
   border: 0;
-  color: #ffffff;
-  background: #0c2d6c;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
 }
 
 .editFromDetailButton:hover:not(:disabled),
 .saveButton:hover:not(:disabled) {
-  background: #173f82;
+  background: var(--color-primary-hover);
 }
 
 .closeDetailButton,
 .cancelButton {
-  border: 1px solid #c7d2e2;
-  color: #344a67;
-  background: #ffffff;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
 }
 
 .closeDetailButton:hover:not(:disabled),
 .cancelButton:hover:not(:disabled) {
-  background: #f4f7fb;
+  background: var(--color-surface-soft);
 }
 
 /* ==============================
@@ -359,11 +359,11 @@
 
 .formError {
   margin-bottom: 18px;
-  border: 1px solid #efc7cf;
-  border-radius: 7px;
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
   padding: 11px 13px;
-  color: #8c243b;
-  background: #fff7f8;
+  color: var(--color-error);
+  background: var(--color-error-soft);
   font-size: 0.73rem;
   line-height: 1.45;
 }
@@ -381,24 +381,24 @@
 }
 
 .formField > span {
-  color: #344a67;
+  color: var(--color-text-primary);
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .formField b {
   margin-left: 2px;
-  color: #cd123a;
+  color: var(--color-accent);
 }
 
 .formField input {
   width: 100%;
   height: 42px;
-  border: 1px solid #c8d4e3;
-  border-radius: 7px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
   padding: 0 12px;
-  color: #1e3048;
-  background: #ffffff;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
   font: inherit;
   font-size: 0.8rem;
   outline: none;
@@ -408,17 +408,17 @@
 }
 
 .formField input:focus {
-  border-color: #315f9f;
-  box-shadow: 0 0 0 3px rgb(49 95 159 / 10%);
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 var(--focus-width) color-mix(in srgb, var(--color-focus) 20%, transparent);
 }
 
 .formField input[aria-invalid='true'] {
-  border-color: #cf4d64;
-  box-shadow: 0 0 0 3px rgb(207 77 100 / 8%);
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 12%, transparent);
 }
 
 .formField input:disabled {
-  background: #f5f7fa;
+  background: var(--color-surface-soft);
   cursor: not-allowed;
 }
 
@@ -427,17 +427,17 @@
 }
 
 .fieldError {
-  color: #b4233f;
+  color: var(--color-error);
   font-size: 0.66rem;
   line-height: 1.4;
 }
 
 .initialPasswordInfo {
   margin-top: 18px;
-  border-left: 3px solid #214e8f;
+  border-left: 3px solid var(--color-primary);
   padding: 10px 12px;
-  color: #52627a;
-  background: #f3f7fc;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-soft);
   font-size: 0.7rem;
   line-height: 1.5;
 }
@@ -448,7 +448,7 @@
   gap: 10px;
   margin-top: 22px;
   padding-top: 18px;
-  border-top: 1px solid #e4eaf2;
+  border-top: 1px solid var(--color-border);
 }
 
 @keyframes spin {

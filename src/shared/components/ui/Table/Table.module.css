@@ -1,0 +1,104 @@
+.tableWrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--type-body);
+  color: var(--color-text-primary);
+}
+
+.caption {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+  text-align: left;
+}
+
+.th {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  font: var(--type-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sortButton,
+.table button.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sortButton:hover,
+.table button.sortButton:hover {
+  color: var(--color-accent);
+}
+
+.tr {
+  border-bottom: 1px solid var(--color-border-soft);
+  transition: background-color var(--transition-fast);
+}
+
+.tr:last-child {
+  border-bottom: 0;
+}
+
+.tr:hover {
+  background-color: var(--color-surface-soft);
+}
+
+.td {
+  padding: var(--space-3) var(--space-4);
+  overflow-wrap: anywhere;
+}
+
+.align-left {
+  text-align: left;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.stateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  text-align: center;
+}
+
+.emptyTitle {
+  color: var(--color-text-primary);
+  font: var(--type-h3);
+}
+
+.stateText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+}

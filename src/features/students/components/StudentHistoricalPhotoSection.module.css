@@ -13,11 +13,11 @@
   flex: 0 1 160px;
   width: 160px;
   min-height: 180px;
-  border: 1px solid var(--color-border, #dce5f2);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;
-  background: var(--color-surface-muted, #f5fbff);
-  color: var(--color-text-secondary, #52627a);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
   text-align: center;
 }
 .photo img {
@@ -41,7 +41,7 @@
 .form label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 .form input,
 .form textarea {
@@ -50,7 +50,7 @@
   box-sizing: border-box;
 }
 .form textarea {
-  border: 1px solid var(--color-border-strong, #b8c9e1);
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
   padding: 10px;
   font: inherit;
@@ -66,5 +66,5 @@
   opacity: 0.6;
 }
 .section [role='alert'] {
-  color: var(--color-error, #b42318);
+  color: var(--color-error);
 }

@@ -1,24 +1,24 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(23, 37, 84, 0.5);
+  background: color-mix(in srgb, var(--color-text-primary) 50%, transparent);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 200; /* por encima del modal de detalle (100) */
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .dialog {
   width: 100%;
   max-width: 420px;
-  background: #fafafa;
-  border-radius: 12px;
-  box-shadow: 0px 12px 36px rgba(23, 37, 84, 0.18);
-  padding: 24px 28px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-6) 28px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   animation: dialogIn 0.15s ease-out;
 }
 
@@ -35,23 +35,21 @@
 
 .title {
   margin: 0;
-  color: var(--brand-navy, #172554);
-  font-size: 20px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font: var(--type-h3);
 }
 
 .message {
   margin: 0;
-  color: var(--color-text-secondary, #68778f);
-  font-size: 15px;
-  line-height: 1.5;
+  color: var(--color-text-secondary);
+  font: var(--type-body);
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
 }
 
 .cancelButton,
@@ -60,47 +58,46 @@
 .successButton {
   height: 42px;
   padding: 0 18px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--button-radius);
+  font: var(--type-interactive);
   cursor: pointer;
-  transition: all var(--transition-fast, 0.15s);
+  transition: all var(--transition-fast);
 }
 
 .cancelButton {
-  background: #fafafa;
-  border: 1px solid var(--brand-blue, #2563eb);
-  color: var(--brand-blue, #2563eb);
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
 }
 .cancelButton:hover:not(:disabled) {
-  background: var(--brand-blue-light, #eaf3ff);
+  background: var(--color-surface-soft);
 }
 
 .primaryButton {
-  background: var(--brand-blue, #2563eb);
-  border: 1px solid var(--brand-blue, #2563eb);
-  color: #fafafa;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-on-primary);
 }
 .primaryButton:hover:not(:disabled) {
-  background: var(--color-primary-hover, #1d4ed8);
+  background: var(--color-primary-hover);
 }
 
 .dangerButton {
-  background: #d32f2f;
-  border: 1px solid #d32f2f;
-  color: #fafafa;
+  background: var(--color-error);
+  border: 1px solid var(--color-error);
+  color: var(--color-on-primary);
 }
 .dangerButton:hover:not(:disabled) {
-  background: #b71c1c;
+  background: color-mix(in srgb, var(--color-error) 85%, var(--color-text-primary));
 }
 
 .successButton {
-  background: #2e7d32;
-  border: 1px solid #2e7d32;
-  color: #fafafa;
+  background: var(--color-success);
+  border: 1px solid var(--color-success);
+  color: var(--color-on-primary);
 }
 .successButton:hover:not(:disabled) {
-  background: #1b5e20;
+  background: color-mix(in srgb, var(--color-success) 85%, var(--color-text-primary));
 }
 
 .cancelButton:disabled,
@@ -112,13 +109,13 @@
 }
 
 .dialog button:focus-visible {
-  outline: 3px solid var(--brand-blue, #2563eb);
-  outline-offset: 3px;
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 
 @media (max-width: 480px) {
   .dialog {
-    padding: 20px;
+    padding: var(--space-5);
     max-height: calc(100dvh - 40px);
     overflow-y: auto;
   }
@@ -140,12 +137,12 @@
   box-shadow: var(--shadow-lg);
 }
 .nativeDialog::backdrop {
-  background: rgb(23 37 84 / 50%);
+  background: color-mix(in srgb, var(--color-text-primary) 50%, transparent);
 }
 .nativeDialog .dialog {
   max-width: none;
   box-sizing: border-box;
-  padding: 24px;
+  padding: var(--space-6);
   border-radius: inherit;
   background: var(--color-surface);
   box-shadow: none;
@@ -165,7 +162,7 @@
 }
 @media (max-width: 600px) {
   .nativeDialog .dialog {
-    padding: 20px;
+    padding: var(--space-5);
   }
   .nativeDialog .actions {
     flex-wrap: wrap;

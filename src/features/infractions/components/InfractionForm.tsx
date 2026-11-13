@@ -14,6 +14,7 @@ import type {
   InfractionType,
 } from '../types/infraction.types'
 import { InfractionMutationGuard } from './InfractionMutationGuard'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import styles from '@/features/incidents/components/IncidentForm.module.css'
 
 export function InfractionForm({ examId }: { examId: number }) {
@@ -87,7 +88,7 @@ export function InfractionForm({ examId }: { examId: number }) {
       </fieldset>
       <div className={styles.field}>
         <label htmlFor={`${id}-type`}>Tipo de infracción *</label>
-        <select
+        <Dropdown
           id={`${id}-type`}
           value={type}
           required
@@ -96,17 +97,16 @@ export function InfractionForm({ examId }: { examId: number }) {
           aria-describedby={
             request.fieldErrors.type ? `${id}-type-error` : undefined
           }
-          onChange={(event) =>
-            setType(event.target.value as InfractionType | '')
-          }
-        >
-          <option value="">Selecciona una categoría</option>
-          {Object.entries(INFRACTION_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          placeholder="Selecciona una categoría"
+          options={[
+            { value: '', label: 'Selecciona una categoría' },
+            ...Object.entries(INFRACTION_TYPE_LABELS).map(([value, label]) => ({
+              value: value as InfractionType,
+              label,
+            })),
+          ]}
+          onChange={(nextValue) => setType(nextValue as InfractionType | '')}
+        />
         {request.fieldErrors.type && (
           <p id={`${id}-type-error`} className={styles.error}>
             {request.fieldErrors.type}

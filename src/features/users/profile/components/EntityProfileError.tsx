@@ -1,6 +1,8 @@
 import { useId } from 'react'
+import { ChevronLeft } from 'lucide-react'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { Button, Card, Icon, Text } from '@/shared/components/ui/index'
 import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
 
 /**
@@ -22,16 +24,18 @@ export function EntityProfileError({
   return (
     <PageContainer labelledBy={titleId}>
       <PageHeader title={title} titleId={titleId} />
-      <div className={layoutStyles.sectionCard} role="alert">
-        <p>{message}</p>
-        <button
+      <Card as="div" className={layoutStyles.sectionCard} role="alert">
+        <Text>{message}</Text>
+        <Button
           type="button"
+          variant="secondary"
           className={layoutStyles.cancelBtn}
           onClick={onBack}
         >
-          {backLabel}
-        </button>
-      </div>
+          <Icon icon={ChevronLeft} size="sm" />
+          <span>{backLabel}</span>
+        </Button>
+      </Card>
     </PageContainer>
   )
 }

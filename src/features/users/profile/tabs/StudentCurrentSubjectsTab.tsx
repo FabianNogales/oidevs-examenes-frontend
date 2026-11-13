@@ -1,11 +1,12 @@
-import { useProfileRecords } from '../hooks/useProfileRecords'
-import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
+import { Card, Heading, Text } from '@/shared/components/ui/index'
+import { useProfileRecords } from '../hooks/useProfileRecords'
+import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
@@ -19,10 +20,16 @@ interface CurrentSubjectEnrollmentItem extends BaseTableEntity {
   academicTerm: string
 }
 
-export function StudentCurrentSubjectsTab({ entity }: ProfileTabComponentProps) {
+export function StudentCurrentSubjectsTab({
+  entity,
+}: ProfileTabComponentProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const records = useProfileRecords<CurrentSubjectEnrollmentItem>(entity, 'subjects', searchQuery)
+  const records = useProfileRecords<CurrentSubjectEnrollmentItem>(
+    entity,
+    'subjects',
+    searchQuery,
+  )
   const filteredSubjects = records.items
 
   const cardFields = useMemo<
@@ -75,17 +82,17 @@ export function StudentCurrentSubjectsTab({ entity }: ProfileTabComponentProps) 
   )
 
   return (
-    <section className={layoutStyles.sectionCard}>
+    <Card as="section" className={layoutStyles.sectionCard}>
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <h2>Materias actuales</h2>
-          <p>
+          <Heading level={2}>Materias actuales</Heading>
+          <Text variant="small" tone="secondary">
             Asignaturas en las que{' '}
             <strong>
               {entity.first_names} {entity.last_names}
             </strong>{' '}
             se encuentra inscrito durante el periodo académico activo.
-          </p>
+          </Text>
         </div>
         <ProfileActiveTermBadge
           className={`${layoutStyles.subSectionBadgeCount} ${layoutStyles.badgeCountActive}`}
@@ -109,6 +116,6 @@ export function StudentCurrentSubjectsTab({ entity }: ProfileTabComponentProps) 
         emptyTitle="Sin materias inscritas en la gestión actual"
         emptyDescription="El estudiante no registra inscripciones activas o no existen coincidencias con la búsqueda."
       />
-    </section>
+    </Card>
   )
 }

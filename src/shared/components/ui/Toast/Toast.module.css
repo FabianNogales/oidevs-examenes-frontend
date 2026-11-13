@@ -1,0 +1,141 @@
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-info);
+  border-radius: var(--radius-md);
+  background-color: var(--color-info-soft);
+  color: var(--color-text-primary);
+  font: var(--type-small);
+}
+
+.banner {
+  border-radius: var(--radius-sm);
+}
+
+.info {
+  background-color: var(--color-info-soft);
+  border-color: var(--color-info);
+}
+
+.info .iconWrap,
+.info .title {
+  color: var(--color-primary);
+}
+
+.success {
+  background-color: var(--color-success-soft);
+  border-color: var(--color-success);
+}
+
+.success .iconWrap,
+.success .title {
+  color: var(--color-success);
+}
+
+/* SKILL SEMI FLAT.md: Alert warning message text stays #172554 (--color-text-primary). */
+.warning {
+  background-color: var(--color-warning-soft);
+  border-color: var(--color-warning);
+}
+
+.warning .iconWrap,
+.warning .title {
+  color: var(--color-text-primary);
+}
+
+.danger {
+  background-color: var(--color-error-soft);
+  border-color: var(--color-error);
+}
+
+.danger .iconWrap,
+.danger .title {
+  color: var(--color-error);
+}
+
+.iconWrap {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.icon {
+  width: var(--space-5);
+  height: var(--space-5);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.title {
+  font-weight: var(--font-weight-semibold);
+}
+
+.message {
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dismissButton,
+.alert button.dismissButton,
+.toastItem button.dismissButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--space-8);
+  height: var(--space-8);
+  min-height: var(--space-8);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.dismissButton:hover,
+.alert button.dismissButton:hover,
+.toastItem button.dismissButton:hover {
+  background-color: var(--color-surface);
+  color: var(--color-accent);
+}
+
+.toastViewport {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(calc(100vw - var(--space-8)), 400px);
+}
+
+.toastItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font: var(--type-small);
+  box-shadow: var(--shadow-lg);
+}

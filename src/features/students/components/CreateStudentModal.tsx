@@ -5,6 +5,7 @@ import type { SubjectCareer } from '@/features/subjects/types/adminSubject.types
 import type { CreateStudentPayload, Student, StudentFieldErrors } from '@/features/students/types/adminStudent.types'
 import styles from '@/shared/styles/dialogBase.module.css'
 import { Button } from '@/shared/components/ui/Button/Button'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { StudentDialog } from './StudentDialog'
 
 const fields = [
@@ -71,16 +72,29 @@ export function CreateStudentModal({ onClose, onCreated }: { onClose: () => void
       </div>)}
       <div>
         <label className={styles.fieldLabel} htmlFor={`${id}-career`}>Carrera</label>
-        <select id={`${id}-career`} className={styles.input} required value={values.career_id}
-          disabled={saving || catalogLoading || Boolean(catalogError)} aria-invalid={Boolean(errors.career_id?.length)}
+        <Dropdown
+          id={`${id}-career`}
+          required
+          value={values.career_id}
+          disabled={saving || catalogLoading || Boolean(catalogError)}
+          aria-invalid={Boolean(errors.career_id?.length)}
           aria-describedby={errors.career_id?.length ? `${id}-career-error` : undefined}
-          onChange={(event) => { setValues((current) => ({ ...current, career_id: event.target.value }));
-            setErrors((current) => ({ ...current, career_id: undefined })) }}>
-          <option value="">{catalogLoading ? 'Cargando carreras…' : 'Seleccione una carrera'}</option>
-          {careers.map((career) => <option key={career.id} value={career.id}>
-            {career.code} — {career.name}{career.status === 'INACTIVE' ? ' (Inactiva)' : ''}
-          </option>)}
-        </select>
+          placeholder={catalogLoading ? 'Cargando carreras…' : 'Seleccione una carrera'}
+          options={[
+            {
+              value: '',
+              label: catalogLoading ? 'Cargando carreras…' : 'Seleccione una carrera',
+            },
+            ...careers.map((career) => ({
+              value: String(career.id),
+              label: `${career.code} — ${career.name}${career.status === 'INACTIVE' ? ' (Inactiva)' : ''}`,
+            })),
+          ]}
+          onChange={(nextValue) => {
+            setValues((current) => ({ ...current, career_id: String(nextValue) }))
+            setErrors((current) => ({ ...current, career_id: undefined }))
+          }}
+        />
         {errors.career_id?.length ? <p id={`${id}-career-error`} className={styles.inlineError}>{errors.career_id.join(' ')}</p> : null}
         {catalogError && <p role="alert">{catalogError} <Button variant="secondary" size="sm" onClick={() => {
           setCatalogLoading(true); setCatalogVersion((value) => value + 1)

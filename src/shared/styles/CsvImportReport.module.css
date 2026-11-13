@@ -36,7 +36,7 @@
 .summaryItem span {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 
 .summaryItem strong {
@@ -124,7 +124,7 @@
 .reportHeader span {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 
 .previewTableWrap {
@@ -190,7 +190,7 @@
 }
 
 .rowObservations strong {
-  color: var(--color-warning);
+  color: var(--color-text-primary);
   font-size: var(--font-size-sm);
 }
 

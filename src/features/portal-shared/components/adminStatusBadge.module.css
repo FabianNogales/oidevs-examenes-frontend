@@ -12,18 +12,19 @@
 
 .badge[data-status='PUBLISHED'],
 .badge[data-status='ACTIVE'] {
-  background: var(--brand-blue-light);
+  background: var(--color-info-soft);
   color: var(--color-primary);
 }
 
 .badge[data-status='DRAFT'] {
   background: var(--color-warning-soft);
-  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+  color: var(--color-text);
 }
 
 .badge[data-status='PENDING_CHANGES'] {
-  background: var(--brand-pink-light);
-  color: var(--brand-crimson);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .badge[data-status='CANCELLED'] {

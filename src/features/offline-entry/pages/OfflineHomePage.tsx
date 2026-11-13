@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { ArrowRight, Clock, FolderKanban } from 'lucide-react'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { OfflineAccessGate } from '../components/OfflineAccessGate'
 import { readOwnedOfflinePackages } from '../storage/offlineStore'
 import { offlineError } from '../api/offlineApi'
 import { formatOfflineTime } from '../utils/offlineRules'
 import type { OfflineIdentity } from '../services/offlineIdentity'
 import type { StoredPackage } from '../types/offline.types'
-import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
-import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import shared from "../components/OfflineShared.module.css";
 import distStyles from "../components/OfflineDistribution.module.css";
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
@@ -50,17 +50,16 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
   return (
     <main className={pageStyles.main}>
       <PageContainer labelledBy={titleId}>
-      <PageHeader
-        title="Mis listas locales"
-        titleId={titleId}
-        eyebrow="EIDA · Este dispositivo"
-        description={
-          <>
-            Paquetes descargados por {identity.displayName}. Los eventos se
-            conservan aunque salgas de una pantalla.
-          </>
-        }
-      />
+        <PageHeader
+          eyebrow="EIDA · Este dispositivo"
+          subtitle="Mis listas locales"
+          titleId={titleId}
+          description={`Paquetes descargados por ${identity.displayName}. Los eventos se conservan aunque salgas de una pantalla.`}
+          breadcrumbs={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Mis listas locales' },
+          ]}
+        />
       <p className={shared.notice}>
         Prepara y usa este espacio en la misma pestaña. Al cerrarla o bloquear
         el acceso puede ser necesario volver a verificar tu cuenta con conexión.
@@ -82,7 +81,7 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
           <FolderKanban
             size={36}
             strokeWidth={1.65}
-            color="var(--brand-blue)"
+            color="var(--color-primary)"
             style={{ marginInline: 'auto', marginBottom: '12px' }}
             aria-hidden="true"
           />

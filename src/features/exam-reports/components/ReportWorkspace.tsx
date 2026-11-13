@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import type {
   ReportExam,
   ReportFilters,
@@ -60,24 +61,20 @@ export function ReportWorkspace({
             <div className={styles.filters}>
               <label htmlFor={`${id}-type`}>
                 Tipo de reporte
-                <select
+                <Dropdown<ReportKind>
                   id={`${id}-type`}
                   disabled={report.busy}
                   value={filters.type}
-                  onChange={(e) =>
-                    change({ type: e.target.value as ReportKind })
-                  }
-                  aria-invalid={!!errors.type}
+                  invalid={Boolean(errors.type)}
                   aria-describedby={
                     errors.type ? `${id}-type-error` : undefined
                   }
-                >
-                  {exam.permissions.report_types.map((t) => (
-                    <option key={t} value={t}>
-                      {REPORT_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
+                  options={exam.permissions.report_types.map((t) => ({
+                    value: t,
+                    label: REPORT_LABELS[t],
+                  }))}
+                  onChange={(nextType) => change({ type: nextType })}
+                />
                 {errors.type && (
                   <small id={`${id}-type-error`} className={styles.error}>
                     {errors.type}

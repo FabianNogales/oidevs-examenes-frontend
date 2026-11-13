@@ -1,0 +1,63 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font: var(--type-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  white-space: nowrap;
+}
+
+.sm {
+  padding: 2px var(--space-2);
+}
+
+.md {
+  padding: var(--space-1) var(--space-3);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.neutral {
+  background-color: var(--color-surface-soft);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.info {
+  background-color: var(--color-info-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.accent {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-decorative);
+  color: var(--color-accent);
+}
+
+.success {
+  background-color: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+/* SKILL SEMI FLAT.md: Text on yellow warning must be #172554 (--color-text-primary), never white. */
+.warning {
+  background-color: var(--color-warning-soft);
+  border-color: var(--color-warning);
+  color: var(--color-text-primary);
+}
+
+.danger {
+  background-color: var(--color-error-soft);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}

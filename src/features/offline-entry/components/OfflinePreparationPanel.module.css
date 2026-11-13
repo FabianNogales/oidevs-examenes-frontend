@@ -18,7 +18,7 @@
   padding: 6px 14px;
   border-radius: var(--radius-pill);
   background: var(--color-surface-soft);
-  color: var(--brand-blue);
+  color: var(--color-primary);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
@@ -60,7 +60,7 @@
   padding: var(--space-8) var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: #fbfcfe;
+  background: var(--color-surface);
 }
 
 .emptyDownloadIcon {
@@ -70,16 +70,16 @@
   display: grid;
   place-items: center;
   background: var(--color-surface-soft);
-  color: var(--brand-blue);
+  color: var(--color-primary);
   margin-bottom: var(--space-3);
 }
 
 .emptyDownloadText {
   max-width: 48ch;
   margin: 0 0 var(--space-5);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-relaxed);
 }
 
@@ -87,7 +87,7 @@
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: #fbfcfe;
+  background: var(--color-surface);
 }
 
 .downloadPrimaryButton {
@@ -98,11 +98,11 @@
   min-height: 44px;
   padding: 0 var(--space-5);
   border-radius: var(--radius-md);
-  background: var(--brand-blue);
+  background: var(--color-primary);
   color: var(--color-on-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  box-shadow: 0 4px 12px rgb(37 99 235 / 22%);
+  box-shadow: var(--shadow-sm);
   transition: background-color var(--transition-fast);
 }
 
@@ -113,13 +113,13 @@
 .shellAlertCard {
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  border: 1px solid #f2d0d9;
-  background: var(--brand-pink-light);
-  color: var(--brand-crimson);
+  border: 1px solid var(--color-decorative);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .shellAlertCard[data-warning='false'] {
-  border-color: #bbf7d0;
+  border-color: var(--color-success);
   background: var(--color-success-soft);
   color: var(--color-success);
 }
@@ -134,7 +134,7 @@
 
 .shellAlertCard p {
   margin: 0;
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-relaxed);
 }

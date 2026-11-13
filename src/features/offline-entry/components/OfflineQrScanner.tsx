@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { Camera, Flashlight } from 'lucide-react'
 import { useEntryQrCamera } from '@/features/exams/hooks/useEntryQrCamera'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { provisionalQr } from '../utils/offlineRules'
 import shared from './OfflineShared.module.css'
 import captureStyles from './OfflineCapturePanel.module.css'
@@ -119,17 +120,15 @@ export function OfflineQrScanner({
       {camera.devices.length > 1 ? (
         <label className={captureStyles.searchField} htmlFor={cameraId}>
           Cámara
-          <select
+          <Dropdown
             id={cameraId}
             value={camera.deviceId}
-            onChange={(event) => camera.setDeviceId(event.target.value)}
-          >
-            {camera.devices.map((device, index) => (
-              <option key={device.deviceId} value={device.deviceId}>
-                {device.label || `Cámara ${index + 1}`}
-              </option>
-            ))}
-          </select>
+            options={camera.devices.map((device, index) => ({
+              value: device.deviceId,
+              label: device.label || `Cámara ${index + 1}`,
+            }))}
+            onChange={(nextValue) => camera.setDeviceId(nextValue)}
+          />
         </label>
       ) : null}
 

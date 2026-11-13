@@ -1,4 +1,5 @@
-import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
+import { CheckCircle2, XCircle } from 'lucide-react'
+import { Badge, Icon, Text } from '@/shared/components/ui/index'
 
 export type AcademicResult = 'APPROVED' | 'FAILED' | 'NOT_RECORDED'
 
@@ -7,13 +8,20 @@ export function AcademicResultBadge({ result }: { result: AcademicResult }) {
   // TODO(HU21-P03): map a verified persisted result before enabling these states.
   // Contract and original Git reference: docs/HU21_HU22_FUNCIONALIDADES_FUTURAS.md.
   if (result !== 'APPROVED' && result !== 'FAILED') {
-    return <span>Información no disponible: sin resultado registrado</span>
+    return (
+      <Text as="span" variant="small" tone="secondary">
+        Información no disponible: sin resultado registrado
+      </Text>
+    )
   }
   const isApproved = result === 'APPROVED'
   return (
-    <span className={`${tableStyles.statusBadge} ${isApproved ? tableStyles.statusActive : tableStyles.statusInactive}`}>
-      <span className={tableStyles.statusDot} aria-hidden="true" />
+    <Badge
+      tone={isApproved ? 'success' : 'danger'}
+      size="sm"
+      icon={<Icon icon={isApproved ? CheckCircle2 : XCircle} size="sm" />}
+    >
       {isApproved ? 'Aprobado' : 'Reprobado'}
-    </span>
+    </Badge>
   )
 }

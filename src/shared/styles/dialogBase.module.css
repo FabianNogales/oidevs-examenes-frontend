@@ -4,7 +4,7 @@
   z-index: 30;
   display: grid;
   place-items: center;
-  background: rgb(15 23 42 / 45%);
+  background: color-mix(in srgb, var(--color-text-primary) 45%, transparent);
   padding: var(--space-4);
   /* DS4.2c.2: neutralise the user-agent [popover] box (CollaborationModal); no effect elsewhere. */
   width: auto;
@@ -49,7 +49,7 @@
 .subjectName {
   margin: 0 0 var(--space-4);
   color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 
 .closeButton {
@@ -159,7 +159,7 @@
 
 .summaryBox h3 {
   margin: 0 0 var(--space-2);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
 }
 
 .summaryBox ul {

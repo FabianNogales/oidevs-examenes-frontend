@@ -1,11 +1,12 @@
-import { useProfileRecords } from '../hooks/useProfileRecords'
-import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import { useState, useMemo } from 'react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
+import { Badge, Card, Heading, Text } from '@/shared/components/ui/index'
+import { useProfileRecords } from '../hooks/useProfileRecords'
+import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
 
@@ -31,13 +32,21 @@ interface TeacherExamItem extends BaseTableEntity {
 }
 
 function getGroupTypeLabel(careersCount: number): string {
-  return careersCount > 1 ? 'Varias carreras asociadas' : careersCount === 1 ? 'Una carrera asociada' : 'Sin carreras asociadas'
+  return careersCount > 1
+    ? 'Varias carreras asociadas'
+    : careersCount === 1
+      ? 'Una carrera asociada'
+      : 'Sin carreras asociadas'
 }
 
 export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const records = useProfileRecords<TeacherExamItem>(entity, 'exams', searchQuery)
+  const records = useProfileRecords<TeacherExamItem>(
+    entity,
+    'exams',
+    searchQuery,
+  )
   const filteredExams = records.items
 
   const cardFields = useMemo<readonly CardFieldDef<TeacherExamItem>[]>(
@@ -61,7 +70,13 @@ export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
           <div className={cardStyles.inlinePairedRow}>
             <span className={tableStyles.primaryText}>{item.examDate}</span>
             <span className={cardStyles.inlineSecondaryLabel}>Examen</span>
-            <span className={layoutStyles.examTypeBadge}>{item.examType}</span>
+            <Badge
+              tone="accent"
+              size="sm"
+              className={layoutStyles.examTypeBadge}
+            >
+              {item.examType}
+            </Badge>
           </div>
         ),
       },
@@ -86,7 +101,9 @@ export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
         cell: (item) => {
           const isMixed = item.careers.length > 1
           return (
-            <span
+            <Badge
+              tone={isMixed ? 'warning' : 'info'}
+              size="sm"
               className={`${layoutStyles.rolePill} ${
                 isMixed
                   ? layoutStyles.rolePillCollaborator
@@ -94,7 +111,7 @@ export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
               }`}
             >
               {getGroupTypeLabel(item.careers.length)}
-            </span>
+            </Badge>
           )
         },
       },
@@ -112,20 +129,23 @@ export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
   )
 
   return (
-    <section className={layoutStyles.sectionCard}>
+    <Card as="section" className={layoutStyles.sectionCard}>
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <h2>Exámenes activos</h2>
-          <p>
+          <Heading level={2}>Exámenes activos</Heading>
+          <Text variant="small" tone="secondary">
             Evaluaciones programadas vigentes (pendientes de realización)
             asociadas al docente{' '}
             <strong>
               {entity.first_names} {entity.last_names}
             </strong>
             .
-          </p>
+          </Text>
         </div>
-        <ProfileActiveTermBadge className={layoutStyles.termBadge} label="Gestión activa" />
+        <ProfileActiveTermBadge
+          className={layoutStyles.termBadge}
+          label="Gestión activa"
+        />
       </div>
 
       <DataCardGrid
@@ -144,6 +164,6 @@ export function TeacherActiveExamsTab({ entity }: ProfileTabComponentProps) {
         emptyTitle="Sin exámenes activos programados"
         emptyDescription="El docente no tiene evaluaciones pendientes de realización o no hay coincidencias con la búsqueda."
       />
-    </section>
+    </Card>
   )
 }

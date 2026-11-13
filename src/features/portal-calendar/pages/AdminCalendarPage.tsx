@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
@@ -196,52 +197,53 @@ export function AdminCalendarPage() {
         <div className={styles.filters}>
           <label className={styles.field}>
             Visibilidad
-            <select
+            <Dropdown
               name="visibility"
               value={query.visibility}
-              onChange={(event) =>
-                setQuery({ ...query, page: 1, visibility: event.target.value })
+              options={[
+                { value: '', label: 'Todas' },
+                { value: 'PUBLIC', label: 'Públicas' },
+                { value: 'PRIVATE', label: 'Privadas' },
+              ]}
+              onChange={(nextValue) =>
+                setQuery({ ...query, page: 1, visibility: nextValue })
               }
-            >
-              <option value="">Todas</option>
-              <option value="PUBLIC">Públicas</option>
-              <option value="PRIVATE">Privadas</option>
-            </select>
+            />
           </label>
           <label className={styles.field}>
             Estado
-            <select
+            <Dropdown
               name="status"
               value={query.status}
-              onChange={(event) =>
-                setQuery({ ...query, page: 1, status: event.target.value })
+              options={[
+                { value: '', label: 'Todos los estados' },
+                ...Object.entries(STATUS_LABELS).map(([value, label]) => ({
+                  value,
+                  label,
+                })),
+              ]}
+              onChange={(nextValue) =>
+                setQuery({ ...query, page: 1, status: nextValue })
               }
-            >
-              <option value="">Todos los estados</option>
-              {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+            />
           </label>
           {categories.data?.length ? (
             <label className={styles.field}>
               Categoría
-              <select
+              <Dropdown
                 name="category_id"
                 value={query.category}
-                onChange={(event) =>
-                  setQuery({ ...query, page: 1, category: event.target.value })
+                options={[
+                  { value: '', label: 'Todas las categorías' },
+                  ...categories.data.map((category) => ({
+                    value: String(category.id),
+                    label: category.name,
+                  })),
+                ]}
+                onChange={(nextValue) =>
+                  setQuery({ ...query, page: 1, category: nextValue })
                 }
-              >
-                <option value="">Todas las categorías</option>
-                {categories.data.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
           ) : null}
         </div>

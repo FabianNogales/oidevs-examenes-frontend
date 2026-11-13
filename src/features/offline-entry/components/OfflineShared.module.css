@@ -3,10 +3,6 @@
    ========================================================================== */
 
 .page {
-  width: min(1300px, 100%);
-  max-width: 1300px;
-  padding: var(--space-6) var(--space-4) var(--space-10);
-  margin-inline: auto;
   flex: 1;
 }
 
@@ -26,7 +22,7 @@
 .eyebrow {
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin: 0 0 var(--space-2);
@@ -43,14 +39,14 @@
 }
 
 .panel h2 {
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-xl);
 }
 
 .panel h3 {
   margin: 0;
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-lg);
 }
 
@@ -111,7 +107,7 @@
 
 .details dd {
   margin: var(--space-1) 0 0;
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
   overflow-wrap: anywhere;
 }
@@ -123,7 +119,7 @@
   padding: 6px 12px;
   border-radius: var(--radius-pill);
   background: var(--color-surface-soft);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
@@ -149,7 +145,7 @@
 .badge[data-status='CONFLICT'],
 .badge[data-status='PENDING'] {
   background: var(--color-surface-accent);
-  color: var(--brand-crimson);
+  color: var(--color-accent);
 }
 
 .badge[data-status='REJECTED'] {
@@ -164,7 +160,7 @@
   margin-block: var(--space-4);
   border-left: 4px solid var(--color-primary);
   background: var(--color-surface-soft);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
 }
 
 .notice p,
@@ -178,7 +174,7 @@
 }
 
 .notice[data-warning='true'] {
-  border-color: var(--brand-crimson);
+  border-color: var(--color-accent);
   background: var(--color-surface-accent);
 }
 
@@ -211,7 +207,7 @@
   margin-top: 3px;
   width: 18px;
   height: 18px;
-  accent-color: var(--brand-blue);
+  accent-color: var(--color-primary);
   flex-shrink: 0;
 }
 

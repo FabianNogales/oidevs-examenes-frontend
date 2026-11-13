@@ -81,7 +81,7 @@ export function OfflineAccessGate({
             <ShieldAlert
               size={36}
               strokeWidth={1.65}
-              color="var(--brand-crimson)"
+              color="var(--color-accent)"
               style={{ marginInline: 'auto', marginBottom: '12px' }}
               aria-hidden="true"
             />

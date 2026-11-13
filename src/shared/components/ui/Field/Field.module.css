@@ -30,5 +30,5 @@
 
 .error {
   color: var(--color-error);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }

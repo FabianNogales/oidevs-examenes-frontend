@@ -1040,5 +1040,5 @@ test('HU44 public catalogue uses horizontal cards and keeps responsive keyboard 
     /@media \(max-width: 600px\)\s*\{[\s\S]*?\.serviceCardHorizontal\s*\{[^}]*grid-template-columns:\s*40px\s+minmax\(0,\s*1fr\)[\s\S]*?\.serviceCardHorizontal \.serviceAction\s*\{[^}]*justify-self:\s*end/,
   )
   assert.match(styles, /\.serviceAction:focus-visible\s*\{/)
-  assert.match(styles, /\.servicesPage\s*\{[^}]*background:\s*#eff6fc/s)
+  assert.match(styles, /\.servicesPage\s*\{[^}]*background:\s*var\(--color-background\)/s)
 })

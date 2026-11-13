@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
+import { Breadcrumb, LoadingState } from '@/shared/components/ui/index'
 
 import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
 import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
@@ -132,9 +132,7 @@ export function AdminTeacherDetailPage({
   if (loading) {
     return (
       <div className={layoutStyles.mainArea}>
-        <div className={layoutStyles.sectionCard}>
-          Cargando perfil del docente...
-        </div>
+        <LoadingState title="Cargando perfil del docente..." />
       </div>
     )
   }
@@ -168,7 +166,7 @@ export function AdminTeacherDetailPage({
       onOptionChange={handleOptionChange}
       onBack={() => navigate(backRoute)}
     >
-      <Breadcrumbs items={getProfileBreadcrumbs(moduleContext)} />
+      <Breadcrumb items={getProfileBreadcrumbs(moduleContext)} />
       {currentTabConfig.render({
         entity: unifiedEntity,
         moduleContext,

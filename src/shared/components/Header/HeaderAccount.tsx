@@ -72,7 +72,7 @@ export function HeaderAccount({
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#172554"
+              stroke="var(--color-text-primary)"
               strokeWidth="1.5"
               focusable="false"
             >
@@ -82,16 +82,16 @@ export function HeaderAccount({
           </span>
 
           <span className={styles.userDetails}>
-            <span className={styles.userName} style={{ fontWeight: 600 }}>{user.name}</span>
+            <span className={styles.userName}>{user.name}</span>
             {/* Texto de rol muteado */}
-            <span className={styles.userRole} style={{ color: '#68778F' }}>{roleLabel}</span>
+            <span className={styles.userRole}>{roleLabel}</span>
           </span>
 
           <svg
             className={styles.chevron}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#7A7E86"
+            stroke="var(--color-text-secondary)"
             strokeWidth="1.8"
             aria-hidden="true"
           >
@@ -139,7 +139,7 @@ export function HeaderNotifications({ notifications }: Pick<HeaderAccountProps, 
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#172554"
+              stroke="var(--color-text-primary)"
               strokeWidth="1.5"
               aria-hidden="true"
               focusable="false"

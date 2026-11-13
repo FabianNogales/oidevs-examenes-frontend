@@ -1,0 +1,95 @@
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.itemOpen {
+  border-color: var(--color-decorative);
+}
+
+.heading {
+  margin: 0;
+}
+
+.trigger,
+.accordion button.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--button-height);
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font: var(--type-body);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.trigger:hover:not(:disabled),
+.accordion button.trigger:hover:not(:disabled) {
+  background-color: var(--color-surface-soft);
+}
+
+.trigger:focus-visible,
+.accordion button.trigger:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.trigger:disabled,
+.accordion button.trigger:disabled {
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
+
+.triggerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  color: inherit;
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+}
+
+.chevron {
+  width: var(--space-4);
+  height: var(--space-4);
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.chevronOpen {
+  color: var(--color-accent);
+  transform: rotate(180deg);
+}
+
+.panel {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--color-border-soft);
+  color: var(--color-text-primary);
+  font: var(--type-body);
+}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { getRequestStatus } from '@/features/auth/utils/apiErrors'
 import { getEntryControlErrorMessage } from '../api/entryControlApi'
 import { processEntryQr } from '../api/entryQrApi'
@@ -196,18 +197,16 @@ export function EntryQrPanel({
               {camera.devices.length > 1 ? (
                 <div className={styles.cameraChoice}>
                   <label htmlFor={cameraId}>Cambiar cámara</label>
-                  <select
+                  <Dropdown
                     id={cameraId}
                     value={camera.deviceId}
                     disabled={processing || camera.state === 'loading'}
-                    onChange={(event) => camera.setDeviceId(event.target.value)}
-                  >
-                    {camera.devices.map((device, index) => (
-                      <option key={device.deviceId} value={device.deviceId}>
-                        {cameraLabels[index]}
-                      </option>
-                    ))}
-                  </select>
+                    options={camera.devices.map((device, index) => ({
+                      value: device.deviceId,
+                      label: cameraLabels[index],
+                    }))}
+                    onChange={(deviceId) => camera.setDeviceId(deviceId)}
+                  />
                 </div>
               ) : null}
               <span

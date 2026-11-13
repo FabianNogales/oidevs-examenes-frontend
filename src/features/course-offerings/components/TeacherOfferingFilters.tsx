@@ -1,5 +1,6 @@
 import type { Subject } from '@/features/subjects/types/subject.types'
 import { useId } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import styles from '../pages/AdminCourseOfferingsPage.module.css'
 
 export function TeacherOfferingFilters({
@@ -18,18 +19,18 @@ export function TeacherOfferingFilters({
   return (
     <div className={styles.teacherPeriodFilter}>
       <label htmlFor={id}>Periodo académico</label>
-      <select
+      <Dropdown
         id={id}
         value={term}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="">Todos los periodos</option>
-        {terms.map((name) => (
-          <option key={name} value={name}>
-            {name}
-          </option>
-        ))}
-      </select>
+        options={[
+          { value: '', label: 'Todos los periodos' },
+          ...terms.map((name) => ({
+            value: name,
+            label: name,
+          })),
+        ]}
+        onChange={(nextTerm) => onChange(nextTerm)}
+      />
     </div>
   )
 }

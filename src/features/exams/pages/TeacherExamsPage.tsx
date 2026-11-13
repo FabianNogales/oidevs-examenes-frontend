@@ -10,6 +10,7 @@ import {
 } from '@/features/exams/api/examManagementApi'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import management from './ExamManagement.module.css'
 
 import styles from './TeacherExamsPage.module.css'
@@ -72,18 +73,17 @@ export function TeacherExamsPage() {
             </label>
             <label htmlFor="exam-view">
               Mostrar
-              <select
+              <Dropdown<ExamView>
                 id="exam-view"
                 value={view}
-                onChange={(event) =>
-                  updateFilters(event.target.value as ExamView, search)
-                }
-              >
-                <option value="upcoming">Próximos y en curso</option>
-                <option value="past">Anteriores</option>
-                <option value="cancelled">Cancelados</option>
-                <option value="all">Todos</option>
-              </select>
+                options={[
+                  { value: 'upcoming', label: 'Próximos y en curso' },
+                  { value: 'past', label: 'Anteriores' },
+                  { value: 'cancelled', label: 'Cancelados' },
+                  { value: 'all', label: 'Todos' },
+                ]}
+                onChange={(nextView) => updateFilters(nextView, search)}
+              />
             </label>
 
             <button type="submit">Buscar</button>

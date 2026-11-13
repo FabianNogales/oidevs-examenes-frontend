@@ -22,7 +22,7 @@
   color: var(--color-primary);
 }
 
-.calendar button {
+.calendar button:where(:not([data-ds-button])) {
   min-height: 36px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
@@ -33,7 +33,7 @@
   font: inherit;
 }
 
-.calendar button:disabled {
+.calendar button:where(:not([data-ds-button])):disabled {
   opacity: 0.5;
   cursor: default;
 }
@@ -86,7 +86,7 @@
 }
 
 .dayWithEvents .dayNumber {
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
 }
 
 .day[aria-current='date'] {
@@ -116,7 +116,7 @@
 
 .dayWithEvents .dot {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
 }
 
 .calendarLegend {
@@ -142,7 +142,7 @@
   );
   color: var(--color-primary);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
 }
 
@@ -177,7 +177,7 @@
   border: 0;
   padding: 0;
   min-height: 32px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-align: left;
   overflow-wrap: anywhere;
 }
@@ -193,7 +193,7 @@
 }
 
 .details dt {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .description {
@@ -211,7 +211,7 @@
 
 .form legend {
   margin-block: 16px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .formRow {
@@ -277,7 +277,7 @@
   background: var(--color-surface-soft);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
 

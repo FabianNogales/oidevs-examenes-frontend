@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 import type {
   OfferingImportPreview,
@@ -59,20 +60,22 @@ export function OfferingImportReport({
       <div className={local.formActions}>
         <label className={local.filter}>
           Mostrar filas
-          <select
+          <Dropdown
             value={filter}
-            onChange={(event) => {
-              setFilter(event.target.value)
+            options={[
+              { value: 'ALL', label: 'Todas' },
+              {
+                value: confirmed ? 'IMPORTED' : 'VALID',
+                label: confirmed ? 'Importadas' : 'Listas para importar',
+              },
+              { value: 'ERROR', label: 'Con errores' },
+              { value: 'OMITTED', label: 'Omitidas' },
+            ]}
+            onChange={(nextFilter) => {
+              setFilter(nextFilter)
               setPage(1)
             }}
-          >
-            <option value="ALL">Todas</option>
-            <option value={confirmed ? 'IMPORTED' : 'VALID'}>
-              {confirmed ? 'Importadas' : 'Listas para importar'}
-            </option>
-            <option value="ERROR">Con errores</option>
-            <option value="OMITTED">Omitidas</option>
-          </select>
+          />
         </label>
         <Button
           variant="secondary"

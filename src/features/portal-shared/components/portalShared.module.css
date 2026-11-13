@@ -16,7 +16,7 @@
 
 .servicesPage {
   min-height: 100vh;
-  background: #eff6fc;
+  background: var(--color-background);
 }
 
 .serviceCards {
@@ -142,7 +142,7 @@
   min-height: 44px;
   margin-top: auto;
   color: var(--color-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
 }
 
@@ -164,7 +164,7 @@
 }
 
 .serviceCardHorizontal .serviceAction:hover {
-  background: color-mix(in srgb, var(--color-primary) 88%, #000);
+  background: var(--color-primary-hover);
   text-decoration: none;
 }
 
@@ -247,7 +247,7 @@
 
 .faq summary {
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .linkRow {
@@ -314,7 +314,7 @@
   padding: 0;
   margin-bottom: 10px;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-semibold);
 }
 
 .serviceEditor > p {
@@ -351,7 +351,7 @@
 
 .editorActions .publishAction {
   border-color: var(--color-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .editorActions .unpublishAction {
@@ -376,13 +376,13 @@
 
 .serviceStatusAction .publishAction {
   border-color: var(--color-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .serviceActions .unpublishAction {
   border-color: var(--color-error);
   background: var(--color-surface-soft);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .serviceConfirmation {
@@ -441,7 +441,7 @@
 }
 
 .informationAdminPage {
-  max-width: 1280px;
+  max-width: var(--content-max-width);
   margin-inline: auto;
   padding-block: 16px;
 }

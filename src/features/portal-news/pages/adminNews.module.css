@@ -27,6 +27,11 @@
   margin: 0 0 12px;
 }
 
+.newsAdminPage .statusFilter [data-ds-dropdown] {
+  flex: 1 1 auto;
+  min-width: 184px;
+}
+
 .newsAdminPage .clearFilters {
   min-height: 44px;
   white-space: nowrap;
@@ -92,7 +97,7 @@
 }
 
 .metadata dt {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .metadata dd {

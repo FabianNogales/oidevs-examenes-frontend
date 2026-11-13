@@ -64,7 +64,7 @@
 
 .manualReviewNote h2 {
   margin: 0 0 var(--space-2);
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: 1.05rem;
 }
 
@@ -326,7 +326,7 @@ table.bulkErrors {
 }
 .studentIdentifiers dd {
   margin: 0;
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   overflow-wrap: break-word;
 }
 .statusField {

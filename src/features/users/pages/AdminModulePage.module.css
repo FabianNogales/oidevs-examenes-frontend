@@ -1,14 +1,10 @@
 .page {
-  display: flex;
-  justify-content: center;
-
   width: 100%;
-
-  padding: 48px 24px;
 }
 
 .content {
-  width: min(100%, 1100px);
+  width: 100%;
+  max-width: var(--content-max-width);
 
   padding: 36px;
 

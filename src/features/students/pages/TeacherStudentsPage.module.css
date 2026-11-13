@@ -23,9 +23,9 @@
   background: linear-gradient(
     180deg,
     var(--color-surface) 0%,
-    rgba(255, 255, 255, 0.9) 100%
+    color-mix(in srgb, var(--color-surface) 90%, transparent) 100%
   );
-  box-shadow: 0 10px 22px rgb(15 23 42 / 6%);
+  box-shadow: var(--shadow-sm);
   transition:
     transform 180ms ease,
     box-shadow 180ms ease,
@@ -33,9 +33,9 @@
 }
 
 .subjectCard:hover {
-  border-color: rgb(59 130 246 / 35%);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgb(15 23 42 / 10%);
+  box-shadow: var(--shadow-md);
 }
 
 .cardBody {
@@ -50,7 +50,7 @@
 
 .subjectMeta h2 {
   margin: 0;
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: clamp(1.05rem, 1.8vw, 1.35rem);
   line-height: 1.4;
   font-weight: var(--font-weight-semibold);
@@ -80,7 +80,7 @@
 .metaValue {
   color: var(--color-text);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   word-break: break-word;
 }
 

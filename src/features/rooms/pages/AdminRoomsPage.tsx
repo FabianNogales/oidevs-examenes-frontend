@@ -3,7 +3,7 @@ import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useCallback, useState, type FormEvent } from 'react'
 import { Button } from '@/shared/components/ui/Button/Button'
 import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
-import { Select } from '@/shared/components/ui/Field/Select'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { TextInput } from '@/shared/components/ui/Field/TextInput'
 import { Snackbar } from '@/shared/components/Snackbar'
 import type { AuthNotice } from '@/features/auth/types/auth'
@@ -127,20 +127,21 @@ export function AdminRoomsPage() {
           <Button type="submit">Buscar</Button>
           <label className={styles.filter}>
             Estado
-            <Select
+            <Dropdown
               value={query.status}
-              onChange={(event) =>
+              options={[
+                { value: '', label: 'Todos' },
+                { value: 'ACTIVE', label: 'Activos' },
+                { value: 'INACTIVE', label: 'Inactivos' },
+              ]}
+              onChange={(nextValue) =>
                 changeQuery({
                   ...query,
                   page: 1,
-                  status: event.target.value as RoomStatus | '',
+                  status: nextValue as RoomStatus | '',
                 })
               }
-            >
-              <option value="">Todos</option>
-              <option value="ACTIVE">Activos</option>
-              <option value="INACTIVE">Inactivos</option>
-            </Select>
+            />
           </label>
           {filtered && (
             <Button
