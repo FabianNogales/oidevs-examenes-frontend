@@ -1,7 +1,11 @@
 import { StudentProfileField } from '@/features/students/components/StudentProfileField'
 import { StudentProfilePhoto } from '@/features/students/components/StudentProfilePhoto'
 import { useStudentProfile } from '@/features/students/hooks/useStudentProfile'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import styles from './StudentProfilePage.module.css'
+
+const titleId = 'student-profile-title'
 
 export function StudentProfilePage() {
   const {
@@ -15,13 +19,16 @@ export function StudentProfilePage() {
   } = useStudentProfile()
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1>Mi perfil</h1>
-        <p>
-          Consulta tu información personal y académica registrada en el sistema.
-        </p>
-      </header>
+    <PageContainer labelledBy={titleId} className={styles.page}>
+      <PageHeader
+        title="Mi perfil"
+        titleId={titleId}
+        breadcrumbs={[
+          { label: 'Inicio', to: '/' },
+          { label: 'Mi perfil', to: '/students/profile' },
+        ]}
+        description="Consulta tu información personal y académica registrada en el sistema."
+      />
 
       {loading ? (
         <p className={styles.state} role="status">
@@ -101,6 +108,6 @@ export function StudentProfilePage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

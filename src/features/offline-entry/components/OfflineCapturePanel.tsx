@@ -11,8 +11,8 @@ import type {
 import { packageBlocker, studentBlocker } from '../utils/offlineRules'
 import { OfflineStudentList } from './OfflineStudentList'
 import { OfflineQrScanner } from './OfflineQrScanner'
-import shared from './styles/OfflineShared.module.css'
-import captureStyles from './styles/OfflineCapturePanel.module.css'
+import shared from './OfflineShared.module.css'
+import captureStyles from './OfflineCapturePanel.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export function OfflineCapturePanel({

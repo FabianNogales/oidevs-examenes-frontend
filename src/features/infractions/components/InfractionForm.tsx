@@ -1,5 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link, Navigate } from 'react-router'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
+import { useExpulsions } from '@/features/expulsions/hooks/useExpulsionQuery'
+import { Field } from '@/shared/components/ui/Field/Field'
+import { Select } from '@/shared/components/ui/Field/Select'
+import { CaseExpulsion } from '@/features/expulsions/components/CaseExpulsion'
+import { Link } from 'react-router'
 import type { FormEvent } from 'react'
 import { IncidentStudentPicker } from '@/features/incidents/components/IncidentStudentPicker'
 import { createInfraction } from '../api/infractionsApi'
@@ -14,12 +19,27 @@ import type {
   InfractionType,
 } from '../types/infraction.types'
 import { InfractionMutationGuard } from './InfractionMutationGuard'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import styles from '@/features/incidents/components/IncidentForm.module.css'
 
-export function InfractionForm({ examId }: { examId: number }) {
+export function InfractionForm({
+  examId,
+  initialStudent = null,
+  onCancel,
+  onBusyChange,
+}: {
+  examId: number
+  initialStudent?: InfractionStudent | null
+  onCancel?: () => void
+  onBusyChange?: (busy: boolean) => void
+}) {
   const id = useId()
+  const measures = useExpulsions(examId)
+  const [decision, setDecision] = useState('record')
   const form = useRef<HTMLFormElement>(null)
-  const [student, setStudent] = useState<InfractionStudent | null>(null)
+  const [student, setStudent] = useState<InfractionStudent | null>(
+    initialStudent,
+  )
   const [type, setType] = useState<InfractionType | ''>('')
   const [description, setDescription] = useState('')
   const [observations, setObservations] = useState('')
@@ -27,7 +47,10 @@ export function InfractionForm({ examId }: { examId: number }) {
     (payload: CreateInfractionPayload) => createInfraction(examId, payload),
     validateInfraction,
   )
-  const back = `/teacher/exams/${examId}/infractions`
+  const back = `/exams/${examId}/incidents?from=teacher&kind=infractions`
+  useEffect(() => {
+    onBusyChange?.(request.busy)
+  }, [request.busy, onBusyChange])
   useEffect(() => {
     if (Object.keys(request.fieldErrors).length)
       form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
@@ -43,11 +66,25 @@ export function InfractionForm({ examId }: { examId: number }) {
   }
   if (request.saved)
     return (
-      <Navigate
-        to={`${back}/${request.saved.id}`}
-        replace
-        state={{ createdInfractionId: request.saved.id }}
-      />
+      <section className={styles.panel}>
+        <p role="status">Infracción #{request.saved.id} registrada.</p>
+        <CaseExpulsion
+          record={request.saved}
+          refresh={() => {}}
+          initialOpen={decision === 'expel'}
+          onBusyChange={onBusyChange}
+        />
+        <ButtonLink
+          to={`/teacher/exams/${examId}/infractions/${request.saved.id}`}
+        >
+          Ver caso y seguimiento
+        </ButtonLink>
+        {onCancel && (
+          <button type="button" onClick={onCancel}>
+            Continuar control de ingreso
+          </button>
+        )}
+      </section>
     )
   return (
     <form
@@ -87,7 +124,7 @@ export function InfractionForm({ examId }: { examId: number }) {
       </fieldset>
       <div className={styles.field}>
         <label htmlFor={`${id}-type`}>Tipo de infracción *</label>
-        <select
+        <Dropdown
           id={`${id}-type`}
           value={type}
           required
@@ -96,17 +133,16 @@ export function InfractionForm({ examId }: { examId: number }) {
           aria-describedby={
             request.fieldErrors.type ? `${id}-type-error` : undefined
           }
-          onChange={(event) =>
-            setType(event.target.value as InfractionType | '')
-          }
-        >
-          <option value="">Selecciona una categoría</option>
-          {Object.entries(INFRACTION_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          placeholder="Selecciona una categoría"
+          options={[
+            { value: '', label: 'Selecciona una categoría' },
+            ...Object.entries(INFRACTION_TYPE_LABELS).map(([value, label]) => ({
+              value: value as InfractionType,
+              label,
+            })),
+          ]}
+          onChange={(nextValue) => setType(nextValue as InfractionType | '')}
+        />
         {request.fieldErrors.type && (
           <p id={`${id}-type-error`} className={styles.error}>
             {request.fieldErrors.type}
@@ -156,6 +192,27 @@ export function InfractionForm({ examId }: { examId: number }) {
           </p>
         )}
       </div>
+      <Field label="Decisión">
+        {(control) => (
+          <Select
+            {...control}
+            value={decision}
+            disabled={request.busy || request.needsRefresh}
+            onChange={(event) => setDecision(event.target.value)}
+          >
+            <option value="record">Solo registrar</option>
+            {measures.data?.permissions.can_create && (
+              <option value="expel">Registrar y expulsar del examen</option>
+            )}
+          </Select>
+        )}
+      </Field>
+      {decision === 'expel' && (
+        <p>
+          Primero se guardará el caso. Después podrás justificar y confirmar la
+          expulsión autorizada.
+        </p>
+      )}
       {request.error && (
         <p role="alert" className={styles.error}>
           {request.error}
@@ -172,13 +229,18 @@ export function InfractionForm({ examId }: { examId: number }) {
           to={back}
           aria-disabled={request.busy}
           onClick={(event) => {
-            if (request.busy) event.preventDefault()
+            if (request.busy || onCancel) event.preventDefault()
+            if (!request.busy) onCancel?.()
           }}
         >
           Cancelar
         </Link>
         <button type="submit" disabled={request.busy || request.needsRefresh}>
-          {request.busy ? 'Registrando…' : 'Registrar infracción'}
+          {request.busy
+            ? 'Registrando…'
+            : decision === 'expel'
+              ? 'Registrar y continuar'
+              : 'Registrar infracción'}
         </button>
       </div>
     </form>

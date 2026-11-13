@@ -202,7 +202,8 @@ test('HU30 unauthorized detail exposes neither original evidence nor a fabricate
     'features/infractions/pages/InfractionDetailPage.tsx',
   )
   const root = InfractionDetailPage()
-  ui.h.render(() => root.type(root.props))
+  const resolved = root.type(root.props)
+  ui.h.render(() => resolved.type(resolved.props))
   await settle()
   const tree = ui.h.render()
   assert.match(textContent(tree), /No tienes autorización/)

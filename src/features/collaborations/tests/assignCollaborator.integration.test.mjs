@@ -205,7 +205,8 @@ test('lookup failure leaves the dialog open with the query and allows explicit r
   } })
   await ui.search('Persona')
   assert.equal(ui.closes, 0)
-  assert.equal(nodes(ui.tree, (node) => node.props?.role === 'dialog').length, 1)
+  // G5.1: the shell is PortalDialog, a native <dialog> (implicit role, no role attribute).
+  assert.equal(nodes(ui.tree, (node) => node.type === 'dialog').length, 1)
   assert.equal(ui.input().props.value, 'Persona')
   assert.deepEqual(ui.alerts(), ['No se pudieron consultar los usuarios.Reintentar búsqueda'])
   fail = false
@@ -236,7 +237,7 @@ for (const [name, status, body, expected] of [
     await ui.search('Persona')
     ui.select(first.id)
     await ui.assign()
-    const dialog = nodes(ui.tree, (node) => node.props?.role === 'dialog')[0]
+    const dialog = nodes(ui.tree, (node) => node.type === 'dialog')[0]
     assert.ok(dialog)
     assert.deepEqual(nodes(dialog, (node) => node.props?.role === 'alert').map(textContent), [expected])
     assert.equal(ui.closes, 0)

@@ -2,6 +2,7 @@ import type { AcademicTerm } from '../types/academicTerm.types'
 import { formatAcademicTermDate } from '../utils/academicTermDate'
 import { AcademicTermStatusBadge } from './AcademicTermStatusBadge'
 import styles from './AcademicTermModal.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function AcademicTermDetails({
   term,
@@ -43,16 +44,15 @@ export function AcademicTermDetails({
         </div>
       </dl>
       <footer className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
+        <Button
+          variant="secondary"
           onClick={onClose}
         >
           Cerrar
-        </button>
-        <button type="button" className={styles.primaryButton} onClick={onEdit}>
+        </Button>
+        <Button onClick={onEdit}>
           Editar periodo
-        </button>
+        </Button>
       </footer>
     </>
   )

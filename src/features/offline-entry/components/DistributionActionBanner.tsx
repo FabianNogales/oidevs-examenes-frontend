@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { ArrowUpRight, Lock, MonitorDown, RefreshCw } from 'lucide-react'
-import shared from './styles/OfflineShared.module.css'
-import distStyles from './styles/OfflineDistribution.module.css'
+import shared from './OfflineShared.module.css'
+import distStyles from './OfflineDistribution.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export interface DistributionActionBannerProps {

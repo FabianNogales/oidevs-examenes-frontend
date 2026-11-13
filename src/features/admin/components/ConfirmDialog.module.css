@@ -1,2 +1,0 @@
-/* Compatibility stylesheet; new consumers import the shared component. */
-@import '../../../shared/components/ConfirmDialog/ConfirmDialog.module.css';

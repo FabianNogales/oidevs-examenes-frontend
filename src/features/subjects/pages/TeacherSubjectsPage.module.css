@@ -1,35 +1,9 @@
-.page {
-  min-height: calc(100dvh - var(--app-header-height) - var(--footer-height));
-  padding: var(--space-10) var(--content-gutter);
-  background: #eaf3ff;
-}
-
+/* U1: content card; heading and layout come from PageHeader/PageContainer. */
 .content {
-  width: min(100%, 1120px);
-  margin-inline: auto;
   padding: var(--space-8);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-md);
-}
-
-.pageHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-6);
-}
-
-.pageHeader h1 {
-  margin: 0;
-  color: var(--brand-navy);
-  font-size: var(--font-size-3xl);
-}
-
-.pageHeader p {
-  margin: var(--space-2) 0 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
 }
 
 .successBanner {
@@ -38,10 +12,10 @@
   gap: var(--space-2);
   margin-bottom: var(--space-5);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--color-info);
   border-radius: var(--radius-md);
-  background: #eff6ff;
-  color: var(--brand-navy);
+  background: var(--color-info-soft);
+  color: var(--color-text);
 }
 
 .state {
@@ -86,15 +60,7 @@
 }
 
 @media (max-width: 640px) {
-  .page {
-    padding-block: var(--space-6);
-  }
-
   .content {
     padding: var(--space-5);
-  }
-
-  .pageHeader h1 {
-    font-size: var(--font-size-2xl);
   }
 }

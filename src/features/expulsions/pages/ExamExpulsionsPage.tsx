@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Navigate, useParams, useSearchParams } from 'react-router'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { formatIncidentDate } from '@/features/incidents/utils/incidentDisplay'
@@ -7,6 +7,7 @@ import { ExpulsionLayout } from '../components/ExpulsionLayout'
 import { useExpulsions } from '../hooks/useExpulsionQuery'
 import type { Expulsion } from '../types/expulsion.types'
 import styles from '@/features/incidents/pages/Incidents.module.css'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
 type Row = Omit<Expulsion, 'status'> & { expulsion_status: Expulsion['status'] }
 const columns: TableColumnDef<Row>[] = [
   {
@@ -31,24 +32,24 @@ const columns: TableColumnDef<Row>[] = [
   },
   { id: 'responsible', header: 'Responsable', cell: (v) => v.expelled_by.name },
 ]
-function List({ examId }: { examId: number }) {
+export function ExpulsionRecords({
+  examId,
+  embedded = false,
+}: {
+  examId: number
+  embedded?: boolean
+}) {
   const [params, setParams] = useSearchParams()
   const page = params.has('page') ? Number(params.get('page')) : 1
   const query = useExpulsions(examId, page)
   const response = query.data
   return (
     <ExpulsionLayout
+      embedded={embedded}
       examId={examId}
       exam={response?.exam}
       title="Expulsiones del examen"
     >
-      {response?.permissions.can_create && (
-        <div className={styles.access}>
-          <Link to={`/teacher/exams/${examId}/expulsions/create`}>
-            Registrar expulsión
-          </Link>
-        </div>
-      )}
       <p className={styles.note}>
         Las expulsiones conservan los registros de asistencia, las infracciones
         y los antecedentes del estudiante.
@@ -65,7 +66,9 @@ function List({ examId }: { examId: number }) {
         entityLabel="expulsiones"
         viewActionLabel="Ver detalle"
         getProfilePath={(v) =>
-          `/teacher/exams/${examId}/expulsions/${v.id}${page > 1 ? `?page=${page}` : ''}`
+          v.infraction
+            ? `/teacher/exams/${examId}/infractions/${v.infraction.id}`
+            : `/teacher/exams/${examId}/expulsions/${v.id}${page > 1 ? `?page=${page}` : ''}`
         }
         emptyTitle="No hay expulsiones registradas"
         emptyDescription="Aquí aparecerán las expulsiones autorizadas de este examen."
@@ -78,7 +81,13 @@ function List({ examId }: { examId: number }) {
               }
             : null
         }
-        onPageChange={(v) => setParams(v === 1 ? {} : { page: String(v) })}
+        onPageChange={(v) =>
+          setParams((current) => {
+            const next = new URLSearchParams(current)
+            next.set('page', String(v))
+            return next
+          })
+        }
       />
     </ExpulsionLayout>
   )
@@ -87,8 +96,14 @@ export function ExamExpulsionsPage() {
   const { examId } = useParams()
   const id = Number(examId)
   return positiveId(id) ? (
-    <List key={id} examId={id} />
+    <Navigate
+      replace
+      to={`/exams/${id}/incidents?from=teacher&measure=EXPELLED`}
+    />
   ) : (
-    <p role="alert">El identificador del examen no es válido.</p>
+    <InvalidExamPage
+      title="Expulsiones del examen"
+      message="El identificador del examen no es válido."
+    />
   )
 }

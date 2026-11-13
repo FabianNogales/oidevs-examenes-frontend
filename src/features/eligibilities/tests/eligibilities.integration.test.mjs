@@ -475,8 +475,13 @@ function modal(api, eligibility, onSave) {
       InfoCircleIcon: 'info-icon',
       UserIcon: 'user-icon',
     },
-    '@/features/collaborations/components/CollaborationModal': {
-      CollaborationModal: 'modal',
+    // G5.2: the shell is PortalDialog (it was CollaborationModal).
+    '@/shared/components/PortalDialog/PortalDialog': {
+      PortalDialog: 'modal',
+    },
+    // The decorative student avatar loads its photo through AuthenticatedImage (Arqmoc ad44491).
+    '@/shared/components/AuthenticatedImage/AuthenticatedImage': {
+      AuthenticatedImage: 'authenticated-image',
     },
     '../api/eligibilitiesApi': api,
     '../utils/eligibilityDisplay': {

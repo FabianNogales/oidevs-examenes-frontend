@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
-import pageStyles from '@/features/exams/pages/TeacherExamsPage.module.css'
 import {
   EligibilityAutomationApiError,
   getEligibilityCriteria,
@@ -294,237 +295,204 @@ export function AdminEligibilityPoliciesPage() {
   }
 
   return (
-    <main className={pageStyles.page}>
-      <section className={pageStyles.content}>
-        <Breadcrumbs
-          items={[
-            { label: 'Administración', to: '/admin' },
-            { label: 'Criterios de habilitación' },
-          ]}
-        />
-        <header className={pageStyles.pageHeader}>
-          <h1>Criterios de habilitación</h1>
-          <p>
-            Administra los criterios disponibles para la evaluación automática
-            de habilitaciones.
-          </p>
-        </header>
-        {error ? (
-          <div role="alert" className={styles.error}>
-            <p>{error}</p>
-            {conflict ? (
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                onClick={() => void refreshRevisionPreservingDraft()}
-              >
-                Cargar revisión actual conservando mis cambios
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-        {notice ? (
-          <p role="status" className={styles.success}>
-            {notice}
-          </p>
-        ) : null}
-        {loading ? <p role="status">Cargando criterios…</p> : null}
-        {catalogRevision ? (
-          <p className={styles.note}>Criterios disponibles: {meta.total}</p>
-        ) : null}
-        <section
-          className={styles.criterionCatalog}
-          aria-label="Catálogo de criterios"
-        >
-          {criteria.map((criterion) => (
-            <article
-              className={styles.criterionCatalogCard}
-              key={criterion.code}
+    <PageContainer labelledBy="eligibility-criteria-title">
+      <PageHeader
+        title="Criterios de habilitación"
+        titleId="eligibility-criteria-title"
+        description="Administra los criterios disponibles para la evaluación automática de habilitaciones."
+        breadcrumbs={[
+          { label: 'Administración', to: '/admin' },
+          { label: 'Criterios de habilitación' },
+        ]}
+      />
+      {error ? (
+        <div role="alert" className={styles.error}>
+          <p>{error}</p>
+          {conflict ? (
+            <button
+              type="button"
+              className={sharedStyles.secondaryButton}
+              onClick={() => void refreshRevisionPreservingDraft()}
             >
-              <header className={styles.criterionCatalogHeader}>
-                <div>
-                  <h2>{criterion.name}</h2>
-                  <span
-                    className={`${styles.status} ${criterion.status === 'ACTIVE' ? styles.statusActive : styles.statusInactive}`}
-                  >
-                    {criterion.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
-                <div className={styles.criterionCatalogActions}>
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    onClick={() => startEditing(criterion)}
-                    disabled={saving || statusWorking}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    onClick={() => setPendingStatus(criterion)}
-                    disabled={saving || statusWorking}
-                  >
-                    {criterion.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
-                  </button>
-                  <button
-                    type="button"
-                    className={sharedStyles.secondaryButton}
-                    onClick={() => void toggleHistory(criterion)}
-                    disabled={historyLoading}
-                  >
-                    {historyCode === criterion.code
-                      ? 'Ocultar historial'
-                      : 'Historial'}
-                  </button>
-                </div>
-              </header>
-              <p>{criterion.description || 'Sin descripción disponible.'}</p>
-              <dl className={styles.criterionCatalogSummary}>
-                <div>
-                  <dt>Parámetros por examen</dt>
-                  <dd>
-                    {parameterSummary(criterion).length ? (
-                      <ul>
-                        {parameterSummary(criterion).map((summary) => (
-                          <li key={summary}>{summary}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      'Sin parámetros editables'
-                    )}
-                  </dd>
-                </div>
-              </dl>
-              {editingCode === criterion.code && draft ? (
-                <form
-                  className={styles.criterionEditForm}
-                  onSubmit={(event) => void saveCriterion(event)}
-                >
-                  <h3>Editar criterio</h3>
-                  <label>
-                    Nombre
-                    <input
-                      required
-                      maxLength={200}
-                      value={draft.name}
-                      onChange={(event) =>
-                        setDraft({ ...draft, name: event.currentTarget.value })
-                      }
-                    />
-                  </label>
-                  <label>
-                    Descripción
-                    <textarea
-                      maxLength={1000}
-                      value={draft.description}
-                      onChange={(event) =>
-                        setDraft({
-                          ...draft,
-                          description: event.currentTarget.value,
-                        })
-                      }
-                    />
-                  </label>
-                  <div className={styles.policySaveActions}>
-                    <button
-                      type="submit"
-                      className={sharedStyles.primaryButton}
-                      disabled={saving || !draft.name.trim()}
-                    >
-                      {saving ? 'Guardando…' : 'Guardar cambios'}
-                    </button>
-                    <button
-                      type="button"
-                      className={sharedStyles.secondaryButton}
-                      disabled={saving}
-                      onClick={cancelEditing}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              ) : null}
-              {historyCode === criterion.code ? (
-                <section
-                  className={styles.criterionHistory}
-                  aria-label={`Historial de ${criterion.name}`}
-                >
-                  <h3>Historial</h3>
-                  {historyLoading ? (
-                    <p role="status">Cargando historial…</p>
-                  ) : history?.length ? (
-                    history.map((entry) => (
-                      <article key={entry.id}>
-                        <h4>{historyAction(entry)}</h4>
-                        <p>
-                          {entry.user_id
-                            ? `Usuario #${entry.user_id}`
-                            : 'Responsable no disponible'}
-                          {' · '}
-                          <time dateTime={entry.created_at}>
-                            {evaluationDateLabel(entry.created_at)}
-                          </time>
-                        </p>
-                        {historyChanges(entry).map((change) => (
-                          <p key={change}>{change}</p>
-                        ))}
-                      </article>
-                    ))
-                  ) : (
-                    <p>No hay cambios registrados para este criterio.</p>
-                  )}
-                </section>
-              ) : null}
-            </article>
-          ))}
-          {!loading && criteria.length === 0 && !error ? (
-            <p role="status">No hay criterios disponibles.</p>
+              Cargar revisión actual conservando mis cambios
+            </button>
           ) : null}
-        </section>
-        {pendingStatus ? (
-          <div
-            className={styles.criterionStatusDialog}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="criterion-status-title"
+        </div>
+      ) : null}
+      {notice ? (
+        <p role="status" className={styles.success}>
+          {notice}
+        </p>
+      ) : null}
+      {loading ? <p role="status">Cargando criterios…</p> : null}
+      {catalogRevision ? (
+        <p className={styles.note}>Criterios disponibles: {meta.total}</p>
+      ) : null}
+      <section
+        className={styles.criterionCatalog}
+        aria-label="Catálogo de criterios"
+      >
+        {criteria.map((criterion) => (
+          <article
+            className={styles.criterionCatalogCard}
+            key={criterion.code}
           >
-            <div className={styles.panel}>
-              <h2 id="criterion-status-title">
-                {pendingStatus.status === 'ACTIVE'
-                  ? '¿Desactivar este criterio?'
-                  : '¿Activar este criterio?'}
-              </h2>
-              <p>
-                {pendingStatus.status === 'ACTIVE'
-                  ? 'Los nuevos cálculos dejarán de utilizar este criterio. Los resultados históricos no serán modificados.'
-                  : 'Este criterio estará disponible para configuraciones y nuevos cálculos.'}
-              </p>
-              <p>
-                <strong>{pendingStatus.name}</strong>
-              </p>
-              <div className={styles.policySaveActions}>
+            <header className={styles.criterionCatalogHeader}>
+              <div>
+                <h2>{criterion.name}</h2>
+                <span
+                  className={`${styles.status} ${criterion.status === 'ACTIVE' ? styles.statusActive : styles.statusInactive}`}
+                >
+                  {criterion.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+              <div className={styles.criterionCatalogActions}>
                 <button
                   type="button"
-                  className={sharedStyles.primaryButton}
-                  disabled={statusWorking}
-                  onClick={() => void confirmStatusChange()}
+                  className={sharedStyles.secondaryButton}
+                  onClick={() => startEditing(criterion)}
+                  disabled={saving || statusWorking}
                 >
-                  {statusWorking ? 'Actualizando…' : 'Confirmar'}
+                  Editar
                 </button>
                 <button
                   type="button"
                   className={sharedStyles.secondaryButton}
-                  disabled={statusWorking}
-                  onClick={() => setPendingStatus(null)}
+                  onClick={() => setPendingStatus(criterion)}
+                  disabled={saving || statusWorking}
                 >
-                  Cancelar
+                  {criterion.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
+                </button>
+                <button
+                  type="button"
+                  className={sharedStyles.secondaryButton}
+                  onClick={() => void toggleHistory(criterion)}
+                  disabled={historyLoading}
+                >
+                  {historyCode === criterion.code
+                    ? 'Ocultar historial'
+                    : 'Historial'}
                 </button>
               </div>
-            </div>
-          </div>
+            </header>
+            <p>{criterion.description || 'Sin descripción disponible.'}</p>
+            <dl className={styles.criterionCatalogSummary}>
+              <div>
+                <dt>Parámetros por examen</dt>
+                <dd>
+                  {parameterSummary(criterion).length ? (
+                    <ul>
+                      {parameterSummary(criterion).map((summary) => (
+                        <li key={summary}>{summary}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    'Sin parámetros editables'
+                  )}
+                </dd>
+              </div>
+            </dl>
+            {editingCode === criterion.code && draft ? (
+              <form
+                className={styles.criterionEditForm}
+                onSubmit={(event) => void saveCriterion(event)}
+              >
+                <h3>Editar criterio</h3>
+                <label>
+                  Nombre
+                  <input
+                    required
+                    maxLength={200}
+                    value={draft.name}
+                    onChange={(event) =>
+                      setDraft({ ...draft, name: event.currentTarget.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Descripción
+                  <textarea
+                    maxLength={1000}
+                    value={draft.description}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        description: event.currentTarget.value,
+                      })
+                    }
+                  />
+                </label>
+                <div className={styles.policySaveActions}>
+                  <button
+                    type="submit"
+                    className={sharedStyles.primaryButton}
+                    disabled={saving || !draft.name.trim()}
+                  >
+                    {saving ? 'Guardando…' : 'Guardar cambios'}
+                  </button>
+                  <button
+                    type="button"
+                    className={sharedStyles.secondaryButton}
+                    disabled={saving}
+                    onClick={cancelEditing}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            ) : null}
+            {historyCode === criterion.code ? (
+              <section
+                className={styles.criterionHistory}
+                aria-label={`Historial de ${criterion.name}`}
+              >
+                <h3>Historial</h3>
+                {historyLoading ? (
+                  <p role="status">Cargando historial…</p>
+                ) : history?.length ? (
+                  history.map((entry) => (
+                    <article key={entry.id}>
+                      <h4>{historyAction(entry)}</h4>
+                      <p>
+                        {entry.user_id
+                          ? `Usuario #${entry.user_id}`
+                          : 'Responsable no disponible'}
+                        {' · '}
+                        <time dateTime={entry.created_at}>
+                          {evaluationDateLabel(entry.created_at)}
+                        </time>
+                      </p>
+                      {historyChanges(entry).map((change) => (
+                        <p key={change}>{change}</p>
+                      ))}
+                    </article>
+                  ))
+                ) : (
+                  <p>No hay cambios registrados para este criterio.</p>
+                )}
+              </section>
+            ) : null}
+          </article>
+        ))}
+        {!loading && criteria.length === 0 && !error ? (
+          <p role="status">No hay criterios disponibles.</p>
         ) : null}
       </section>
-    </main>
+      {pendingStatus ? (
+        <ConfirmDialog
+          isOpen
+          native
+          title={pendingStatus.status === 'ACTIVE'
+            ? '¿Desactivar este criterio?'
+            : '¿Activar este criterio?'}
+          message={pendingStatus.status === 'ACTIVE'
+            ? `Criterio: ${pendingStatus.name}. Los nuevos cálculos dejarán de utilizar este criterio. Los resultados históricos se conservan.`
+            : `Criterio: ${pendingStatus.name}. Este criterio estará disponible para configuraciones y nuevos cálculos.`}
+          loading={statusWorking}
+          onConfirm={() => void confirmStatusChange()}
+          onCancel={() => setPendingStatus(null)}
+        />
+      ) : null}
+    </PageContainer>
   )
 }

@@ -1,14 +1,17 @@
 // Real components and HTTP fixture in headless Chrome; never contacts the backend.
 // Node20: node --experimental-websocket src/features/incidents/tests/incidents.browser.mjs
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, writeFile, mkdir } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { createServer } from 'vite'
+import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
+import { cleanupBrowserProfile, createBrowserProfile, trackBrowser } from '../../../shared/tests/browserProfile.mjs'
 
-const profile = await mkdtemp(join(tmpdir(), 'eida-hu27-'))
-const output = resolve('../tmp/hu27-browser')
+// Marked temporary profile removed in `finally` (and on SIGINT/SIGTERM/exit by browserProfile.mjs).
+const profile = await createBrowserProfile('hu27-incidents')
+const output = join(process.cwd(), '.validation.local', `hu27-browser-${randomUUID()}`)
 await mkdir(output, { recursive: true })
 const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const requests = [],
@@ -34,7 +37,7 @@ const fixture = {
 const demo = `import React from 'react';import {createRoot} from 'react-dom/client';
 import {createMemoryRouter,RouterProvider} from 'react-router';
 import '/src/assets/styles/global.css';import '@fontsource/poppins/400.css';import '@fontsource/poppins/600.css';
-import '/src/features/exams/components/CreateExamModal.module.css';
+
 import {IncidentControlDialog} from '/src/features/incidents/components/IncidentControlDialog.tsx';
 import {httpClient} from '/src/shared/api/httpClient.ts';
 import {CreateIncidentPage} from '/src/features/incidents/pages/CreateIncidentPage.tsx';
@@ -146,16 +149,17 @@ try {
       '--no-first-run',
       '--no-default-browser-check',
       '--remote-debugging-port=0',
-      `--user-data-dir=${profile}`,
+      `--user-data-dir=${profile.dir}`,
       'about:blank',
     ],
     { windowsHide: true, stdio: 'ignore' },
   )
+  trackBrowser(profile, chrome)
   let port
   for (let i = 0; i < 100; i++) {
     try {
       port = Number(
-        (await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split(
+        (await readFile(join(profile.dir, 'DevToolsActivePort'), 'utf8')).split(
           '\n',
         )[0],
       )
@@ -255,16 +259,16 @@ try {
   })
   await wait("document.querySelector('form')")
   assert.equal(
-    await evaluate("document.querySelectorAll('select option').length"),
+    await evaluate("document.querySelectorAll('form select option').length"),
     6,
   )
   await click('Registrar incidencia')
   assert.equal(requests.filter((r) => r.method === 'POST').length, 0)
-  assert.equal(await evaluate('document.activeElement.tagName'), 'SELECT')
+  assert.equal(await evaluate("!!document.activeElement.closest('[aria-invalid=\"true\"]')"), true)
   checks.push(
     'Empty required fields prevent POST and focus the invalid category',
   )
-  await fill('select', 'IDENTIFICATION', 'HTMLSelectElement')
+  await fill('form select', 'IDENTIFICATION', 'HTMLSelectElement')
   await fill('textarea', 'Documento ilegible.', 'HTMLTextAreaElement')
   behavior = 'validation'
   await click('Registrar incidencia')
@@ -296,7 +300,7 @@ try {
   await evaluate("window.__hu27Router.navigate('/exams/4/incidents')")
   await wait("document.body.innerText.includes('Espera a que termine')")
   await wait(
-    "document.querySelector('h1')?.textContent==='Detalle de incidencia'",
+    "document.querySelector('main header h2')?.textContent.trim()==='Detalle de incidencia'",
   )
   await wait("document.querySelector('article')")
   assert.equal(requests.filter((r) => r.method === 'POST').length, before + 1)
@@ -385,6 +389,29 @@ try {
         'document.querySelector(\'[aria-label="Cerrar modal"]\').click()',
       )
   }
+  const contractStates = [
+    { name: 'colaborador lista', path: '/exams/4/incidents', title: 'Incidencias del examen', crumbs: ['Colaborador', 'Incidencias'], ready: "!!document.querySelector('table') || document.body.innerText.includes('No hay incidencias')" },
+    { name: 'colaborador error', path: '/exams/5/incidents', title: 'Incidencias del examen', crumbs: ['Colaborador', 'Incidencias'], ready: "!!document.querySelector('main [role=alert]')" },
+    { name: 'colaborador detalle', path: '/exams/4/incidents/9', title: 'Detalle de incidencia', crumbs: ['Incidencias', 'Incidencia #9'], ready: "!document.body.innerText.includes('Consultando incidencia')" },
+    { name: 'alta id no válido', path: '/exams/abc/incidents/create', title: 'Registrar incidencia o infracción', crumbs: [] },
+    { name: 'alta', path: '/exams/4/incidents/create', title: 'Registrar incidencia o infracción', crumbs: ['Incidencias', 'Registrar incidencia o infracción'], ready: "!!document.querySelector('form')" },
+  ]
+  // U3.4b: shared page contract (PageContainer + PageHeader) for every incident state at 320-1440px.
+  const contractFailures = []
+  for (const state of contractStates) {
+    await navigate(state.path)
+    await wait(`document.querySelector('main header h2')?.textContent.trim()===${JSON.stringify(state.title)} && (${state.ready ?? 'true'})`)
+    await pause(200)
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
+      await pause(120)
+      const problems = pageContractProblems(await evaluate(pageContractScript), { width, ...state })
+      if (problems.length) contractFailures.push(`${state.name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} contrato ${state.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+  }
+  assert.deepEqual(contractFailures, [], 'contrato de página de incidencias')
   assert.deepEqual(errors, [])
   await writeFile(
     join(output, 'resultados.json'),
@@ -393,6 +420,6 @@ try {
   console.log(JSON.stringify({ checks, errors, output }, null, 2))
 } finally {
   ws?.close()
-  chrome?.kill()
+  await cleanupBrowserProfile(profile, chrome)
   await vite?.close()
 }

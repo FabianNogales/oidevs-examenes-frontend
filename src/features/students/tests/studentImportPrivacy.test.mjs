@@ -339,7 +339,9 @@ test('existing preview filters and pagination still select the expected rows', (
     styles: {}, StudentImportSummary: summary, StudentImportPreviewTable: table,
     PreviewMessage: () => null, FileObservations: () => null,
     InfoIcon: () => null, FileIcon: () => null, ArrowRightIcon: () => null, DownloadIcon: () => null,
-    downloadCurrentView: () => {}, formatFileSize: () => '' })
+    downloadCurrentView: () => {}, formatFileSize: () => '',
+    // DS4.2a: the Design System Button renders a native <button>.
+    Button: 'button' })
   const render = () => h.render(() => review({ file: null, preview: data, message: null, isConfirming: false,
     canConfirm: true, onChangeFile: () => {}, onCancel: () => {}, onConfirm: () => {} }))
   let tree = render()

@@ -1,0 +1,241 @@
+.roomCard {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  overflow: hidden;
+}
+
+.roomCard::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--color-border-strong);
+  transition: background-color var(--transition-fast), width var(--transition-fast);
+}
+
+.roomCard:hover:not(:disabled):not(.roomCardSelected) {
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Disponible verificada con fecha: indicador lateral verde */
+.roomCardVerifiedAvailable {
+  border-color: var(--color-success);
+}
+
+.roomCardVerifiedAvailable::before {
+  background: var(--color-success);
+}
+
+/* Ocupada en esa fecha y hora */
+.roomCardBusy {
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+  opacity: 0.68;
+}
+
+.roomCardBusy::before {
+  background: var(--color-error);
+}
+
+.roomCardSelected {
+  border-color: var(--color-accent) !important;
+  background: var(--color-accent-soft) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent) !important;
+}
+
+.roomCardSelected::before {
+  width: 7px;
+  background: var(--color-accent) !important;
+}
+
+/* Fila superior de la card con línea divisoria*/
+.roomCardHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 11px 16px 11px 22px;
+  background: var(--color-surface-muted);
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+.roomCardSelected .roomCardHeader {
+  background: color-mix(in srgb, var(--color-accent-soft) 75%, var(--color-surface));
+  border-bottom-color: var(--color-decorative);
+}
+
+.roomIdentityGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.roomIndexBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--color-text-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.roomCardSelected .roomIndexBadge {
+  background: var(--color-accent);
+  color: var(--color-on-primary);
+}
+
+.roomNameText {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.roomCapacityTag {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border-strong);
+  padding: 2px 9px;
+  border-radius: var(--radius-sm);
+}
+
+/* Cuerpo inferior de la card */
+.roomCardBody {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 10px 16px 12px 22px;
+}
+
+.roomLocationText {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+}
+
+.roomSlotsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.slotMetaChip {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 9px;
+  border-radius: 5px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.slotMetaChipConflict {
+  background: var(--color-error-soft);
+  border-color: var(--color-error);
+  color: var(--color-error);
+  font-weight: var(--font-weight-semibold);
+}
+
+.roomStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.roomStatusBadgeValid {
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
+.roomStatusBadgeSelected {
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  color: var(--color-on-primary);
+}
+
+.roomStatusBadgeBusy {
+  background: var(--color-error-soft);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+}
+
+.roomStatusBadgeNeutral {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+.statusDotIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.recommendedBadge {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.sharedSlotChip {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 9px;
+  border-radius: 5px;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+/* Approved design (PROGRESS › Decisiones 9). Authorized phone fix: the card header may wrap so
+   "Ver días libres" no longer covers the room name, capacity or recommendation badge, and nothing is cut.
+   The overlap existed from 320px up to 430px; scoped below the canonical 480px breakpoint, so the
+   approved rendering stays identical from 480px up. */
+@media (max-width: 479px) {
+  .roomCardHeader,
+  .roomIdentityGroup {
+    flex-wrap: wrap;
+  }
+}

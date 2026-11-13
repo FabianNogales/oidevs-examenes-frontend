@@ -44,7 +44,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
-.panel button {
+.panel button:where(:not([data-ds-button])) {
   font: inherit;
   min-height: var(--button-height);
   padding: var(--space-2) var(--space-4);
@@ -54,7 +54,7 @@
   background: var(--color-surface);
   cursor: pointer;
 }
-.panel button:disabled {
+.panel button:where(:not([data-ds-button])):disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -70,6 +70,12 @@
   margin-block: var(--space-5);
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
 }
+.filters {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.filters .actions {
+  margin: 0;
+}
 .catalogFilters {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) auto;
 }
@@ -79,8 +85,8 @@
   gap: var(--space-2);
   min-width: 0;
 }
-.panel input,
-.panel select {
+.panel input:where(:not([data-ds-dropdown] input)),
+.panel select:where(:not([data-ds-dropdown] select)) {
   font: inherit;
   width: 100%;
   min-height: var(--input-height);
@@ -108,7 +114,7 @@
   .panel {
     padding: var(--space-4);
   }
-  .actions button {
+  .actions button:where(:not([data-ds-button])) {
     flex: 1 1 auto;
   }
   .counts {

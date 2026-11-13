@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { useInfractionResource } from '@/features/infractions/hooks/useInfractionResource'
@@ -65,37 +66,39 @@ export function ReportExamCatalog({
       <form onSubmit={submit} className={styles.catalogFilters}>
         <label>
           Materia
-          <select
+          <Dropdown<string | number>
             value={subject}
-            onChange={(e) => setSubject(e.target.value)}
             disabled={q.loading}
-          >
-            <option value="">Todas las materias</option>
-            {!r && subject && (
-              <option value={subject}>Materia seleccionada</option>
-            )}
-            {r?.filters.subjects.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: '', label: 'Todas las materias' },
+              ...(!r && subject
+                ? [{ value: subject, label: 'Materia seleccionada' }]
+                : []),
+              ...(r?.filters.subjects.map((o) => ({
+                value: o.id,
+                label: o.name,
+              })) ?? []),
+            ]}
+            onChange={(nextSubject) => setSubject(String(nextSubject))}
+          />
         </label>
         <label>
           Periodo académico
-          <select
+          <Dropdown<string | number>
             value={term}
-            onChange={(e) => setTerm(e.target.value)}
             disabled={q.loading}
-          >
-            <option value="">Todos los periodos</option>
-            {!r && term && <option value={term}>Periodo seleccionado</option>}
-            {r?.filters.academic_terms.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: '', label: 'Todos los periodos' },
+              ...(!r && term
+                ? [{ value: term, label: 'Periodo seleccionado' }]
+                : []),
+              ...(r?.filters.academic_terms.map((o) => ({
+                value: o.id,
+                label: o.name,
+              })) ?? []),
+            ]}
+            onChange={(nextTerm) => setTerm(String(nextTerm))}
+          />
         </label>
         <label>
           Buscar examen

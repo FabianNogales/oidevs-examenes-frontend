@@ -1,17 +1,17 @@
 /* Same navigation treatment used in student management. */
 .breadcrumbs {
   width: 100%;
-  margin-bottom: var(--space-6, 24px);
-  color: var(--brand-blue, #2563eb);
-  font-size: 1rem;
-  font-weight: 500;
+  margin-bottom: var(--space-6);
+  color: var(--color-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
 }
 
 .breadcrumbs ol {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -20,7 +20,7 @@
 .breadcrumbs li {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -40,12 +40,12 @@
 }
 
 .breadcrumbs a:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
   border-radius: 2px;
 }
 
 .current {
-  color: var(--brand-pink, #d67a8c);
-  font-weight: 400;
+  color: var(--color-decorative);
+  font-weight: var(--font-weight-regular);
 }

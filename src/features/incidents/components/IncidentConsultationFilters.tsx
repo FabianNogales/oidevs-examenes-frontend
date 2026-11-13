@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import type {
   IncidentConsultationErrors,
   IncidentConsultationFilters as Filters,
@@ -60,40 +61,38 @@ export function IncidentConsultationFilters({
       </div>
       <div>
         <label htmlFor={`${id}-type`}>Tipo de incidencia</label>
-        <select
+        <Dropdown<IncidentType | ''>
           id={`${id}-type`}
           name="type"
           value={draft.type}
-          onChange={(e) =>
-            setDraft({ ...draft, type: e.target.value as IncidentType | '' })
-          }
-        >
-          <option value="">Todos los tipos</option>
-          {Object.entries(INCIDENT_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: '', label: 'Todos los tipos' },
+            ...Object.entries(INCIDENT_TYPE_LABELS).map(([value, label]) => ({
+              value: value as IncidentType,
+              label,
+            })),
+          ]}
+          onChange={(nextType) => setDraft({ ...draft, type: nextType })}
+        />
       </div>
       <div>
         <label htmlFor={`${id}-status`}>Estado</label>
-        <select
+        <Dropdown
           id={`${id}-status`}
           name="status"
           value={draft.status}
-          onChange={(e) => setDraft({ ...draft, status: e.target.value })}
-        >
-          <option value="">Todos los estados</option>
-          {draft.status && !statuses.some((s) => s.value === draft.status) && (
-            <option value={draft.status}>{draft.status}</option>
-          )}
-          {statuses.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: '', label: 'Todos los estados' },
+            ...(draft.status && !statuses.some((s) => s.value === draft.status)
+              ? [{ value: draft.status, label: draft.status }]
+              : []),
+            ...statuses.map((s) => ({
+              value: s.value,
+              label: s.label,
+            })),
+          ]}
+          onChange={(nextStatus) => setDraft({ ...draft, status: nextStatus })}
+        />
       </div>
       {(['date_from', 'date_to'] as const).map((field) => (
         <div key={field}>

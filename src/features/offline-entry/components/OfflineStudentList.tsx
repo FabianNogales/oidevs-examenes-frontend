@@ -4,8 +4,8 @@ import { EntryConditionBadge } from '@/features/exams/components/EntryConditionB
 import { eligibilityDisplay } from '@/features/exams/utils/entryControlDisplay'
 import type { LocalEntry, OfflineStudent } from '../types/offline.types'
 import { searchOfflineStudents, studentBlocker, studentName,} from '../utils/offlineRules'
-import shared from './styles/OfflineShared.module.css'
-import captureStyles from './styles/OfflineCapturePanel.module.css'
+import shared from './OfflineShared.module.css'
+import captureStyles from './OfflineCapturePanel.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
 
 export function OfflineStudentList({

@@ -15,7 +15,7 @@ import type {
 } from '@/shared/components/DataTable/dataTable.types'
 import type { AssignedStudent, OfflineAssignment } from '../types/offline.types'
 import { studentName } from '../utils/offlineRules'
-import distStyles from './styles/OfflineDistribution.module.css'
+import distStyles from './OfflineDistribution.module.css'
 
 interface StudentTableRow extends BaseTableEntity, AssignedStudent {
   id: number

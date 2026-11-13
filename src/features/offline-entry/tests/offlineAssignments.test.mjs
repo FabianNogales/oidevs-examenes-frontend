@@ -75,30 +75,24 @@ test('HU35: backend failure keeps unprepared state and surfaces its error', asyn
   assert.equal(state.distribution, null)
   assert.match(state.error, /congelada/)
 })
-test('HU35: assignment cards render the actual owner, range and count and open the existing modal', () => {
+test('HU35: assignment cards render the actual owner, range and count and select the list for the student view', () => {
   const harness = sourceHarness({})
   const { OfflineAssignmentCards } = harness.load(
     'features/offline-entry/components/OfflineAssignmentCards.tsx',
   )
-  let tree = harness.render(() =>
-    OfflineAssignmentCards({ distribution: distributionFixture() }),
+  // Arqmoc 7f9c0ec: the cards delegate to TeacherDistributionPage (?listId=) instead of opening a modal.
+  const selected = []
+  const distribution = distributionFixture()
+  const tree = harness.render(() =>
+    OfflineAssignmentCards({ distribution, onSelectList: (id) => selected.push(id) }),
   )
   assert.match(textContent(tree), /Ana Pérez/)
   assert.match(textContent(tree), /García — García/)
-  assert.match(textContent(tree), /1 estudiantes/)
+  assert.match(textContent(tree), /1 estudiante(?!s)/, 'singular count (OfflineAssignmentCards pluralizes)')
   nodes(
     tree,
     (node) =>
       node.type === 'button' && textContent(node) === 'Consultar estudiantes',
   )[0].props.onClick()
-  tree = harness.render()
-  assert.equal(
-    nodes(
-      tree,
-      (node) =>
-        typeof node.type === 'function' &&
-        node.type.name === 'AssignedStudents',
-    ).length,
-    1,
-  )
+  assert.deepEqual(selected, [distribution.lists[0].list_id])
 })

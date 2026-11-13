@@ -1,4 +1,6 @@
 // Live HU41 QA. Creates one uniquely identified QA news item and leaves it ARCHIVED.
+// DS5-F1: real app (Vite 5173), backend (localhost:8000) and a real admin login, so it only runs
+// with EIDA_LIVE_QA=hu41 (see shared/tests/liveQa.mjs); otherwise it stops before any work.
 // Only that item is edited; its optional image is removed at the end. No seeding.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
@@ -9,6 +11,15 @@ import {
   createBrowserProfile,
 } from '../../../shared/tests/browserProfile.mjs'
 import { randomUUID } from 'node:crypto'
+import { requireLiveQa } from '../../../shared/tests/liveQa.mjs'
+
+if (
+  !requireLiveQa(
+    'hu41',
+    'app Vite y backend reales, login real y creación de datos',
+  )
+)
+  process.exit(0)
 
 const output = '.validation.local/hu41'
 await mkdir(output, { recursive: true })
@@ -295,7 +306,7 @@ try {
     `document.body.innerText.includes('No hay registros disponibles')`,
   )
   check('Listado y búsqueda vacíos controlados')
-  await main.button('Crear')
+  await main.button('Crear noticia')
   await main.wait(`document.querySelector('dialog input[name=title]')`)
   await main.field('dialog input[name=title]', tag)
   await main.field(

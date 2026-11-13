@@ -12,6 +12,7 @@ import type {
   InfractionStatus,
 } from '../types/infraction.types'
 import { InfractionMutationGuard } from './InfractionMutationGuard'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import formStyles from '@/features/incidents/components/IncidentForm.module.css'
 import styles from './InfractionManagement.module.css'
 
@@ -85,7 +86,7 @@ export function InfractionStatusForm({
       </p>
       <div className={formStyles.field}>
         <label htmlFor={`${id}-status`}>Nuevo estado *</label>
-        <select
+        <Dropdown
           id={`${id}-status`}
           value={status}
           disabled={disabled}
@@ -93,17 +94,18 @@ export function InfractionStatusForm({
           aria-describedby={
             request.fieldErrors.status ? `${id}-status-error` : undefined
           }
-          onChange={(event) =>
-            setStatus(event.target.value as InfractionStatus | '')
+          placeholder="Selecciona una operación autorizada"
+          options={[
+            { value: '', label: 'Selecciona una operación autorizada' },
+            ...detail.data.permissions.allowed_statuses.map((value) => ({
+              value,
+              label: INFRACTION_STATUS_LABELS[value],
+            })),
+          ]}
+          onChange={(nextValue) =>
+            setStatus(nextValue as InfractionStatus | '')
           }
-        >
-          <option value="">Selecciona una operación autorizada</option>
-          {detail.data.permissions.allowed_statuses.map((value) => (
-            <option key={value} value={value}>
-              {INFRACTION_STATUS_LABELS[value]}
-            </option>
-          ))}
-        </select>
+        />
         {request.fieldErrors.status && (
           <p id={`${id}-status-error`} className={formStyles.error}>
             {request.fieldErrors.status}

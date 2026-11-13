@@ -379,6 +379,75 @@ test('valid academic CSV validates teacher fields and adapts to the current back
     '202600001,FIRST_PARTIAL,true,28,18,20',
     '202600001,SECOND_PARTIAL,true,32,18,20',
   ])
+
+  const criterion = (code, parameters = {}) => ({ code, parameters })
+  const grade = criterion('MIN_ASSESSMENT_SCORE', { assessment_key: 'SECOND_PARTIAL' })
+  const attendance = criterion('MIN_ATTENDANCE_PERCENTAGE')
+  const mandatory = criterion('SECOND_INSTANCE_PARTIAL_AVERAGE', {
+    assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'],
+  })
+  const parseFor = async (criteria, row) => {
+    const layout = csv.getAcademicCsvLayout(criteria, schema)
+    const header = csv.getAcademicCsvTemplate(layout.columns)
+    const data = new TextEncoder().encode(header + row + '\r\n')
+    const result = await csv.prepareAcademicCsv({
+      name: 'datos.csv',
+      size: data.byteLength,
+      arrayBuffer: async () => data.buffer,
+    }, schema, layout)
+    return [header.trim(), ...result.csv.trim().split(/\r?\n/).slice(1)]
+  }
+  assert.deepEqual(await parseFor([grade], '1,Juan,0'), [
+    'sis,nombre_completo,nota_sp',
+    '1,SECOND_PARTIAL,true,0,,',
+  ])
+  assert.deepEqual(await parseFor([grade, attendance], '1,Juan,32,18,20'), [
+    'sis,nombre_completo,nota_sp,asistencias,total_clases',
+    '1,SECOND_PARTIAL,true,32,18,20',
+  ])
+  assert.deepEqual(await parseFor([mandatory], '1,Juan,28,32'), [
+    'sis,nombre_completo,nota_pp,nota_sp',
+    '1,FIRST_PARTIAL,true,28,,',
+    '1,SECOND_PARTIAL,true,32,,',
+  ])
+  assert.deepEqual(await parseFor([attendance], '1,Juan,Sí,18,20'), [
+    'sis,nombre_completo,rindio_pp,asistencias,total_clases',
+    '1,FIRST_PARTIAL,true,,18,20',
+  ])
+  await assert.rejects(parseFor([attendance], '1,Juan,,18,20'), /indicar si rindió/)
+  const taken = criterion('PREVIOUS_ASSESSMENTS_TAKEN', {
+    assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'],
+  })
+  assert.deepEqual(await parseFor([taken], '1,Juan,Sí,No'), [
+    'sis,nombre_completo,rindio_pp,rindio_sp',
+    '1,FIRST_PARTIAL,true,,,',
+    '1,SECOND_PARTIAL,false,,,',
+  ])
+})
+
+test('persisted academic model combines mandatory and optional criteria, excludes inactive and uses assessment labels', () => {
+  const { load } = createHarness()
+  const csv = load(resolve(featureRoot, 'utils/academicCsv.ts'))
+  const criterion = (code, parameters = {}) => ({ code, parameters })
+  const mandatory = criterion('MIN_ASSESSMENT_SCORE', { assessment_key: 'SECOND_PARTIAL' })
+  const taken = criterion('PREVIOUS_ASSESSMENTS_TAKEN', { assessment_keys: ['FIRST_PARTIAL'] })
+  const attendance = criterion('MIN_ATTENDANCE_PERCENTAGE')
+  const configuration = { mandatory_criteria: [mandatory], selected_criteria: [taken, attendance], inactive_criteria: [attendance] }
+  const schema = { assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'] }
+  const labels = [{ key: 'FIRST_PARTIAL', label: 'Diagnóstico' }, { key: 'SECOND_PARTIAL', label: 'Defensa final' }]
+  const layout = csv.getAcademicCsvLayout(csv.getPersistedAcademicCriteria(configuration), schema, labels)
+  assert.deepEqual(layout.columns.map(({ key }) => key), ['sis', 'nombre_completo', 'nota_sp', 'rindio_pp'])
+  assert.deepEqual(layout.fields.map(({ key, scored, column }) => [key, scored, column.label]), [
+    ['SECOND_PARTIAL', true, 'Nota Defensa final'], ['FIRST_PARTIAL', false, 'Rindió Diagnóstico'],
+  ])
+  assert.equal(layout.includesAttendance, false)
+  assert.equal(layout.includesAverage, false)
+  const fallback = csv.getAcademicCsvLayout([], schema, labels)
+  assert.equal(fallback.fields.length, 2)
+  assert.equal(fallback.includesAttendance, true)
+  assert.equal(fallback.includesAverage, true)
+  const inactive = csv.getAcademicCsvLayout([{ ...mandatory, status: 'INACTIVE' }], schema)
+  assert.deepEqual(inactive.columns.map(({ key }) => key), fallback.columns.map(({ key }) => key))
 })
 
 test('academic CSV rejects invalid headers, row values, and file limits', async () => {
@@ -587,7 +656,7 @@ test('evaluation preview preserves manual and non-override statuses from backend
   )
 })
 
-test('evaluation result pagination loads every backend snapshot page for confirmation summary', async () => {
+test('historical evaluation pagination can load every backend snapshot page', async () => {
   const first = {
     id: 31,
     results: {
@@ -831,5 +900,421 @@ test('academic records omit empty search and serialize a nonempty string without
   assert.equal(
     axios.getUri({ url: calls[0].args[0], params: calls[0].args[1].params }),
     '/academic-offerings/8/academic-records?page=1&per_page=10',
+  )
+})
+
+// ── HU34 E1 — «Revisar y aplicar»: presentation rules over the backend snapshot ──
+const reviewResult = (
+  id,
+  computed,
+  current,
+  effective,
+  { manual = false, will = false, name } = {},
+) => ({
+  student: {
+    id,
+    display_name: name ?? `Estudiante ${id}`,
+    sis: `QA-${String(id).padStart(4, '0')}`,
+  },
+  computed_status: computed,
+  current_status: current,
+  effective_status: effective,
+  manual_override_preserved: manual,
+  will_update: will,
+  reason: 'Motivo de prueba.',
+  missing_fields: [],
+  eligibility_revision: 1,
+  criteria_results: [],
+})
+const loadReview = () =>
+  createHarness().load(resolve(featureRoot, 'utils/evaluationReview.ts'))
+
+test('remote review serializes all six filters and requests only the required snapshot page', async () => {
+  const { api, calls } = createHarness({
+    get: () => response({ data: { id: 31 } }),
+    post: () => response({ data: { id: 31 } }),
+  })
+  await api.previewEligibilityEvaluation(17, 4, 'catalog-r7')
+  assert.deepEqual(calls[0].args[2].params, {
+    page: 1,
+    per_page: 10,
+    filter: 'CHANGES',
+    search: '',
+  })
+  const signal = new AbortController().signal
+  for (const filter of [
+    'ALL',
+    'CHANGES',
+    'ELIGIBLE',
+    'INELIGIBLE',
+    'PENDING',
+    'PROTECTED',
+  ]) {
+    const query = { filter, search: 'Ángela', page: 2, per_page: 10 }
+    await api.getEvaluationDetail(17, 31, 2, query, signal)
+    const call = calls.at(-1)
+    assert.equal(
+      call.args[0],
+      '/exams/17/eligibility-automation/evaluations/31',
+    )
+    assert.deepEqual(call.args[1].params, query)
+    assert.equal(call.args[1].signal, signal)
+  }
+  assert.equal(calls.length, 7)
+})
+
+test('global review summary comes entirely from backend even on an empty filtered page', () => {
+  const review = loadReview()
+  const view = {
+    results: { data: [], meta: { total: 0 } },
+    summary: {
+      total: 230,
+      eligible: 184,
+      ineligible: 23,
+      pending: 23,
+      effective_eligible: 161,
+      effective_ineligible: 46,
+      effective_unset: 23,
+      state_changes: 46,
+      traceability_only: 23,
+      protected: 23,
+    },
+  }
+  assert.deepEqual(review.summarizeReview(view), {
+    total: 230,
+    eligible: 161,
+    ineligible: 46,
+    unset: 23,
+    pending: 23,
+    changes: 46,
+    traceability: 23,
+    protected: 23,
+  })
+  assert.equal(review.hasGlobalReviewSummary(view), true)
+  const historical = {
+    ...view,
+    summary: { total: 230, eligible: 184, ineligible: 23, pending: 23 },
+  }
+  assert.equal(review.summarizeReview(historical).eligible, undefined)
+  assert.equal(review.hasGlobalReviewSummary(historical), false)
+})
+
+test('review uses server flags and preserves effective reasons and historical fallbacks', () => {
+  const review = loadReview()
+  const row = reviewResult(1, 'ELIGIBLE', 'INELIGIBLE', 'ELIGIBLE', {
+    will: true,
+  })
+  assert.equal(
+    review.isStateChange({
+      ...row,
+      state_will_change: false,
+      traceability_only: true,
+    }),
+    false,
+  )
+  assert.equal(review.isStateChange({ ...row, state_will_change: true }), true)
+  assert.equal(review.isStateChange(row), true)
+  assert.equal(review.isStateChange({ ...row, will_update: false }), false)
+  assert.equal(review.effectiveReason({ ...row, effective_reason: null }), null)
+  assert.equal(
+    review.effectiveReason({
+      ...row,
+      effective_reason: 'Final',
+      current_reason: 'Actual',
+    }),
+    'Final',
+  )
+  assert.equal(
+    review.effectiveReason({
+      ...row,
+      will_update: false,
+      current_reason: 'Actual',
+    }),
+    'Actual',
+  )
+  assert.equal(review.effectiveReason(row), row.reason)
+  assert.equal(
+    review.effectiveReason({ ...row, will_update: false, current_reason: null }),
+    null,
+  )
+  assert.equal(
+    review.protectedLabel({ ...row, protected_source: 'MANUAL' }),
+    'Protegido · Manual',
+  )
+  assert.equal(
+    review.protectedLabel({ ...row, protected_source: 'LEGACY' }),
+    'Protegido · Heredado',
+  )
+  assert.equal(review.protectedLabel(row), 'Protegido')
+})
+
+test('review blocks an expired snapshot and labels statuses without inventing an origin', () => {
+  const review = loadReview()
+  const now = Date.parse('2026-11-11T12:00:00Z')
+  assert.equal(review.isSnapshotExpired('2026-11-11T11:59:59Z', now), true)
+  assert.equal(review.isSnapshotExpired('2026-11-11T12:00:00Z', now), true)
+  assert.equal(review.isSnapshotExpired('2026-11-11T12:00:01Z', now), false)
+  // A missing or unreadable date does not block: the backend still validates the snapshot.
+  assert.equal(review.isSnapshotExpired(null, now), false)
+  assert.equal(review.isSnapshotExpired('not a date', now), false)
+  assert.deepEqual(
+    ['ELIGIBLE', 'INELIGIBLE', 'PENDING', null].map(review.displayStatus),
+    ['Habilitado', 'Inhabilitado', 'Pendiente', 'Sin decisión vigente'],
+  )
+  assert.equal(
+    review.briefReason('  Motivo\n con   saltos  '),
+    'Motivo con saltos',
+  )
+  assert.equal(review.briefReason(''), '—')
+  assert.equal(review.briefReason('x'.repeat(200)).length, 90)
+})
+
+test('historical detail can still load all backend pages', async () => {
+  const page = (number) => ({
+    id: 31,
+    preview_id: 'snapshot-31',
+    results: {
+      data: Array.from({ length: number === 3 ? 30 : 100 }, (_, index) =>
+        reviewResult(
+          (number - 1) * 100 + index + 1,
+          'ELIGIBLE',
+          'INELIGIBLE',
+          'ELIGIBLE',
+          { will: true },
+        ),
+      ),
+      meta: { current_page: number, per_page: 100, total: 230, last_page: 3 },
+    },
+    summary: { total: 230, eligible: 230, ineligible: 0, pending: 0 },
+  })
+  const { api, calls } = createHarness({
+    get: (_url, config) => response({ data: page(config.params.page) }),
+  })
+  const complete = await api.getAllEvaluationResults(17, page(1))
+  assert.deepEqual(
+    calls.map((call) => call.args[1].params),
+    [
+      { page: 2, per_page: 100 },
+      { page: 3, per_page: 100 },
+    ],
+  )
+  assert.equal(complete.results.data.length, 230)
+})
+
+test('applying confirms the whole snapshot by preview id, without body, filters or page', async () => {
+  const { api, calls } = createHarness({
+    post: () =>
+      response({
+        data: {
+          evaluation_id: 31,
+          updated: 46,
+          unchanged: 184,
+          manual_preserved: 23,
+          pending: 23,
+        },
+      }),
+  })
+  const confirmation = await api.confirmEligibilityEvaluation(17, 'snapshot-31')
+  assert.equal(calls.length, 1)
+  assert.equal(
+    calls[0].args[0],
+    '/exams/17/eligibility-automation/evaluations/snapshot-31/confirm',
+  )
+  assert.equal(
+    calls[0].args[1],
+    undefined,
+    'no payload: nothing visible on screen is sent',
+  )
+  assert.deepEqual(calls[0].args[2], { params: undefined })
+  assert.equal(confirmation.updated, 46)
+})
+
+// HU34 E4 — the partial CSV preserves exactly the fields requested by the user.
+const mergeSchema = {
+  columns: [
+    'sis',
+    'assessment_key',
+    'was_taken',
+    'score',
+    'attended_classes',
+    'total_classes',
+  ],
+  assessment_keys: ['FIRST_PARTIAL', 'SECOND_PARTIAL'],
+  encoding: 'UTF-8',
+  delimiter: ',',
+  max_rows: 1000,
+  max_file_kb: 5120,
+  score_min: 0,
+  score_max: 100,
+  score_decimal_places: 2,
+  was_taken_values: ['true', 'false'],
+  modes: ['CREATE_ONLY', 'MERGE'],
+  default_mode: 'CREATE_ONLY',
+  merge: {
+    allowed_columns: [
+      'sis',
+      'assessment_key',
+      'was_taken',
+      'score',
+      'attended_classes',
+      'total_classes',
+    ],
+    required_columns: ['sis'],
+    attendance_columns: ['sis', 'attended_classes', 'total_classes'],
+    assessment_columns: ['sis', 'assessment_key', 'was_taken', 'score'],
+    empty_values: 'PRESERVE',
+    reason_required_for_updates: true,
+    reason_max_length: 500,
+    confirmation_revalidates_revisions: true,
+  },
+}
+const partialCsvFile = (text) => ({
+  name: 'partial.csv',
+  size: Buffer.byteLength(text),
+  arrayBuffer: async () => new TextEncoder().encode(text).buffer,
+})
+const loadCsv = () =>
+  createHarness().load(resolve(featureRoot, 'utils/academicCsv.ts'))
+
+test('MERGE templates are derived from the published import schema', () => {
+  const csv = loadCsv()
+  assert.deepEqual(
+    csv.getAcademicMergeTemplates(mergeSchema).map((t) => t.columns),
+    [
+      mergeSchema.merge.attendance_columns,
+      mergeSchema.merge.assessment_columns,
+      mergeSchema.merge.allowed_columns,
+    ],
+  )
+  assert.deepEqual(
+    csv.getAcademicMergeTemplates({ ...mergeSchema, merge: undefined }),
+    [],
+  )
+})
+
+test('MERGE attendance without an assessment preserves zero and original row mapping', async () => {
+  const csv = loadCsv()
+  const result = await csv.prepareAcademicMergeCsv(
+    partialCsvFile('sis,attended_classes,total_classes\n202600001,0,20\n'),
+    mergeSchema,
+  )
+  assert.equal(
+    result.csv,
+    'sis,attended_classes,total_classes\r\n202600001,0,20\r\n',
+  )
+  assert.deepEqual(result.rows, [
+    { sis: '202600001', attended_classes: '0', total_classes: '20' },
+  ])
+  assert.deepEqual(result.sourceRows, [2])
+  assert.doesNotMatch(result.csv, /assessment_key|was_taken/)
+})
+
+test('MERGE one or two assessments leaves empty and omitted fields untouched', async () => {
+  const csv = loadCsv()
+  const result = await csv.prepareAcademicMergeCsv(
+    partialCsvFile(
+      'score,sis,assessment_key,was_taken\n0,1,FIRST_PARTIAL,\n,1,SECOND_PARTIAL,true\n',
+    ),
+    mergeSchema,
+  )
+  assert.deepEqual(result.sourceRows, [2, 3])
+  assert.equal(result.rows[0].score, '0')
+  assert.equal(result.rows[0].was_taken, '')
+  assert.equal(result.rows[1].score, '')
+  assert.doesNotMatch(result.csv, /false|attended_classes|total_classes/)
+  const scoreOnly = await csv.prepareAcademicMergeCsv(
+    partialCsvFile('sis,assessment_key,score\n1,FIRST_PARTIAL,50\n'),
+    mergeSchema,
+  )
+  assert.equal(scoreOnly.rows[0].was_taken, undefined)
+})
+
+test('MERGE rejects unknown headers, duplicates, missing targets and incompatible values', async () => {
+  const csv = loadCsv()
+  for (const text of [
+    'sis,nombre_completo\n1,Juan\n',
+    'sis,sis,score\n1,1,50\n',
+    'score\n50\n',
+    'sis,attended_classes\n1,2\n',
+    'sis,attended_classes,total_classes\n1,21,20\n',
+    'sis,assessment_key,was_taken,score\n1,FIRST_PARTIAL,false,0\n',
+    'sis,assessment_key,score\n1,FIRST_PARTIAL,101\n',
+    'sis,assessment_key,score\n1,UNKNOWN,20\n',
+    'sis,assessment_key,score\n1,FIRST_PARTIAL,30\n1,FIRST_PARTIAL,30\n',
+    'sis,attended_classes,total_classes\n1,10,20\n1,10,20\n',
+    'sis,score\n1,50\n',
+    'sis,assessment_key,score\n1,FIRST_PARTIAL,\n',
+    'sis,score\n,,\n',
+    'sis,score\n1,2"bad\n',
+  ])
+    await assert.rejects(
+      csv.prepareAcademicMergeCsv(partialCsvFile(text), mergeSchema),
+      csv.AcademicCsvValidationError,
+    )
+})
+
+test('MERGE sends mode and reason only in preview and preserves server actions and revisions', async () => {
+  const view = {
+    preview_id: 'partial-1',
+    mode: 'MERGE',
+    reason: 'Ajuste',
+    can_confirm: true,
+    summary: { created_records: 1, updated_records: 1, unchanged_records: 1 },
+    valid_records: ['CREATE', 'UPDATE', 'UNCHANGED'].map((action, i) => ({
+      action,
+      record_id: i || null,
+      revision: i || null,
+      before: { assessments: {}, attended_classes: null, total_classes: null },
+      proposed: { assessments: {}, attended_classes: 0, total_classes: 20 },
+    })),
+    errors: [],
+  }
+  const { api, calls } = createHarness({ post: () => response({ data: view }) })
+  assert.deepEqual(
+    await api.previewAcademicImport(8, new File(['csv'], 'partial.csv'), {
+      mode: 'MERGE',
+      reason: 'Ajuste',
+    }),
+    view,
+  )
+  assert.equal(calls[0].args[1].get('mode'), 'MERGE')
+  assert.equal(calls[0].args[1].get('reason'), 'Ajuste')
+  await api.confirmAcademicImport(8, 'partial-1')
+  assert.equal(calls[1].args[1], undefined)
+  assert.equal(
+    calls[1].args[0],
+    '/academic-offerings/8/academic-records/imports/partial-1/confirm',
+  )
+})
+
+test('MERGE preserves reason validation and concurrency errors from the backend', async () => {
+  const validation = createHarness({
+    post: () => {
+      throw httpError(422, {
+        message: 'Justifica la actualización.',
+        errors: { reason: ['Máximo 500 caracteres.'] },
+      })
+    },
+  })
+  await assert.rejects(
+    validation.api.previewAcademicImport(8, new File(['csv'], 'p.csv'), {
+      mode: 'MERGE',
+      reason: 'x'.repeat(501),
+    }),
+    (error) =>
+      error.status === 422 &&
+      error.fieldErrors.reason === 'Máximo 500 caracteres.',
+  )
+  const conflict = createHarness({
+    post: () => {
+      throw httpError(409, {
+        code: 'AUTOMATION_CONFLICT',
+        message: 'Los datos cambiaron.',
+      })
+    },
+  })
+  await assert.rejects(
+    conflict.api.confirmAcademicImport(8, 'partial-1'),
+    (error) => error.status === 409 && error.code === 'AUTOMATION_CONFLICT',
   )
 })

@@ -6,9 +6,9 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   PortalAdminCollection,
   type PortalRow,
-} from '@/features/portal-shared/PortalAdminCollection'
-import { PortalModal } from '@/features/portal-shared/PortalUi'
-import type { PortalQuery } from '@/features/portal-shared/portalApi'
+} from '@/features/portal-shared/components/PortalAdminCollection'
+import { PortalModal } from '@/features/portal-shared/components/PortalUi'
+import type { PortalQuery } from '@/features/portal-shared/api/portalApi'
 import { listManagedCategories } from './categoriesApi'
 import { CategoryHistory } from './CategoryHistory'
 import {
@@ -23,7 +23,7 @@ import {
   type CategoryStateFilter,
   type ManagedCategory,
 } from './types'
-import styles from '@/features/portal-shared/portalShared.module.css'
+import styles from '@/features/portal-shared/components/portalShared.module.css'
 import categoryStyles from './categories.module.css'
 
 const columns: readonly TableColumnDef<PortalRow<ManagedCategory>>[] = [

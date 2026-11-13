@@ -2,8 +2,10 @@ import { AuthenticatedImage } from '@/shared/components/AuthenticatedImage/Authe
 import { UserIcon } from '@/features/auth/components/AuthIcons'
 import type { ExamCollaborator } from '../types/collaboration.types'
 import { formatAssignmentDate } from '../utils/collaborationFormat'
-import { CollaborationModal } from './CollaborationModal'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
 import styles from '../pages/Collaborations.module.css'
+import dialogStyles from './CollaboratorDialog.module.css'
 import detailStyles from './CollaboratorDetailModal.module.css'
 
 type Props = {
@@ -20,7 +22,13 @@ export function CollaboratorDetailModal({
   const photoUrl = collaborator.profile_photo_url
 
   return (
-    <CollaborationModal title="Detalle del colaborador" onClose={onClose}>
+    <PortalDialog
+      title="Detalle del colaborador"
+      onClose={onClose}
+      closeOnBackdrop
+      className={dialogStyles.dialog}
+      closeClassName={dialogBase.closeButton}
+    >
       <section
         className={detailStyles.summary}
         aria-label="Datos del colaborador"
@@ -56,6 +64,6 @@ export function CollaboratorDetailModal({
           Cerrar
         </button>
       </div>
-    </CollaborationModal>
+    </PortalDialog>
   )
 }

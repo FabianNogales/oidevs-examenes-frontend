@@ -45,5 +45,14 @@ Las reglas de git (ramas, PR y autorizaciones) están en [README.md](README.md) 
 
 ## 8. Migración
 - **Una feature por subetapa** (p. ej. `DS3.rooms`), registrada y asignada en [PROGRESS.md](PROGRESS.md) antes de empezar.
-- Los cambios en tokens o en componentes compartidos se hacen en su propia subetapa y requieren revisión cruzada.
+- Los cambios en tokens o en componentes compartidos se hacen en su propia subetapa y requieren revisión cruzada por el otro desarrollador; si no hay otro desarrollador disponible, se aplica la excepción del §9.
 - Cada subetapa cierra con la validación de [validation.md](validation.md) y actualiza [PROGRESS.md](PROGRESS.md).
+
+## 9. Revisión en desarrollo individual (excepción)
+La revisión cruzada humana sigue siendo la opción preferida. Esta excepción solo se aplica cuando no hay otro desarrollador frontend disponible para revisar, y requiere **todo** lo siguiente:
+- **Revisión técnica asistida por IA** de cada paquete: archivos exactos, cambios, riesgos y criterios de aceptación revisados contra el código.
+- **Evidencia de pruebas:** batería Node completa, pruebas de navegador relevantes, TypeScript, build y ESLint sin errores nuevos frente a la línea base.
+- **Trazabilidad:** un commit por paquete con su lista exacta de archivos, y las decisiones registradas en [PROGRESS.md](PROGRESS.md).
+- **Declaración explícita** en el mensaje del commit y en [PROGRESS.md](PROGRESS.md): «Sin revisión humana; revisión técnica asistida por IA».
+
+La revisión asistida por IA **nunca se registra como revisión humana**. Cuando haya otro desarrollador disponible, puede revisar estos paquetes a posteriori. Publicar o integrar en ramas compartidas (push, merge) sigue requiriendo la autorización del responsable del proyecto.

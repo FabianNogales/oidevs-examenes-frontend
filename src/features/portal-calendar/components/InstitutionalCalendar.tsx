@@ -12,7 +12,8 @@ import {
   shiftMonth,
 } from '../utils/calendarDates'
 import { PublicEventDialog } from './PublicEventDialog'
-import styles from '../portalCalendar.module.css'
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
+import styles from '../pages/portalCalendar.module.css'
 
 export function InstitutionalCalendar({
   compact = false,
@@ -101,20 +102,20 @@ export function InstitutionalCalendar({
       ) : categories.data?.length ? (
         <label className={styles.field}>
           Categoría
-          <select
+          <Dropdown<string | number>
             value={category}
-            onChange={(event) => {
-              setCategory(event.target.value)
+            options={[
+              { value: '', label: 'Todas las categorías' },
+              ...categories.data.map((item) => ({
+                value: item.id,
+                label: item.name,
+              })),
+            ]}
+            onChange={(nextValue) => {
+              setCategory(String(nextValue))
               setDay(null)
             }}
-          >
-            <option value="">Todas las categorías</option>
-            {categories.data.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          />
         </label>
       ) : (
         <p className={styles.muted}>

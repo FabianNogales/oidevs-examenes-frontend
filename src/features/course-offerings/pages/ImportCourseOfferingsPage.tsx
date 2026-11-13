@@ -1,4 +1,5 @@
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { OfferingImportPanel } from '../components/OfferingImportPanel'
@@ -19,35 +20,27 @@ export function ImportCourseOfferingsPage() {
       : ''
   const back = `/admin/teachers/assignments${suffix}`
   return (
-    <section className={styles.page}>
-      <div className={styles.container}>
-        <Breadcrumbs
-          items={[
-            { label: 'Inicio', to: '/admin' },
-            { label: 'Docentes', to: '/admin/teachers' },
-            { label: 'Asignación de materias', to: back },
-            { label: 'Importar asignaciones' },
-          ]}
-        />
-        <header className={styles.pageHeader}>
-          <div>
-            <h1>Importar asignaciones de materias</h1>
-            <p className={styles.description}>
-              Asigna materias a uno o varios docentes mediante un archivo CSV.
-            </p>
-          </div>
-        </header>
-        {blocked && (
-          <p role="status" className={styles.notice}>
-            Espera a que termine la operación antes de salir.
-          </p>
-        )}
-        <OfferingImportPanel
-          onBusy={setBusy}
-          onCancel={() => navigate(back)}
-          onViewAssignments={() => navigate(back)}
-        />
-      </div>
-    </section>
+    <PageContainer>
+      <PageHeader
+        title="Importar asignaciones de materias"
+        description="Asigna materias a uno o varios docentes mediante un archivo CSV."
+        breadcrumbs={[
+          { label: 'Inicio', to: '/' },
+          { label: 'Docentes', to: '/admin/teachers' },
+          { label: 'Asignación de materias', to: back },
+          { label: 'Importar asignaciones' },
+        ]}
+      />
+      {blocked && (
+        <p role="status" className={styles.notice}>
+          Espera a que termine la operación antes de salir.
+        </p>
+      )}
+      <OfferingImportPanel
+        onBusy={setBusy}
+        onCancel={() => navigate(back)}
+        onViewAssignments={() => navigate(back)}
+      />
+    </PageContainer>
   )
 }

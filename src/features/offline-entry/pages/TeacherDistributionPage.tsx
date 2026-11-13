@@ -5,7 +5,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
 import { ExamInformation } from '@/features/exams/components/ExamInformation'
 import { ExamsSkeleton } from '@/features/exams/components/ExamsSkeleton'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
 import { useOfflineAssignments } from '../hooks/useOfflineAssignments'
@@ -15,9 +16,12 @@ import { DistributionActionBanner } from '../components/DistributionActionBanner
 import { DistributionSummaryMetrics } from '../components/DistributionSummaryMetrics'
 import { OfflineAssignmentCards } from '../components/OfflineAssignmentCards'
 import { OfflineConnectionStatus } from '../components/OfflineConnectionStatus'
-import shared from '../components/styles/OfflineShared.module.css'
-import distStyles from '../components/styles/OfflineDistribution.module.css'
+import shared from '../components/OfflineShared.module.css'
+import distStyles from '../components/OfflineDistribution.module.css'
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
+
+// U3.5: header and container come from PageHeader/PageContainer (OfflineShared.module.css unchanged).
+const titleId = 'teacher-distribution-title'
 
 function DistributionContent({ examId }: { examId: number }) {
   const navigate = useNavigate()
@@ -80,162 +84,165 @@ function DistributionContent({ examId }: { examId: number }) {
     const examTitle = exam.exam?.name ?? exam.detail?.name ?? `Examen ${examId}`
 
     return (
-      <main className={shared.page}>
-        <Breadcrumbs
-          items={[
-            { label: 'Mis exámenes', to: '/teacher/exams' },
-            { label: 'Examen', to: `/teacher/exams/${examId}` },
-            {
-              label: 'Distribución de listas',
-              to: `/teacher/exams/${examId}/distribution`,
-            },
-            { label: `Lista ${selectedListIndex + 1}` },
-          ]}
-        />
+      <main>
+        <PageContainer labelledBy={titleId}>
+          <PageHeader
+            title={`Lista ${selectedListIndex + 1} de estudiantes`}
+            titleId={titleId}
+            description={`${subjectName} · ${examTitle}`}
+            breadcrumbs={[
+              { label: 'Mis exámenes', to: '/teacher/exams' },
+              { label: 'Examen', to: `/teacher/exams/${examId}` },
+              {
+                label: 'Distribución de listas',
+                to: `/teacher/exams/${examId}/offline/assignments`,
+              },
+              { label: `Lista ${selectedListIndex + 1}` },
+            ]}
+          />
 
-        <AssignedListStudentsView
-          list={selectedList}
-          listPosition={selectedListIndex + 1}
-          version={lists.distribution.version}
-          subjectName={subjectName}
-          examName={examTitle}
-          onBack={() => setSearchParams({}, { replace: false })}
-        />
+          <AssignedListStudentsView
+            list={selectedList}
+            listPosition={selectedListIndex + 1}
+            version={lists.distribution.version}
+            subjectName={subjectName}
+            examName={examTitle}
+            onBack={() => setSearchParams({}, { replace: false })}
+          />
+        </PageContainer>
       </main>
     )
   }
 
   return (
-    <main className={shared.page}>
-      <Breadcrumbs
-        items={[
-          { label: 'Mis exámenes', to: '/teacher/exams' },
-          { label: 'Examen', to: `/teacher/exams/${examId}` },
-          { label: 'Distribución de listas' },
-        ]}
-      />
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Distribución de estudiantes"
+          titleId={titleId}
+          description="Listas exclusivas y consecutivas por apellidos."
+          breadcrumbs={[
+            { label: 'Mis exámenes', to: '/teacher/exams' },
+            { label: 'Examen', to: `/teacher/exams/${examId}` },
+            { label: 'Distribución de listas' },
+          ]}
+          actions={
+            <>
+              {/* Botón superior para volver a la lista de exámenes */}
+              <button
+                type="button"
+                className={distStyles.backButton}
+                onClick={() => void navigate(`/teacher/exams`)}
+              >
+                <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" />
+                <span>Volver a mis exámenes</span>
+              </button>
+              <OfflineConnectionStatus online={online} />
+            </>
+          }
+        />
 
-      {/* Botón superior para volver al detalle del examen */}
-      <div className={distStyles.backNavigationRow}>
-        <button
-          type="button"
-          className={distStyles.backButton}
-          onClick={() => void navigate(`/teacher/exams`)}
-        >
-          <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" />
-          <span>Volver a mis exámenes</span>
-        </button>
+        {exam.isLoading ? <ExamsSkeleton /> : null}
 
-        <OfflineConnectionStatus online={online} />
-      </div>
-
-      <header className={shared.header}>
-        <div>
-          <h1>Distribución de estudiantes</h1>
-          <p>Listas exclusivas y consecutivas por apellidos.</p>
-        </div>
-      </header>
-
-      {exam.isLoading ? <ExamsSkeleton /> : null}
-
-      {exam.errorMessage ? (
-        <div className={shared.error} role="alert">
-          <p>{exam.errorMessage}</p>
-          <button className={buttons.secondaryButton} onClick={exam.reload}>
-            Reintentar examen
-          </button>
-        </div>
-      ) : null}
-
-      {exam.exam ? <ExamInformation exam={exam.exam} /> : null}
-
-      {exam.detail ? (
-        <>
-          <DistributionSummaryMetrics
-            totalStudents={totalStudents}
-            collaboratorsCount={collaboratorsCount}
-            hasPreparedDistribution={lists.distribution !== null}
-            distributionVersion={lists.distribution?.version ?? null}
-          />
-
-          {noCollaborators ? (
-            <p className={shared.notice}>
-              No hay colaboradores en esta distribución. El servidor asigna la
-              lista al docente responsable.
-            </p>
-          ) : null}
-
-          {lists.error ? (
-            <p className={shared.error} role="alert">
-              {lists.error}
-            </p>
-          ) : null}
-
-          <DistributionActionBanner
-            examId={examId}
-            isPrepared={lists.distribution !== null}
-            isLoading={lists.loading}
-            isPreparing={lists.preparing}
-            isOnline={online}
-            canPrepare={canPrepare}
-            totalStudents={totalStudents}
-            onReload={lists.reload}
-            onRequestPrepare={() => setConfirmation(true)}
-          />
-
-          {lists.distribution ? (
-            <OfflineAssignmentCards
-              distribution={lists.distribution}
-              onSelectList={(listId) =>
-                setSearchParams({ listId: String(listId) })
-              }
-            />
-          ) : null}
-        </>
-      ) : null}
-
-      {confirmation ? (
-        <CollaborationModal
-          title="Preparar listas exclusivas"
-          busy={lists.preparing}
-          onClose={() => setConfirmation(false)}
-        >
-          <p>
-            Se distribuirán los estudiantes inscritos entre los colaboradores
-            vigentes. Si no hay colaboradores, la lista será del docente
-            responsable.
-          </p>
-          <p>
-            La primera distribución queda congelada en versión 1. Esta operación
-            no permite reasignar ni regenerar estudiantes después.
-          </p>
-          <div className={shared.actions}>
-            <button
-              className={buttons.secondaryButton}
-              disabled={lists.preparing}
-              onClick={() => setConfirmation(false)}
-            >
-              Cancelar
-            </button>
-            <button
-              className={buttons.primaryButton}
-              disabled={lists.preparing || !canPrepare}
-              onClick={() => {
-                void lists.prepare().then((prepared) => {
-                  setConfirmation(false)
-                  if (prepared)
-                    notify(
-                      'success',
-                      'Distribución preparada y guardada en el servidor.',
-                    )
-                })
-              }}
-            >
-              {lists.preparing ? 'Preparando…' : 'Confirmar preparación'}
+        {exam.errorMessage ? (
+          <div className={shared.error} role="alert">
+            <p>{exam.errorMessage}</p>
+            <button className={buttons.secondaryButton} onClick={exam.reload}>
+              Reintentar examen
             </button>
           </div>
-        </CollaborationModal>
-      ) : null}
+        ) : null}
+
+        {exam.exam ? <ExamInformation exam={exam.exam} /> : null}
+
+        {exam.detail ? (
+          <>
+            <DistributionSummaryMetrics
+              totalStudents={totalStudents}
+              collaboratorsCount={collaboratorsCount}
+              hasPreparedDistribution={lists.distribution !== null}
+              distributionVersion={lists.distribution?.version ?? null}
+            />
+
+            {noCollaborators ? (
+              <p className={shared.notice}>
+                No hay colaboradores en esta distribución. El servidor asigna la
+                lista al docente responsable.
+              </p>
+            ) : null}
+
+            {lists.error ? (
+              <p className={shared.error} role="alert">
+                {lists.error}
+              </p>
+            ) : null}
+
+            <DistributionActionBanner
+              examId={examId}
+              isPrepared={lists.distribution !== null}
+              isLoading={lists.loading}
+              isPreparing={lists.preparing}
+              isOnline={online}
+              canPrepare={canPrepare}
+              totalStudents={totalStudents}
+              onReload={lists.reload}
+              onRequestPrepare={() => setConfirmation(true)}
+            />
+
+            {lists.distribution ? (
+              <OfflineAssignmentCards
+                distribution={lists.distribution}
+                onSelectList={(listId) =>
+                  setSearchParams({ listId: String(listId) })
+                }
+              />
+            ) : null}
+          </>
+        ) : null}
+
+        {confirmation ? (
+          <CollaborationModal
+            title="Preparar listas exclusivas"
+            busy={lists.preparing}
+            onClose={() => setConfirmation(false)}
+          >
+            <p>
+              Se distribuirán los estudiantes inscritos entre los colaboradores
+              vigentes. Si no hay colaboradores, la lista será del docente
+              responsable.
+            </p>
+            <p>
+              La primera distribución queda congelada en versión 1. Esta operación
+              no permite reasignar ni regenerar estudiantes después.
+            </p>
+            <div className={shared.actions}>
+              <button
+                className={buttons.secondaryButton}
+                disabled={lists.preparing}
+                onClick={() => setConfirmation(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className={buttons.primaryButton}
+                disabled={lists.preparing || !canPrepare}
+                onClick={() => {
+                  void lists.prepare().then((prepared) => {
+                    setConfirmation(false)
+                    if (prepared)
+                      notify(
+                        'success',
+                        'Distribución preparada y guardada en el servidor.',
+                      )
+                  })
+                }}
+              >
+                {lists.preparing ? 'Preparando…' : 'Confirmar preparación'}
+              </button>
+            </div>
+          </CollaborationModal>
+        ) : null}
+      </PageContainer>
     </main>
   )
 }
@@ -244,8 +251,11 @@ export function TeacherDistributionPage() {
   const { examId } = useParams()
   const id = parseExamId(examId)
   return id === null ? (
-    <main className={shared.page}>
-      <p role="alert">El examen no es válido.</p>
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader title="Distribución de estudiantes" titleId={titleId} />
+        <p role="alert">El examen no es válido.</p>
+      </PageContainer>
     </main>
   ) : (
     <DistributionContent key={id} examId={id} />

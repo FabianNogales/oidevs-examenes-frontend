@@ -448,6 +448,13 @@ function adminPage(categories = [category]) {
   let tree
   const render = () => {
     tree = c.h.render(() => AdminCalendarPage())
+    const expand = (node) => {
+      if (Array.isArray(node)) return node.map(expand)
+      if (!node || typeof node !== 'object') return node
+      if (node.type?.name === 'PageHeader') return expand(node.type(node.props))
+      return { ...node, props: { ...node.props, children: expand(node.props?.children) } }
+    }
+    tree = expand(tree)
     return tree
   }
   render()
@@ -578,7 +585,7 @@ test('E1.2 the status column uses the shared AdminStatusBadge for DRAFT, PUBLISH
   assert.equal(statusColumn.header, 'Estado')
   assert.equal(visibilityColumn.header, 'Visibilidad', 'visibility stays a separate column')
   const { AdminStatusBadge } = sourceHarness().load(
-    'features/portal-shared/AdminStatusBadge.tsx',
+    'features/portal-shared/components/AdminStatusBadge.tsx',
   )
   for (const [eventStatus, label] of [
     ['DRAFT', 'Borrador'],
@@ -754,7 +761,7 @@ test('F1.1 Drawer status uses AdminStatusBadge and visibility is a separate, out
   page.h.unmount()
 
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
     'utf8',
   )
   assert.doesNotMatch(css, /\.badge\[data-status/, 'unused local status rules removed')
@@ -773,13 +780,13 @@ test('F2.2 admin breadcrumb matches the page title and keeps the home link', asy
     { label: 'Inicio', to: '/' },
     { label: 'Gestión del calendario' },
   ])
-  assert.equal(textContent(byType(ui.tree, 'h1')[0]), 'Gestión del calendario')
+  assert.equal(textContent(byType(ui.tree, 'h2')[0]), 'Gestión del calendario')
   ui.h.unmount()
 })
 
 test('F2.1 admin calendar page uses the shared content width; the public page is unaffected', () => {
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
     'utf8',
   )
   const rule = css.match(/(?:^|\n)\.page\s*\{([^}]*)\}/)?.[1]
@@ -795,7 +802,7 @@ test('F2.1 admin calendar page uses the shared content width; the public page is
     resolve(sourceRoot, 'features/portal-calendar/pages/CalendarPage.tsx'),
     'utf8',
   )
-  assert.match(admin, /className=\{styles\.page\}/)
+  assert.match(admin, /<PageContainer>/)
   assert.doesNotMatch(publicPage, /styles\.page\b/, 'public calendar keeps publicPage')
 })
 
@@ -825,7 +832,7 @@ test('E1.4 date cell has one container and the mobile action button may wrap ins
   ui.h.unmount()
 
   const css = readFileSync(
-    resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+    resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
     'utf8',
   )
   const mobile = css.slice(css.lastIndexOf('@media (max-width: 600px)'))
@@ -1270,7 +1277,7 @@ test('calendar UI/API contain no physical deletion or raw HTML injection', () =>
 test('responsive contract uses seven shrinkable calendar columns, bounded dialogs and single-column mobile forms', () => {
   const css =
     readFileSync(
-      resolve(sourceRoot, 'features/portal-calendar/portalCalendar.module.css'),
+      resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
       'utf8',
     ) +
     readFileSync(

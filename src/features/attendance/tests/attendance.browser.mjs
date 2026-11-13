@@ -1,6 +1,7 @@
 // Browser UI and controlled HTTP only. No backend or database changes.
 import assert from 'node:assert/strict'
 import { browserFixture } from '../../../shared/tests/browserHarness.mjs'
+import { pageContractProblems, pageContractScript } from '../../../shared/tests/pageContract.mjs'
 import {
   base,
   activity,
@@ -262,6 +263,28 @@ try {
   checks.push(
     'Other exam is denied without previous data; desktop/tablet/mobile320-1440 have no horizontal overflow',
   )
+  const contractStates = [
+    { name: 'asistencia', path: '/teacher/exams/4/attendance', title: 'Asistencia del examen', crumbs: ['Mis exámenes', 'Asistencia'], ready: "!!document.querySelector('table')" },
+    { name: 'asistencia error', path: '/teacher/exams/5/attendance', title: 'Asistencia del examen', crumbs: ['Mis exámenes', 'Asistencia'], ready: "!!document.querySelector('main [role=alert]')" },
+    // R2: invalid id keeps its exact message, one main and one h1, no breadcrumbs.
+    { name: 'asistencia id no válido', path: '/teacher/exams/abc/attendance', title: 'Asistencia del examen', crumbs: [], alertText: 'El identificador del examen no es válido.', ready: "!!document.querySelector('[role=alert]')" },
+  ]
+  // U3.4c: shared page contract (PageContainer + PageHeader) for every state at 320-1440px.
+  const contractFailures = []
+  for (const state of contractStates) {
+    await evaluate(`window.__router.navigate(${JSON.stringify(state.path)})`)
+    await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(state.title)} && (${state.ready ?? 'true'})`)
+    await new Promise((done) => setTimeout(done, 250))
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await b.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 })
+      await new Promise((done) => setTimeout(done, 120))
+      const problems = pageContractProblems(await evaluate(pageContractScript), { width, ...state })
+      if (problems.length) contractFailures.push(`${state.name} ${width}px: ${problems.join(' · ')}`)
+      console.log(`${problems.length ? 'FAIL' : 'PASS'} contrato ${state.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
+    }
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+  }
+  assert.deepEqual(contractFailures, [], 'contrato de página')
   assert.deepEqual(b.errors, [])
   assert.ok(requests.every((r) => r.method === 'GET'))
   await b.report({ checks, requests })

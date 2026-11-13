@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import { translateVisibleMessage } from '@/shared/api/visibleMessage'
 import type {
   OfferingImportPreview,
@@ -7,6 +8,7 @@ import type {
 import { downloadOfferingReport } from '../utils/offeringCsv'
 import styles from './OfferingImport.module.css'
 import local from '../pages/AdminCourseOfferingsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function OfferingImportReport({
   report,
@@ -58,28 +60,29 @@ export function OfferingImportReport({
       <div className={local.formActions}>
         <label className={local.filter}>
           Mostrar filas
-          <select
+          <Dropdown
             value={filter}
-            onChange={(event) => {
-              setFilter(event.target.value)
+            options={[
+              { value: 'ALL', label: 'Todas' },
+              {
+                value: confirmed ? 'IMPORTED' : 'VALID',
+                label: confirmed ? 'Importadas' : 'Listas para importar',
+              },
+              { value: 'ERROR', label: 'Con errores' },
+              { value: 'OMITTED', label: 'Omitidas' },
+            ]}
+            onChange={(nextFilter) => {
+              setFilter(nextFilter)
               setPage(1)
             }}
-          >
-            <option value="ALL">Todas</option>
-            <option value={confirmed ? 'IMPORTED' : 'VALID'}>
-              {confirmed ? 'Importadas' : 'Listas para importar'}
-            </option>
-            <option value="ERROR">Con errores</option>
-            <option value="OMITTED">Omitidas</option>
-          </select>
+          />
         </label>
-        <button
-          type="button"
-          className={local.secondaryButton}
+        <Button
+          variant="secondary"
           onClick={() => downloadOfferingReport(report)}
         >
           Descargar reporte CSV
-        </button>
+        </Button>
       </div>
       <div className={styles.previewTableWrap}>
         <table className={styles.previewTable}>
@@ -132,22 +135,21 @@ export function OfferingImportReport({
           {filtered.length} filas · Página {currentPage} de {lastPage}
         </p>
         <div>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             className={local.secondaryButton}
             disabled={currentPage <= 1}
             onClick={() => setPage(currentPage - 1)}
           >
             Anterior
-          </button>
-          <button
-            type="button"
-            className={local.secondaryButton}
+          </Button>
+          <Button
+            variant="secondary"
             disabled={currentPage >= lastPage}
             onClick={() => setPage(currentPage + 1)}
           >
             Siguiente
-          </button>
+          </Button>
         </div>
       </nav>
     </section>

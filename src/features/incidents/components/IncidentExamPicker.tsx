@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { useRetryFocus } from '@/shared/hooks/useRetryFocus'
 import type { IncidentsPage } from '../types/incident.types'
 import { useIncidentExamCatalog } from '../hooks/useIncidentExamCatalog'
 import styles from './IncidentExamPicker.module.css'
@@ -15,6 +16,10 @@ export function IncidentExamPicker({
   const id = useId()
   const catalog = useIncidentExamCatalog()
   const response = catalog.response
+  const { retryRef, markRetry } = useRetryFocus(
+    catalog.loading,
+    Boolean(catalog.error),
+  )
   return (
     <section
       className={styles.picker}
@@ -42,7 +47,14 @@ export function IncidentExamPicker({
       ) : catalog.error ? (
         <div role="alert">
           <p>{catalog.error}</p>
-          <button type="button" onClick={catalog.retry}>
+          <button
+            ref={retryRef}
+            type="button"
+            onClick={() => {
+              markRetry()
+              catalog.retry()
+            }}
+          >
             Reintentar
           </button>
         </div>

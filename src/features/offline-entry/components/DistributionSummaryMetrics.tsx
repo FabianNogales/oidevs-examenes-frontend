@@ -1,5 +1,5 @@
 import { Layers, UserCheck, Users } from 'lucide-react'
-import distStyles from './styles/OfflineDistribution.module.css'
+import distStyles from './OfflineDistribution.module.css'
 
 export interface DistributionSummaryMetricsProps {
   totalStudents: number | null

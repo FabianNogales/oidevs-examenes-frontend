@@ -1,12 +1,15 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CsvDropzone } from '@/features/students/components/CsvDropzone'
 import studentDesignStyles from '@/features/students/components/StudentImportDesign.module.css'
 import studentPageStyles from '@/features/students/pages/ImportStudentsPage.module.css'
 import {
   confirmAcademicImport,
+  getAutomationError,
   previewAcademicImport,
 } from '../api/eligibilityAutomationApi'
 import type {
+  AcademicImportMode,
+  AcademicValues,
   CsvImportPreview,
   CsvImportResult,
   ImportSchema,
@@ -14,15 +17,21 @@ import type {
 import type { AcademicCsvRow } from '../utils/academicCsv'
 import {
   AcademicCsvValidationError,
-  ACADEMIC_CSV_COLUMNS,
   downloadAcademicCsvTemplate,
+  getAcademicCsvLayout,
   prepareAcademicCsv,
+  prepareAcademicMergeCsv,
+  getAcademicMergeTemplates,
+  downloadAcademicMergeTemplate,
 } from '../utils/academicCsv'
+import { assessmentLabel } from '../utils/automationPresentation'
 import styles from '../pages/EligibilityAutomation.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 type Props = {
   offeringId: number
   schema: ImportSchema
+  layout: ReturnType<typeof getAcademicCsvLayout>
   onConfirmed: () => Promise<void>
 }
 
@@ -33,10 +42,7 @@ const INVALID_STUDENT_MESSAGE =
 
 function humanizeAcademicImportMessage(message: string): string {
   const normalized = message.toLocaleLowerCase('es')
-  if (
-    normalized.includes('ya existen datos') ||
-    normalized.includes('corrección explícita')
-  ) {
+  if (normalized.includes('ya existen datos')) {
     return EXISTING_DATA_MESSAGE
   }
   if (
@@ -51,12 +57,22 @@ function humanizeAcademicImportMessage(message: string): string {
 export function AcademicCsvImportPanel({
   offeringId,
   schema,
+  layout,
   onConfirmed,
 }: Props) {
+  const [mode, setMode] = useState<AcademicImportMode>('CREATE_ONLY')
+  const [reason, setReason] = useState('')
+  const [template, setTemplate] = useState('attendance')
+  const [now, setNow] = useState(() => Date.now())
+  const templates = getAcademicMergeTemplates(schema)
+  const selectedTemplate =
+    templates.find(({ id }) => id === template) ?? templates[0]
+  const reasonLimit = Math.min(500, schema.merge?.reason_max_length ?? 500)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [prepared, setPrepared] = useState<{
     csv: string
     rows: AcademicCsvRow[]
+    sourceRows: number[]
   } | null>(null)
   const [preview, setPreview] = useState<CsvImportPreview | null>(null)
   const [result, setResult] = useState<CsvImportResult | null>(null)
@@ -65,8 +81,31 @@ export function AcademicCsvImportPanel({
   const [working, setWorking] = useState(false)
   const operation = useRef(0)
   const errorId = 'academic-csv-error'
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 15000)
+    return () => {
+      window.clearInterval(timer)
+      operation.current += 1
+    }
+  }, [])
+
+  function invalidatePreview() {
+    setPreview(null)
+    setResult(null)
+    setError('')
+  }
+
+  const expired = preview ? Date.parse(preview.expires_at) <= now : false
+  const missingReason =
+    mode === 'MERGE' &&
+    schema.merge?.reason_required_for_updates &&
+    (preview?.summary?.updated_records ?? 0) > 0 &&
+    !preview?.reason?.trim()
+  const blocked =
+    working || expired || Boolean(missingReason) || Boolean(result)
 
   async function selectFile(file: File) {
+    if (working) return
     const request = ++operation.current
     setSelectedFile(file)
     setPrepared(null)
@@ -75,7 +114,10 @@ export function AcademicCsvImportPanel({
     setError('')
     setValidating(true)
     try {
-      const next = await prepareAcademicCsv(file, schema)
+      const next =
+        mode === 'MERGE'
+          ? { ...(await prepareAcademicMergeCsv(file, schema)), rows: [] }
+          : await prepareAcademicCsv(file, schema, layout)
       if (request === operation.current) setPrepared(next)
     } catch (validationError) {
       if (request === operation.current) {
@@ -91,6 +133,7 @@ export function AcademicCsvImportPanel({
   }
 
   function removeFile() {
+    if (working) return
     operation.current += 1
     setSelectedFile(null)
     setPrepared(null)
@@ -107,18 +150,29 @@ export function AcademicCsvImportPanel({
     setWorking(true)
     setError('')
     setResult(null)
+    setPreview(null)
     try {
       const file = new File([prepared.csv], selectedFile.name, {
         type: 'text/csv;charset=utf-8',
       })
-      const next = await previewAcademicImport(offeringId, file)
+      const next = await previewAcademicImport(
+        offeringId,
+        file,
+        mode === 'MERGE' ? { mode, reason } : undefined,
+      )
+      if (mode === 'MERGE' && next.mode !== 'MERGE')
+        throw new Error(
+          'La respuesta no corresponde a la modalidad MERGE. Genera una nueva vista previa.',
+        )
       if (request === operation.current) setPreview(next)
     } catch (previewError) {
       if (request === operation.current) {
+        const apiError = getAutomationError(previewError)
         setError(
-          previewError instanceof Error
-            ? humanizeAcademicImportMessage(previewError.message)
-            : 'No se pudo generar la vista previa del archivo.',
+          [
+            humanizeAcademicImportMessage(apiError.message),
+            ...Object.values(apiError.fieldErrors),
+          ].join(' '),
         )
       }
     } finally {
@@ -127,7 +181,11 @@ export function AcademicCsvImportPanel({
   }
 
   async function confirmImport() {
-    if (!preview?.can_confirm || working) return
+    if (!preview?.can_confirm || blocked) return
+    if (Date.parse(preview.expires_at) <= Date.now()) {
+      setNow(Date.now())
+      return
+    }
     const request = operation.current
     setWorking(true)
     setError('')
@@ -138,24 +196,43 @@ export function AcademicCsvImportPanel({
       )
       if (request === operation.current) {
         setResult(confirmed)
-        await onConfirmed()
+        setPreview(null)
+        try {
+          await onConfirmed()
+        } catch {
+          setError(
+            'La importación fue confirmada. Recarga los registros para consultar los datos actualizados.',
+          )
+        }
       }
     } catch (confirmationError) {
       if (request === operation.current) {
-        setError(
-          confirmationError instanceof Error
-            ? humanizeAcademicImportMessage(confirmationError.message)
-            : 'No se pudo confirmar la importación.',
-        )
+        const apiError = getAutomationError(confirmationError)
+        if (apiError.status === 409) {
+          setPreview(null)
+          setError(
+            'Los datos cambiaron o la vista previa caducó. Genera una nueva vista previa antes de confirmar.',
+          )
+        } else {
+          setError(
+            [
+              humanizeAcademicImportMessage(apiError.message),
+              ...Object.values(apiError.fieldErrors),
+            ].join(' '),
+          )
+        }
       }
     } finally {
       if (request === operation.current) setWorking(false)
     }
   }
 
-  const maxStudentRows = schema.assessment_keys.length
-    ? Math.floor(schema.max_rows / schema.assessment_keys.length)
+  const maxStudentRows = layout.assessmentKeys.length
+    ? Math.floor(schema.max_rows / layout.assessmentKeys.length)
     : 0
+  const asksIfTaken = layout.columns.some(({ key }) =>
+    key.startsWith('rindio_'),
+  )
 
   return (
     <section
@@ -171,24 +248,88 @@ export function AcademicCsvImportPanel({
             Importar datos académicos
           </h3>
           <p className={styles.academicImportDescription}>
-            Carga las calificaciones y asistencia de los estudiantes mediante un
-            archivo CSV.
+            Carga los datos académicos de los estudiantes mediante un archivo
+            CSV.
           </p>
           <p className={styles.academicImportDescription}>
             Estos datos serán utilizados para evaluar automáticamente los
             criterios de habilitación.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={`${studentPageStyles.templateButton} ${styles.academicTemplateButton}`}
-          onClick={downloadAcademicCsvTemplate}
+          disabled={
+            mode === 'MERGE'
+              ? !selectedTemplate
+              : layout.assessmentKeys.length === 0
+          }
+          onClick={() =>
+            mode === 'MERGE'
+              ? downloadAcademicMergeTemplate(selectedTemplate.columns)
+              : downloadAcademicCsvTemplate(layout.columns)
+          }
         >
           <DownloadIcon />
           Descargar plantilla CSV
-        </button>
+        </Button>
       </header>
 
+      {templates.length > 0 ? (
+        <div className={styles.mergeControls}>
+          <label>
+            Modalidad de importación
+            <select
+              id="academic-import-mode"
+              value={mode}
+              disabled={working}
+              onChange={(event) => {
+                removeFile()
+                setMode(event.currentTarget.value as AcademicImportMode)
+                setReason('')
+              }}
+            >
+              <option value="CREATE_ONLY">Crear registros nuevos</option>
+              <option value="MERGE">Actualizar parcialmente (MERGE)</option>
+            </select>
+          </label>
+          {mode === 'MERGE' ? (
+            <>
+              <label>
+                Plantilla MERGE
+                <select
+                  id="academic-merge-template"
+                  value={template}
+                  onChange={(event) => setTemplate(event.currentTarget.value)}
+                >
+                  {templates.map((item) => (
+                    <option value={item.id} key={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Justificación de actualización
+                <textarea
+                  id="academic-merge-reason"
+                  value={reason}
+                  maxLength={reasonLimit}
+                  disabled={working}
+                  onChange={(event) => {
+                    invalidatePreview()
+                    setReason(event.currentTarget.value)
+                  }}
+                />
+                <span>
+                  Obligatoria cuando se actualicen datos existentes. Máximo{' '}
+                  {reasonLimit} caracteres.
+                </span>
+              </label>
+            </>
+          ) : null}
+        </div>
+      ) : null}
       <div>
         <p className={studentPageStyles.columnsIntro}>
           El archivo debe incluir las siguientes columnas:
@@ -197,12 +338,36 @@ export function AcademicCsvImportPanel({
           className={`${studentDesignStyles.columnsGuide} ${styles.academicColumnsGuide}`}
           aria-label="Columnas de la plantilla CSV"
         >
-          {ACADEMIC_CSV_COLUMNS.map((column) => (
+          {(mode === 'MERGE'
+            ? (selectedTemplate?.columns ?? []).map((key) => ({
+                key,
+                label: key,
+              }))
+            : layout.columns
+          ).map((column) => (
             <span key={column.key}>{column.label}</span>
           ))}
         </div>
+        {mode === 'CREATE_ONLY' && layout.requiresAssessmentForAttendance ? (
+          <p>
+            Para registrar la asistencia, el importador requiere indicar si el
+            estudiante rindió un parcial.
+          </p>
+        ) : null}
+        {mode === 'CREATE_ONLY' && asksIfTaken ? (
+          <p>En las columnas «Rindió», escribe «Sí» o «No».</p>
+        ) : null}
       </div>
 
+      {mode === 'MERGE' ? (
+        <p>
+          Las columnas omitidas y las celdas vacías conservan los datos
+          existentes. El cero es un valor explícito. Usa true o false para
+          was_taken. Cada evaluación y la asistencia pueden aparecer una sola
+          vez por SIS. Puedes combinar las columnas permitidas por el esquema,
+          con sis obligatorio.
+        </p>
+      ) : null}
       <CsvDropzone
         className={styles.academicDropzone}
         fileStateClassName={styles.academicFileState}
@@ -230,8 +395,11 @@ export function AcademicCsvImportPanel({
       ) : null}
       <p className={styles.academicCsvLimits}>
         UTF-8 · Separado por comas · Máximo {formatFileSize(schema.max_file_kb)}{' '}
-        y {schema.max_rows} filas CSV ({maxStudentRows} estudiantes con el
-        esquema actual).
+        y {schema.max_rows} filas CSV
+        {mode === 'CREATE_ONLY'
+          ? ` (${maxStudentRows} estudiantes con el esquema actual)`
+          : ''}
+        .
       </p>
 
       <div className={studentPageStyles.infoBanner}>
@@ -240,28 +408,42 @@ export function AcademicCsvImportPanel({
           Podrás revisar los datos académicos antes de confirmar la carga y
           aplicar la habilitación automática.
           <br />
-          Si un estudiante ya tiene datos registrados, deberás modificarlos
-          mediante la opción “Corregir”.
+          {mode === 'MERGE'
+            ? 'Las celdas vacías conservan los valores existentes. Importar no recalcula habilitaciones.'
+            : 'Si un estudiante ya tiene datos registrados, deberás modificarlos mediante la opción “Corregir”.'}
         </div>
       </div>
 
       <div className={studentPageStyles.panelActions}>
-        <button
-          type="button"
+        <Button
           className={`${studentPageStyles.continueButton} ${styles.academicPreviewButton}`}
           disabled={!prepared || validating || working}
           onClick={() => void generatePreview()}
         >
           {working ? 'Procesando…' : 'Validar y generar vista previa'}
-        </button>
+        </Button>
       </div>
 
-      {preview ? (
+      {expired ? (
+        <p role="alert">
+          La vista previa caducó. Genera una nueva vista previa.
+        </p>
+      ) : null}
+      {preview && mode === 'MERGE' ? (
+        <AcademicMergePreview
+          preview={preview}
+          sourceRows={prepared?.sourceRows ?? []}
+          blocked={blocked}
+          onConfirm={() => void confirmImport()}
+        />
+      ) : null}
+      {preview && mode === 'CREATE_ONLY' ? (
         <AcademicCsvPreview
           preview={preview}
           inputRows={prepared?.rows ?? []}
-          assessmentCount={schema.assessment_keys.length}
-          working={working}
+          layout={layout}
+          working={blocked}
+          sourceRows={prepared?.sourceRows ?? []}
           onConfirm={() => void confirmImport()}
         />
       ) : null}
@@ -269,6 +451,9 @@ export function AcademicCsvImportPanel({
         <p className={styles.success} role="status">
           Importación confirmada: {result.created_records} registros creados. Se
           actualizaron los registros académicos.
+          {mode === 'MERGE'
+            ? ` Actualizados: ${result.updated_records ?? 0} · Sin cambios: ${result.unchanged_records ?? 0}.`
+            : ''}
         </p>
       ) : null}
     </section>
@@ -278,25 +463,31 @@ export function AcademicCsvImportPanel({
 function AcademicCsvPreview({
   preview,
   inputRows,
-  assessmentCount,
+  sourceRows,
+  layout,
   working,
   onConfirm,
 }: {
   preview: CsvImportPreview
   inputRows: AcademicCsvRow[]
-  assessmentCount: number
+  sourceRows: number[]
+  layout: Props['layout']
   working: boolean
   onConfirm: () => void
 }) {
+  const includesPP = layout.columns.some(({ key }) => key === 'nota_pp')
+  const includesSP = layout.columns.some(({ key }) => key === 'nota_sp')
+  const includesTakenPP = layout.columns.some(({ key }) => key === 'rindio_pp')
+  const includesTakenSP = layout.columns.some(({ key }) => key === 'rindio_sp')
+  const includesAttendance = layout.columns.some(
+    ({ key }) => key === 'asistencias',
+  )
   const errorsByInputRow = new Map<
     number,
     { sis: string | null; messages: Set<string> }
   >()
   preview.errors.forEach((item) => {
-    const inputRow =
-      assessmentCount > 0
-        ? Math.floor((item.row - 2) / assessmentCount) + 2
-        : item.row
+    const inputRow = sourceRows[item.row - 2] ?? item.row
     const grouped = errorsByInputRow.get(inputRow) ?? {
       sis: item.sis,
       messages: new Set<string>(),
@@ -342,11 +533,49 @@ function AcademicCsvPreview({
               <tr>
                 <th scope="col">SIS</th>
                 <th scope="col">Nombre completo</th>
-                <th scope="col">Nota PP</th>
-                <th scope="col">Nota SP</th>
-                <th scope="col">Asistencia</th>
-                <th scope="col">% asistencia</th>
-                <th scope="col">Promedio</th>
+                {includesPP ? (
+                  <th scope="col">
+                    {
+                      layout.columns.find((column) => column.key === 'nota_pp')
+                        ?.label
+                    }
+                  </th>
+                ) : null}
+                {includesSP ? (
+                  <th scope="col">
+                    {
+                      layout.columns.find((column) => column.key === 'nota_sp')
+                        ?.label
+                    }
+                  </th>
+                ) : null}
+                {includesTakenPP ? (
+                  <th scope="col">
+                    {
+                      layout.columns.find(
+                        (column) => column.key === 'rindio_pp',
+                      )?.label
+                    }
+                  </th>
+                ) : null}
+                {includesTakenSP ? (
+                  <th scope="col">
+                    {
+                      layout.columns.find(
+                        (column) => column.key === 'rindio_sp',
+                      )?.label
+                    }
+                  </th>
+                ) : null}
+                {includesAttendance ? (
+                  <>
+                    <th scope="col">Asistencia</th>
+                    <th scope="col">% asistencia</th>
+                  </>
+                ) : null}
+                {includesPP && includesSP ? (
+                  <th scope="col">Promedio</th>
+                ) : null}
                 <th scope="col">Estado de validación</th>
               </tr>
             </thead>
@@ -364,13 +593,25 @@ function AcademicCsvPreview({
                   <tr key={`${source.sis}-${index}`}>
                     <td>{source.sis}</td>
                     <td>{source.nombre_completo}</td>
-                    <td>{formatAssessment(pp, source.nota_pp)}</td>
-                    <td>{formatAssessment(sp, source.nota_sp)}</td>
-                    <td>
-                      {source.asistencias} / {source.total_clases}
-                    </td>
-                    <td>{formatAttendancePercentage(attended, total)}</td>
-                    <td>{formatAverage(source.nota_pp, source.nota_sp)}</td>
+                    {includesPP ? (
+                      <td>{formatAssessment(pp, source.nota_pp)}</td>
+                    ) : null}
+                    {includesSP ? (
+                      <td>{formatAssessment(sp, source.nota_sp)}</td>
+                    ) : null}
+                    {includesTakenPP ? <td>{source.rindio_pp}</td> : null}
+                    {includesTakenSP ? <td>{source.rindio_sp}</td> : null}
+                    {includesAttendance ? (
+                      <>
+                        <td>
+                          {source.asistencias} / {source.total_clases}
+                        </td>
+                        <td>{formatAttendancePercentage(attended, total)}</td>
+                      </>
+                    ) : null}
+                    {includesPP && includesSP ? (
+                      <td>{formatAverage(source.nota_pp, source.nota_sp)}</td>
+                    ) : null}
                     <td>
                       <span className={styles.academicValidationStatus}>
                         {academicValidationStatus(error?.messages)}
@@ -384,16 +625,135 @@ function AcademicCsvPreview({
         </div>
       ) : null}
       <div className={studentPageStyles.panelActions}>
-        <button
-          type="button"
+        <Button
           className={`${studentPageStyles.continueButton} ${styles.academicPreviewButton}`}
           disabled={!preview.can_confirm || working}
           onClick={onConfirm}
         >
           {working ? 'Confirmando…' : 'Confirmar importación'}
-        </button>
+        </Button>
       </div>
     </section>
+  )
+}
+
+function AcademicMergePreview({
+  preview,
+  sourceRows,
+  blocked,
+  onConfirm,
+}: {
+  preview: CsvImportPreview
+  sourceRows: number[]
+  blocked: boolean
+  onConfirm: () => void
+}) {
+  const actions = {
+    CREATE: 'Crear',
+    UPDATE: 'Actualizar',
+    UNCHANGED: 'Sin cambios',
+  }
+  const complete =
+    Boolean(preview.summary) &&
+    preview.valid_records.every(
+      (record) => record.action && record.before && record.proposed,
+    )
+  return (
+    <section
+      className={styles.academicPreview}
+      aria-labelledby="academic-merge-preview-title"
+    >
+      <h4 id="academic-merge-preview-title">
+        Vista previa de importación parcial
+      </h4>
+      {preview.summary ? (
+        <p role="status">
+          Crear: {preview.summary.created_records} · Actualizar:{' '}
+          {preview.summary.updated_records} · Sin cambios:{' '}
+          {preview.summary.unchanged_records}
+        </p>
+      ) : (
+        <p role="alert">
+          No se recibió el resumen de la importación. Genera una nueva vista
+          previa.
+        </p>
+      )}
+      <p>
+        Justificación revisada:{' '}
+        {preview.reason ||
+          'Sin justificación; no se actualizarán registros existentes.'}
+      </p>
+      {preview.errors.length > 0 ? (
+        <ul className={styles.errorList}>
+          {preview.errors.map((error, index) => (
+            <li key={`${error.row}-${index}`}>
+              Fila {sourceRows[error.row - 2] ?? error.row} · SIS{' '}
+              {error.sis ?? '—'}:{' '}
+              {Object.values(error.messages).flat().join(' ')}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {preview.valid_records.map((record) => (
+        <article key={record.student_id} className={styles.mergeRecord}>
+          <h5>
+            SIS {record.sis} ·{' '}
+            {record.action ? actions[record.action] : 'Sin acción confirmada'}
+          </h5>
+          <p>
+            Registro {record.record_id ?? 'nuevo'} · Revisión{' '}
+            {record.revision ?? '—'}
+          </p>
+          <div className={styles.mergeDifference}>
+            <section aria-label={`Valores anteriores de ${record.sis}`}>
+              <h6>Anterior</h6>
+              {record.before ? (
+                <AcademicValuesDetail values={record.before} />
+              ) : (
+                <p>Sin datos disponibles</p>
+              )}
+            </section>
+            <section aria-label={`Valores propuestos de ${record.sis}`}>
+              <h6>Propuesto</h6>
+              {record.proposed ? (
+                <AcademicValuesDetail values={record.proposed} />
+              ) : (
+                <p>Sin datos disponibles</p>
+              )}
+            </section>
+          </div>
+        </article>
+      ))}
+      <Button
+        disabled={blocked || !complete || !preview.can_confirm}
+        onClick={onConfirm}
+      >
+        Confirmar importación
+      </Button>
+    </section>
+  )
+}
+
+function AcademicValuesDetail({ values }: { values: AcademicValues }) {
+  return (
+    <dl>
+      <div>
+        <dt>Asistencia</dt>
+        <dd>
+          {values.attended_classes ?? 'Sin dato'} /{' '}
+          {values.total_classes ?? 'Sin dato'}
+        </dd>
+      </div>
+      {Object.entries(values.assessments).map(([key, assessment]) => (
+        <div key={key}>
+          <dt>{assessmentLabel(key)}</dt>
+          <dd>
+            Rindió: {assessment.was_taken ? 'Sí' : 'No'} · Nota:{' '}
+            {assessment.score ?? 'Sin dato'}
+          </dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 

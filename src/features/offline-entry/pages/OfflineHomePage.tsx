@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { ArrowRight, Clock, FolderKanban } from 'lucide-react'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { OfflineAccessGate } from '../components/OfflineAccessGate'
 import { readOwnedOfflinePackages } from '../storage/offlineStore'
 import { offlineError } from '../api/offlineApi'
 import { formatOfflineTime } from '../utils/offlineRules'
 import type { OfflineIdentity } from '../services/offlineIdentity'
 import type { StoredPackage } from '../types/offline.types'
-import shared from '../components/styles/OfflineShared.module.css'
-import distStyles from '../components/styles/OfflineDistribution.module.css'
+import shared from "../components/OfflineShared.module.css";
+import distStyles from "../components/OfflineDistribution.module.css";
 import buttons from '@/features/collaborations/pages/Collaborations.module.css'
+import pageStyles from './OfflinePages.module.css'
+
+const titleId = 'offline-home-title'
 
 function OwnedLists({ identity }: { identity: OfflineIdentity }) {
   const [packages, setPackages] = useState<StoredPackage[]>([])
@@ -43,17 +48,18 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
     ).values(),
   ]
   return (
-    <main className={shared.page}>
-      <header className={shared.header}>
-        <div>
-          <p className={shared.eyebrow}>EIDA · Este dispositivo</p>
-          <h1>Mis listas locales</h1>
-          <p>
-            Paquetes descargados por {identity.displayName}. Los eventos se
-            conservan aunque salgas de una pantalla.
-          </p>
-        </div>
-      </header>
+    <main className={pageStyles.main}>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          eyebrow="EIDA · Este dispositivo"
+          subtitle="Mis listas locales"
+          titleId={titleId}
+          description={`Paquetes descargados por ${identity.displayName}. Los eventos se conservan aunque salgas de una pantalla.`}
+          breadcrumbs={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Mis listas locales' },
+          ]}
+        />
       <p className={shared.notice}>
         Prepara y usa este espacio en la misma pestaña. Al cerrarla o bloquear
         el acceso puede ser necesario volver a verificar tu cuenta con conexión.
@@ -75,7 +81,7 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
           <FolderKanban
             size={36}
             strokeWidth={1.65}
-            color="var(--brand-blue)"
+            color="var(--color-primary)"
             style={{ marginInline: 'auto', marginBottom: '12px' }}
             aria-hidden="true"
           />
@@ -118,6 +124,7 @@ function OwnedLists({ identity }: { identity: OfflineIdentity }) {
           </article>
         ))}
       </div>
+      </PageContainer>
     </main>
   )
 }

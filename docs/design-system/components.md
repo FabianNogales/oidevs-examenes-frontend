@@ -11,20 +11,47 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 | Componente | Ruta | Propósito |
 |---|---|---|
 | `DataTable` (+ `DataTableRow`, tipos en `dataTable.types.ts`) | `shared/components/DataTable/` | Tabla con búsqueda (incluye su botón "Limpiar"), filtros (`filters`, `filterLayout: 'below' \| 'inline'`), estados de carga, error y vacío, paginación y vista de tarjeta en móvil |
-| `PortalDialog` | `shared/components/PortalDialog/` | Modal o Drawer (`drawer`) sobre `<dialog>` nativo: foco inicial, bloqueo de scroll, `footer` fuera del cuerpo, Escape gestionado en `keydown` y reapertura ante cierres nativos inesperados |
+| `PortalDialog` | `shared/components/PortalDialog/` | Modal o Drawer (`drawer`) sobre `<dialog>` nativo: foco inicial (por defecto el ×; `initialFocus` opcional, DS4.2c.1), bloqueo de scroll, `footer` fuera del cuerpo, Escape gestionado en `keydown` y reapertura ante cierres nativos inesperados. Admite `Button`: sus reglas genéricas excluyen `data-ds-button` |
 | `ConfirmDialog` | `shared/components/ConfirmDialog/` | Confirmación. Modo `native` para confirmar sobre un Drawer (Escape robusto, `loading`); modo overlay heredado. `features/admin/components/ConfirmDialog` solo lo reexporta |
 | `Breadcrumbs` | `shared/components/Breadcrumbs/` | Miga de pan (`BreadcrumbItem[]`) |
 | `Header` (+ `headerNavigation.config.ts`) | `shared/components/Header/` | Cabecera y navegación por rol |
 | `Footer` | `shared/components/Footer/` | Pie de página |
 | `DataCardGrid` (+ `DataCardItem`) | `shared/components/DataCardGrid/` | Rejilla de tarjetas con campos y acciones según el rol |
 | `AuthenticatedImage` | `shared/components/AuthenticatedImage/` | Imagen que requiere sesión (usa `useAuthenticatedImage`) |
+| `DataTable` (error) | `shared/components/DataTable/` | DS5-F3: el banner de error se reorganiza por debajo de 480px («Reintentar» bajo el mensaje). Prueba `DataTable/tests/dataTableError.browser.mjs` |
 | `Snackbar` | `shared/components/Snackbar.tsx` | Notificación temporal (clases `.snackbar*` de `assets/styles/snackbar.css`) |
+
+### `src/shared/components/ui` (primitivas del Design System, DS2)
+
+| Componente | Ruta | API |
+|---|---|---|
+| `PageContainer` | `ui/PageContainer/` | `children`, `width?: 'default' \| 'narrow'` (1280px = `--content-max-width` / 960px), `className?`, `labelledBy?` (renderiza `<section aria-labelledby>`; sin él, `<div>`). Padding `--space-8` / `--content-gutter` (`--space-5` vertical ≤640px). **Nunca renderiza `<main>`** (lo aportan los layouts) y no es una tarjeta: sin fondo, borde ni sombra |
+| `PageHeader` | `ui/PageHeader/` | `title` (obligatorio, no vacío; único `<h1>`), `titleId?`, `titleRef?: Ref<HTMLHeadingElement>` (conserva el foco tras recargas), `focusableTitle?` (`tabIndex={-1}` para la gestión de foco existente), `eyebrow?`, `description?` (contenido en línea, va dentro de un `<p>`), `breadcrumbs?: BreadcrumbItem[]` (reutiliza `Breadcrumbs`), `actions?` (se renderizan tal cual). `h1` `--font-size-3xl` (`2xl` ≤640px), bold; descripción `md` (`sm` ≤640px); separación inferior `--space-6`; acciones a la derecha y apiladas ≤640px |
+| `Button` | `ui/Button/` | `variant?: 'primary' \| 'secondary' \| 'danger' \| 'ghost'` (por defecto `primary`), `size?: 'md' \| 'sm'` (44px `--control-height` / 36px `--control-height-sm`, solo acciones secundarias de escritorio), `loading?` (añade `disabled` y `aria-busy`; el texto lo pone el consumidor), `type="button"` por defecto y props nativas (incluido `ref`). No impone nombre accesible: un botón solo con icono necesita `aria-label`. Deshabilitado con `--color-disabled-*` y `opacity: 1` (anula el 0.65 global de `base.css`) |
+| `ButtonLink` | `ui/Button/` | `Link` de `react-router` con el aspecto de `Button` (`variant`, `size`); siempre renderiza `<a>`; sin `disabled` ni `loading` |
+| `Field` | `ui/Field/` | `label`, `htmlFor?` (si falta, `useId`), `required?`, `hint?`, `error?`, `className?` y `children` como función que recibe `{ id, required, aria-invalid, aria-describedby }`. Enlaza ayuda (`<id>-hint`) y error (`<id>-error`) por `aria-describedby`; el error marca `aria-invalid` y **no** es región viva (sin `role="alert"`): los avisos generales van en un resumen del formulario. `*` visual con `aria-hidden` |
+| `TextInput`, `Select`, `Textarea` | `ui/Field/` | Elementos nativos (props nativas y `ref`; `Select` con `<option>`/`<optgroup>` nativos; `Textarea` con `resize: vertical`) más `invalid?`. Estilos compartidos en `controls.module.css` con `--input-height`, `--input-radius` y `--color-input-border`; foco, hover, inválido y deshabilitado con tokens |
+
+Contrato de páginas (D5.2): administración equivalente usa `PageContainer` por defecto y `PageHeader` con breadcrumbs, título, descripción y acciones por props. H1 `3xl`/`2xl` a ≤640px, peso `bold`, línea `tight`; breadcrumbs y cabecera separados por `space-6`, descripción por `space-2`. El layout administrativo aporta el único `<main>`. No añadir un contenedor local con padding o una escala H1 paralela. Información, Noticias y Servicios públicos mantienen explícitamente `width="narrow"` (960px), el `<main>` de la página y la superficie pública heredada: son una variante de lectura legítima, no administración.
+
+Pruebas de `Button`: `ui/tests/button.test.mjs` (SSR y CSS) y `ui/tests/button.browser.mjs` (catálogo aislado: contraste AA, foco con teclado, 4 anchos).
+Pruebas de los campos: `ui/tests/field.test.mjs` (SSR y CSS) y `ui/tests/field.browser.mjs` (label↔control, `aria-describedby`, teclado, `select` nativo, contraste, 4 anchos).
+Consumidores de `Button`, `ButtonLink`, `Field` y controles (lista cerrada por componente en `button.test.mjs` y `field.test.mjs`): `Field` y controles, solo Aulas (DS2.2c: `AdminRoomsPage`, `RoomFormField`, `RoomForm`, `RoomDetails`, `RoomDialog`, `RoomStatusDialog`); `Button`/`ButtonLink`, además, Materias y Periodos académicos (DS2.2d) y `TeacherSubjectStudentsPage` (DS4.1a), y los paneles de importación CSV de Aulas, Materias, Estudiantes, Ofertas, inscripción docente y elegibilidad (DS4.2a). En Materias y Periodos se mantienen las mismas excepciones que en Aulas. Excepciones en Aulas, pendientes de decisión: acciones de cada fila de `RoomsTable` ("Desactivar" usa un estilo de peligro suave sin variante en el DS), el botón de cerrar × de `RoomModal` (botón de icono) y el panel de importación CSV (estilos compartidos con Materias en `CsvImport.module.css`; se migra con Materias en DS2.2d). Dentro de páginas del portal, `.page button` (`portalBase.module.css`) tiene más especificidad que `.button`: revisar al migrar el portal.
+Pruebas: `ui/tests/pageLayout.test.mjs` (SSR, CSS y lista cerrada de consumidores autorizados) y
+`ui/tests/pageLayout.browser.mjs` (navegador con transporte simulado: Importar aulas/materias, Gestión de
+aulas/materias, Carreras, Auditoría y Noticias, Servicios e Información (admin y pública) a 320/390/768/1440px; solo renderizado y layout, sin importar ni guardar).
+Consumidores (DS2.1b–g): Importar aulas/materias, Gestión de aulas/materias, Carreras
+(`AdminReadPage`, solo la variante `careers`; Auditoría conserva su cabecera) y Criterios de
+habilitación, Gestión de noticias, servicios e información (vía `PortalAdminCollection headerVariant="page"`)
+y las páginas públicas de Noticias, Servicios e Información (cada una aporta su propio `<main>`;
+`NewsDetailPage` y `ServiceDetailPage` sin migrar). Las acciones de cabecera existentes se pasan tal cual en `actions` (p. ej. dentro de
+su `.headerActions` original).
 
 ### `src/features/portal-shared` (portal administrativo)
 
 | Componente | Propósito |
 |---|---|
-| `PortalAdminCollection` | Página de listado administrativo: cabecera (título, descripción, botón de crear), DataTable, búsqueda, `filters`, `resetPageKey` y recarga tras guardar sin perder filas (`aria-busy`) |
+| `PortalAdminCollection` | Página de listado administrativo: cabecera (título, descripción, botón de crear; `headerVariant?: 'legacy' \| 'page'`, por defecto `legacy`; `page` usa `PageHeader` dentro del mismo `.page`, hoy Noticias, Servicios e Información), DataTable, búsqueda, `filters`, `resetPageKey` y recarga tras guardar sin perder filas (`aria-busy`) |
 | `AdminStatusBadge` | Badge de estado de solo presentación (`status` ∈ PUBLISHED, DRAFT, UNPUBLISHED, ARCHIVED, ACTIVE, INACTIVE, PENDING_CHANGES, CANCELLED; `children` sustituye la etiqueta) |
 | `PortalUi` | `PortalModal` (adaptador de PortalDialog), `PortalPageLayout`, `PortalFeedback`, `PortalPager`, `EditorFeedback`, `PortalField`, `ContentLink` |
 | `PortalHistory` / `PortalHistoryPanel` | Historial de cambios bajo demanda |
@@ -45,26 +72,27 @@ copiarlo. Inventario verificado en `f3cf6f5`; ubicación de las clases globales 
 
 ## ⚠️ Componentes locales que duplican patrones (no copiar; migrar en DS3–DS4)
 
-Medido en DS0:
+Medido en DS0; actualizado en DS5 (2026-11-08, `6cf5a53`) entre corchetes:
 
-- **Modales y diálogos propios:** 18 `*Modal` y 13 `*Dialog` en features. 6 usan `<dialog>` nativo, 8 un overlay con Escape gestionado a mano y 7 PortalDialog o derivados.
-- **Tablas:** 16 implementaciones con `<table>` propio frente a 9 consumidores de DataTable.
-- **Paginación:** reimplementada en unos 18 archivos.
-- **Botones:** 64 clases distintas (`.primaryButton`, `.secondaryButton`, `.cancelButton`…) en 28 archivos CSS.
+- **Modales y diálogos propios:** 18 `*Modal` y 13 `*Dialog` en features [DS5: 11 diálogos propios fuera de las familias compartidas]. 6 usan `<dialog>` nativo, 8 un overlay con Escape gestionado a mano y 7 PortalDialog o derivados. Desde DS4.2c.2, `CollaborationModal` (overlay compartido, 17 consumidores) se pinta en la top layer como popover manual, con el mismo DOM y API.
+- **Tablas:** 16 implementaciones con `<table>` propio frente a 9 consumidores de DataTable [DS5: 13 propias].
+- **Paginación:** reimplementada en unos 18 archivos [DS5: 19 paginadores propios; candidata a `Pagination` (R4c)].
+- **Botones:** 64 clases distintas (`.primaryButton`, `.secondaryButton`, `.cancelButton`…) en 28 archivos CSS [DS5: 60 clases en 33 módulos; `Button` en 33 archivos].
 - **Badges de dominio:** `AcademicTermStatusBadge`, `EntryConditionBadge`, `AcademicResultBadge`, `ProfileActiveTermBadge`.
-- **Duplicado literal:** `EntityProfileLayout` existe en `features/admin/components/` y en `features/admin/profile/components/`.
+- ~~**Duplicado literal:** `EntityProfileLayout`~~ resuelto: solo queda `features/users/profile/components/EntityProfileLayout.tsx`.
+- **Contrato de página (DS5):** `PageHeader` en 48 archivos y `PageContainer` en 50 (tras DS5-F2: `users/profile/components/EntityProfileError`, error de carga de los perfiles administrativos); quedan 11 H1 propios y 5 migas manuales (inventario en PROGRESS.md › DS5).
 
-## 🕒 Planificados en `src/shared/components/ui/` (ubicación aprobada; no existen todavía, se crean en DS2)
+## 🕒 Planificados en `src/shared/components/ui/` (ubicación aprobada; aún no existen, se crean a lo largo de DS2)
 
 | Componente | Base existente | Notas de API (borrador) |
 |---|---|---|
-| `Button`, `IconButton` | Las 64 clases de botón | `variant`: primary, secondary, ghost, danger; `size`: md, sm; `loading` |
-| `Field`, `TextInput`, `Select`, `Textarea` | `PortalField`, `AuthField`, `RoomFormField` | Etiqueta, error y ayuda con `aria-invalid` y `aria-describedby` |
+| `IconButton` | Botones de icono (p. ej. cerrar ×) | Pendiente de decisión. Mientras tanto: `Button variant="ghost"` con `aria-label` |
 | `Badge` | `AdminStatusBadge` | `tone`: neutral, info, success, warning, danger. `AdminStatusBadge` pasaría a ser un mapeo de estados sobre `Badge`, sin cambiar su API |
 | `Pagination` | Paginación interna de DataTable y `PortalPager` | Extraída sin cambiar la API de DataTable |
 | `EmptyState`, `LoadingState`, `Notice` | Estados de DataTable y `PortalFeedback` | |
 | `Dialog` | `PortalDialog` y `ConfirmDialog` nativo | Una sola familia; conservar el Escape robusto |
-| `PageHeader`, `PageContainer` | Cabecera de `PortalAdminCollection` (1280px, título, descripción, acción) | |
+
+Contraste (DS5-F4): `--color-border-strong` (1.68:1 claro / 2.05:1 oscuro) es para bordes decorativos; no usarlo como único borde de un campo (WCAG 1.4.11). Para campos: `--color-input-border` o `Field`.
 
 Regla: un componente planificado no se usa hasta que exista en el código y esta
 tabla lo mueva a "Existentes".

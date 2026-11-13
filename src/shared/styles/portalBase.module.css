@@ -9,7 +9,7 @@
 }
 
 .publicPage {
-  max-width: 960px;
+  max-width: var(--content-max-width);
   margin-inline: auto;
 }
 
@@ -28,8 +28,8 @@
   font-size: 1.1rem;
 }
 
-.page button,
-.dialog button {
+.page button:where(:not([data-ds-button])),
+.dialog button:where(:not([data-ds-button])) {
   min-height: 36px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
@@ -40,8 +40,8 @@
   font: inherit;
 }
 
-.page button:disabled,
-.dialog button:disabled {
+.page button:where(:not([data-ds-button])):disabled,
+.dialog button:where(:not([data-ds-button])):disabled {
   opacity: 0.5;
   cursor: default;
 }
@@ -60,9 +60,9 @@
   font-size: 0.875rem;
 }
 
-.field input,
+.field input:where(:not([data-ds-dropdown] input)),
 .field textarea,
-.field select {
+.field select:where(:not([data-ds-dropdown] select)) {
   width: 100%;
   min-width: 0;
   max-width: 100%;

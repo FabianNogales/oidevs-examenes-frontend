@@ -75,7 +75,31 @@ export type ConfigurationPayload = {
   manual_review_conditions: string | null
 }
 
+export type AcademicImportMode = 'CREATE_ONLY' | 'MERGE'
+export type AcademicValues = {
+  assessments: Record<string, { was_taken: boolean; score: number | null }>
+  attended_classes: number | null
+  total_classes: number | null
+}
+export type AcademicImportSummary = {
+  created_records: number
+  updated_records: number
+  unchanged_records: number
+}
+
 export type ImportSchema = {
+  modes?: AcademicImportMode[]
+  default_mode?: AcademicImportMode
+  merge?: {
+    allowed_columns: string[]
+    required_columns: string[]
+    attendance_columns: string[]
+    assessment_columns: string[]
+    empty_values: 'PRESERVE'
+    reason_required_for_updates: boolean
+    reason_max_length: number
+    confirmation_revalidates_revisions: boolean
+  }
   columns: string[]
   assessment_keys: string[]
   encoding: string
@@ -89,11 +113,19 @@ export type ImportSchema = {
 }
 
 export type CsvImportPreview = {
+  mode?: AcademicImportMode
+  reason?: string
+  summary?: AcademicImportSummary
   preview_id: string
   expires_at: string
   can_confirm: boolean
   total_rows: number
   valid_records: {
+    action?: 'CREATE' | 'UPDATE' | 'UNCHANGED'
+    record_id?: number | null
+    revision?: number | null
+    before?: AcademicValues
+    proposed?: AcademicValues
     student_id: number
     sis: string
     assessments: Record<string, { was_taken: boolean; score: number | null }>
@@ -108,6 +140,8 @@ export type CsvImportPreview = {
 }
 
 export type CsvImportResult = {
+  updated_records?: number
+  unchanged_records?: number
   preview_id: string
   created_records: number
   record_ids: number[]
@@ -167,11 +201,26 @@ export type CriterionResult = {
   missing_fields?: string[]
 }
 
+export type EvaluationFilter =
+  'ALL' | 'CHANGES' | 'ELIGIBLE' | 'INELIGIBLE' | 'PENDING' | 'PROTECTED'
+
+export type EvaluationQuery = {
+  filter: EvaluationFilter
+  search: string
+  page: number
+  per_page: number
+}
+
 export type EvaluationResult = {
   student: { id: number; display_name: string; sis: string }
   computed_status: 'ELIGIBLE' | 'INELIGIBLE' | 'PENDING'
   current_status: 'ELIGIBLE' | 'INELIGIBLE' | null
   effective_status: 'ELIGIBLE' | 'INELIGIBLE' | null
+  state_will_change?: boolean
+  traceability_only?: boolean
+  protected_source?: 'MANUAL' | 'LEGACY' | null
+  current_reason?: string | null
+  effective_reason?: string | null
   manual_override_preserved: boolean
   will_update: boolean
   reason: string
@@ -202,6 +251,12 @@ export type EvaluationView = {
     eligible: number
     ineligible: number
     pending: number
+    effective_eligible?: number
+    effective_ineligible?: number
+    effective_unset?: number
+    state_changes?: number
+    traceability_only?: number
+    protected?: number
   }
 }
 

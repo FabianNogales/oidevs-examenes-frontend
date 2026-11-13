@@ -6,7 +6,7 @@ import { sourceHarness, nodes, textContent, sourceRoot, compile, ts } from './so
 
 function profileHarness() {
   const h = sourceHarness({ '../components/EntityProfileLayout': { EntityInfoGrid: 'grid' } })
-  return { h, Profile: h.load('features/admin/profile/tabs/ProfileOverviewTab.tsx').ProfileOverviewTab }
+  return { h, Profile: h.load('features/users/profile/tabs/ProfileOverviewTab.tsx').ProfileOverviewTab }
 }
 
 test('029: missing/whitespace institutional fields never invent real personal or academic data', () => {
@@ -28,7 +28,7 @@ test('029: real institutional values are preserved', () => {
 })
 
 test('029: teacher API mapping does not fabricate a department', () => {
-  const filename = resolve(sourceRoot, 'features/admin/pages/AdminTeacherDetailPage.tsx')
+  const filename = resolve(sourceRoot, 'features/teachers/pages/AdminTeacherDetailPage.tsx')
   const source = ts.createSourceFile(filename, readFileSync(filename, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
   const map = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === 'mapTeacherToUnifiedProfile')
   assert.ok(map)
@@ -116,7 +116,7 @@ test('031: focus cycles through select/textarea and excludes hidden, disabled an
 
 test('031: confirmation focuses Cancel, traps Tab, restores focus and keeps busy Escape protection', () => {
   const h = sourceHarness()
-  const { ConfirmDialog } = h.load('features/admin/components/ConfirmDialog.tsx')
+  const { ConfirmDialog } = h.load('shared/components/ConfirmDialog/ConfirmDialog.tsx')
   const trigger = new h.Element(); trigger.focus()
   const cancel = new h.Element({ tag: 'button' })
   const confirm = new h.Element({ tag: 'button' })

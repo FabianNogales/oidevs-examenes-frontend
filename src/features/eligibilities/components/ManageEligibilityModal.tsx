@@ -1,7 +1,8 @@
 import { AuthenticatedImage } from '@/shared/components/AuthenticatedImage/AuthenticatedImage'
 import { useEffect, useId, useRef, useState } from 'react'
 import { InfoCircleIcon, UserIcon } from '@/features/auth/components/AuthIcons'
-import { CollaborationModal as Modal } from '@/features/collaborations/components/CollaborationModal'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
 import {
   ELIGIBILITY_CONFLICT_MESSAGE,
   EligibilityApiError,
@@ -50,6 +51,7 @@ export function ManageEligibilityModal({
   const request = useRef<AbortController | null>(null)
   const reasonInput = useRef<HTMLTextAreaElement>(null)
   const observationsInput = useRef<HTMLTextAreaElement>(null)
+  const pendingFocus = useRef<'reason' | 'observations' | null>(null)
   const fieldId = useId()
   const changed =
     status !== eligibility.status ||
@@ -63,6 +65,16 @@ export function ManageEligibilityModal({
     status === 'INELIGIBLE' && observations.length > 500
 
   useEffect(() => () => request.current?.abort(), [])
+
+  // The fields are disabled while a request is pending and a disabled field cannot take focus:
+  // a server field error is focused once busy is cleared.
+  useEffect(() => {
+    if (busy || !pendingFocus.current) return
+    const target =
+      pendingFocus.current === 'reason' ? reasonInput : observationsInput
+    pendingFocus.current = null
+    target.current?.focus()
+  }, [busy])
 
   function close() {
     if (!request.current) onClose()
@@ -94,6 +106,7 @@ export function ManageEligibilityModal({
     }
     const controller = new AbortController()
     request.current = controller
+    pendingFocus.current = null
     setBusy(true)
     setError(null)
     setFieldErrors({})
@@ -119,9 +132,9 @@ export function ManageEligibilityModal({
         ) {
           setFieldErrors(cause.fieldErrors)
           setError(cause.message)
-          if (cause.fieldErrors.reason) reasonInput.current?.focus()
+          if (cause.fieldErrors.reason) pendingFocus.current = 'reason'
           else if (cause.fieldErrors.observations)
-            observationsInput.current?.focus()
+            pendingFocus.current = 'observations'
         } else {
           setError(
             cause instanceof Error
@@ -181,8 +194,15 @@ export function ManageEligibilityModal({
   }
 
   return (
-    <div className={styles.manageModal}>
-      <Modal title="Gestionar habilitación" onClose={close} busy={busy}>
+    <PortalDialog
+      title="Gestionar habilitación"
+      onClose={close}
+      busy={busy}
+      closeOnBackdrop
+      className={styles.manageDialog}
+      closeClassName={dialogBase.closeButton}
+      initialFocusSelector='input[type="radio"]:checked'
+    >
         <form
           onSubmit={(event) => {
             event.preventDefault()
@@ -420,7 +440,6 @@ export function ManageEligibilityModal({
             </button>
           </div>
         </form>
-      </Modal>
-    </div>
+    </PortalDialog>
   )
 }

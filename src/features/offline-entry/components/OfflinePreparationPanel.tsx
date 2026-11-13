@@ -3,8 +3,8 @@ import type { useOfflinePreparation } from '../hooks/useOfflinePreparation'
 import type { LocalEntry, StoredPackage } from '../types/offline.types'
 import { formatOfflineTime } from '../utils/offlineRules'
 import { OfflineDataDeletion } from './OfflineDataDeletion'
-import shared from './styles/OfflineShared.module.css'
-import prepStyles from './styles/OfflinePreparationPanel.module.css'
+import shared from './OfflineShared.module.css'
+import prepStyles from './OfflinePreparationPanel.module.css'
 
 export function OfflinePreparationPanel({
   ownerId,

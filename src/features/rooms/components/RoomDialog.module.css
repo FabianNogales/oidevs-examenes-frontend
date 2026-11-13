@@ -10,7 +10,7 @@
   font: inherit;
 }
 .dialog::backdrop {
-  background: rgb(0 0 0 / 45%);
+  background: color-mix(in srgb, var(--color-text-primary) 45%, transparent);
 }
 .header {
   display: flex;
@@ -137,7 +137,7 @@
   margin: 0;
   overflow-wrap: anywhere;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
 }
 .exam {
   margin-top: var(--space-5);

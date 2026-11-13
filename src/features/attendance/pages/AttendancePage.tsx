@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { ExamIncidentNavigation } from '@/features/incidents/components/ExamIncidentNavigation'
 import { positiveId } from '@/features/infractions/utils/infractionValidation'
 import { getAttendanceStudents } from '../api/attendanceApi'
@@ -10,8 +11,11 @@ import { AttendanceFilters } from '../components/AttendanceFilters'
 import { AttendanceStudents } from '../components/AttendanceStudents'
 import { AttendanceActivity } from '../components/AttendanceActivity'
 import type { AttendanceQuery } from '../types/attendance.types'
-import shared from '@/features/incidents/pages/Incidents.module.css'
 import styles from './Attendance.module.css'
+import { InvalidExamPage } from '@/features/exams/components/InvalidExamPage'
+
+// U3.4c: header and container come from PageHeader/PageContainer (Incidents.module.css unchanged).
+const titleId = 'attendance-title'
 function Followup({ examId }: { examId: number }) {
   const [params, setParams] = useSearchParams(),
     [activity, setActivity] = useState(false)
@@ -48,21 +52,20 @@ function Followup({ examId }: { examId: number }) {
     setParams(next)
   }
   return (
-    <main className={shared.page}>
-      <section className={shared.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Asistencia del examen"
+          titleId={titleId}
+          description={
+            r?.exam.name ??
+            'Supervisa los ingresos oficiales y el avance del examen.'
+          }
+          breadcrumbs={[
             { label: 'Mis exámenes', to: '/teacher/exams' },
             { label: 'Asistencia' },
           ]}
         />
-        <header className={shared.heading}>
-          <h1>Asistencia del examen</h1>
-          <p>
-            {r?.exam.name ??
-              'Supervisa los ingresos oficiales y el avance del examen.'}
-          </p>
-        </header>
         <ExamIncidentNavigation examId={examId} />
         <div className={styles.toolbar}>
           <p>
@@ -157,7 +160,7 @@ function Followup({ examId }: { examId: number }) {
             />
           </section>
         )}
-      </section>
+      </PageContainer>
     </main>
   )
 }
@@ -167,6 +170,9 @@ export function AttendancePage() {
   return positiveId(id) ? (
     <Followup key={id} examId={id} />
   ) : (
-    <p role="alert">El identificador del examen no es válido.</p>
+    <InvalidExamPage
+      title="Asistencia del examen"
+      message="El identificador del examen no es válido."
+    />
   )
 }

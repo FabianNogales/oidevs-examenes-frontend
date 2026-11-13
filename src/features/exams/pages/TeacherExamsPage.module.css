@@ -1,16 +1,21 @@
 .page {
   min-height: calc(100dvh - var(--app-header-height) - var(--footer-height));
   padding: var(--space-10) var(--content-gutter);
-  background: #eaf3ff;
+  background: var(--color-background);
 }
 
 .content {
-  width: min(100%, 1120px);
+  width: min(100%, var(--content-max-width));
   margin-inline: auto;
   padding: var(--space-8);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-md);
+}
+
+/* U1: Mis exámenes keeps this card at the PageContainer width (other consumers keep 1120px). */
+.contentFull {
+  width: 100%;
 }
 
 .pageHeader {
@@ -19,7 +24,7 @@
 
 .pageHeader h1 {
   margin: 0;
-  color: var(--brand-navy);
+  color: var(--color-text-primary);
   font-size: var(--font-size-3xl);
 }
 

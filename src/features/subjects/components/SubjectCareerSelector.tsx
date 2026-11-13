@@ -1,3 +1,4 @@
+import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import type { SubjectCareer } from '../types/adminSubject.types'
 import styles from './SubjectDialog.module.css'
 
@@ -33,31 +34,27 @@ export function SubjectCareerSelector({
       {!loaded && <p role="status">Cargando carreras…</p>}
       {loaded && (
         <div className={styles.careerOptions}>
-          {available.map((career) => (
-            <label className={styles.careerOption} key={career.id}>
-              <input
-                type="checkbox"
-                name="career_ids"
-                value={career.id}
-                checked={selected.includes(career.id)}
-                aria-invalid={Boolean(error)}
-                onChange={(event) =>
-                  onChange(
-                    event.target.checked
-                      ? [...selected, career.id]
-                      : selected.filter((value) => value !== career.id),
-                  )
-                }
-              />
-              <span>
-                {career.name}
-                {career.status === 'INACTIVE'
-                  ? ' (inactiva, asociación existente)'
-                  : ''}
-              </span>
-            </label>
-          ))}
-          {!available.length && (
+          {available.length > 0 ? (
+            <Dropdown<number>
+              id={`${id}-careers`}
+              name="career_ids"
+              multiple
+              value={selected}
+              disabled={disabled}
+              invalid={Boolean(error)}
+              aria-describedby={error ? `${id}-careers-error` : undefined}
+              placeholder="Selecciona una o más carreras"
+              options={available.map((career) => ({
+                value: career.id,
+                label: `${career.name}${
+                  career.status === 'INACTIVE'
+                    ? ' (inactiva, asociación existente)'
+                    : ''
+                }`,
+              }))}
+              onChange={onChange}
+            />
+          ) : (
             <p className={styles.help}>
               No hay carreras activas disponibles. Registra una carrera antes de
               continuar.

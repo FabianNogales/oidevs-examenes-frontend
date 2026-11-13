@@ -1,0 +1,19 @@
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding: var(--space-8) var(--content-gutter);
+}
+
+/* Uniform 1300px width across all pages (--content-max-width). */
+.narrow {
+  max-width: var(--content-max-width);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-block: var(--space-5);
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { getTeacherSubjects } from '../api/teacherStudentsApi'
 import type { Subject } from '@/features/subjects/types/subject.types'
 import { EnrollmentImportPanel } from '../components/EnrollmentImportPanel'
@@ -46,25 +47,25 @@ function ImportSubjectStudentsContent() {
       current = false
     }
   }, [courseOfferingId])
+  // AppLayout has no main landmark: this page owns it.
   return (
-    <main className={styles.page}>
-      <div className={styles.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy="import-subject-students-title">
+        <PageHeader
+          title="Importar estudiantes"
+          titleId="import-subject-students-title"
+          description={
+            subject
+              ? `${subject.name} · ${subject.academicManagement}`
+              : 'Carga los estudiantes de la materia mediante un archivo CSV.'
+          }
+          breadcrumbs={[
             { label: 'Inicio', to: '/' },
             { label: 'Mis materias', to: `/teacher/subjects${suffix}` },
             { label: 'Estudiantes inscritos', to: back },
             { label: 'Importar estudiantes' },
           ]}
         />
-        <header className={styles.pageHeader}>
-          <h1>Importar estudiantes</h1>
-          <p>
-            {subject
-              ? `${subject.name} · ${subject.academicManagement}`
-              : 'Carga los estudiantes de la materia mediante un archivo CSV.'}
-          </p>
-        </header>
         {error ? (
           <section className={styles.panel} role="alert">
             <p>{error}</p>
@@ -87,7 +88,7 @@ function ImportSubjectStudentsContent() {
             onReturn={() => navigate(back)}
           />
         )}
-      </div>
+      </PageContainer>
     </main>
   )
 }

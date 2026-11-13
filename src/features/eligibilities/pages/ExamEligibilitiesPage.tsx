@@ -1,5 +1,4 @@
 import { useId, useState } from 'react'
-import { Breadcrumbs } from '@/shared/components/Breadcrumbs/Breadcrumbs'
 import { Link, useLocation, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ExamCard } from '@/features/exams/components/ExamCard'
@@ -26,7 +25,13 @@ import {
 } from '../utils/eligibilityDisplay'
 import pageStyles from '@/features/exams/pages/TeacherExamsPage.module.css'
 import sharedStyles from '@/features/collaborations/pages/Collaborations.module.css'
+import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
+import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { Dropdown } from '@/shared/components/ui/Dropdown'
 import styles from './Eligibilities.module.css'
+
+// Page heading id (the table section already uses exam-eligibilities-title).
+const titleId = 'eligibilities-page-title'
 
 const PAGE_SIZE = 10
 
@@ -133,217 +138,216 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
   }
 
   return (
-    <main className={pageStyles.page}>
-      <section className={pageStyles.content}>
-        <Breadcrumbs
-          items={[
+    <main>
+      <PageContainer labelledBy={titleId}>
+        <PageHeader
+          title="Habilitaciones del examen"
+          titleId={titleId}
+          description="Consulta y gestiona el estado de habilitación de los estudiantes para este examen."
+          breadcrumbs={[
             { label: 'Mis exámenes', to: examsPath },
             { label: 'Habilitaciones' },
           ]}
+          actions={
+            <div className={styles.headerActions}>
+              <Link
+                className={styles.automationButton}
+                to={`/teacher/exams/${examId}/eligibilities/automatic${originSearch}`}
+              >
+                Habilitación automática
+              </Link>
+              <Link className={styles.backLink} to={examPath}>
+                Volver al examen
+              </Link>
+            </div>
+          }
         />
-        <header className={pageStyles.pageHeader}>
-          <div className={styles.automationAccess}>
-            <div>
-              <h1>Habilitaciones del examen</h1>
-              <p>
-                Consulta y gestiona el estado de habilitación de los estudiantes
-                para este examen.
-              </p>
-            </div>
-            <Link
-              className={styles.automationButton}
-              to={`/teacher/exams/${examId}/eligibilities/automatic${originSearch}`}
-            >
-              Habilitación automática
-            </Link>
-          </div>
-          <Link className={styles.backLink} to={examPath}>
-            Volver al examen
-          </Link>
-        </header>
-        {examLoading ? (
-          <p role="status">Cargando información del examen…</p>
-        ) : examError ? (
-          <div role="alert">
-            <p className={sharedStyles.error}>{examError}</p>
-            <button
-              type="button"
-              className={sharedStyles.secondaryButton}
-              onClick={() => void loadExams()}
-            >
-              Reintentar información del examen
-            </button>
-          </div>
-        ) : exam ? (
-          <ExamCard
-            subjectName={exam.subject_name}
-            subjectCode={exam.subject_code}
-            examName={exam.name}
-            examDate={exam.exam_date}
-            examTime={exam.start_time}
-            durationMinutes={exam.duration_minutes}
-            roomName={exam.room?.name}
-            roomCode={exam.room?.code}
-            evaluationType={exam.evaluation_type}
-            status={exam.status}
-            academicTermName={exam.academic_term_name}
-          />
-        ) : (
-          <p className={sharedStyles.note}>
-            La información general del examen no está disponible para tu cuenta.
-          </p>
-        )}
-        {list.manualReviewConditions?.trim() ? (
-          <aside
-            className={styles.manualReviewNote}
-            aria-labelledby="manual-review-conditions-title"
-          >
-            <h2 id="manual-review-conditions-title">
-              Condiciones de revisión manual
-            </h2>
-            <p>{list.manualReviewConditions}</p>
-            <p>
-              Esta condición debe ser verificada manualmente por el docente.
-            </p>
-          </aside>
-        ) : null}
-        <section
-          className={sharedStyles.section}
-          aria-labelledby="exam-eligibilities-title"
-        >
-          <div className={sharedStyles.sectionHeader}>
-            <h2 id="exam-eligibilities-title">Estudiantes del examen</h2>
-            <button
-              type="button"
-              className={sharedStyles.primaryButton}
-              onClick={() => setBulkOpen(true)}
-            >
-              Cargar habilitaciones
-            </button>
-          </div>
-          <div
-            className={styles.counters}
-            aria-label="Totales del examen"
-            aria-live="polite"
-            aria-busy={list.loading}
-          >
-            <div className={`${styles.counter} ${styles.eligible}`}>
-              Habilitados: <strong>{showCounts ? counts.eligible : '—'}</strong>
-            </div>
-            <div className={`${styles.counter} ${styles.ineligible}`}>
-              Inhabilitados:{' '}
-              <strong>{showCounts ? counts.ineligible : '—'}</strong>
-            </div>
-          </div>
-          <div className={styles.filters}>
-            <div className={styles.field}>
-              <label htmlFor={searchId}>Buscar estudiante</label>
-              <input
-                id={searchId}
-                type="search"
-                placeholder="Buscar por nombre, apellido o SIS..."
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value)
-                  setPage(1)
-                }}
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor={filterId}>Habilitación</label>
-              <select
-                id={filterId}
-                value={statusFilter}
-                onChange={(event) => {
-                  setStatusFilter(
-                    event.target.value as 'ALL' | EligibilityStatus,
-                  )
-                  setPage(1)
-                }}
-              >
-                <option value="ALL">Todos</option>
-                <option value="ELIGIBLE">Habilitados</option>
-                <option value="INELIGIBLE">Inhabilitados</option>
-              </select>
-            </div>
-          </div>
-          {list.error ? (
+        <section className={`${pageStyles.content} ${pageStyles.contentFull}`}>
+          {examLoading ? (
+            <p role="status">Cargando información del examen…</p>
+          ) : examError ? (
             <div role="alert">
-              <p className={sharedStyles.error}>{list.error}</p>
+              <p className={sharedStyles.error}>{examError}</p>
               <button
                 type="button"
                 className={sharedStyles.secondaryButton}
-                onClick={() => void list.reload()}
+                onClick={() => void loadExams()}
               >
-                Reintentar
+                Reintentar información del examen
               </button>
             </div>
-          ) : null}
-          <EligibilityTable
-            items={pageItems}
-            startIndex={startIndex}
-            loading={list.loading}
-            emptyMessage={
-              list.error
-                ? 'No se pudieron consultar las habilitaciones.'
-                : list.items.length === 0
-                  ? 'No hay estudiantes asociados a este examen.'
-                  : 'No se encontraron estudiantes con los filtros seleccionados.'
-            }
-            onManage={setSelected}
-          />
-          {!list.loading && !list.error && totalPages > 1 ? (
-            <nav
-              className={styles.pagination}
-              aria-label="Paginación de habilitaciones"
+          ) : exam ? (
+            <ExamCard
+              subjectName={exam.subject_name}
+              subjectCode={exam.subject_code}
+              examName={exam.name}
+              examDate={exam.exam_date}
+              examTime={exam.start_time}
+              durationMinutes={exam.duration_minutes}
+              roomName={exam.room?.name}
+              roomCode={exam.room?.code}
+              evaluationType={exam.evaluation_type}
+              status={exam.status}
+              academicTermName={exam.academic_term_name}
+            />
+          ) : (
+            <p className={sharedStyles.note}>
+              La información general del examen no está disponible para tu
+              cuenta.
+            </p>
+          )}
+          {list.manualReviewConditions?.trim() ? (
+            <aside
+              className={styles.manualReviewNote}
+              aria-labelledby="manual-review-conditions-title"
             >
+              <h2 id="manual-review-conditions-title">
+                Condiciones de revisión manual
+              </h2>
+              <p>{list.manualReviewConditions}</p>
+              <p>
+                Esta condición debe ser verificada manualmente por el docente.
+              </p>
+            </aside>
+          ) : null}
+          <section
+            className={sharedStyles.section}
+            aria-labelledby="exam-eligibilities-title"
+          >
+            <div className={sharedStyles.sectionHeader}>
+              <h2 id="exam-eligibilities-title">Estudiantes del examen</h2>
               <button
                 type="button"
-                className={sharedStyles.secondaryButton}
-                disabled={currentPage === 1}
-                onClick={() => setPage(currentPage - 1)}
+                className={sharedStyles.primaryButton}
+                onClick={() => setBulkOpen(true)}
               >
-                Anterior
+                Cargar habilitaciones
               </button>
-              <span role="status" aria-live="polite" aria-atomic="true">
-                Página {currentPage} de {totalPages}
-              </span>
-              <button
-                type="button"
-                className={sharedStyles.secondaryButton}
-                disabled={currentPage === totalPages}
-                onClick={() => setPage(currentPage + 1)}
+            </div>
+            <div
+              className={styles.counters}
+              aria-label="Totales del examen"
+              aria-live="polite"
+              aria-busy={list.loading}
+            >
+              <div className={`${styles.counter} ${styles.eligible}`}>
+                Habilitados:{' '}
+                <strong>{showCounts ? counts.eligible : '—'}</strong>
+              </div>
+              <div className={`${styles.counter} ${styles.ineligible}`}>
+                Inhabilitados:{' '}
+                <strong>{showCounts ? counts.ineligible : '—'}</strong>
+              </div>
+            </div>
+            <div className={styles.filters}>
+              <div className={styles.field}>
+                <label htmlFor={searchId}>Buscar estudiante</label>
+                <input
+                  id={searchId}
+                  type="search"
+                  placeholder="Buscar por nombre, apellido o SIS..."
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value)
+                    setPage(1)
+                  }}
+                />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor={filterId}>Habilitación</label>
+                <Dropdown<'ALL' | EligibilityStatus>
+                  id={filterId}
+                  value={statusFilter}
+                  options={[
+                    { value: 'ALL', label: 'Todos' },
+                    { value: 'ELIGIBLE', label: 'Habilitados' },
+                    { value: 'INELIGIBLE', label: 'Inhabilitados' },
+                  ]}
+                  onChange={(nextStatus) => {
+                    setStatusFilter(nextStatus)
+                    setPage(1)
+                  }}
+                />
+              </div>
+            </div>
+            {list.error ? (
+              <div role="alert">
+                <p className={sharedStyles.error}>{list.error}</p>
+                <button
+                  type="button"
+                  className={sharedStyles.secondaryButton}
+                  onClick={() => void list.reload()}
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : null}
+            <EligibilityTable
+              items={pageItems}
+              startIndex={startIndex}
+              loading={list.loading}
+              emptyMessage={
+                list.error
+                  ? 'No se pudieron consultar las habilitaciones.'
+                  : list.items.length === 0
+                    ? 'No hay estudiantes asociados a este examen.'
+                    : 'No se encontraron estudiantes con los filtros seleccionados.'
+              }
+              onManage={setSelected}
+            />
+            {!list.loading && !list.error && totalPages > 1 ? (
+              <nav
+                className={styles.pagination}
+                aria-label="Paginación de habilitaciones"
               >
-                Siguiente
-              </button>
-            </nav>
+                <button
+                  type="button"
+                  className={sharedStyles.secondaryButton}
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  Anterior
+                </button>
+                <span role="status" aria-live="polite" aria-atomic="true">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className={sharedStyles.secondaryButton}
+                  disabled={currentPage === totalPages}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  Siguiente
+                </button>
+              </nav>
+            ) : null}
+          </section>
+          {selected ? (
+            <ManageEligibilityModal
+              key={selected.id}
+              examId={examId}
+              examLabel={examLabel}
+              eligibility={selected}
+              onClose={() => setSelected(null)}
+              onSave={save}
+            />
+          ) : null}
+          {bulkOpen ? (
+            <BulkEligibilitiesModal
+              examLabel={examLabel}
+              onClose={() => setBulkOpen(false)}
+              onProcess={processFile}
+              listLoading={list.loading}
+              listError={list.error}
+              onReload={list.reload}
+              onReview={() => {
+                setBulkOpen(false)
+                void list.reload()
+              }}
+            />
           ) : null}
         </section>
-        {selected ? (
-          <ManageEligibilityModal
-            key={selected.id}
-            examId={examId}
-            examLabel={examLabel}
-            eligibility={selected}
-            onClose={() => setSelected(null)}
-            onSave={save}
-          />
-        ) : null}
-        {bulkOpen ? (
-          <BulkEligibilitiesModal
-            examLabel={examLabel}
-            onClose={() => setBulkOpen(false)}
-            onProcess={processFile}
-            listLoading={list.loading}
-            listError={list.error}
-            onReload={list.reload}
-            onReview={() => {
-              setBulkOpen(false)
-              void list.reload()
-            }}
-          />
-        ) : null}
-      </section>
+      </PageContainer>
     </main>
   )
 }
@@ -354,12 +358,16 @@ export function ExamEligibilitiesPage() {
   const id = Number(examId)
   if (!Number.isSafeInteger(id) || id <= 0) {
     return (
-      <main className={pageStyles.page}>
-        <section className={pageStyles.content}>
-          <h1>Habilitaciones del examen</h1>
-          <p>El identificador del examen no es válido.</p>
-          <Link to={`/teacher/exams${search}`}>Volver a Mis exámenes</Link>
-        </section>
+      <main>
+        <PageContainer labelledBy={titleId}>
+          <PageHeader title="Habilitaciones del examen" titleId={titleId} />
+          <section
+            className={`${pageStyles.content} ${pageStyles.contentFull}`}
+          >
+            <p>El identificador del examen no es válido.</p>
+            <Link to={`/teacher/exams${search}`}>Volver a Mis exámenes</Link>
+          </section>
+        </PageContainer>
       </main>
     )
   }

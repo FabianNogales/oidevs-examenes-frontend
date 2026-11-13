@@ -12,6 +12,7 @@ import { SubjectCsvDropzone } from './SubjectCsvDropzone'
 import { SubjectImportReport } from './SubjectImportReport'
 import styles from '@/shared/styles/CsvImport.module.css'
 import local from '../../pages/ImportSubjectsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 export function SubjectImportPanel() {
   const navigate = useNavigate()
@@ -44,8 +45,8 @@ export function SubjectImportPanel() {
         <h2 id="subjects-import-panel-title" ref={heading} tabIndex={-1}>
           Archivo de materias
         </h2>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           className={styles.templateButton}
           onClick={downloadSubjectCsvTemplate}
           disabled={processing}
@@ -54,7 +55,7 @@ export function SubjectImportPanel() {
             <path d="M12 3v12m-5-5 5 5 5-5M5 21h14" />
           </svg>
           Descargar plantilla CSV
-        </button>
+        </Button>
       </div>
       {error && (
         <div className={styles.fileObservations} role="alert">
@@ -95,8 +96,8 @@ export function SubjectImportPanel() {
             </span>
           </div>
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               disabled={processing}
               onClick={() => {
@@ -105,15 +106,14 @@ export function SubjectImportPanel() {
               }}
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               disabled={!flow.file || processing}
               onClick={() => void validate()}
             >
               {processing ? 'Validando…' : 'Validar y continuar'}
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -125,14 +125,14 @@ export function SubjectImportPanel() {
               <strong>{flow.file.name}</strong>
               <small>{formatSubjectFileSize(flow.file.size)}</small>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.changeFileButton}
               onClick={reset}
               disabled={processing}
             >
               Cambiar archivo
-            </button>
+            </Button>
           </div>
           <div
             className={styles.reviewMessage}
@@ -159,22 +159,21 @@ export function SubjectImportPanel() {
           </div>
           <SubjectImportReport report={flow.preview} />
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               onClick={reset}
               disabled={processing}
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               disabled={processing || flow.preview.summary.valid === 0}
               onClick={() => void confirm()}
             >
               {processing ? 'Confirmando…' : 'Confirmar importación'}
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -198,20 +197,19 @@ export function SubjectImportPanel() {
             <SubjectImportReport report={flow.result} confirmed />
           </div>
           <div className={styles.panelActions}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               className={styles.cancelButton}
               onClick={() => navigate('/admin/subjects')}
             >
               Volver a materias
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={styles.continueButton}
               onClick={reset}
             >
               Importar otro archivo
-            </button>
+            </Button>
           </div>
         </>
       )}

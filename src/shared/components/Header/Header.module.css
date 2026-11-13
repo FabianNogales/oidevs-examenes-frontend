@@ -13,11 +13,11 @@
   color: var(--color-text);
 
   /* Barra superior clara */
-  background: #eaf3ff;
+  background: var(--color-background);
 
-  border-bottom: 1px solid #cfdbe8;
+  border-bottom: 1px solid var(--color-border);
 
-  box-shadow: 0 1px 3px rgb(12 45 108 / 4%);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ==================================================
@@ -29,7 +29,7 @@
   display: flex;
   align-items: center;
 
-  gap: 12px;
+  gap: var(--space-3);
 
   width: 100%;
   min-height: 58px;
@@ -39,7 +39,7 @@
   padding: 5px 18px;
 
   /* Primer tono del mockup */
-  background: #eaf3ff;
+  background: var(--color-background);
 }
 
 /* ==================================================
@@ -54,14 +54,14 @@
 
   gap: 10px;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   text-decoration: none;
 }
 
 .logoLink:hover,
 .logoLink:visited {
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   text-decoration: none;
 }
@@ -83,10 +83,10 @@
 
   flex-shrink: 0;
 
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 
   line-height: 1.12;
 
@@ -102,7 +102,7 @@
   align-items: center;
   justify-content: flex-end;
 
-  gap: 12px;
+  gap: var(--space-3);
 
   min-width: 0;
 
@@ -141,13 +141,13 @@
 
   color: var(--color-primary);
 
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 .iconButton:hover:not(:disabled) {
   color: var(--color-primary-hover);
 
-  background: #f8fbff;
+  background: var(--color-surface-soft);
 
   border-color: var(--color-primary);
 }
@@ -203,13 +203,13 @@
 }
 
 .userButton:hover {
-  background: rgb(255 255 255 / 60%);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
 
   border-color: var(--color-border);
 }
 
 .userButton[aria-expanded='true'] {
-  background: #ffffff;
+  background: var(--color-surface);
 
   border-color: var(--color-primary);
 }
@@ -231,7 +231,7 @@
 
   color: var(--color-primary);
 
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 .avatar svg {
@@ -382,34 +382,34 @@
   padding: 5px 8px;
 
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 
-  color: #164b91;
+  color: var(--color-text-primary);
 
   background: transparent;
 
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 
   text-decoration: none;
 
   white-space: nowrap;
 
   transition:
-    color 160ms ease,
-    background-color 160ms ease;
+    color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .loginButton:hover {
-  color: #cd123a;
+  color: var(--color-accent);
 
-  background: rgb(255 255 255 / 55%);
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
 }
 
 .loginButton:focus-visible {
   outline: var(--focus-width) solid var(--color-focus);
 
-  outline-offset: 3px;
+  outline-offset: var(--focus-offset);
 }
 
 /* ==================================================
@@ -422,11 +422,11 @@
 
   width: 100%;
 
-  border-top: 1px solid #cfdeeb;
-  border-bottom: 1px solid #c7d9e8;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 
   /* Celeste ligeramente más fuerte */
-  background: #dff1ff;
+  background: var(--color-surface-soft);
 }
 
 .navigation[data-open='true'] {
@@ -460,7 +460,7 @@
   align-items: center;
   justify-content: center;
 
-  gap: 8px;
+  gap: var(--space-2);
 
   min-height: 46px;
 
@@ -469,27 +469,27 @@
   border-bottom: 3px solid transparent;
   border-radius: 0;
 
-  color: #164b91;
+  color: var(--color-text-primary);
 
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 
   text-decoration: none;
 
   transition:
-    color 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease;
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 a.navigationLink:hover {
-  color: #0c2d6c;
+  color: var(--color-text-primary);
 
-  background: rgb(255 255 255 / 28%);
+  background: color-mix(in srgb, var(--color-surface) 28%, transparent);
 }
 
 a.navigationLink:active {
-  color: #164b91;
+  color: var(--color-text-primary);
 }
 
 /* ==================================================
@@ -498,11 +498,11 @@ a.navigationLink:active {
 
 .navigationLink.active,
 .navigationLink.active:hover {
-  color: #cd123a;
+  color: var(--color-accent);
 
   background: transparent;
 
-  border-bottom-color: #cd123a;
+  border-bottom-color: var(--color-accent);
 }
 
 /* ==================================================
@@ -571,7 +571,7 @@ a.navigationLink:active {
 
 @media (max-width: 639px) {
   .topBar {
-    gap: 8px;
+    gap: var(--space-2);
 
     min-height: 60px;
 
@@ -611,7 +611,7 @@ a.navigationLink:active {
   }
 
   .navigation {
-    background: #dff1ff;
+    background: var(--color-surface-soft);
   }
 
   .navigationList {
@@ -629,13 +629,13 @@ a.navigationLink:active {
     padding: 8px 14px;
 
     border-bottom-width: 2px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
   }
 
   .navigationLink.active {
     border-bottom-color: transparent;
 
-    background: rgb(205 18 58 / 8%);
+    background: var(--color-accent-soft);
   }
 }
 
@@ -730,7 +730,7 @@ a.navigationLink:active {
     width: 1px;
     height: 21px;
 
-    background: #bfcfdd;
+    background: var(--color-border-strong);
 
     transform: translateY(-50%);
   }
@@ -818,32 +818,40 @@ a.navigationLink:active {
 .navigationItem {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: stretch;
+}
+
+.navigationItem > .navigationLink {
+  box-sizing: border-box;
+  width: 100%;
 }
 
 button.navigationLink {
+  box-sizing: border-box;
+  width: 100%;
   background-color: transparent;
   font-family: inherit;
   border-bottom: 3px solid transparent;
 }
 
 button.navigationLink:hover {
-  background: rgb(255 255 255 / 28%);
-  color: #0c2d6c;
+  background: color-mix(in srgb, var(--color-surface) 28%, transparent);
+  color: var(--color-text-primary);
 }
 
 button.navigationLink.active,
 button.navigationLink.active:hover {
   background-color: transparent;
-  color: var(--color-accent, #8B1E3F);
-  border-bottom-color: var(--color-accent, #8B1E3F);
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
 }
 
 .dropdownIcon {
   width: 14px;
   height: 14px;
   margin-left: 6px;
-  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
 }
 
 .dropdownIconOpen {
@@ -853,21 +861,24 @@ button.navigationLink.active:hover {
 .navigationDropdownMenu {
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  transform: none;
   z-index: 60;
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 
-  min-width: 175px;
-  padding: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  padding: var(--space-2);
   margin-top: 2px;
-  background: #DFF1FF;
-  border: 1px solid var(--color-accent, #8B1E3F);
-  border-radius: var(--radius-sm, 8px);
-  box-shadow: 0 4px 12px var(--shadow-color, rgba(23, 37, 84, 0.08));
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .navigationDropdownItem {
@@ -875,50 +886,55 @@ button.navigationLink.active:hover {
   align-items: center;
   justify-content: center;
 
+  box-sizing: border-box;
   width: 100%;
-  min-height: 42px;
-  padding: 8px 16px;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
 
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   border: 1px solid transparent;
-  color: #164b91;
-  font-size: 0.76rem;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
   text-align: center;
   text-decoration: none;
+  white-space: normal;
+  overflow-wrap: break-word;
 
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .navigationDropdownItem:hover {
-  background: rgb(255 255 255 / 40%);
-  color: #0c2d6c;
+  background: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  color: var(--color-text-primary);
 }
 
 .navigationDropdownSection {
-  margin-top: 4px;
-  border-top-color: var(--color-border-strong);
+  position: relative;
+  margin-top: var(--space-2);
+}
+
+.navigationDropdownSection::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-1) * -1 - 1px);
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-border-strong);
+  pointer-events: none;
 }
 
 .header[data-admin='true'] .navigationDropdownMenu {
-  min-width: 240px;
-  max-width: calc(100vw - 32px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
   max-height: min(70dvh, 480px);
   overflow-y: auto;
-}
-
-.header[data-admin='true'] .navigationItem:nth-child(2) .navigationDropdownItem {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 100%;
-  text-align: center;
-}
-
-.header[data-admin='true'] .navigationItem:nth-child(2) .navigationDropdownSection {
-  margin-top: 0;
 }
 
 @media (min-width: 768px) {
@@ -928,8 +944,13 @@ button.navigationLink.active:hover {
     margin-inline: auto;
   }
 
+  .header[data-admin='true'] .navigationItem {
+    min-width: clamp(136px, 13vw, 184px);
+  }
+
   .header[data-admin='true'] .navigationLink {
-    padding-inline: clamp(12px, 1.5vw, 22px);
+    width: 100%;
+    padding-inline: clamp(14px, 1.8vw, 24px);
   }
 }
 
@@ -941,13 +962,13 @@ button.navigationLink.active:hover {
 }
 
 .navigationDropdownItemActive {
-  background: var(--color-soft-red, #F7E9ED);
-  border-color: var(--color-accent, #8B1E3F);
-  color: var(--color-accent, #8B1E3F);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .navigationLink.active .dropdownIcon {
-  stroke: var(--color-accent, #8B1E3F);
+  stroke: var(--color-accent);
 }
 
 @media (max-width: 767px) {
@@ -960,12 +981,12 @@ button.navigationLink.active:hover {
     position: static;
     transform: none;
     width: 100%;
-    margin-top: 8px;
+    margin-top: var(--space-2);
     border: none;
-    border-left: 2px solid var(--color-accent, #8B1E3F);
+    border-left: 2px solid var(--color-accent);
     border-radius: 0;
     box-shadow: none;
     background: transparent;
-    padding-left: 16px;
+    padding-left: var(--space-4);
   }
 }

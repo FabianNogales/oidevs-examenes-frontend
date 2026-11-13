@@ -161,6 +161,91 @@ export function academicActionLabel(action: string): string {
   )
 }
 
+/**
+ * Texto de la nota de una evaluación en la tabla de registros. Distingue la
+ * evaluación inexistente, la no rendida y la rendida sin nota; el cero es nota.
+ */
+export function academicScoreLabel(
+  assessment?: { was_taken: boolean; score: number | null } | null,
+): string {
+  if (!assessment) return 'Sin registro'
+  if (!assessment.was_taken) return 'No rindió'
+  if (assessment.score === null || assessment.score === undefined)
+    return 'Rindió · sin nota'
+  return String(assessment.score)
+}
+
+/** Solo los eventos de un registro académico identifican a un estudiante. */
+export function isAcademicRecordEvent(entityType: string): boolean {
+  return entityType.replace(/[^a-z]/gi, '').toLowerCase() === 'academicrecord'
+}
+
+export type AcademicHistorySummary = { title: string; lead: string | null }
+
+function historyCounter(
+  values: Record<string, unknown> | null,
+  key: string,
+): number | null {
+  const value = values?.[key]
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0
+    ? value
+    : null
+}
+
+/**
+ * Título y resumen de un evento del historial académico. Los contadores salen
+ * solo de lo que registró el servidor: si falta un dato, no se muestra.
+ */
+export function academicHistorySummary(entry: {
+  action: string
+  new_values: Record<string, unknown> | null
+}): AcademicHistorySummary {
+  const values = entry.new_values
+  const partial = values?.mode === 'MERGE'
+  const join = (parts: (string | null)[]) =>
+    parts.filter((part): part is string => part !== null).join(' · ') || null
+
+  if (entry.action === 'ACADEMIC_IMPORT_PREVIEWED') {
+    const rows = historyCounter(values, 'total_rows')
+    const errors = historyCounter(values, 'errors')
+    return {
+      title: 'Vista previa de importación',
+      lead: join([
+        partial ? 'Importación parcial (MERGE)' : null,
+        rows === null ? null : `${rows} ${rows === 1 ? 'fila' : 'filas'}`,
+        errors === null ? null : `${errors} con errores`,
+      ]),
+    }
+  }
+  if (entry.action === 'ACADEMIC_IMPORT_CONFIRMED') {
+    const created = historyCounter(values, 'created_records')
+    const updated = historyCounter(values, 'updated_records')
+    const unchanged = historyCounter(values, 'unchanged_records')
+    return {
+      title: 'Importación confirmada',
+      lead: join([
+        partial ? 'Importación parcial (MERGE)' : null,
+        created === null ? null : `Creados: ${created}`,
+        updated === null ? null : `Actualizados: ${updated}`,
+        unchanged === null ? null : `Sin cambios: ${unchanged}`,
+      ]),
+    }
+  }
+  if (entry.action === 'ACADEMIC_RECORD_IMPORTED')
+    return {
+      title: 'Registro académico creado',
+      lead: partial ? 'Alta por importación parcial (MERGE)' : null,
+    }
+  if (entry.action === 'ACADEMIC_RECORD_CORRECTED')
+    return {
+      title: partial
+        ? 'Actualización por importación parcial (MERGE)'
+        : academicActionLabel(entry.action),
+      lead: '1 registro académico actualizado',
+    }
+  return { title: academicActionLabel(entry.action), lead: null }
+}
+
 export type AcademicHistoryChange = {
   label: string
   oldValue: string
@@ -260,7 +345,9 @@ export function academicHistoryChanges(
     }
     changes.push({
       label: 'Asistencia',
-      oldValue: attendance(oldFields, newFields),
+      // Un alta no tiene valor anterior: no se rellena con el nuevo.
+      oldValue:
+        oldValues === null ? 'Sin dato' : attendance(oldFields, newFields),
       newValue: attendance(newFields, oldFields),
     })
     paths.delete('attended_classes')
@@ -288,10 +375,14 @@ export function academicHistoryChanges(
       newValues?.assessment_key,
       oldValues?.assessment_key,
     ].find((value): value is string => typeof value === 'string')
+    const oldLabel = historyValueLabel(oldValue, field)
+    const newLabel = historyValueLabel(newValue, field)
+    // Ausente y nulo se leen igual («Sin dato»): no es un cambio visible.
+    if (oldLabel === newLabel) continue
     changes.push({
       label: historyFieldLabel(path, assessmentKey),
-      oldValue: historyValueLabel(oldValue, field),
-      newValue: historyValueLabel(newValue, field),
+      oldValue: oldLabel,
+      newValue: newLabel,
     })
   }
   return changes
@@ -301,6 +392,12 @@ export function academicHistoryReason(
   oldValues: Record<string, unknown> | null,
   newValues: Record<string, unknown> | null,
 ): string | null {
-  const reason = newValues?.reason ?? oldValues?.reason
+  // El backend audita el motivo como `correction_reason`.
+  const reason = [
+    newValues?.reason,
+    newValues?.correction_reason,
+    oldValues?.reason,
+    oldValues?.correction_reason,
+  ].find((value) => value !== null && value !== undefined)
   return typeof reason === 'string' && reason.trim() ? reason : null
 }

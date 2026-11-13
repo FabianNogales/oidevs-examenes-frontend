@@ -3,6 +3,7 @@ import { getStudentImportOutcome } from '@/features/students/api/studentImportAp
 import type { StudentImportConfirmation } from '@/features/students/types/studentImport'
 import styles from './StudentImportDesign.module.css'
 import pageStyles from '@/features/students/pages/ImportStudentsPage.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 const PAGE_SIZE = 10
 const STATUS_LABELS = { IMPORTED: 'Importado', SKIPPED: 'Omitido', FAILED: 'Fallido' }
@@ -77,22 +78,22 @@ export function StudentImportSuccess({
         </span>
         {totalPages > 1 ? (
           <div className={pageStyles.pagerControls}>
-            <button type="button" className={pageStyles.pagerButton}
-              disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Anterior</button>
+            <Button variant="secondary" className={pageStyles.pagerButton}
+              disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
             <span className={pageStyles.pagerPage}>Página {currentPage} de {totalPages}</span>
-            <button type="button" className={pageStyles.pagerButton}
-              disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Siguiente</button>
+            <Button variant="secondary" className={pageStyles.pagerButton}
+              disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Siguiente</Button>
           </div>
         ) : null}
       </div>
 
       <div className={styles.panelActions}>
-        <button type="button" className={pageStyles.cancelButton} onClick={onBackToPanel}>
+        <Button variant="secondary" className={pageStyles.cancelButton} onClick={onBackToPanel}>
           Volver a Gestión de estudiantes
-        </button>
-        <button type="button" className={pageStyles.continueButton} onClick={onImportAnotherFile}>
+        </Button>
+        <Button className={pageStyles.continueButton} onClick={onImportAnotherFile}>
           Importar otro archivo
-        </button>
+        </Button>
       </div>
     </section>
   )
