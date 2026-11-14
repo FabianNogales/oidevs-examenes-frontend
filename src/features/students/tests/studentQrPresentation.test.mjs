@@ -81,13 +81,33 @@ test('the QR page remounts on account change and is hidden during logout', () =>
   page.h.unmount()
 })
 
+test('each exam card has one QR action and passes the selected exam ID', () => {
+  const h = sourceHarness()
+  const { StudentExamCard } = h.load('features/students/components/StudentExamCard.tsx')
+  const selected = []
+  for (const exam of exams) {
+    const tree = h.render(() => StudentExamCard({
+      exam,
+      selected: false,
+      onSelect: (...args) => selected.push(args),
+    }))
+    const buttons = nodes(tree, (node) => node.type === 'button')
+    assert.equal(buttons.length, 1)
+    assert.equal(textContent(buttons[0]), 'Ver mi QR')
+    assert.equal(buttons[0].props.disabled, exam.qr_status !== 'AVAILABLE')
+    if (!buttons[0].props.disabled) buttons[0].props.onClick()
+  }
+  assert.deepEqual(selected, [[1]])
+  h.unmount()
+})
+
 test('the card presents the supplied v3 SVG unchanged and preserves both download options', () => {
   const h = sourceHarness()
   const { StudentQrCard } = h.load('features/students/components/StudentQrCard.tsx')
   const image = 'data:image/svg+xml;base64,PHN2Zy8+'
   const token = ['e30', Buffer.from(JSON.stringify({ v: 3, exp: 1893459600 })).toString('base64url'), 'example'].join('.')
   const tree = h.render(() => StudentQrCard({
-    qr: { ...exams[0], token, qr_code_base64: image }, version: 3,
+    qr: { ...exams[0], token, qr_code_base64: image },
     studentName: 'Estudiante de prueba', onRetry() {},
   }))
   const img = nodes(tree, (node) => node.type === 'img')[0]
@@ -95,7 +115,7 @@ test('the card presents the supplied v3 SVG unchanged and preserves both downloa
   assert.equal(img.props.width, 480)
   const svg = nodes(tree, (node) => node.type === 'a')[0]
   assert.equal(svg.props.href, image)
-  assert.match(svg.props.download, /-EIDA-Control\.svg$/)
+  assert.match(svg.props.download, /\.svg$/)
   assert.match(textContent(tree), /Descargar PNG/)
   assert.match(textContent(tree), /Estudiante de prueba/)
   h.unmount()

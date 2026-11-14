@@ -35,8 +35,6 @@ export interface StudentExamQrResponse {
   data: StudentExamQr
 }
 
-export type StudentQrVersion = 2 | 3
-
 export interface ApiErrorResponse {
   message: string
   code?: string

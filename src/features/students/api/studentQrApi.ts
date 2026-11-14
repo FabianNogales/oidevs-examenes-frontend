@@ -2,7 +2,6 @@ import { httpClient } from '@/shared/api/httpClient'
 import type {
   StudentExamQrResponse,
   StudentExamsResponse,
-  StudentQrVersion,
 } from '@/features/students/types/studentQr'
 
 export async function getStudentExams(
@@ -19,12 +18,11 @@ export async function getStudentExams(
 
 export async function getStudentExamQr(
   examId: number,
-  version: StudentQrVersion,
   signal?: AbortSignal,
 ): Promise<StudentExamQrResponse> {
   const response = await httpClient.get<StudentExamQrResponse>(
     `/students/exams/${examId}/qr`,
-    { signal, params: version === 3 ? { version } : undefined },
+    { signal, params: { version: 3 } },
   )
   return response.data
 }

@@ -15,10 +15,21 @@ function harness() {
   let listHandler
   let qrHandler
   const signals = []
-  const h = sourceHarness({ '@/features/students/api/studentQrApi': {
-    getStudentExams: (signal) => { listCalls++; signals.push(signal); return listHandler(signal) },
-    getStudentExamQr: (id, version, signal) => {
-      qrCalls++; signals.push(signal); return qrHandler(id, version, signal)
+  const requests = []
+  const h = sourceHarness({ '@/shared/api/httpClient': {
+    httpClient: {
+      async get(path, { signal, params }) {
+        signals.push(signal)
+        if (path === '/students/exams') {
+          listCalls++
+          return { data: await listHandler(signal) }
+        }
+        const match = /^\/students\/exams\/(\d+)\/qr$/.exec(path)
+        assert.ok(match, 'Unexpected QR endpoint')
+        qrCalls++
+        requests.push({ path, params })
+        return { data: await qrHandler(Number(match[1]), signal) }
+      },
     },
   }, '@/features/students/api/studentQrError': {
     getStudentQrError: (cause) => ({ status: cause.status, message: 'Solicitud rechazada' }),
@@ -28,9 +39,12 @@ function harness() {
   const fresh = h.load('features/students/utils/studentQrFreshness.ts')
   let data = [exam(tokenUntil(h.now() + 120_000))]
   listHandler = async () => ({ data })
-  qrHandler = async () => ({ data: data[0] })
+  qrHandler = async () => {
+    const { expiresAt, jti } = fresh.qrDisplayClaims(data[0].token)
+    return { data: { ...data[0], token: tokenUntil(expiresAt, 3, jti) } }
+  }
   return { ...h, fresh, useStudentExams, useStudentQr,
-    listCalls: () => listCalls, qrCalls: () => qrCalls, signals,
+    listCalls: () => listCalls, qrCalls: () => qrCalls, signals, requests,
     setData: (value) => { data = value },
     setListHandler: (value) => { listHandler = value },
     setQrHandler: (value) => { qrHandler = value },
@@ -43,7 +57,7 @@ test('033: visible pages refresh at most once per minute without hiding a valid 
   const render = () => { const list = h.useStudentExams(); return { list, qr: h.useStudentQr(list.data) } }
   h.render(render); await settle()
   let state = h.render()
-  state.qr.select(state.list.data[0], 2); await settle()
+  state.qr.select(state.list.data[0]); await settle()
   state = h.render()
   assert.ok(state.qr.data !== null)
   assert.equal(h.qrCalls(), 1)
@@ -123,7 +137,7 @@ test('033: QR selection revalidates with backend instead of reusing inline cache
   const h = harness()
   let state = h.render(() => h.useStudentQr(h.data()))
   h.setQrHandler(async () => { throw { status: 403 } })
-  state.select(h.data()[0], 2); await settle(); state = h.render()
+  state.select(h.data()[0]); await settle(); state = h.render()
   assert.equal(h.qrCalls(), 1); assert.ok(state.data === null); assert.equal(state.error.status, 403)
   h.unmount()
 })
@@ -132,7 +146,7 @@ test('033: an open QR is removed at expiry without changing JWT duration or auth
   const h = harness()
   h.setData([exam(tokenUntil(h.now() + 10_000))])
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0], 2); await settle(); state = h.render()
+  state.select(h.data()[0]); await settle(); state = h.render()
   assert.ok(state.data !== null)
   h.advance(10_000); state = h.render()
   assert.ok(state.data === null); assert.equal(state.error.status, 404)
@@ -144,7 +158,7 @@ test('033: authoritative revocation, missing exams and token rotation suppress a
   const h = harness()
   const original = h.data()[0]
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(original, 2); await settle(); state = h.render()
+  state.select(original); await settle(); state = h.render()
   assert.ok(state.data !== null)
   h.setData([exam(null, 'NOT_ELIGIBLE')]); state = h.render()
   assert.ok(state.data === null); assert.equal(state.examId, null)
@@ -156,10 +170,10 @@ test('033: authoritative revocation, missing exams and token rotation suppress a
 
 test('033: malformed, missing-exp and expired server QR responses are never displayed', async () => {
   const h = harness()
-  for (const invalid of ['malformed', 'e30.e30.synthetic', tokenUntil(h.now() - 1_000)]) {
-    h.setData([exam(invalid)])
+  for (const invalid of ['malformed', 'e30.e30.synthetic', tokenUntil(h.now() - 1_000, 3)]) {
+    h.setQrHandler(async () => ({ data: exam(invalid) }))
     let state = h.render(() => h.useStudentQr(h.data()))
-    state.select(h.data()[0], 2); await settle(); state = h.render()
+    state.select(h.data()[0]); await settle(); state = h.render()
     assert.ok(state.data === null, 'Invalid QR must be hidden')
     assert.ok(state.error !== null)
   }
@@ -171,10 +185,10 @@ test('033: late QR responses cannot replace the selection or update unmounted st
   let finish
   h.setQrHandler(() => new Promise((resolve) => { finish = resolve }))
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0], 2); state = h.render(); state.clear(); h.render()
+  state.select(h.data()[0]); state = h.render(); state.clear(); h.render()
   finish({ data: h.data()[0] }); await settle(); state = h.render()
   assert.equal(state.examId, null); assert.ok(state.data === null)
-  state.select(h.data()[0], 2); h.render(); h.unmount()
+  state.select(h.data()[0]); h.render(); h.unmount()
   assert.ok(h.signals.at(-1).aborted)
 })
 
@@ -190,7 +204,7 @@ test('033: returning from a suspended tab invalidates expired QR even if timers 
   const h = harness()
   h.setData([exam(tokenUntil(h.now() + 10_000))])
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0], 2); await settle(); state = h.render()
+  state.select(h.data()[0]); await settle(); state = h.render()
   assert.ok(state.data !== null)
   h.jump(20_000)
   h.emit('focus'); state = h.render()
@@ -202,10 +216,10 @@ test('033: returning from a suspended tab invalidates expired QR even if timers 
 test('033: unavailable exams never request QR and responses for another exam are rejected', async () => {
   const h = harness()
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(exam(null, 'NOT_ELIGIBLE'), 2)
+  state.select(exam(null, 'NOT_ELIGIBLE'))
   assert.equal(h.qrCalls(), 0)
-  h.setQrHandler(async () => ({ data: { ...h.data()[0], exam_id: 2 } }))
-  state.select(h.data()[0], 2); await settle(); state = h.render()
+  h.setQrHandler(async () => ({ data: { ...exam(tokenUntil(h.now() + 120_000, 3)), exam_id: 2 } }))
+  state.select(h.data()[0]); await settle(); state = h.render()
   assert.ok(state.data === null)
   assert.ok(state.error !== null)
   h.unmount()
@@ -216,14 +230,9 @@ test('a v3 QR survives v2 list refresh but is removed when the registry ID chang
   const expiry = h.now() + 120_000
   const v3 = tokenUntil(expiry, 3)
   h.setData([exam(tokenUntil(expiry))])
-  h.setQrHandler(async (id, version) => {
-    assert.equal(version, 3)
-    return { data: { ...h.data()[0], exam_id: id, token: v3 } }
-  })
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0], 3); await settle(); state = h.render()
-  assert.equal(state.version, 3)
-  assert.ok(state.data)
+  state.select(h.data()[0]); await settle(); state = h.render()
+  assert.equal(state.data?.token, v3)
   h.setData([exam(tokenUntil(expiry))])
   assert.ok(h.render().data)
   h.setData([exam(tokenUntil(expiry, 2, 'revoked-and-replaced'))])
@@ -235,22 +244,24 @@ test('a v3 QR survives v2 list refresh but is removed when the registry ID chang
 
 test('v3 failures never issue a v2 request and a v2 response cannot appear as v3', async () => {
   const h = harness()
-  const versions = []
-  h.setQrHandler(async (_id, version) => {
-    versions.push(version)
-    if (version === 3 && versions.length === 1) throw { status: 503 }
-    return { data: h.data()[0] }
+  h.setQrHandler(async () => {
+    if (h.qrCalls() === 1) throw { status: 503 }
+    if (h.qrCalls() === 2) return { data: h.data()[0] }
+    return { data: exam(tokenUntil(h.now() + 120_000, 3)) }
   })
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0], 3); await settle(); state = h.render()
+  state.select(h.data()[0]); await settle(); state = h.render()
   assert.equal(state.error.status, 503)
   assert.equal(state.data, null)
+  assert.equal(h.qrCalls(), 1)
   state.retry(); await settle(); state = h.render()
   assert.equal(state.data, null)
   assert.ok(state.error)
-  assert.deepEqual(versions, [3, 3])
-  state.select(h.data()[0], 2); await settle(); state = h.render()
+  assert.equal(h.qrCalls(), 2)
+  state.retry(); await settle(); state = h.render()
   assert.ok(state.data)
-  assert.deepEqual(versions, [3, 3, 2])
+  assert.deepEqual(h.requests, Array.from({ length: 3 }, () => ({
+    path: '/students/exams/1/qr', params: { version: 3 },
+  })))
   h.unmount()
 })

@@ -1,24 +1,23 @@
 import type { ReactNode } from 'react'
 import { ExamSchedule } from '@/features/students/components/ExamSchedule'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
-import type { StudentExam, StudentQrVersion } from '@/features/students/types/studentQr'
+import type { StudentExam } from '@/features/students/types/studentQr'
 import styles from '@/features/students/pages/StudentQrPage.module.css'
 
 interface StudentExamCardProps {
   exam: StudentExam
-  selectedVersion: StudentQrVersion | null
-  onSelect: (examId: number, version: StudentQrVersion) => void
+  selected: boolean
+  onSelect: (examId: number) => void
   children?: ReactNode
 }
 
 export function StudentExamCard({
   exam,
-  selectedVersion,
+  selected,
   onSelect,
   children,
 }: StudentExamCardProps) {
   const qrAvailable = exam.qr_status === 'AVAILABLE'
-  const selected = selectedVersion !== null
   const status = {
     PENDING_ELIGIBILITY: {
       style: styles.unavailable,
@@ -85,30 +84,17 @@ export function StudentExamCard({
           <span className={styles.statusDetail}>{status.detail}</span>
         </span>
       </div>
-      <div className={styles.qrActions}>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          disabled={!qrAvailable}
-          aria-describedby={`exam-${exam.exam_id}-availability`}
-          aria-controls={selectedVersion === 3 ? `exam-${exam.exam_id}-qr` : undefined}
-          aria-expanded={selectedVersion === 3}
-          onClick={() => onSelect(exam.exam_id, 3)}
-        >
-          QR para EIDA Control
-        </button>
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          disabled={!qrAvailable}
-          aria-describedby={`exam-${exam.exam_id}-availability`}
-          aria-controls={selectedVersion === 2 ? `exam-${exam.exam_id}-qr` : undefined}
-          aria-expanded={selectedVersion === 2}
-          onClick={() => onSelect(exam.exam_id, 2)}
-        >
-          QR para control web
-        </button>
-      </div>
+      <button
+        type="button"
+        className={styles.primaryButton}
+        disabled={!qrAvailable}
+        aria-describedby={`exam-${exam.exam_id}-availability`}
+        aria-controls={selected ? `exam-${exam.exam_id}-qr` : undefined}
+        aria-expanded={selected}
+        onClick={() => onSelect(exam.exam_id)}
+      >
+        Ver mi QR
+      </button>
       {children}
     </article>
   )

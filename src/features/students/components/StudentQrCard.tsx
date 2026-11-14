@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExamSchedule } from '@/features/students/components/ExamSchedule'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
-import type { StudentExamQr, StudentQrVersion } from '@/features/students/types/studentQr'
+import type { StudentExamQr } from '@/features/students/types/studentQr'
 import {
   downloadQrBlob,
   getQrFilename,
@@ -13,12 +13,11 @@ import downloadStyles from './StudentQrCard.module.css'
 
 interface StudentQrCardProps {
   qr: StudentExamQr
-  version: StudentQrVersion
   studentName: string
   onRetry: () => void
 }
 
-export function StudentQrCard({ qr, version, studentName, onRetry }: StudentQrCardProps) {
+export function StudentQrCard({ qr, studentName, onRetry }: StudentQrCardProps) {
   const [imageFailed, setImageFailed] = useState(false)
   const [generatingPng, setGeneratingPng] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
@@ -28,8 +27,7 @@ export function StudentQrCard({ qr, version, studentName, onRetry }: StudentQrCa
 
   const validImage = qr.qr_code_base64.startsWith('data:image/svg+xml;base64,')
 
-  const filename = getQrFilename(qr.subject, qr.exam_title) +
-    (version === 3 ? '-EIDA-Control' : '')
+  const filename = getQrFilename(qr.subject, qr.exam_title)
   const expiresAt = qrExpiresAt(qr.token)
   const validity = expiresAt === null ? 'Disponible hasta el final del examen' :
     new Intl.DateTimeFormat('es-BO', {
@@ -93,13 +91,13 @@ export function StudentQrCard({ qr, version, studentName, onRetry }: StudentQrCa
         </div>
       ) : (
         <>
-          <div className={version === 3 ? styles.qrFrameMobile : styles.qrFrame}>
+          <div className={styles.qrFrame}>
             <img
               className={styles.qrImage}
               src={qr.qr_code_base64}
               alt={`Código QR del examen ${qr.exam_title}, ${qr.subject}`}
-              width={version === 3 ? 480 : 320}
-              height={version === 3 ? 480 : 320}
+              width={480}
+              height={480}
               onError={() => setImageFailed(true)}
             />
           </div>
@@ -112,7 +110,6 @@ export function StudentQrCard({ qr, version, studentName, onRetry }: StudentQrCa
             <p className={styles.qrHelp}>
               {expiresAt === null ? validity : 'Vence el ' + validity + ' (hora de Bolivia)'}
             </p>
-            {version === 2 && <p className={styles.qrHelp}>Úsalo en el control web con conexión.</p>}
           </div>
 
           <div className={downloadStyles.downloads}>
