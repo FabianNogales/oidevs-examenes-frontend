@@ -1,10 +1,11 @@
 import { useId, useMemo, useState } from 'react'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { StudentExamCard } from '@/features/students/components/StudentExamCard'
 import { StudentQrCard } from '@/features/students/components/StudentQrCard'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
 import { useStudentExams } from '@/features/students/hooks/useStudentExams'
 import { useStudentQr } from '@/features/students/hooks/useStudentQr'
-import type { StudentQrStatus } from '@/features/students/types/studentQr'
+import type { StudentQrStatus, StudentQrVersion } from '@/features/students/types/studentQr'
 import entryControlStyles from '@/features/exams/pages/EntryControlPage.module.css'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
@@ -21,6 +22,13 @@ const statusOrder: Record<StudentQrStatus, number> = {
 }
 
 export function StudentQrPage() {
+  const { user, isLoggingOut } = useAuth()
+  if (!user || isLoggingOut) return null
+
+  return <StudentQrSession key={user.id} studentName={user.display_name} />
+}
+
+function StudentQrSession({ studentName }: { studentName: string }) {
   const exams = useStudentExams()
   const qr = useStudentQr(exams.data)
   const [activeGroup, setActiveGroup] = useState<'current' | 'history'>(
@@ -61,12 +69,12 @@ export function StudentQrPage() {
     setActiveGroup(group)
   }
 
-  function selectExam(examId: number) {
+  function selectExam(examId: number, version: StudentQrVersion) {
     const exam = exams.data.find((item) => item.exam_id === examId)
 
-    if (exam?.qr_status !== 'AVAILABLE' || qr.examId === examId) return
+    if (exam?.qr_status !== 'AVAILABLE' || (qr.examId === examId && qr.version === version)) return
 
-    qr.select(exam)
+    qr.select(exam, version)
   }
 
   function refreshExams() {
@@ -199,7 +207,7 @@ export function StudentQrPage() {
                     <li key={exam.exam_id}>
                       <StudentExamCard
                         exam={exam}
-                        selected={qr.examId === exam.exam_id}
+                        selectedVersion={qr.examId === exam.exam_id ? qr.version : null}
                         onSelect={selectExam}
                       >
                         {qr.examId === exam.exam_id && (
@@ -211,7 +219,7 @@ export function StudentQrPage() {
                           >
                             <div className={styles.expandedQrHeading}>
                               <h3 id={`exam-${exam.exam_id}-qr-heading`}>
-                                Código QR del examen
+                                {qr.version === 3 ? 'QR para EIDA Control' : 'QR para control web'}
                               </h3>
                               <button
                                 type="button"
@@ -249,10 +257,12 @@ export function StudentQrPage() {
                                     : 'Reintentar'}
                                 </button>
                               </div>
-                            ) : qr.data ? (
+                            ) : qr.data && qr.version ? (
                               <StudentQrCard
-                                key={qr.data.exam_id}
+                                key={`${qr.data.exam_id}:${qr.version}`}
                                 qr={qr.data}
+                                version={qr.version}
+                                studentName={studentName}
                                 onRetry={qr.retry}
                               />
                             ) : null}

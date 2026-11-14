@@ -4,6 +4,7 @@ import { sourceHarness, nodes } from '../../../shared/tests/sourceHarness.mjs'
 
 test('student pages pass their real routes to the shared PageHeader breadcrumbs in loading state', () => {
   const h = sourceHarness({
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { id: 1 } }) },
     '@/shared/api/httpClient': { httpClient: {} },
     '@/features/students/hooks/useStudentProfile': { useStudentProfile: () => ({ loading: true }) },
     '@/features/students/hooks/useStudentExams': { useStudentExams: () => ({ data: [], loading: true }) },
@@ -15,7 +16,10 @@ test('student pages pass their real routes to the shared PageHeader breadcrumbs 
     ['StudentQrPage', 'Mis exámenes', '/students/qr'],
   ]) {
     const page = h.load(`features/students/pages/${name}.tsx`)[name]
-    const tree = h.render(page)
+    const tree = h.render(name === 'StudentQrPage' ? () => {
+      const session = page()
+      return session.type(session.props)
+    } : page)
     const headers = nodes(tree, (node) => node.type === PageHeader)
     assert.equal(headers.length, 1)
     assert.equal(headers[0].props.title, title)

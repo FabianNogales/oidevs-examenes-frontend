@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { getStudentExamQr } from '@/features/students/api/studentQrApi'
 import { getStudentQrError } from '@/features/students/api/studentQrError'
-import { qrExpiresAt } from '@/features/students/utils/studentQrFreshness'
+import { qrDisplayClaims, qrExpiresAt } from '@/features/students/utils/studentQrFreshness'
 import type {
   StudentExam,
   StudentExamQr,
   StudentQrError,
+  StudentQrVersion,
 } from '@/features/students/types/studentQr'
 
 interface QrState {
   examId: number | null
+  version: StudentQrVersion | null
   data: StudentExamQr | null
   loading: boolean
   error: StudentQrError | null
@@ -17,6 +19,7 @@ interface QrState {
 
 const emptyState: QrState = {
   examId: null,
+  version: null,
   data: null,
   loading: false,
   error: null,
@@ -53,29 +56,29 @@ export function useStudentQr(exams: readonly StudentExam[]) {
     }
   }, [state.data])
 
-  async function load(examId: number) {
+  async function load(examId: number, version: StudentQrVersion) {
     activeRequest.current?.abort()
     const controller = new AbortController()
     activeRequest.current = controller
-    setState({ examId, data: null, loading: true, error: null })
+    setState({ examId, version, data: null, loading: true, error: null })
 
     try {
-      const response = await getStudentExamQr(examId, controller.signal)
+      const response = await getStudentExamQr(examId, version, controller.signal)
       // Never display a response belonging to another exam, even if the API errs.
       if (response.data.exam_id !== examId) throw new Error('Unexpected exam')
-      const expiresAt = qrExpiresAt(response.data.token)
-      if (expiresAt === null || expiresAt <= Date.now()) throw new Error('Expired QR')
+      const claims = qrDisplayClaims(response.data.token)
+      if (!claims || claims.version !== version || claims.expiresAt <= Date.now() ||
+        (version === 3 && !claims.jti)) throw new Error('Unexpected QR')
       if (!controller.signal.aborted) {
-        setState({ examId, data: response.data, loading: false, error: null })
+        setState((current) => current.examId === examId && current.version === version
+          ? { examId, version, data: response.data, loading: false, error: null }
+          : current)
       }
     } catch (cause: unknown) {
       if (!controller.signal.aborted) {
-        setState({
-          examId,
-          data: null,
-          loading: false,
-          error: getStudentQrError(cause, 'qr'),
-        })
+        setState((current) => current.examId === examId && current.version === version
+          ? { examId, version, data: null, loading: false, error: getStudentQrError(cause, 'qr') }
+          : current)
       }
     }
   }
@@ -86,21 +89,32 @@ export function useStudentQr(exams: readonly StudentExam[]) {
     setState(emptyState)
   }
 
-  function select(exam: StudentExam) {
+  function select(exam: StudentExam, version: StudentQrVersion) {
     clear()
 
     if (exam.qr_status !== 'AVAILABLE') return
 
     // Opening a QR always revalidates availability and eligibility on the backend.
-    void load(exam.exam_id)
+    void load(exam.exam_id, version)
   }
 
   function retry() {
-    if (state.examId !== null) void load(state.examId)
+    if (state.examId !== null && state.version !== null) void load(state.examId, state.version)
   }
 
   const currentExam = exams.find((exam) => exam.exam_id === state.examId)
+  const selectedToken = state.data?.token
+  const listedToken = currentExam?.token
+  // The list carries v2. Both versions share the registry jti and exam expiry.
+  const displayed = selectedToken && qrDisplayClaims(selectedToken)
+  const listed = listedToken && qrDisplayClaims(listedToken)
+  const matches = state.version === 3
+    ? displayed && listed && listed.version === 2 && displayed.jti === listed.jti &&
+      displayed.expiresAt === listed.expiresAt
+    : selectedToken === listedToken
   const invalidated = state.examId !== null && (currentExam?.qr_status !== 'AVAILABLE' ||
-    (state.data !== null && currentExam.token !== state.data.token))
-  return { ...(invalidated ? emptyState : state), select, load, clear, retry }
+    (state.data !== null && !matches))
+  if (invalidated) setState(emptyState)
+
+  return { ...(invalidated ? emptyState : state), select, clear, retry }
 }

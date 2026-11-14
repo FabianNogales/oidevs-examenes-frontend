@@ -3,7 +3,8 @@ import { test } from 'node:test'
 import { sourceHarness, settle } from '../../../shared/tests/sourceHarness.mjs'
 
 // Synthetic credentials only, kept internal. Assertions never print QR/token payloads.
-const tokenUntil = (milliseconds) => ['e30', Buffer.from(JSON.stringify({ v: 2, exp: milliseconds / 1000 })).toString('base64url'), 'synthetic'].join('.')
+const tokenUntil = (milliseconds, v = 2, jti = 'synthetic-id') => ['e30',
+  Buffer.from(JSON.stringify({ v, jti, exp: milliseconds / 1000 })).toString('base64url'), 'synthetic'].join('.')
 const exam = (token, status = 'AVAILABLE') => ({ exam_id: 1, subject: 'Materia', exam_title: 'Examen',
   scheduled_at: '2027-01-01 10:00:00', qr_status: status, is_qr_available: status === 'AVAILABLE',
   qr_code_base64: 'data:image/svg+xml;base64,', token })
@@ -16,7 +17,9 @@ function harness() {
   const signals = []
   const h = sourceHarness({ '@/features/students/api/studentQrApi': {
     getStudentExams: (signal) => { listCalls++; signals.push(signal); return listHandler(signal) },
-    getStudentExamQr: (id, signal) => { qrCalls++; signals.push(signal); return qrHandler(id, signal) },
+    getStudentExamQr: (id, version, signal) => {
+      qrCalls++; signals.push(signal); return qrHandler(id, version, signal)
+    },
   }, '@/features/students/api/studentQrError': {
     getStudentQrError: (cause) => ({ status: cause.status, message: 'Solicitud rechazada' }),
   } })
@@ -40,7 +43,7 @@ test('033: visible pages refresh at most once per minute without hiding a valid 
   const render = () => { const list = h.useStudentExams(); return { list, qr: h.useStudentQr(list.data) } }
   h.render(render); await settle()
   let state = h.render()
-  state.qr.select(state.list.data[0]); await settle()
+  state.qr.select(state.list.data[0], 2); await settle()
   state = h.render()
   assert.ok(state.qr.data !== null)
   assert.equal(h.qrCalls(), 1)
@@ -120,7 +123,7 @@ test('033: QR selection revalidates with backend instead of reusing inline cache
   const h = harness()
   let state = h.render(() => h.useStudentQr(h.data()))
   h.setQrHandler(async () => { throw { status: 403 } })
-  state.select(h.data()[0]); await settle(); state = h.render()
+  state.select(h.data()[0], 2); await settle(); state = h.render()
   assert.equal(h.qrCalls(), 1); assert.ok(state.data === null); assert.equal(state.error.status, 403)
   h.unmount()
 })
@@ -129,7 +132,7 @@ test('033: an open QR is removed at expiry without changing JWT duration or auth
   const h = harness()
   h.setData([exam(tokenUntil(h.now() + 10_000))])
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0]); await settle(); state = h.render()
+  state.select(h.data()[0], 2); await settle(); state = h.render()
   assert.ok(state.data !== null)
   h.advance(10_000); state = h.render()
   assert.ok(state.data === null); assert.equal(state.error.status, 404)
@@ -141,7 +144,7 @@ test('033: authoritative revocation, missing exams and token rotation suppress a
   const h = harness()
   const original = h.data()[0]
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(original); await settle(); state = h.render()
+  state.select(original, 2); await settle(); state = h.render()
   assert.ok(state.data !== null)
   h.setData([exam(null, 'NOT_ELIGIBLE')]); state = h.render()
   assert.ok(state.data === null); assert.equal(state.examId, null)
@@ -156,7 +159,7 @@ test('033: malformed, missing-exp and expired server QR responses are never disp
   for (const invalid of ['malformed', 'e30.e30.synthetic', tokenUntil(h.now() - 1_000)]) {
     h.setData([exam(invalid)])
     let state = h.render(() => h.useStudentQr(h.data()))
-    state.select(h.data()[0]); await settle(); state = h.render()
+    state.select(h.data()[0], 2); await settle(); state = h.render()
     assert.ok(state.data === null, 'Invalid QR must be hidden')
     assert.ok(state.error !== null)
   }
@@ -168,10 +171,10 @@ test('033: late QR responses cannot replace the selection or update unmounted st
   let finish
   h.setQrHandler(() => new Promise((resolve) => { finish = resolve }))
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0]); state = h.render(); state.clear(); h.render()
+  state.select(h.data()[0], 2); state = h.render(); state.clear(); h.render()
   finish({ data: h.data()[0] }); await settle(); state = h.render()
   assert.equal(state.examId, null); assert.ok(state.data === null)
-  state.select(h.data()[0]); h.render(); h.unmount()
+  state.select(h.data()[0], 2); h.render(); h.unmount()
   assert.ok(h.signals.at(-1).aborted)
 })
 
@@ -187,7 +190,7 @@ test('033: returning from a suspended tab invalidates expired QR even if timers 
   const h = harness()
   h.setData([exam(tokenUntil(h.now() + 10_000))])
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(h.data()[0]); await settle(); state = h.render()
+  state.select(h.data()[0], 2); await settle(); state = h.render()
   assert.ok(state.data !== null)
   h.jump(20_000)
   h.emit('focus'); state = h.render()
@@ -199,11 +202,55 @@ test('033: returning from a suspended tab invalidates expired QR even if timers 
 test('033: unavailable exams never request QR and responses for another exam are rejected', async () => {
   const h = harness()
   let state = h.render(() => h.useStudentQr(h.data()))
-  state.select(exam(null, 'NOT_ELIGIBLE'))
+  state.select(exam(null, 'NOT_ELIGIBLE'), 2)
   assert.equal(h.qrCalls(), 0)
   h.setQrHandler(async () => ({ data: { ...h.data()[0], exam_id: 2 } }))
-  state.select(h.data()[0]); await settle(); state = h.render()
+  state.select(h.data()[0], 2); await settle(); state = h.render()
   assert.ok(state.data === null)
   assert.ok(state.error !== null)
+  h.unmount()
+})
+
+test('a v3 QR survives v2 list refresh but is removed when the registry ID changes', async () => {
+  const h = harness()
+  const expiry = h.now() + 120_000
+  const v3 = tokenUntil(expiry, 3)
+  h.setData([exam(tokenUntil(expiry))])
+  h.setQrHandler(async (id, version) => {
+    assert.equal(version, 3)
+    return { data: { ...h.data()[0], exam_id: id, token: v3 } }
+  })
+  let state = h.render(() => h.useStudentQr(h.data()))
+  state.select(h.data()[0], 3); await settle(); state = h.render()
+  assert.equal(state.version, 3)
+  assert.ok(state.data)
+  h.setData([exam(tokenUntil(expiry))])
+  assert.ok(h.render().data)
+  h.setData([exam(tokenUntil(expiry, 2, 'revoked-and-replaced'))])
+  assert.equal(h.render().data, null)
+  h.setData([exam(tokenUntil(expiry))])
+  assert.equal(h.render().data, null)
+  h.unmount()
+})
+
+test('v3 failures never issue a v2 request and a v2 response cannot appear as v3', async () => {
+  const h = harness()
+  const versions = []
+  h.setQrHandler(async (_id, version) => {
+    versions.push(version)
+    if (version === 3 && versions.length === 1) throw { status: 503 }
+    return { data: h.data()[0] }
+  })
+  let state = h.render(() => h.useStudentQr(h.data()))
+  state.select(h.data()[0], 3); await settle(); state = h.render()
+  assert.equal(state.error.status, 503)
+  assert.equal(state.data, null)
+  state.retry(); await settle(); state = h.render()
+  assert.equal(state.data, null)
+  assert.ok(state.error)
+  assert.deepEqual(versions, [3, 3])
+  state.select(h.data()[0], 2); await settle(); state = h.render()
+  assert.ok(state.data)
+  assert.deepEqual(versions, [3, 3, 2])
   h.unmount()
 })

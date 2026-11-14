@@ -10,6 +10,7 @@ const exams = [
 
 function setup(initialExams = exams) {
   let retryCount = 0
+  let auth = { user: { id: 1 }, isLoggingOut: false }
   const list = { data: initialExams, loading: false, error: null, retry() { retryCount++ } }
   const qr = {
     examId: null,
@@ -21,6 +22,7 @@ function setup(initialExams = exams) {
     retry() {},
   }
   const h = sourceHarness({
+    '@/features/auth/hooks/useAuth': { useAuth: () => auth },
     '@/features/students/hooks/useStudentExams': {
       useStudentExams: () => list,
     },
@@ -38,7 +40,10 @@ function setup(initialExams = exams) {
     },
   })
   const { StudentQrPage } = h.load('features/students/pages/StudentQrPage.tsx')
-  const render = () => h.render(() => StudentQrPage())
+  const render = () => h.render(() => {
+    const session = StudentQrPage()
+    return session.type(session.props)
+  })
   let tree = render()
   const selectTab = (name) => {
     const tab = nodes(tree, (node) => node.props?.role === 'tab').find(
@@ -51,12 +56,50 @@ function setup(initialExams = exams) {
   return {
     h,
     list,
+    qr,
+    root: () => StudentQrPage(),
+    setAuth: (value) => { auth = value },
     render: () => (tree = render()),
     selectTab,
     retryCount: () => retryCount,
     tree: () => tree,
   }
 }
+
+test('the QR page remounts on account change and is hidden during logout', () => {
+  const page = setup()
+  const first = page.root()
+  page.setAuth({ user: { id: 2 }, isLoggingOut: false })
+  const second = page.root()
+  assert.equal(first.type, second.type)
+  assert.equal(first.key, '1')
+  assert.equal(second.key, '2')
+  page.setAuth({ user: { id: 2 }, isLoggingOut: true })
+  assert.equal(page.root(), null)
+  page.setAuth({ user: null, isLoggingOut: false })
+  assert.equal(page.root(), null)
+  page.h.unmount()
+})
+
+test('the card presents the supplied v3 SVG unchanged and preserves both download options', () => {
+  const h = sourceHarness()
+  const { StudentQrCard } = h.load('features/students/components/StudentQrCard.tsx')
+  const image = 'data:image/svg+xml;base64,PHN2Zy8+'
+  const token = ['e30', Buffer.from(JSON.stringify({ v: 3, exp: 1893459600 })).toString('base64url'), 'example'].join('.')
+  const tree = h.render(() => StudentQrCard({
+    qr: { ...exams[0], token, qr_code_base64: image }, version: 3,
+    studentName: 'Estudiante de prueba', onRetry() {},
+  }))
+  const img = nodes(tree, (node) => node.type === 'img')[0]
+  assert.equal(img.props.src, image)
+  assert.equal(img.props.width, 480)
+  const svg = nodes(tree, (node) => node.type === 'a')[0]
+  assert.equal(svg.props.href, image)
+  assert.match(svg.props.download, /-EIDA-Control\.svg$/)
+  assert.match(textContent(tree), /Descargar PNG/)
+  assert.match(textContent(tree), /Estudiante de prueba/)
+  h.unmount()
+})
 
 test('student exams: Vigentes is selected initially and only its cards render', () => {
   const page = setup()

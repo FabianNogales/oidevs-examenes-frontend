@@ -1,21 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExamSchedule } from '@/features/students/components/ExamSchedule'
 import { StudentQrIcon } from '@/features/students/components/StudentQrIcon'
-import type { StudentExamQr } from '@/features/students/types/studentQr'
+import type { StudentExamQr, StudentQrVersion } from '@/features/students/types/studentQr'
 import {
   downloadQrBlob,
   getQrFilename,
   svgToPng,
 } from '@/features/students/utils/studentQrDownload'
+import { qrExpiresAt } from '@/features/students/utils/studentQrFreshness'
 import styles from '@/features/students/pages/StudentQrPage.module.css'
 import downloadStyles from './StudentQrCard.module.css'
 
 interface StudentQrCardProps {
   qr: StudentExamQr
+  version: StudentQrVersion
+  studentName: string
   onRetry: () => void
 }
 
-export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
+export function StudentQrCard({ qr, version, studentName, onRetry }: StudentQrCardProps) {
   const [imageFailed, setImageFailed] = useState(false)
   const [generatingPng, setGeneratingPng] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
@@ -25,7 +28,13 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
 
   const validImage = qr.qr_code_base64.startsWith('data:image/svg+xml;base64,')
 
-  const filename = getQrFilename(qr.subject, qr.exam_title)
+  const filename = getQrFilename(qr.subject, qr.exam_title) +
+    (version === 3 ? '-EIDA-Control' : '')
+  const expiresAt = qrExpiresAt(qr.token)
+  const validity = expiresAt === null ? 'Disponible hasta el final del examen' :
+    new Intl.DateTimeFormat('es-BO', {
+      dateStyle: 'short', timeStyle: 'short', timeZone: 'America/La_Paz',
+    }).format(expiresAt)
 
   async function downloadPng() {
     if (activeDownload.current) return
@@ -58,6 +67,7 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
       </div>
       <p className={styles.subject}>{qr.subject}</p>
       <h3>{qr.exam_title}</h3>
+      {studentName && <p className={styles.qrHelp}>{studentName}</p>}
 
       <p className={`${styles.schedule} ${styles.qrSchedule}`}>
         <StudentQrIcon name="calendar" />
@@ -83,13 +93,13 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
         </div>
       ) : (
         <>
-          <div className={styles.qrFrame}>
+          <div className={version === 3 ? styles.qrFrameMobile : styles.qrFrame}>
             <img
               className={styles.qrImage}
               src={qr.qr_code_base64}
               alt={`Código QR del examen ${qr.exam_title}, ${qr.subject}`}
-              width={320}
-              height={320}
+              width={version === 3 ? 480 : 320}
+              height={version === 3 ? 480 : 320}
               onError={() => setImageFailed(true)}
             />
           </div>
@@ -99,7 +109,10 @@ export function StudentQrCard({ qr, onRetry }: StudentQrCardProps) {
               <StudentQrIcon name="check" />
               Válido únicamente para este examen
             </p>
-            <p className={styles.qrHelp}>Disponible hasta el final del examen</p>
+            <p className={styles.qrHelp}>
+              {expiresAt === null ? validity : 'Vence el ' + validity + ' (hora de Bolivia)'}
+            </p>
+            {version === 2 && <p className={styles.qrHelp}>Úsalo en el control web con conexión.</p>}
           </div>
 
           <div className={downloadStyles.downloads}>

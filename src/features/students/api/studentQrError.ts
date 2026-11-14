@@ -17,6 +17,10 @@ export function getStudentQrError(
   if (!isAxiosError<ApiErrorResponse>(error)) return { message: fallback }
 
   const status = error.response?.status
+  if (resource === 'qr' && status === 503 && error.response?.data?.code === 'QR_V3_UNAVAILABLE') {
+    return { status, message: 'El QR para EIDA Control no está disponible en este momento.' }
+  }
+
   switch (status) {
     case 401:
       return {

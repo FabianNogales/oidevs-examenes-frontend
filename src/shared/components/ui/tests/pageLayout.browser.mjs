@@ -246,7 +246,7 @@ const screens = [
   // StudentLayout owns main; shared breadcrumbs preserve the provisional title accent.
   { path: '/students/profile', title: 'Mi perfil', crumbs: ['Inicio', 'Mi perfil'], structural: true, student: true,
     description: 'Consulta tu información personal y académica registrada en el sistema.', rows: ['QA-STU-01'] },
-  { path: '/students/qr', title: 'Mis exámenes', crumbs: ['Inicio', 'Mis exámenes'], structural: true, student: true,
+  { path: '/students/qr', title: 'Mis exámenes', crumbs: ['Inicio', 'Mis exámenes'], structural: true, student: true, authUser: { id: 31 },
     description: 'Consulta tus exámenes programados y accede a tu código QR cuando esté disponible.', rows: ['Parcial QA de programación'] },
 ].filter(screen => process.env.EIDA_LAYOUT_SCOPE === 'r3' ? screen.kind === 'portal-detail' : process.env.EIDA_LAYOUT_SCOPE === 'u3f2' ? screen.collab : process.env.EIDA_LAYOUT_SCOPE === 'u3f1' ? screen.examDetail : process.env.EIDA_LAYOUT_SCOPE === 'u12' ? /^\/(teacher\/(subjects|students|exams)$|students\/)/.test(screen.path) : process.env.EIDA_LAYOUT_SCOPE === 'd53' ? ['/admin/students/manage','/admin/teachers'].includes(screen.path) : process.env.EIDA_LAYOUT_SCOPE !== 'd52' || screen.structural || ['/admin/users/history','/information','/news','/services'].includes(screen.path))
 
