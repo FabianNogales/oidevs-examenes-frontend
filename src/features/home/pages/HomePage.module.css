@@ -76,8 +76,8 @@
 }
 
 .eidaLogo {
-  width: 46px;
-  height: 46px;
+  width: 60px;
+  height: 60px;
 
   flex-shrink: 0;
 
@@ -89,22 +89,12 @@
   flex-direction: column;
 }
 
-.eidaBrand strong {
-  color: var(--color-text-primary);
-
-  font-size: 0.9rem;
-  font-weight: var(--font-weight-semibold);
-
+.eidaTitle {
   letter-spacing: 0.04em;
 }
 
-.eidaBrand span {
+.eidaSubtitle {
   margin-top: 2px;
-
-  color: var(--color-text-secondary);
-
-  font-size: 0.75rem;
-  font-weight: var(--font-weight-regular);
 }
 
 /* ==================================================
@@ -122,11 +112,6 @@
 
   margin: 0;
 
-  font-size: clamp(2.15rem, 2.75vw, 3rem);
-  font-weight: var(--font-weight-extrabold);
-
-  line-height: 1;
-
   letter-spacing: -0.025em;
 }
 
@@ -137,7 +122,7 @@
 .heroTitle strong {
   color: var(--color-accent);
 
-  font-weight: var(--font-weight-extrabold);
+  font-weight: inherit;
 }
 
 .heroDescription {
@@ -147,11 +132,6 @@
   max-width: 470px;
 
   margin: 14px 0 0;
-
-  color: var(--color-text-secondary);
-
-  font-size: 0.95rem;
-  line-height: 1.5;
 }
 
 .heroDivider {
@@ -173,11 +153,6 @@
   z-index: 1;
 
   margin: 7px 0 0;
-
-  color: var(--color-text-primary);
-
-  font-size: 0.7rem;
-  font-weight: var(--font-weight-semibold);
 
   letter-spacing: 0.17em;
 }
@@ -590,10 +565,6 @@
     padding: 26px 24px;
   }
 
-  .heroTitle {
-    font-size: clamp(1.8rem, 4vw, 2.5rem);
-  }
-
   .heroVisual::before {
     width: 70px;
   }
@@ -630,14 +601,6 @@
     min-height: auto;
 
     padding: 32px 20px;
-  }
-
-  .heroTitle {
-    font-size: clamp(1.8rem, 8vw, 2.4rem);
-  }
-
-  .heroDescription {
-    font-size: 0.92rem;
   }
 
   .heroVisual {
@@ -725,35 +688,19 @@
   }
 
   .eidaLogo {
-    width: 42px;
-    height: 42px;
+    width: 55px;
+    height: 55px;
   }
 
   .eidaBrand {
     margin-bottom: 12px;
   }
 
-  .eidaBrand strong {
-    font-size: 0.86rem;
-  }
-
-  .eidaBrand span {
-    font-size: 0.68rem;
-  }
-
-  .heroTitle {
-    font-size: clamp(1.8rem, 9.5vw, 2.25rem);
-  }
-
   .heroDescription {
     margin-top: 14px;
-
-    font-size: 0.9rem;
   }
 
   .heroSlogan {
-    font-size: 0.64rem;
-
     letter-spacing: 0.15em;
   }
 
@@ -842,22 +789,20 @@
      ================================================== */
 
   .hero {
-    flex: 0 0 310px;
+    flex: 0 0 auto;
 
     grid-template-columns:
       minmax(0, 46%)
       minmax(0, 54%);
 
     width: 100%;
-    height: 310px;
     min-height: 310px;
 
     overflow: hidden;
   }
 
   .heroContent {
-    height: 310px;
-    min-height: 0;
+    min-height: 310px;
 
     justify-content: center;
 
@@ -873,34 +818,18 @@
   }
 
   .eidaLogo {
-    width: 46px;
-    height: 46px;
-  }
-
-  .eidaBrand strong {
-    font-size: 0.9rem;
-  }
-
-  .eidaBrand span {
-    font-size: 0.75rem;
+    width: 60px;
+    height: 60px;
   }
 
   .heroTitle {
     max-width: 590px;
-
-    font-size: clamp(2.15rem, 2.75vw, 3rem);
-
-    line-height: 1;
   }
 
   .heroDescription {
     max-width: 470px;
 
     margin-top: 14px;
-
-    font-size: 0.95rem;
-
-    line-height: 1.5;
   }
 
   .heroDivider {
@@ -911,8 +840,6 @@
 
   .heroSlogan {
     margin-top: 7px;
-
-    font-size: 0.7rem;
   }
 
   .heroVisual {
@@ -1170,7 +1097,6 @@
 
   width: min(calc(100% - 96px), 1640px);
 
-  height: clamp(286px, 37vh, 340px);
   min-height: 286px;
 
   margin-inline: auto;
@@ -1209,43 +1135,24 @@
   }
 
   .eidaLogo {
-    width: 42px;
-    height: 42px;
-  }
-
-  .eidaBrand strong {
-    font-size: 0.9rem;
-  }
-
-  .eidaBrand span {
-    font-size: 0.75rem;
+    width: 55px;
+    height: 55px;
   }
 
   /* Título */
 
   .heroTitle {
-  max-width: 520px;
+    max-width: 520px;
 
-  margin: 0;
+    margin: 0;
 
-  font-size: clamp(
-    1.75rem,
-    2.1vw,
-    2.3rem
-  );
-
-  line-height: 0.98;
-
-  letter-spacing: -0.025em;
-}
+    letter-spacing: -0.025em;
+  }
 
   .heroDescription {
     max-width: 450px;
 
     margin-top: 11px;
-
-    font-size: 0.95rem;
-    line-height: 1.5;
   }
 
   .heroDivider {
@@ -1257,8 +1164,6 @@
 
   .heroSlogan {
     margin-top: 7px;
-
-    font-size: 0.68rem;
 
     letter-spacing: 0.17em;
   }

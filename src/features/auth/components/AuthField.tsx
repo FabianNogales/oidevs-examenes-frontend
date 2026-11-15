@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, ReactNode } from 'react'
+import { Label, Text } from '@/shared/components/ui'
 
 type AuthFieldProps = {
   id: string
@@ -21,7 +22,7 @@ export function AuthField({
 
   return (
     <div className="auth-field">
-      <label htmlFor={id}>{label}</label>
+      <Label htmlFor={id}>{label}</Label>
       <div className={`auth-field__control ${className ?? ''}`}>
         {icon ? <span className="auth-field__icon">{icon}</span> : null}
         <input
@@ -33,9 +34,16 @@ export function AuthField({
         {action ? <span className="auth-field__action">{action}</span> : null}
       </div>
       {error ? (
-        <p className="auth-field__error" id={errorId} role="alert">
+        <Text
+          as="p"
+          variant="small"
+          tone="danger"
+          className="auth-field__error"
+          id={errorId}
+          role="alert"
+        >
           {error}
-        </p>
+        </Text>
       ) : null}
     </div>
   )
