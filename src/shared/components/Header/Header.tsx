@@ -4,7 +4,7 @@ import { Bell, LogOut, Menu, X } from 'lucide-react'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { Avatar } from '@/shared/components/ui'
 
-import { HeaderAccount, HeaderNotifications } from './HeaderAccount'
+import { HeaderAccount } from './HeaderAccount'
 import { HeaderLogo } from './HeaderLogo'
 import { HeaderAcademicTermsLink } from './HeaderAcademicTermsLink'
 import { HeaderNavigation } from './HeaderNavigation'
