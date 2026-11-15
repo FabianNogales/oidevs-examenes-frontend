@@ -7,7 +7,6 @@ import {
   useLocation,
 } from 'react-router'
 import {
-  Breadcrumb,
   Card,
   Heading,
   LoadingState,
@@ -16,10 +15,10 @@ import {
 import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
 import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
 import { EntityProfileError } from '@/features/users/profile/components/EntityProfileError'
+import { buildProfilePhotoHistory } from '@/features/users/profile/utils/buildProfilePhotoHistory'
 import {
   getProfileTabs,
   getBackRouteByContext,
-  getProfileBreadcrumbs,
 } from '@/features/users/profile/config/profileTabs.registry'
 import type {
   EditableEntityValues,
@@ -58,6 +57,13 @@ function mapStudentToUnifiedProfile(data: StudentDetail): UnifiedEntityProfile {
     status: data.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
     role: 'STUDENT',
     career_name: careerName || 'No registrada',
+    photos: buildProfilePhotoHistory({
+      institutional: {
+        url: data.historical_photo_url,
+        revision: data.historical_photo_revision,
+      },
+      current: { url: data.profile_photo_url },
+    }),
   }
 }
 
@@ -196,6 +202,7 @@ export function AdminStudentDetailPage({
   return (
     <EntityProfileLayout
       initials={initials}
+      photoUrl={student.profile_photo_url}
       fullName={fullName}
       role={unifiedEntity.role}
       isActive={unifiedEntity.status === 'ACTIVE'}
@@ -204,14 +211,13 @@ export function AdminStudentDetailPage({
       onOptionChange={handleOptionChange}
       onBack={() => navigate(backRoute)}
     >
-      <Breadcrumb items={getProfileBreadcrumbs(moduleContext)} />
       {currentTabConfig.render({
         entity: unifiedEntity,
         moduleContext,
         onUpdateEntity: handleUpdateStudent,
         onNavigateTab: handleOptionChange,
       })}
-      {['perfil', 'editar'].includes(currentTabConfig.id) ? (
+      {currentTabConfig.id === 'editar' ? (
         <>
           <Card
             as="section"

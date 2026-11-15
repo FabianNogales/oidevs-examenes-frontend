@@ -21,6 +21,19 @@ export type ProfileIconName =
   | 'mail'
   | 'info'
   | 'id-card'
+  | 'photo-history'
+
+/** Estado de una fotografía dentro del historial del perfil */
+export type ProfilePhotoStatus = 'INSTITUTIONAL' | 'CURRENT' | 'PREVIOUS'
+
+/** Registro normalizado de una fotografía (independiente del origen: estudiante o docente) */
+export interface ProfilePhotoRecord {
+  id: string
+  url: string | null
+  status: ProfilePhotoStatus
+  /** Revisión opcional para invalidar la caché del blob autenticado */
+  revision?: number
+}
 
 /** Modelo normalizado de cualquier usuario/entidad para renderizar su perfil */
 export interface UnifiedEntityProfile {
@@ -33,6 +46,8 @@ export interface UnifiedEntityProfile {
   status: 'ACTIVE' | 'INACTIVE'
   role: EntityRole
   career_name?: string
+  /** Fotografías conocidas de la entidad (actual primero) */
+  photos?: readonly ProfilePhotoRecord[]
 }
 
 /** Datos editables desde la pestaña "Editar datos" */

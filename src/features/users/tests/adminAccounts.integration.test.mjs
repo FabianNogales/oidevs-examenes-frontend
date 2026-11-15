@@ -195,7 +195,7 @@ test('reconciliation preserves result badge styles without treating missing data
   }
   for (const result of ['NOT_RECORDED', null, 'UNKNOWN']) {
     const tree = h.render(() => AcademicResultBadge({ result }))
-    assert.match(textContent(tree), /Información no disponible/)
+    assert.match(textContent(tree), /Sin resultado registrado/)
     assert.doesNotMatch(textContent(tree), /Aprobado|Reprobado/)
     assert.equal(tree.props.className, undefined)
   }

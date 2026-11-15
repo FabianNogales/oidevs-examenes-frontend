@@ -4,7 +4,7 @@ import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
-import { Badge, Card, Heading, Text } from '@/shared/components/ui/index'
+import { Badge, Stack, Text } from '@/shared/components/ui/index'
 import { useProfileRecords } from '../hooks/useProfileRecords'
 import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
@@ -102,16 +102,12 @@ export function TeacherActiveSubjectsTab({
   )
 
   return (
-    <Card as="section" className={layoutStyles.sectionCard}>
+    <Stack direction="vertical" gap="4">
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <Heading level={2}>Materias que dicta</Heading>
-          <Text variant="small" tone="secondary">
-            Asignaturas y grupos asignados al docente{' '}
-            <strong>
-              {entity.first_names} {entity.last_names}
-            </strong>{' '}
-            durante la gestión académica activa.
+          <Text variant="body" tone="primary">
+            Asignaturas asignados al docente durante el periodo
+            académico.
           </Text>
         </div>
         <ProfileActiveTermBadge
@@ -122,6 +118,17 @@ export function TeacherActiveSubjectsTab({
 
       <DataCardGrid
         fields={cardFields}
+        getCardConfig={(item) => ({
+          badgeLabel: 'MATERIA',
+          title: item.subjectName,
+          headline: { label: 'Código', value: item.subjectCode },
+          splitLeft: { label: 'Grupo', value: `Grupo ${item.groupCode}` },
+          splitRight: { label: 'Gestión', value: item.academicTerm },
+          primaryMeta: {
+            label: 'Carrera(s)',
+            value: item.careers.join(' - '),
+          },
+        })}
         data={filteredSubjects}
         loading={records.loading}
         error={records.error}
@@ -136,6 +143,6 @@ export function TeacherActiveSubjectsTab({
         emptyTitle="Sin materias asignadas en la gestión actual"
         emptyDescription="El docente no registra grupos activos o no existen coincidencias con la búsqueda."
       />
-    </Card>
+    </Stack>
   )
 }

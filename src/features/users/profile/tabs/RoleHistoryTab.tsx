@@ -1,12 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
+import { CheckCircle2, History, UserCheck } from 'lucide-react'
 import { DataCardGrid } from '@/shared/components/DataCardGrid/DataCardGrid'
 import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid.types'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
 import {
   Badge,
-  Card,
-  Heading,
+  Icon,
+  Stack,
   Text,
   type BadgeTone,
 } from '@/shared/components/ui/index'
@@ -47,13 +48,22 @@ const ROLE_BADGE_TONE_MAP: Record<SystemRoleCode, BadgeTone> = {
   UNKNOWN: 'neutral',
 }
 
-export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
-  const [searchQuery, setSearchQuery] = useState('')
+function splitDateAndTime(changedAt: string): { date: string; time: string } {
+  if (changedAt.includes(',')) {
+    const [datePart, ...rest] = changedAt.split(',')
+    return {
+      date: datePart.trim(),
+      time: rest.join(',').trim() || 'No registrada',
+    }
+  }
+  return { date: changedAt, time: 'No registrada' }
+}
 
+export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
   const records = useProfileRecords<RoleHistoryAuditItem>(
     entity,
     'roles',
-    searchQuery,
+    '',
   )
   const filteredRoleLogs = records.items
 
@@ -102,29 +112,48 @@ export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
     [],
   )
 
+  const entityRoleLabel =
+    entity.role === 'TEACHER'
+      ? 'el docente'
+      : entity.role === 'ADMIN'
+        ? 'el administrador'
+        : 'el estudiante'
+
   return (
-    <Card as="section" className={layoutStyles.sectionCard}>
+    <Stack direction="vertical" gap="4">
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <Heading level={2}>Historial de roles</Heading>
-          <Text variant="small" tone="secondary">
+          <Text variant="body" tone="primary">
             Bitácora de auditoría inmutable con los roles ejercidos por{' '}
-            <strong>
-              {entity.first_names} {entity.last_names}
-            </strong>
-            , detallando la fecha exacta y el administrador o docente que
-            autorizó cada cambio.
+            {entityRoleLabel}, detallando el administrador o
+            docente que autorizó cada cambio.
           </Text>
         </div>
       </div>
 
-      <Text variant="small" tone="secondary">
-        Solo se muestran eventos persistidos; no se reconstruyen cambios
-        anteriores. Los nombres de responsables y exámenes corresponden a sus
-        registros actuales.
-      </Text>
       <DataCardGrid
         fields={cardFields}
+        getCardConfig={(item) => {
+          const isCurrentRole = item.roleCode === entity.role
+          const { date, time } = splitDateAndTime(item.changedAt)
+          return {
+            headerIcon: <Icon icon={UserCheck} size="md" />,
+            badgeLabel: isCurrentRole ? 'Activo' : 'Inactivo',
+            badgeTone: isCurrentRole ? 'success' : 'neutral',
+            badgeIcon: (
+              <Icon icon={isCurrentRole ? CheckCircle2 : History} size="sm" />
+            ),
+            title: `Rol asignado: ${item.roleLabel}`,
+            headline: { label: 'Autorizado por', value: item.authorizedByName },
+            primaryMeta: {
+              label: 'Rol autorizador',
+              value: item.authorizedByRole,
+            },
+            splitPosition: 'afterMeta',
+            splitLeft: { label: 'Fecha', value: date },
+            splitRight: { label: 'Hora', value: time },
+          }
+        }}
         data={filteredRoleLogs}
         loading={records.loading}
         error={records.error}
@@ -134,11 +163,9 @@ export function RoleHistoryTab({ entity }: ProfileTabComponentProps) {
         pageSize={10}
         labelWidth="92px"
         entityLabel="registros de rol"
-        searchPlaceholder="Buscar por código de acción registrado (USER_ROLE, EXAM_COLLABORATOR...)"
-        onSearch={setSearchQuery}
         emptyTitle="Sin cambios de rol registrados"
         emptyDescription="No hay eventos conservados para esta consulta. No se reconstruyen asignaciones anteriores sin auditoría."
       />
-    </Card>
+    </Stack>
   )
 }

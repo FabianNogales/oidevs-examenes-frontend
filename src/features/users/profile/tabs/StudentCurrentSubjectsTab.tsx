@@ -4,7 +4,7 @@ import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
-import { Card, Heading, Text } from '@/shared/components/ui/index'
+import { Stack, Text } from '@/shared/components/ui/index'
 import { useProfileRecords } from '../hooks/useProfileRecords'
 import { ProfileActiveTermBadge } from '../components/ProfileActiveTermBadge'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
@@ -82,16 +82,12 @@ export function StudentCurrentSubjectsTab({
   )
 
   return (
-    <Card as="section" className={layoutStyles.sectionCard}>
+    <Stack direction="vertical" gap="4">
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <Heading level={2}>Materias actuales</Heading>
-          <Text variant="small" tone="secondary">
-            Asignaturas en las que{' '}
-            <strong>
-              {entity.first_names} {entity.last_names}
-            </strong>{' '}
-            se encuentra inscrito durante el periodo académico activo.
+          <Text variant="body" tone="primary">
+            Asignaturas en las que el estudiante se encuentra inscrito durante
+            el periodo académico actual.
           </Text>
         </div>
         <ProfileActiveTermBadge
@@ -102,6 +98,15 @@ export function StudentCurrentSubjectsTab({
 
       <DataCardGrid
         fields={cardFields}
+        getCardConfig={(item) => ({
+          badgeLabel: 'MATERIA',
+          title: item.subjectName,
+          headline: { label: 'Código', value: item.subjectCode },
+          splitLeft: { label: 'Grupo', value: `Grupo ${item.groupCode}` },
+          splitRight: { label: 'Gestión', value: item.academicTerm },
+          primaryMeta: { label: 'Docente', value: item.teacherFullName },
+          secondaryMeta: { label: 'Correo', value: item.teacherEmail },
+        })}
         data={filteredSubjects}
         loading={records.loading}
         error={records.error}
@@ -111,11 +116,11 @@ export function StudentCurrentSubjectsTab({
         pageSize={10}
         labelWidth="92px"
         entityLabel="materias inscritas"
-        searchPlaceholder="Buscar por materia, codigo, docente o gestion..."
+        searchPlaceholder="Buscar por materia, código o docente"
         onSearch={setSearchQuery}
         emptyTitle="Sin materias inscritas en la gestión actual"
         emptyDescription="El estudiante no registra inscripciones activas o no existen coincidencias con la búsqueda."
       />
-    </Card>
+    </Stack>
   )
 }

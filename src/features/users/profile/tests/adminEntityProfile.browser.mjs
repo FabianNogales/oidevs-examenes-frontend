@@ -196,8 +196,8 @@ try {
       if (page.sidebar.count < 3 || page.sidebar.problems.length) problems.push('barra lateral: ' + JSON.stringify(page.sidebar))
       if (page.banner.problems.length || page.banner.badges < 2 || page.banner.stacked !== (width < 480)) problems.push('cabecera del perfil: ' + JSON.stringify(page.banner))
       const crumbs = await evaluate(inspectCrumbs)
-      if (!crumbs || crumbs.navs !== 1 || !crumbs.inside || JSON.stringify(crumbs.items) !== JSON.stringify(profile.crumbs) || crumbs.current !== profile.crumbs.at(-1)[0])
-        problems.push('migas: ' + JSON.stringify(crumbs))
+      if (crumbs !== null)
+        problems.push('migas inesperadas: ' + JSON.stringify(crumbs))
       if (width === 390 || width === 1440) {
         const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
         await writeFile(join(evidence, `${profile.name.replaceAll(' ', '-')}-${width}.png`), Buffer.from(shot.data, 'base64'))
@@ -212,13 +212,10 @@ try {
       // "Regresar" goes back to the module list.
       await clickText('Regresar')
       await wait(`window.__router.state.location.pathname===${JSON.stringify(profile.back)}`, `${profile.name}: Regresar`)
-      // G7: the module breadcrumb leads to the same list; the breadcrumbs stay when the tab changes.
       await evaluate(`window.__router.navigate(${JSON.stringify(profile.path + '?tab=editar')})`)
-      await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(profile.fullName)}&&!!document.querySelector('main nav[aria-label="Ruta de navegación"] a')`, `${profile.name}: migas tras cambiar de pestaña`)
+      await wait(`document.querySelector('h1')?.textContent.trim()===${JSON.stringify(profile.fullName)}`, `${profile.name}: carga con otra pestaña`)
       const tabCrumbs = await evaluate(inspectCrumbs)
-      if (JSON.stringify(tabCrumbs?.items) !== JSON.stringify(profile.crumbs)) problems.push('migas con otra pestaña: ' + JSON.stringify(tabCrumbs))
-      await evaluate(`[...document.querySelectorAll('main nav[aria-label="Ruta de navegación"] a')].find(a=>a.textContent.trim()===${JSON.stringify(profile.crumbs[1][0])}).click()`)
-      await wait(`window.__router.state.location.pathname===${JSON.stringify(profile.back)}`, `${profile.name}: miga del módulo`)
+      if (tabCrumbs !== null) problems.push('migas con otra pestaña: ' + JSON.stringify(tabCrumbs))
       if (problems.length) failures.push(`${profile.name} ${width}px: ${problems.join(' · ')}`)
       console.log(`${problems.length ? 'FAIL' : 'PASS'} perfil ${profile.name} ${width}px${problems.length ? ': ' + problems.join(' · ') : ''}`)
     }

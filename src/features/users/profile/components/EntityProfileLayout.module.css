@@ -117,8 +117,9 @@
 .mainArea {
   gap: var(--space-6);
   padding: var(--space-8) var(--space-8);
-  max-width: var(--content-max-width);
+  max-width: none;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -454,7 +455,6 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
 }
 
 .sectionTitleGroup {
@@ -470,8 +470,8 @@
 
 .sectionTitleGroup p {
   margin: 0;
-  color: var(--color-text-secondary);
-  font: var(--type-small);
+  color: var(--color-text-primary);
+  font: var(--type-body);
 }
 
 /* ==========================================================================
@@ -482,7 +482,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1);
-  background: var(--color-background);
+  background: var(--color-surface-soft);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
@@ -644,11 +644,6 @@
     border-bottom: 1px solid var(--color-border);
   }
 
-  .infoGrid,
-  .editForm {
-    grid-template-columns: 1fr;
-  }
-
   .mainArea {
     padding: var(--space-6) var(--space-4);
   }
@@ -656,6 +651,13 @@
   .banner,
   .sectionCard {
     padding: var(--space-5);
+  }
+}
+
+@media (max-width: 768px) {
+  .infoGrid,
+  .editForm {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

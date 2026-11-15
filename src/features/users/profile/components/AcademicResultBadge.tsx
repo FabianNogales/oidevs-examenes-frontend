@@ -10,7 +10,7 @@ export function AcademicResultBadge({ result }: { result: AcademicResult }) {
   if (result !== 'APPROVED' && result !== 'FAILED') {
     return (
       <Text as="span" variant="small" tone="secondary">
-        Información no disponible: sin resultado registrado
+        Sin resultado registrado
       </Text>
     )
   }
