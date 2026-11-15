@@ -34,7 +34,8 @@ export interface HeaderNavigationProps {
 export interface HeaderAccountProps {
   user?: HeaderUser | null
   notifications?: ReactNode
-  onLogout?: () => void | Promise<void>
+  /** Abre la confirmación de cierre de sesión (la gestiona Header). */
+  onLogoutRequest?: () => void
   isLoggingOut?: boolean
   accountOpen?: boolean
   onAccountOpenChange?: (open: boolean) => void

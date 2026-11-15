@@ -1,5 +1,7 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { NavLink } from 'react-router'
+import { Bell, ChevronDown, LogOut } from 'lucide-react'
+import { Avatar, Button, Card } from '@/shared/components/ui'
 import { roleLabelByRole } from './headerNavigation.config'
 import type { HeaderAccountProps } from './header.types'
 import styles from './Header.module.css'
@@ -7,12 +9,11 @@ import styles from './Header.module.css'
 export function HeaderAccount({
   user,
   notifications,
-  onLogout,
+  onLogoutRequest,
   isLoggingOut = false,
   accountOpen = false,
   onAccountOpenChange,
 }: HeaderAccountProps) {
-  const [logoutError, setLogoutError] = useState<string | null>(null)
   const accountButton = useRef<HTMLButtonElement>(null)
 
   if (!user) {
@@ -33,16 +34,9 @@ export function HeaderAccount({
     onAccountOpenChange?.(!accountOpen)
   }
 
-  async function handleLogout() {
-    if (!onLogout || isLoggingOut) return
-    setLogoutError(null)
-    try {
-      await onLogout()
-    } catch {
-      setLogoutError('No se pudo cerrar sesión. Intenta nuevamente.')
-      return
-    }
+  function requestLogout() {
     closeAccount()
+    onLogoutRequest?.()
   }
 
   return (
@@ -68,18 +62,12 @@ export function HeaderAccount({
           aria-expanded={accountOpen}
           onClick={toggleAccount}
         >
-          <span className={styles.avatar} aria-hidden="true">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--color-text-primary)"
-              strokeWidth="1.5"
-              focusable="false"
-            >
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
-            </svg>
-          </span>
+          <Avatar
+            name={user.name}
+            size="md"
+            className={styles.avatar}
+            aria-hidden="true"
+          />
 
           <span className={styles.userDetails}>
             <span className={styles.userName}>{user.name}</span>
@@ -87,39 +75,30 @@ export function HeaderAccount({
             <span className={styles.userRole}>{roleLabel}</span>
           </span>
 
-          <svg
-            className={styles.chevron}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--color-text-secondary)"
-            strokeWidth="1.8"
+          <ChevronDown
+            className={`${styles.chevron} ${accountOpen ? styles.chevronOpen : ''}`}
             aria-hidden="true"
-          >
-            <path d={accountOpen ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'} />
-          </svg>
+          />
         </button>
 
         {accountOpen && (
-          <div className={`${styles.accountDropdown} flat2-card`} role="menu">
+          <Card padding="sm" className={styles.accountDropdown} role="menu">
             <div className={styles.accountSummary}>
               <strong>{user.name}</strong>
               <span>{roleLabel}</span>
             </div>
-            {logoutError && (
-              <p className={styles.logoutError} role="alert">
-                {logoutError}
-              </p>
-            )}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               role="menuitem"
               className={styles.logoutButton}
-              disabled={!onLogout || isLoggingOut}
-              onClick={() => void handleLogout()}
+              disabled={!onLogoutRequest || isLoggingOut}
+              onClick={requestLogout}
             >
-              {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
-            </button>
-          </div>
+              <LogOut aria-hidden="true" className={styles.logoutIcon} />
+              <span>{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</span>
+            </Button>
+          </Card>
         )}
       </div>
     </div>
@@ -128,27 +107,17 @@ export function HeaderAccount({
 export function HeaderNotifications({ notifications }: Pick<HeaderAccountProps, 'notifications'>) {
   return (
     <>
-        {notifications ?? (
-          <button
-            type="button"
-            className={styles.iconButton}
-            disabled
-            aria-label="Notificaciones no disponibles"
-            title="Notificaciones no disponibles"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--color-text-primary)"
-              strokeWidth="1.5"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" />
-              <path d="M10 21h4" />
-            </svg>
-          </button>
-        )}
+      {notifications ?? (
+        <Button
+          variant="secondary"
+          className={styles.iconButton}
+          disabled
+          aria-label="Notificaciones no disponibles"
+          title="Notificaciones no disponibles"
+        >
+          <Bell aria-hidden="true" />
+        </Button>
+      )}
     </>
   )
 }
