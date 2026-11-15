@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
+import { Mail } from 'lucide-react'
 import { forgotPassword } from '@/features/auth/api/authApi'
 import { AuthField } from '@/features/auth/components/AuthField'
-import { UserIcon } from '@/features/auth/components/AuthIcons'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   getApiFieldErrors,
@@ -80,7 +80,7 @@ export function ForgotPasswordForm() {
         disabled={isSubmitting}
         onChange={(event) => updateEmail(event.target.value)}
         onBlur={() => setHasInteracted(true)}
-        icon={<UserIcon />}
+        icon={<Mail aria-hidden="true" />}
         placeholder="usuario@umss.edu.bo"
         required
       />

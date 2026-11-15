@@ -1,55 +1,53 @@
-import eidaLogo from '@/assets/images/eida-logo.svg'
-import {
-  BoltIcon,
-  ShieldIcon,
-  UsersIcon,
-} from '@/features/auth/components/AuthIcons'
+import { ShieldCheck, Users, Zap } from 'lucide-react'
+import { EidaLogo } from '@/assets/icons/EidaLogo'
+import { Heading, Text } from '@/shared/components/ui'
 
 const BENEFITS = [
   {
     title: 'Seguro',
     description: 'Protegemos tu información.',
-    icon: <ShieldIcon />,
+    icon: <ShieldCheck aria-hidden="true" />,
     tone: 'secure',
   },
   {
     title: 'Confiable',
     description: 'Respaldado por la UMSS.',
-    icon: <UsersIcon />,
+    icon: <Users aria-hidden="true" />,
     tone: 'trusted',
   },
   {
     title: 'Ágil',
     description: 'Accede rápidamente a tus herramientas.',
-    icon: <BoltIcon />,
+    icon: <Zap aria-hidden="true" />,
     tone: 'fast',
   },
 ]
 
-export function AuthInfoPanel() {
+type AuthInfoPanelProps = {
+  isPasswordVisible?: boolean
+}
+
+export function AuthInfoPanel({ isPasswordVisible = false }: AuthInfoPanelProps) {
   return (
     <section className="auth-info" aria-labelledby="auth-info-title">
       <div className="auth-info__content">
         <div className="auth-info__brand">
-          <img
+          <EidaLogo
             className="auth-info__brand-logo"
-            src={eidaLogo}
-            alt="Logo EIDA"
-            width={48}
-            height={48}
+            lookRight={isPasswordVisible}
+            aria-hidden="true"
           />
           <div className="auth-info__brand-text">
-            <strong>EIDA</strong>
-            <span>Escáner de Identidad Digital Ágil</span>
+            <Heading level={2}>EIDA</Heading>
+            <Text as="span" variant="body" tone="secondary">
+              Escáner de Identidad Digital Ágil
+            </Text>
           </div>
         </div>
-        <h1 id="auth-info-title">
+        <Heading level={1} id="auth-info-title">
           Sistema de Control
           <span>de Exámenes Masivos</span>
-        </h1>
-        <p className="auth-info__summary">
-          Acceso seguro para estudiantes, docentes y personal autorizado.
-        </p>
+        </Heading>
 
         <ul className="auth-info__benefits" aria-label="Beneficios">
           {BENEFITS.map((benefit) => (
@@ -59,9 +57,13 @@ export function AuthInfoPanel() {
               >
                 {benefit.icon}
               </span>
-              <span>
-                <strong>{benefit.title}</strong>
-                <small>{benefit.description}</small>
+              <span className="auth-info__benefit-text">
+                <Text as="strong" variant="body" weight="semibold">
+                  {benefit.title}
+                </Text>
+                <Text as="span" variant="small" tone="secondary">
+                  {benefit.description}
+                </Text>
               </span>
             </li>
           ))}
@@ -69,10 +71,14 @@ export function AuthInfoPanel() {
 
         <div className="auth-info__academic">
           <span aria-hidden="true" />
-          <p>
-            <strong>Gestión académica</strong>
-            para un futuro con más oportunidades.
-          </p>
+          <div className="auth-info__academic-text">
+            <Text as="strong" variant="body" weight="semibold">
+              Gestión académica
+            </Text>
+            <Text as="span" variant="small" tone="secondary">
+              para un futuro con más oportunidades.
+            </Text>
+          </div>
         </div>
       </div>
 

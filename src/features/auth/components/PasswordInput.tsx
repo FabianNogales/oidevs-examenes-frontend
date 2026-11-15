@@ -1,8 +1,4 @@
-import {
-  EyeIcon,
-  EyeOffIcon,
-  LockIcon,
-} from '@/features/auth/components/AuthIcons'
+import { Eye, EyeOff, Lock } from 'lucide-react'
 import { AuthField } from '@/features/auth/components/AuthField'
 
 type PasswordInputProps = {
@@ -45,7 +41,7 @@ export function PasswordInput({
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
       onBlur={onBlur}
-      icon={<LockIcon />}
+      icon={<Lock aria-hidden="true" />}
       action={
         <button
           className="auth-field__icon-button"
@@ -55,7 +51,7 @@ export function PasswordInput({
           aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           aria-pressed={isVisible}
         >
-          {isVisible ? <EyeOffIcon /> : <EyeIcon />}
+          {isVisible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
         </button>
       }
       required

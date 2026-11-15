@@ -1,10 +1,14 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { Bell, LogOut, Menu, X } from 'lucide-react'
 
-import { HeaderAccount, HeaderNotifications } from './HeaderAccount'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
+import { Avatar } from '@/shared/components/ui'
+
+import { HeaderAccount } from './HeaderAccount'
 import { HeaderLogo } from './HeaderLogo'
 import { HeaderAcademicTermsLink } from './HeaderAcademicTermsLink'
 import { HeaderNavigation } from './HeaderNavigation'
-import { getHeaderNavigation } from './headerNavigation.config'
+import { getHeaderNavigation, roleLabelByRole } from './headerNavigation.config'
 
 import type { HeaderProps } from './header.types'
 
@@ -19,6 +23,8 @@ export function Header({
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+  const [logoutError, setLogoutError] = useState<string | null>(null)
 
   const navigationId = useId()
   const menuButton = useRef<HTMLButtonElement>(null)
@@ -110,6 +116,30 @@ export function Header({
     setAccountOpen(open)
   }
 
+  function requestLogout() {
+    closeMenus()
+    setLogoutError(null)
+    setLogoutConfirmOpen(true)
+  }
+
+  function cancelLogout() {
+    if (isLoggingOut) return
+    setLogoutConfirmOpen(false)
+    setLogoutError(null)
+  }
+
+  async function confirmLogout() {
+    if (!onLogout || isLoggingOut) return
+    setLogoutError(null)
+    try {
+      await onLogout()
+    } catch {
+      setLogoutError('No se pudo cerrar sesión. Intenta nuevamente.')
+      return
+    }
+    setLogoutConfirmOpen(false)
+  }
+
   return (
     <header
       ref={headerRef}
@@ -130,7 +160,7 @@ export function Header({
         <HeaderAccount
           user={user}
           notifications={smallScreen ? <></> : notifications}
-          onLogout={onLogout}
+          onLogoutRequest={onLogout ? requestLogout : undefined}
           isLoggingOut={isLoggingOut}
           accountOpen={accountOpen}
           onAccountOpenChange={handleAccountOpenChange}
@@ -149,22 +179,7 @@ export function Header({
           }
           onClick={toggleMenu}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path
-              d={
-                menuOpen
-                  ? 'M6 6l12 12M6 18 18 6'
-                  : 'M4 6h16M4 12h16M4 18h16'
-              }
-            />
-          </svg>
+          {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
       </div>
 
@@ -175,17 +190,62 @@ export function Header({
         className={styles.navigation}
         data-open={menuOpen}
       >
+        {user ? (
+          <div className={styles.mobileProfile}>
+            <Avatar
+              name={user.name}
+              size="lg"
+              className={styles.mobileProfileAvatar}
+              aria-hidden="true"
+            />
+            <span className={styles.mobileProfileDetails}>
+              <span className={styles.mobileProfileName}>{user.name}</span>
+              <span className={styles.mobileProfileRole}>
+                {user.roleLabel ?? roleLabelByRole[user.role]}
+              </span>
+            </span>
+          </div>
+        ) : null}
         <HeaderNavigation
           items={navigationItems}
           onNavigate={closeMenus}
         />
         {smallScreen && user ? (
           <div className={styles.mobileNotifications}>
-            <span>Notificaciones</span>
-            <HeaderNotifications notifications={notifications} />
+            <Bell aria-hidden="true" className={styles.navigationItemIcon} />
+            <span className={styles.navigationLabel}>Notificaciones</span>
           </div>
         ) : null}
+        {user && onLogout ? (
+          <button
+            type="button"
+            className={styles.mobileLogout}
+            disabled={isLoggingOut}
+            onClick={requestLogout}
+          >
+            <LogOut aria-hidden="true" className={styles.navigationItemIcon} />
+            <span className={styles.navigationLabel}>
+              {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+            </span>
+          </button>
+        ) : null}
       </nav>
+
+      <ConfirmDialog
+        native
+        isOpen={logoutConfirmOpen}
+        title="¿Deseas cerrar sesión?"
+        message={
+          logoutError ??
+          'Tu sesión actual se cerrará y tendrás que volver a iniciar sesión para acceder a tu cuenta.'
+        }
+        confirmLabel="Cerrar sesión"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={isLoggingOut}
+        onConfirm={() => void confirmLogout()}
+        onCancel={cancelLogout}
+      />
     </header>
   )
 }

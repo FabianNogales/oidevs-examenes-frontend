@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { ChevronDown } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 
 import type {
   HeaderNavigationItem,
   HeaderNavigationProps,
 } from './header.types'
 import { isHeaderDestinationActive } from './headerNavigationActive'
+import { getHeaderNavigationIcon } from './headerNavigationIcons'
 import styles from './Header.module.css'
 import { useStudentImportDraft } from '@/features/students/utils/studentImportDraft'
 
@@ -100,6 +101,13 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
             ),
           )
         const dropdownId = `${navigationId}-${index}`
+        const ItemIcon = getHeaderNavigationIcon(item.label)
+        const itemIcon = (
+          <ItemIcon aria-hidden="true" className={styles.navigationItemIcon} />
+        )
+        const itemArrow = (
+          <ArrowRight aria-hidden="true" className={styles.navigationArrow} />
+        )
 
         return (
           <li
@@ -123,7 +131,8 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
                   aria-expanded={openDropdown === item.label}
                   aria-controls={dropdownId}
                 >
-                  {item.label}
+                  {itemIcon}
+                  <span className={styles.navigationLabel}>{item.label}</span>
                   <ChevronDown
                     aria-hidden="true"
                     className={`${styles.dropdownIcon} ${
@@ -185,7 +194,9 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
                 }
                 onClick={onNavigate}
               >
-                {item.label}
+                {itemIcon}
+                <span className={styles.navigationLabel}>{item.label}</span>
+                {itemArrow}
               </NavLink>
             ) : (
               <span
@@ -194,8 +205,10 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
                 aria-disabled="true"
                 title="Próximamente"
               >
-                {item.label}
+                {itemIcon}
+                <span className={styles.navigationLabel}>{item.label}</span>
                 <span className={styles.srOnly}> (próximamente)</span>
+                {itemArrow}
               </span>
             )}
           </li>

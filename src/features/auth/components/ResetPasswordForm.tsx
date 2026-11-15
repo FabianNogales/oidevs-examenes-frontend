@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
+import { Mail } from 'lucide-react'
 import { resetPassword } from '@/features/auth/api/authApi'
 import { AuthField } from '@/features/auth/components/AuthField'
-import { UserIcon } from '@/features/auth/components/AuthIcons'
 import { PasswordInput } from '@/features/auth/components/PasswordInput'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
@@ -92,7 +92,7 @@ export function ResetPasswordForm() {
         error={fieldErrors.email}
         disabled={isSubmitting}
         onChange={(event) => updateField('email', event.target.value)}
-        icon={<UserIcon />}
+        icon={<Mail aria-hidden="true" />}
         placeholder="usuario@umss.edu.bo"
         required
       />

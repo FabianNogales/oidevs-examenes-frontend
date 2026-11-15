@@ -134,7 +134,7 @@
   width: var(--button-height);
   min-height: var(--button-height);
 
-  padding: var(--space-2);
+  padding: 0;
 
   border: 1px solid var(--color-border);
   border-radius: var(--button-radius);
@@ -142,6 +142,13 @@
   color: var(--color-primary);
 
   background: var(--color-surface);
+
+  cursor: pointer;
+
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .iconButton:hover:not(:disabled) {
@@ -156,15 +163,27 @@
   color: var(--color-primary-active);
 }
 
-.iconButton:disabled {
-  color: var(--color-text-muted);
+.iconButton:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
 
-  opacity: 0.65;
+.account .iconButton {
+  width: var(--button-height);
+  min-height: var(--button-height);
+  padding: 0;
+  border-radius: var(--button-radius);
+}
+
+.account .iconButton:disabled {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-disabled-background);
 }
 
 .iconButton svg {
-  width: var(--space-6);
-  height: var(--space-6);
+  width: 20px;
+  height: 20px;
 }
 
 /* ==================================================
@@ -192,26 +211,40 @@
   min-width: 0;
   min-height: var(--button-height);
 
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
 
   border: 1px solid transparent;
   border-radius: var(--radius-md);
 
-  color: var(--color-text);
+  color: var(--color-text-primary);
 
   background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .userButton:hover {
-  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  background: var(--color-accent-soft);
 
-  border-color: var(--color-border);
+  border-color: var(--color-decorative);
 }
 
 .userButton[aria-expanded='true'] {
   background: var(--color-surface);
 
-  border-color: var(--color-primary);
+  border-color: var(--color-accent);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.userButton:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 
 /* ==================================================
@@ -219,24 +252,7 @@
    ================================================== */
 
 .avatar {
-  display: grid;
-  place-items: center;
-
   flex-shrink: 0;
-
-  width: var(--button-height);
-  height: var(--button-height);
-
-  border-radius: var(--radius-pill);
-
-  color: var(--color-primary);
-
-  background: var(--color-surface);
-}
-
-.avatar svg {
-  width: var(--space-6);
-  height: var(--space-6);
 }
 
 /* ==================================================
@@ -256,10 +272,9 @@
 .userName {
   overflow: hidden;
 
-  color: var(--color-text);
+  color: var(--color-text-primary);
 
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font: var(--type-interactive);
 
   text-overflow: ellipsis;
 
@@ -269,8 +284,7 @@
 .userRole {
   color: var(--color-text-secondary);
 
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-regular);
+  font: var(--type-small);
 }
 
 .chevron {
@@ -280,6 +294,15 @@
   height: var(--space-4);
 
   color: var(--color-text-secondary);
+
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--color-accent);
 }
 
 /* ==================================================
@@ -289,49 +312,48 @@
 .accountDropdown {
   position: absolute;
 
-  top: calc(100% + var(--space-2));
+  top: calc(100% + var(--space-1));
+  left: 0;
   right: 0;
-  z-index: 60;
+  z-index: var(--z-dropdown);
 
-  display: grid;
-
+  box-sizing: border-box;
   gap: var(--space-2);
 
-  width: min(
-    240px,
-    calc(100vw - var(--space-8))
-  );
-
+  width: 100%;
   padding: var(--space-3);
-
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-
-  background: var(--color-surface);
-
-  box-shadow: var(--shadow-md);
 }
 
 .accountSummary {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 
-  padding: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-3);
 
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .accountSummary strong {
-  color: var(--color-text);
+  overflow: hidden;
 
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+
+  font: var(--type-interactive);
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .accountSummary span {
+  overflow: hidden;
+
   color: var(--color-text-secondary);
 
-  font-size: var(--font-size-xs);
+  font: var(--type-small);
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .logoutError {
@@ -339,29 +361,44 @@
 
   color: var(--color-error);
 
-  font-size: var(--font-size-xs);
+  font: var(--type-small);
 }
 
 /* ==================================================
    CERRAR SESIÓN
    ================================================== */
 
-.logoutButton {
+.accountDropdown .logoutButton {
+  justify-content: flex-start;
+
   width: 100%;
+  min-height: var(--control-height);
 
-  padding-inline: var(--space-4);
+  padding: 0 var(--space-2);
 
-  border: 1px solid transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
 
   color: var(--color-error);
 
   background: transparent;
 
+  font: var(--type-interactive);
   text-align: left;
 }
 
-.logoutButton:hover:not(:disabled) {
+.accountDropdown .logoutButton:hover:not(:disabled),
+.accountDropdown .logoutButton:active:not(:disabled) {
+  color: var(--color-error);
+
   background: var(--color-error-soft);
+}
+
+.logoutIcon {
+  flex-shrink: 0;
+
+  width: var(--space-4);
+  height: var(--space-4);
 }
 
 /* ==================================================
@@ -793,12 +830,21 @@ a.navigationLink:active {
   }
 }
 
+/* Elementos exclusivos del menú móvil: ocultos por defecto */
+.mobileProfile,
+.mobileLogout,
+.navigationItemIcon,
+.navigationArrow {
+  display: none;
+}
+
 .mobileNotifications {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-6);
-  color: var(--color-primary);
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-2);
+  color: var(--color-text-primary);
+  font: var(--type-interactive);
 }
 
 @media (min-width: 1024px) {
@@ -988,5 +1034,284 @@ button.navigationLink.active:hover {
     box-shadow: none;
     background: transparent;
     padding-left: var(--space-4);
+  }
+}
+
+/* ==================================================
+   MENÚ MÓVIL — Semi-Flat
+   Tarjeta de perfil + lista con icono, texto y flecha.
+   Solo aplica cuando el menú hamburguesa existe (< 768px).
+   ================================================== */
+
+@media (max-width: 767px) {
+  .navigation,
+  .header[data-admin='true'] .navigation {
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .navigation[data-open='true'] {
+    padding: var(--space-4);
+  }
+
+  /* El menú se despliega como una capa flotante sobre la página
+     (no empuja el contenido). El header sticky es su contenedor. */
+  .header .navigation[data-open='true'],
+  .header[data-admin='true'] .navigation[data-open='true'] {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: var(--z-dropdown);
+
+    max-height: calc(100dvh - var(--app-header-height));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    border-top: 0;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* ---------- Tarjeta de perfil ---------- */
+
+  .mobileProfile {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+
+    margin-bottom: var(--space-4);
+    padding: var(--space-4);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+
+    background: var(--gradient-surface);
+    box-shadow: var(--shadow-md);
+  }
+
+  .mobileProfileAvatar {
+    flex-shrink: 0;
+
+    border: 2px solid var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .mobileProfileDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    min-width: 0;
+  }
+
+  .mobileProfileName {
+    overflow: hidden;
+
+    color: var(--color-text-primary);
+    font: var(--type-h3);
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobileProfileRole {
+    overflow: hidden;
+
+    color: var(--color-text-secondary);
+    font: var(--type-small);
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---------- Lista ---------- */
+
+  .navigation .navigationList {
+    gap: var(--space-1);
+
+    padding: 0;
+  }
+
+  .navigation .navigationLink,
+  .navigation button.navigationLink {
+    justify-content: flex-start;
+    gap: var(--space-4);
+
+    width: 100%;
+    min-height: 48px;
+
+    padding: var(--space-3) var(--space-2);
+
+    border: 0;
+    border-radius: var(--radius-sm);
+
+    color: var(--color-text-primary);
+    background: transparent;
+
+    font: var(--type-interactive);
+    text-align: left;
+  }
+
+  .navigation a.navigationLink:hover,
+  .navigation button.navigationLink:hover {
+    color: var(--color-text-primary);
+    background: var(--color-accent-soft);
+  }
+
+  .navigation .navigationLink:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: calc(var(--focus-width) * -1);
+  }
+
+  .navigation .navigationLink.active,
+  .navigation .navigationLink.active:hover,
+  .navigation button.navigationLink.active,
+  .navigation button.navigationLink.active:hover {
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .navigation .unavailable,
+  .navigation .unavailable:hover {
+    color: var(--color-text-muted);
+    background: transparent;
+  }
+
+  .navigationLabel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .navigationItemIcon {
+    display: block;
+    flex-shrink: 0;
+
+    width: 20px;
+    height: 20px;
+
+    color: var(--color-text-primary);
+  }
+
+  .navigationArrow,
+  .navigation .dropdownIcon {
+    display: block;
+    flex-shrink: 0;
+
+    width: var(--space-4);
+    height: var(--space-4);
+    margin-left: auto;
+
+    color: var(--color-text-secondary);
+
+    transition:
+      transform var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .navigationLink:hover .navigationArrow {
+    color: var(--color-decorative);
+    transform: translateX(2px);
+  }
+
+  .navigationLink.active .navigationItemIcon,
+  .navigationLink.active .navigationArrow,
+  .navigationLink.active .dropdownIcon {
+    color: var(--color-accent);
+    stroke: currentColor;
+  }
+
+  /* ---------- Submenú (dropdown en móvil) ---------- */
+
+  .navigation .navigationDropdownMenu {
+    margin: var(--space-1) 0 var(--space-2) 17px;
+    padding: 0 0 0 var(--space-5);
+
+    border-left: 1px solid var(--color-border-strong);
+  }
+
+  .navigation .navigationDropdownItem {
+    justify-content: flex-start;
+
+    min-height: 40px;
+
+    font: var(--type-interactive);
+    text-align: left;
+  }
+
+  .navigation .navigationDropdownItem:hover {
+    background: var(--color-accent-soft);
+  }
+
+  /* ---------- Notificaciones ---------- */
+
+  .mobileNotifications {
+    margin-top: var(--space-2);
+    padding-top: var(--space-4);
+
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ---------- Cuenta en la barra superior ----------
+     En móvil el nombre y el dropdown se reemplazan por la
+     tarjeta de perfil y el botón "Cerrar sesión" del menú. */
+
+  .accountMenu {
+    display: none;
+  }
+
+  /* ---------- Cerrar sesión (final del menú) ---------- */
+
+  .mobileLogout {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+
+    width: 100%;
+    min-height: 48px;
+
+    margin-top: var(--space-2);
+    padding: var(--space-3) var(--space-2);
+
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+
+    color: var(--color-error);
+    background: transparent;
+
+    font: var(--type-interactive);
+    text-align: left;
+
+    cursor: pointer;
+
+    transition: background-color var(--transition-fast);
+  }
+
+  /* Si no hay notificaciones encima, el separador ya lo aporta el botón */
+  .mobileNotifications + .mobileLogout {
+    margin-top: 0;
+  }
+
+  .mobileLogout .navigationItemIcon {
+    color: var(--color-error);
+  }
+
+  .mobileLogout:hover:not(:disabled) {
+    border-radius: var(--radius-sm);
+
+    background: var(--color-error-soft);
+  }
+
+  .mobileLogout:focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: calc(var(--focus-width) * -1);
+  }
+
+  .mobileLogout:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
   }
 }

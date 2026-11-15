@@ -6,32 +6,46 @@
   gap: var(--space-2);
   min-height: var(--button-height);
   margin-left: auto;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-primary);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-decorative);
   border-radius: var(--button-radius);
-  color: var(--color-primary);
+  color: var(--color-accent);
   background: var(--color-surface);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
+  font: var(--type-interactive);
   text-decoration: none;
+  white-space: nowrap;
   transition:
     background-color var(--transition-fast),
-    color var(--transition-fast);
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
+
 .link svg {
-  width: 21px;
-  height: 21px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
-.link:hover,
-.active {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+
+.link:hover {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
+
+.active,
+.active:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: var(--shadow-sm);
+}
+
 .link:focus-visible {
   outline: var(--focus-width) solid var(--color-focus);
   outline-offset: var(--focus-offset);
 }
+
 @media (max-width: 1023px) {
   .link {
     order: 4;

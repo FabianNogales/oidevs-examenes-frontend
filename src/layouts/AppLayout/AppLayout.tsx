@@ -41,7 +41,7 @@ function AppLayoutContent() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { logout, user, isLoading, isLoggingOut } = useAuth()
+  const { logout, user, isLoading, isLoggingOut, notify } = useAuth()
   const { collaborations } = useMyCollaborations()
   const inCollaboratorContext =
     /^\/collaborator\/?$/.test(location.pathname) ||
@@ -94,6 +94,8 @@ function AppLayoutContent() {
 
   async function handleLogout() {
     await logout()
+
+    notify('success', 'Cerraste sesión correctamente.')
 
     navigate('/login', {
       replace: true,

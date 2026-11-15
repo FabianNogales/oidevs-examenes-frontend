@@ -9,9 +9,11 @@ import type {
   HeaderRole,
   HeaderUser,
 } from '@/shared/components/Header/header.types'
+import { Card } from '@/shared/components/ui'
 
 type PublicAuthLayoutProps = {
   children: ReactNode
+  isPasswordVisible?: boolean
 }
 
 const HEADER_ROLE_BY_AUTH_ROLE: Record<AuthRole, HeaderRole> = {
@@ -22,7 +24,10 @@ const HEADER_ROLE_BY_AUTH_ROLE: Record<AuthRole, HeaderRole> = {
 
 const ROLE_PRIORITY: AuthRole[] = ['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE']
 
-export function PublicAuthLayout({ children }: PublicAuthLayoutProps) {
+export function PublicAuthLayout({
+  children,
+  isPasswordVisible = false,
+}: PublicAuthLayoutProps) {
   const { user } = useAuth()
 
   const primaryRole = user
@@ -41,10 +46,10 @@ export function PublicAuthLayout({ children }: PublicAuthLayoutProps) {
     <div className="auth-shell">
       <Header user={headerUser} navigation={publicNavigation} />
       <main className="auth-shell__body">
-        <AuthInfoPanel />
-        <section className="auth-card" aria-live="polite">
+        <AuthInfoPanel isPasswordVisible={isPasswordVisible} />
+        <Card as="section" padding="lg" className="auth-card" aria-live="polite">
           {children}
-        </section>
+        </Card>
       </main>
       <Footer />
     </div>

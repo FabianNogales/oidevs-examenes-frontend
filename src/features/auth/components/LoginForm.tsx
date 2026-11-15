@@ -1,12 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { ArrowRight, Info, Mail } from 'lucide-react'
 import { AuthField } from '@/features/auth/components/AuthField'
-import {
-  ArrowRightIcon,
-  InfoCircleIcon,
-  UserIcon,
-} from '@/features/auth/components/AuthIcons'
 import { PasswordInput } from '@/features/auth/components/PasswordInput'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
@@ -26,9 +22,14 @@ import {
   validateLoginForm,
   validatePassword,
 } from '@/features/auth/utils/authValidation'
+import { Button, Heading, Text } from '@/shared/components/ui'
 
 type LoginFieldName = keyof LoginFormValues
 type TouchedLoginFields = Partial<Record<LoginFieldName, boolean>>
+
+type LoginFormProps = {
+  onPasswordVisibilityChange?: (isVisible: boolean) => void
+}
 
 const INITIAL_VALUES: LoginFormValues = {
   identifier: '',
@@ -43,7 +44,7 @@ const FIELD_VALIDATORS: Record<
   password: validatePassword,
 }
 
-export function LoginForm() {
+export function LoginForm({ onPasswordVisibilityChange }: LoginFormProps) {
   const navigate = useNavigate()
   const { login, notify } = useAuth()
   const [values, setValues] = useState<LoginFormValues>(INITIAL_VALUES)
@@ -52,6 +53,14 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  function togglePasswordVisibility() {
+    setShowPassword((current) => {
+      const next = !current
+      onPasswordVisibilityChange?.(next)
+      return next
+    })
+  }
 
   function updateField(field: LoginFieldName, value: string) {
     const nextValues = { ...values, [field]: value }
@@ -118,14 +127,18 @@ export function LoginForm() {
   return (
     <form className="login-form" onSubmit={handleSubmit} noValidate>
       <header className="auth-card__header">
-        <h2 id="login-title">Iniciar sesión</h2>
-        <p>Ingresa con tu correo, código institucional de docente o SIS</p>
+        <Heading level={3} id="login-title">
+          Iniciar sesión
+        </Heading>
+        <Text variant="small" tone="secondary">
+          Ingresa con tu correo, código institucional
+        </Text>
       </header>
 
       <AuthField
         id="identifier"
         name="identifier"
-        label="Correo institucional / Código docente / SIS"
+        label="Correo institucional"
         type="text"
         autoComplete="username"
         value={values.identifier}
@@ -133,8 +146,8 @@ export function LoginForm() {
         disabled={isSubmitting}
         onChange={(event) => updateField('identifier', event.target.value)}
         onBlur={() => markFieldAsTouched('identifier')}
-        icon={<UserIcon />}
-        placeholder="Correo institucional, código docente o SIS"
+        icon={<Mail aria-hidden="true" />}
+        placeholder="Correo institucional o Código institucional"
         required
       />
 
@@ -148,7 +161,7 @@ export function LoginForm() {
           error={fieldErrors.password}
           disabled={isSubmitting}
           isVisible={showPassword}
-          onVisibilityChange={() => setShowPassword((isVisible) => !isVisible)}
+          onVisibilityChange={togglePasswordVisibility}
           onChange={(value) => updateField('password', value)}
           onBlur={() => markFieldAsTouched('password')}
         />
@@ -157,19 +170,24 @@ export function LoginForm() {
         </Link>
       </div>
 
-      <button className="primary-button" type="submit" disabled={isSubmitting}>
+      <Button
+        className="primary-button"
+        type="submit"
+        variant="primary"
+        loading={isSubmitting}
+      >
         <span>{isSubmitting ? 'Ingresando...' : 'Ingresar'}</span>
-        <ArrowRightIcon />
-      </button>
+        <ArrowRight aria-hidden="true" />
+      </Button>
 
       <div className="auth-card__divider" aria-hidden="true" />
 
-      <p className="auth-note">
-        <InfoCircleIcon />
-        <span>
+      <div className="auth-note">
+        <Info aria-hidden="true" />
+        <Text as="span" variant="small" tone="primary">
           Si es tu primer acceso, tu contraseña será tu carnet de identidad.
-        </span>
-      </p>
+        </Text>
+      </div>
     </form>
   )
 }
