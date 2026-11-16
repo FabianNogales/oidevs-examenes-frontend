@@ -4,7 +4,7 @@ import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
-import { Card, Heading, Text } from '@/shared/components/ui/index'
+import { Stack, Text } from '@/shared/components/ui/index'
 import { useProfileRecords } from '../hooks/useProfileRecords'
 import { AcademicResultBadge } from '../components/AcademicResultBadge'
 import type { AcademicResult } from '../components/AcademicResultBadge'
@@ -85,23 +85,28 @@ export function StudentSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
   )
 
   return (
-    <Card as="section" className={layoutStyles.sectionCard}>
+    <Stack direction="vertical" gap="4">
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <Heading level={2}>Historial de materias</Heading>
-          <Text variant="small" tone="secondary">
-            Registro histórico de asignaturas cursadas por{' '}
-            <strong>
-              {entity.first_names} {entity.last_names}
-            </strong>{' '}
-            en otras gestiones o con inscripción inactiva. No hay calificaciones
-            finales registradas en EIDA.
+          <Text variant="body" tone="primary">
+            Registro histórico de asignaturas cursadas por el estudiante en
+            otras gestiones o con inscripción inactiva.
           </Text>
         </div>
       </div>
 
       <DataCardGrid
         fields={cardFields}
+        getCardConfig={(item) => ({
+          badgeLabel: 'MATERIA',
+          title: item.subjectName,
+          headline: { label: 'Código', value: item.subjectCode },
+          splitLeft: { label: 'Grupo', value: `Grupo ${item.groupCode}` },
+          splitRight: { label: 'Gestión', value: item.academicTerm },
+          primaryMeta: { label: 'Docente', value: item.teacherFullName },
+          secondaryMeta: { label: 'Correo', value: item.teacherEmail },
+          footerExtra: <AcademicResultBadge result={item.approvalStatus} />,
+        })}
         data={filteredHistory}
         loading={records.loading}
         error={records.error}
@@ -111,11 +116,11 @@ export function StudentSubjectHistoryTab({ entity }: ProfileTabComponentProps) {
         pageSize={10}
         labelWidth="92px"
         entityLabel="materias históricas"
-        searchPlaceholder="Buscar por materia, codigo, docente o gestion..."
+        searchPlaceholder="Buscar por materia, código o docente"
         onSearch={setSearchQuery}
         emptyTitle="Sin historial académico registrado"
         emptyDescription="No se encontraron materias cursadas en gestiones pasadas con ese criterio."
       />
-    </Card>
+    </Stack>
   )
 }

@@ -4,7 +4,7 @@ import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
-import { Badge, Card, Heading, Text } from '@/shared/components/ui/index'
+import { Badge, Stack, Text } from '@/shared/components/ui/index'
 import { useProfileRecords } from '../hooks/useProfileRecords'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
@@ -101,22 +101,29 @@ export function TeacherSubjectHistoryTab({
   )
 
   return (
-    <Card as="section" className={layoutStyles.sectionCard}>
+    <Stack direction="vertical" gap="4">
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <Heading level={2}>Historial de materias dictadas</Heading>
-          <Text variant="small" tone="secondary">
-            Registro histórico de asignaturas impartidas por{' '}
-            <strong>
-              {entity.first_names} {entity.last_names}
-            </strong>{' '}
-            en gestiones académicas pasadas.
+          <Text variant="body" tone="primary">
+            Registro histórico de asignaturas impartidas por el docente en
+            gestiones académicas pasadas.
           </Text>
         </div>
       </div>
 
       <DataCardGrid
         fields={cardFields}
+        getCardConfig={(item) => ({
+          badgeLabel: 'MATERIA',
+          title: item.subjectName,
+          headline: { label: 'Código', value: item.subjectCode },
+          splitLeft: { label: 'Grupo', value: `Grupo ${item.groupCode}` },
+          splitRight: { label: 'Gestión', value: item.academicTerm },
+          primaryMeta: {
+            label: 'Carrera(s)',
+            value: item.careers.join(' - '),
+          },
+        })}
         data={filteredHistory}
         loading={records.loading}
         error={records.error}
@@ -126,11 +133,11 @@ export function TeacherSubjectHistoryTab({
         pageSize={10}
         labelWidth="92px"
         entityLabel="materias históricas"
-        searchPlaceholder="Buscar por materia, codigo, docente o gestion..."
+        searchPlaceholder="Buscar por materia, código o docente"
         onSearch={setSearchQuery}
         emptyTitle="Sin historial de materias dictadas"
         emptyDescription="No se encontraron asignaturas impartidas en gestiones anteriores con ese criterio."
       />
-    </Card>
+    </Stack>
   )
 }

@@ -15,6 +15,7 @@ import { TeacherActiveExamsTab } from '../tabs/TeacherActiveExamsTab'
 import { TeacherExamHistoryTab } from '../tabs/TeacherExamHistoryTab'
 import { CollaboratorRoleTab } from '../tabs/CollaboratorRoleTab'
 import { RoleHistoryTab } from '../tabs/RoleHistoryTab'
+import { ProfilePhotoHistoryTab } from '../tabs/ProfilePhotoHistoryTab'
 
 /** Pestañas base compartidas por todos los roles */
 const BASE_TABS: readonly ProfileTabConfig[] = [
@@ -31,6 +32,14 @@ const BASE_TABS: readonly ProfileTabConfig[] = [
     render: (props) => <ProfileEditTab {...props} />,
   },
 ]
+
+/** Historial de fotografías (solo para entidades con fotografía: estudiante y docente) */
+const PHOTO_HISTORY_TAB: ProfileTabConfig = {
+  id: 'historial-fotos',
+  label: 'Historial de fotos',
+  icon: 'photo-history',
+  render: (props) => <ProfilePhotoHistoryTab {...props} />,
+}
 
 /** Pestañas finales de roles compartidas */
 const ROLE_MANAGEMENT_TABS: readonly ProfileTabConfig[] = [
@@ -51,6 +60,7 @@ const ROLE_MANAGEMENT_TABS: readonly ProfileTabConfig[] = [
 /** 1. Configuración para ESTUDIANTE */
 const STUDENT_TABS: readonly ProfileTabConfig[] = [
   ...BASE_TABS,
+  PHOTO_HISTORY_TAB,
   {
     id: 'materias-actuales',
     label: 'Materias actuales',
@@ -69,6 +79,7 @@ const STUDENT_TABS: readonly ProfileTabConfig[] = [
 /** 2. Configuración para DOCENTE */
 const TEACHER_TABS: readonly ProfileTabConfig[] = [
   ...BASE_TABS,
+  PHOTO_HISTORY_TAB,
   {
     id: 'materias-dicta',
     label: 'Materias que dicta',

@@ -1,32 +1,35 @@
 /* ==========================================================================
-   EIDA FLAT DESIGN 2.0 — UNIVERSAL DATA CARD GRID (2 Columnas x 5 Filas)
+   EIDA FLAT DESIGN 2.0 (SEMI-FLAT) — UNIVERSAL DATA CARD GRID
+   Source of truth: docs/design-system/SKILL SEMI FLAT.md & src/assets/styles/tokens.css
    ========================================================================== */
 
 .gridContainerCard {
   --card-label-width: 96px;
   display: flex;
   flex-direction: column;
+  gap: var(--space-5);
   width: 100%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   font-family: var(--font-family);
-  overflow: hidden;
 }
 
 /* ==========================================================================
-   BARRA DE BÚSQUEDA (Idéntica a DataTable)
+   BARRA DE BÚSQUEDA (Semi-Flat Surface)
    ========================================================================== */
 .searchBar {
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-4) var(--space-5);
   gap: var(--space-3);
   width: 100%;
   background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
 }
 
 .searchInputWrapper {
@@ -36,7 +39,7 @@
   align-items: center;
   height: var(--input-height);
   padding: 0 var(--space-4);
-  gap: 10px;
+  gap: var(--space-3);
   background: var(--color-surface);
   border: 1px solid var(--color-input-border);
   border-radius: var(--input-radius);
@@ -70,6 +73,14 @@
 
 .searchInput::placeholder {
   color: var(--color-text-muted);
+}
+
+.searchCounter {
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .searchButton,
@@ -109,56 +120,275 @@
 }
 
 .searchResultBanner {
-  padding: var(--space-2) var(--space-6);
-  background: var(--color-surface-muted);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   color: var(--color-text-secondary);
   font: var(--type-small);
 }
 
 /* ==========================================================================
-   GRILLA DE TARJETAS: 2 COLUMNAS x 5 FILAS (10 ítems por página)
+   GRILLA DE TARJETAS RESPONSIVA (Desktop: 2 por fila | Móvil: 1 por fila)
    ========================================================================== */
 .cardsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px var(--space-5);
-  padding: var(--space-5) var(--space-6);
-  background: var(--color-surface-muted);
+  gap: var(--space-6);
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  box-sizing: border-box;
 }
 
+/* ==========================================================================
+   TARJETA TIPO FICHA SEMI-FLAT CON PESTAÑA SUPERIOR Y BADGE EN MUESCA
+   ========================================================================== */
 .cardItem {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  transition: transform var(--transition-fast);
+}
+
+.cardItem:hover {
+  transform: translateY(-2px);
+}
+
+.cardItem:hover .cardTopTab,
+.cardItem:hover .cardBodySurface {
+  border-color: var(--color-border-strong);
+}
+
+.cardItem:hover .cardBodySurface {
+  box-shadow: var(--shadow-lg);
+}
+
+.cardTopRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.cardTopTab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5) var(--space-2) var(--space-6);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  transition: border-color var(--transition-fast);
+}
+
+/* Curva cóncava suave que une la pestaña superior con el cuerpo de la tarjeta */
+.cardTopTab::after {
+  content: '';
+  position: absolute;
+  right: -16px;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent 15px,
+    var(--color-border) 15px,
+    var(--color-border) 16px,
+    var(--color-surface) 16px
+  );
+  pointer-events: none;
+}
+
+.cardItem:hover .cardTopTab::after {
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent 15px,
+    var(--color-border-strong) 15px,
+    var(--color-border-strong) 16px,
+    var(--color-surface) 16px
+  );
+}
+
+.cardSubjectIconBox {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-info-soft);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.cardHeaderTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font: var(--type-h3);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cardBadgeSlot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--space-1) 0 var(--space-2) var(--space-4);
+}
+
+.cardCategoryPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  color: var(--color-on-accent);
+  font: var(--type-small);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.cardCategoryPillSuccess {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--color-on-primary);
+}
+
+.cardCategoryPillNeutral {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+.cardBodySurface {
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
+  flex: 1;
+  margin-top: -1px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
+  position: relative;
+  z-index: 1;
   transition:
-    transform var(--transition-fast),
     box-shadow var(--transition-fast),
     border-color var(--transition-fast);
 }
 
-.cardItem:hover {
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
+.cardMainContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6) var(--space-5);
 }
 
+.cardCodeHeadline {
+  margin: 0;
+  color: var(--color-text-primary);
+  font: var(--type-body);
+  overflow-wrap: anywhere;
+}
+
+.cardSplitRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.cardSplitCol {
+  min-width: 0;
+  color: var(--color-text-primary);
+  font: var(--type-body);
+  overflow-wrap: anywhere;
+}
+
+.cardSplitLabel,
+.cardMetaLabel {
+  color: var(--color-text-primary);
+  font: var(--type-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.cardSplitValue,
+.cardMetaValue {
+  color: var(--color-text-primary);
+  font: var(--type-body);
+}
+
+.cardSplitDivider {
+  width: 1px;
+  height: 100%;
+  min-height: 24px;
+  background: var(--color-border);
+  align-self: stretch;
+}
+
+.cardPrimaryMeta {
+  color: var(--color-text-primary);
+  font: var(--type-body);
+  overflow-wrap: anywhere;
+}
+
+.cardFooterBand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: color-mix(in srgb, var(--color-border-soft) 55%, var(--color-surface));
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.cardFooterMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.cardFooterText {
+  color: var(--color-text-primary);
+  font: var(--type-body);
+  overflow-wrap: anywhere;
+}
+
+.cardFooterExtra {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ==========================================================================
+   CLASES UTILITARIAS LEGADAS (Compatibilidad con celdas declarativas)
+   ========================================================================== */
 .cardFieldsList {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
 
-/*
-  ALINEACIÓN HASTA LA LÍNEA ROJA:
-  La columna de la etiqueta tiene un ancho compacto fijo (por defecto 96px)
-  para que el contenido de la derecha comience exactamente en la línea roja.
-  Las filas de campos y el pie de acciones comparten la misma estructura.
-*/
 .fieldRow,
 .cardActionsRow {
   display: grid;
@@ -193,7 +423,6 @@
   overflow-wrap: break-word;
 }
 
-/* Bloques de ancho completo como "Grupo 1" o "II/2026" */
 .fullWidthPillGray,
 .fullWidthPillBlue,
 .fullWidthPillBlueCentered {
@@ -225,12 +454,10 @@
   justify-content: flex-start;
 }
 
-/* Centra el texto también en el bloque azul de Gestión */
 .fullWidthPillBlueCentered {
   justify-content: center;
 }
 
-/* Contenedor para mostrar dos datos cortos (ej. Grupo y Gestión) en la misma fila */
 .inlinePairedRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -322,7 +549,7 @@
 }
 
 /* ==========================================================================
-   PAGINADOR (Mismo diseño exacto que DataTable)
+   PAGINADOR (Semi-Flat Surface)
    ========================================================================== */
 .paginationFooter {
   display: flex;
@@ -330,9 +557,12 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 14px var(--space-6);
+  padding: 14px var(--space-5);
   background: var(--color-surface);
-  border-top: 1px solid var(--color-border-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
 }
 
 .paginationSummary {
@@ -395,6 +625,9 @@
   padding: var(--space-10) var(--space-5);
   text-align: center;
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .spinner {
@@ -423,7 +656,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin: var(--space-4) var(--space-6);
   padding: 14px 18px;
   border: 1px solid var(--color-decorative);
   border-radius: var(--radius-md);
@@ -447,11 +679,13 @@
   }
 }
 
-/* En pantallas menores a 900px pasa a 1 columna manteniendo la alineación interna */
-@media (max-width: 900px) {
+/* ==========================================================================
+   RESPONSIVE: MÓVIL (1 TARJETA POR FILA) Y TABLET
+   ========================================================================== */
+@media (max-width: 768px) {
   .cardsGrid {
-    grid-template-columns: 1fr;
-    padding: var(--space-4);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
   }
 
   .searchBar {
@@ -472,10 +706,34 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
+    padding: var(--space-4);
   }
 
   .paginationControls {
     width: 100%;
     justify-content: space-between;
+  }
+}
+
+@media (max-width: 520px) {
+  .cardTopTab {
+    padding: var(--space-3) var(--space-4) var(--space-2);
+  }
+
+  .cardBadgeSlot {
+    padding-left: var(--space-2);
+  }
+
+  .cardCategoryPill {
+    padding: var(--space-1) var(--space-3);
+    min-height: 34px;
+  }
+
+  .cardMainContent {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+
+  .cardFooterBand {
+    padding: var(--space-3) var(--space-4);
   }
 }

@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
-import { Breadcrumb, LoadingState } from '@/shared/components/ui/index'
+import { LoadingState } from '@/shared/components/ui/index'
 
 import { EntityProfileLayout } from '@/features/users/profile/components/EntityProfileLayout'
 import layoutStyles from '@/features/users/profile/components/EntityProfileLayout.module.css'
 import { EntityProfileError } from '@/features/users/profile/components/EntityProfileError'
+import { buildProfilePhotoHistory } from '@/features/users/profile/utils/buildProfilePhotoHistory'
 import {
   getProfileTabs,
   getBackRouteByContext,
-  getProfileBreadcrumbs,
 } from '@/features/users/profile/config/profileTabs.registry'
 import type {
   EditableEntityValues,
@@ -38,6 +38,9 @@ function mapTeacherToUnifiedProfile(data: Teacher): UnifiedEntityProfile {
     email: data.email ?? '',
     status: data.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
     role: 'TEACHER',
+    photos: buildProfilePhotoHistory({
+      current: { url: data.profile_photo_url },
+    }),
   }
 }
 
@@ -158,6 +161,7 @@ export function AdminTeacherDetailPage({
   return (
     <EntityProfileLayout
       initials={initials}
+      photoUrl={teacher.profile_photo_url ?? null}
       fullName={fullName}
       role={unifiedEntity.role}
       isActive={unifiedEntity.status === 'ACTIVE'}
@@ -166,7 +170,6 @@ export function AdminTeacherDetailPage({
       onOptionChange={handleOptionChange}
       onBack={() => navigate(backRoute)}
     >
-      <Breadcrumb items={getProfileBreadcrumbs(moduleContext)} />
       {currentTabConfig.render({
         entity: unifiedEntity,
         moduleContext,

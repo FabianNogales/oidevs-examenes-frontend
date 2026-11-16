@@ -8,6 +8,7 @@ export interface Teacher {
   last_names: string
   email: string
   status: TeacherStatus
+  profile_photo_url?: string | null
 }
 
 export interface TeacherFormValues {

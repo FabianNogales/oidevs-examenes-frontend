@@ -7,6 +7,7 @@ import {
   FileText,
   History,
   IdCard,
+  Images,
   Info,
   Landmark,
   Mail,
@@ -29,6 +30,7 @@ import {
   type BadgeTone,
   type IconComponentType,
 } from '@/shared/components/ui/index'
+import { useAuthenticatedImage } from '@/shared/hooks/useAuthenticatedImage'
 import type {
   EntityInfoCard,
   EntityRole,
@@ -44,6 +46,7 @@ export interface EntitySidebarOption {
 
 interface EntityProfileLayoutProps {
   initials: string
+  photoUrl?: string | null
   fullName: string
   role: EntityRole
   isActive: boolean
@@ -92,6 +95,7 @@ const PROFILE_ICON_MAP: Record<ProfileIconName, IconComponentType> = {
   mail: Mail,
   info: Info,
   'id-card': IdCard,
+  'photo-history': Images,
 }
 
 export function ProfileIcon({
@@ -153,6 +157,7 @@ const ENTITY_NAME_ID = 'entity-profile-name'
 
 export function EntityProfileLayout({
   initials,
+  photoUrl,
   fullName,
   role,
   isActive,
@@ -163,6 +168,7 @@ export function EntityProfileLayout({
   children,
 }: EntityProfileLayoutProps) {
   const roleTheme = ROLE_DISPLAY_CONFIG[role]
+  const photo = useAuthenticatedImage(photoUrl)
 
   return (
     <div className={styles.layoutWrapper}>
@@ -214,6 +220,8 @@ export function EntityProfileLayout({
           }`}
         >
           <Avatar
+            src={photo.src}
+            alt={`Foto de perfil de ${fullName}`}
             initials={initials}
             size="lg"
             className={`${styles.avatarCircle} ${roleTheme.avatarClass}`}

@@ -65,9 +65,47 @@ export interface CardActionDef<T extends BaseTableEntity> {
   onClick: (item: T, routeContext: RouteAccessContext) => void
 }
 
+export interface DataCardSplitField {
+  label: string
+  value: ReactNode
+}
+
+export interface DataCardShowcaseConfig {
+  /** Etiqueta de la píldora superior derecha (por defecto 'MATERIA') */
+  badgeLabel?: string
+  /** Variante de color de la píldora superior derecha (por defecto 'accent') */
+  badgeTone?: 'accent' | 'success' | 'neutral'
+  /** Icono dentro de la píldora superior derecha */
+  badgeIcon?: ReactNode
+  /** Icono dentro del recuadro superior izquierdo */
+  headerIcon?: ReactNode
+  /** Título junto al icono superior izquierdo (ej. nombre de la materia) */
+  title: ReactNode
+  /** Subtítulo / código destacado debajo del título (ej. 'Código: FULLQA-RED') */
+  headline?: ReactNode | DataCardSplitField
+  /** Posición del bloque dividido respecto a primaryMeta/secondaryMeta (por defecto 'beforeMeta') */
+  splitPosition?: 'beforeMeta' | 'afterMeta'
+  /** Columna izquierda del bloque dividido con línea vertical */
+  splitLeft?: DataCardSplitField
+  /** Columna derecha del bloque dividido con línea vertical */
+  splitRight?: DataCardSplitField
+  /** Fila de texto principal sobre el pie de la tarjeta (ej. Docente) */
+  primaryMeta?: ReactNode | DataCardSplitField
+  /** Segunda línea de metadato inmediatamente debajo de primaryMeta (ej. Correo) */
+  secondaryMeta?: ReactNode | DataCardSplitField
+  /** Texto o nodo en la franja inferior de la tarjeta */
+  footerMeta?: ReactNode | DataCardSplitField
+  /** Nodo opcional a la derecha de la franja inferior (ej. badge de estado/resultado) */
+  footerExtra?: ReactNode
+}
+
 export interface DataCardItemProps<T extends BaseTableEntity> {
   item: T
   fields: readonly CardFieldDef<T>[]
+  getCardConfig?: (
+    item: T,
+    routeContext: RouteAccessContext,
+  ) => DataCardShowcaseConfig
   actions?: readonly CardActionDef<T>[]
   renderCustomActions?: (
     item: T,
@@ -82,6 +120,11 @@ export interface DataCardGridProps<T extends BaseTableEntity> {
   data: readonly T[]
   loading: boolean
   error?: string | null
+  /** Mapeador declarativo para el diseño de tarjeta tipo ficha (Semi-Flat) */
+  getCardConfig?: (
+    item: T,
+    routeContext: RouteAccessContext,
+  ) => DataCardShowcaseConfig
   /** Si no se pasa pagination externa, el componente pagina automáticamente de 10 en 10 (2x5) */
   pagination?: TablePaginationMeta | null
   /** Por defecto 10 para mantener exactamente 2 columnas x 5 filas */
@@ -90,6 +133,8 @@ export interface DataCardGridProps<T extends BaseTableEntity> {
   labelWidth?: string
   entityLabel?: string
   searchPlaceholder?: string
+  /** Límite máximo de caracteres para el input de búsqueda (por defecto 50) */
+  searchMaxLength?: number
   initialSearch?: string
   onSearch?: (query: string) => void
   onPageChange?: (newPage: number) => void

@@ -17,6 +17,7 @@ export function DataCardGrid<T extends BaseTableEntity>({
   labelWidth = '96px',
   entityLabel = 'registros',
   searchPlaceholder = 'Buscar registros...',
+  searchMaxLength = 50,
   initialSearch = '',
   onSearch,
   onPageChange,
@@ -26,6 +27,7 @@ export function DataCardGrid<T extends BaseTableEntity>({
   actions,
   renderCustomActions,
   forcedModuleScope,
+  getCardConfig,
 }: DataCardGridProps<T>) {
   const { retryRef, markRetry } = useRetryFocus(loading, Boolean(error))
   const [searchInput, setSearchInput] = useState(initialSearch)
@@ -36,7 +38,7 @@ export function DataCardGrid<T extends BaseTableEntity>({
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const trimmed = searchInput.trim()
+    const trimmed = searchInput.trim().slice(0, searchMaxLength)
     setActiveSearch(trimmed)
     setInternalPage(1)
     onSearch?.(trimmed)
@@ -111,9 +113,15 @@ export function DataCardGrid<T extends BaseTableEntity>({
                 type="search"
                 className={styles.searchInput}
                 placeholder={searchPlaceholder}
+                maxLength={searchMaxLength}
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={(e) =>
+                  setSearchInput(e.target.value.slice(0, searchMaxLength))
+                }
               />
+              <span className={styles.searchCounter} aria-live="polite">
+                {searchInput.length}/{searchMaxLength}
+              </span>
             </label>
 
             <button
@@ -191,6 +199,7 @@ export function DataCardGrid<T extends BaseTableEntity>({
               key={item.id}
               item={item}
               fields={fields}
+              getCardConfig={getCardConfig}
               actions={actions}
               renderCustomActions={renderCustomActions}
               routeContext={routeContext}

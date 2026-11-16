@@ -5,7 +5,7 @@ import type { CardFieldDef } from '@/shared/components/DataCardGrid/dataCardGrid
 import cardStyles from '@/shared/components/DataCardGrid/DataCardGrid.module.css'
 import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
-import { Badge, Card, Heading, Icon, Text } from '@/shared/components/ui/index'
+import { Badge, Icon, Stack, Text } from '@/shared/components/ui/index'
 import { useProfileRecords } from '../hooks/useProfileRecords'
 import layoutStyles from '../components/EntityProfileLayout.module.css'
 import type { ProfileTabComponentProps } from '../types/entityProfile.types'
@@ -125,14 +125,13 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         : 'el estudiante'
 
   return (
-    <Card as="section" className={layoutStyles.sectionCard}>
+    <Stack direction="vertical" gap="4">
       <div className={layoutStyles.sectionHeaderRow}>
         <div className={layoutStyles.sectionTitleGroup}>
-          <Heading level={2}>Rol colaborador en control de exámenes</Heading>
-          <Text variant="small" tone="secondary">
+          <Text variant="body" tone="primary">
             {isShowingActive
-              ? `Designaciones vigentes donde ${entity.first_names} ${entity.last_names} es colaborador actualmente.`
-              : `Ultima asignacion conservada por examen donde ${entity.first_names} ${entity.last_names} fue colaborador.`}
+              ? `Designaciones vigentes donde ${entityRoleLabel} es colaborador actualmente.`
+              : `Última asignación conservada por examen donde ${entityRoleLabel} fue colaborador.`}
           </Text>
         </div>
 
@@ -175,13 +174,27 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
         </div>
       </div>
 
-      <Text variant="small" tone="secondary">
-        Última asignación conservada por examen. Los períodos anteriores con
-        auditoría se consultan en Historial de roles y autorizaciones.
-      </Text>
       <DataCardGrid
         key={selectedTab}
         fields={cardFields}
+        getCardConfig={(item) => ({
+          badgeLabel: 'COLABORADOR',
+          title: item.subjectName,
+          headline: { label: 'Código', value: item.subjectCode },
+          splitLeft: { label: 'Grupo', value: `Grupo ${item.groupCode}` },
+          splitRight: { label: 'Gestión', value: item.academicTerm },
+          primaryMeta: { label: 'Docente', value: item.teacherFullName },
+          secondaryMeta: { label: 'Correo', value: item.teacherEmail },
+          footerExtra: (
+            <Badge
+              tone="accent"
+              size="sm"
+              className={layoutStyles.examTypeBadge}
+            >
+              {item.examType} · {item.assignedAt}
+            </Badge>
+          ),
+        })}
         data={filteredCollaborations}
         loading={records.loading}
         error={records.error}
@@ -195,7 +208,7 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
             ? 'colaboraciones activas'
             : 'colaboraciones concluidas'
         }
-        searchPlaceholder="Buscar por materia, código, docente o gestión..."
+        searchPlaceholder="Buscar por materia, código o docente"
         initialSearch={searchQuery}
         onSearch={setSearchQuery}
         emptyTitle={
@@ -209,6 +222,6 @@ export function CollaboratorRoleTab({ entity }: ProfileTabComponentProps) {
             : `No se encontraron registros históricos de colaboración para ${entityRoleLabel}.`
         }
       />
-    </Card>
+    </Stack>
   )
 }

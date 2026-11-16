@@ -1,0 +1,117 @@
+/* ==========================================================================
+   EIDA FLAT DESIGN 2.0 (SEMI-FLAT) — PROFILE PHOTO CARD (1:1)
+   Source of truth: docs/design-system/SKILL SEMI FLAT.md & src/assets/styles/tokens.css
+   ========================================================================== */
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.photoCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  box-sizing: border-box;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.photoCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-lg);
+}
+
+.photoFrame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+}
+
+.photoImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+}
+
+/* Mensajes de estado de AuthenticatedImage (cargando / error) */
+.photoImage [role='status'] {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: var(--space-3);
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+  text-align: center;
+}
+
+.statusLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font: var(--type-small);
+  font-weight: var(--font-weight-semibold);
+  box-sizing: border-box;
+}
+
+.statusInstitutional {
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.statusCurrent {
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
+.statusPrevious {
+  background: var(--color-info-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+  .photoGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  .photoCard {
+    padding: var(--space-3);
+  }
+}
