@@ -608,7 +608,7 @@ export function EventForm({
             </button>
           </div>
         </section>
-      ) : canManage && pending ? (
+      ) : canManage && pending !== null && pending !== 'visibility' ? (
         <section
           ref={confirmation}
           className={styles.notice}
