@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import layoutStyles from './ExamSchedulerLayout.module.css'
+import { Button, Modal } from '@/shared/components/ui'
 
 export interface ExamNavigationGuardBannerProps {
   blocked: boolean
@@ -16,43 +15,32 @@ export function ExamNavigationGuardBanner({
   onStay,
   onDiscard,
 }: ExamNavigationGuardBannerProps) {
-  const noticeRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    if (blocked) noticeRef.current?.focus()
-  }, [blocked])
-
-  if (!blocked) return null
-
   return (
-    <section
-      ref={noticeRef}
-      tabIndex={-1}
-      className={layoutStyles.navigationGuardBanner}
-      role="alert"
-    >
-      <p>
-        {isBusy
+    <Modal
+      isOpen={blocked}
+      size="sm"
+      title={isBusy ? 'Guardando evaluación' : 'Cambios sin guardar'}
+      description={
+        isBusy
           ? 'Se está guardando el examen. Espera a que termine la operación.'
-          : 'Tienes cambios sin guardar. ¿Deseas descartarlos y salir?'}
-      </p>
-      <div className={layoutStyles.inlineActionRow}>
-        <button
-          type="button"
-          className={layoutStyles.inlineSecondaryBtn}
-          onClick={onStay}
-        >
-          {stayLabel}
-        </button>
-        <button
-          type="button"
-          className={layoutStyles.inlinePrimaryBtn}
-          disabled={isBusy}
-          onClick={onDiscard}
-        >
-          Descartar cambios
-        </button>
-      </div>
-    </section>
+          : 'Tienes cambios sin guardar. ¿Deseas descartarlos y salir?'
+      }
+      onClose={onStay}
+      footer={
+        <>
+          <Button type="button" variant="secondary" onClick={onStay}>
+            {stayLabel}
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={isBusy}
+            onClick={onDiscard}
+          >
+            Descartar cambios
+          </Button>
+        </>
+      }
+    />
   )
 }

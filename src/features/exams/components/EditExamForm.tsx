@@ -32,10 +32,6 @@ export function EditExamForm({
     [exam],
   )
 
-  const initialSharedFlag = Boolean(
-    (exam as unknown as Record<string, unknown>).is_shared_room ||
-      exam.rules?.includes('[SHARED_ROOM]'),
-  )
   const offeringId = (exam as unknown as Record<string, unknown>)
     .course_offering_id as number | string | undefined
 
@@ -70,7 +66,6 @@ export function EditExamForm({
     initialSelectedRoomIds: initialParsed.selectedRoomId
       ? [initialParsed.selectedRoomId]
       : [],
-    initialSharedRoomEnabled: initialSharedFlag,
     onScheduleFieldChange: ClearFieldErrors,
   })
 
@@ -88,8 +83,7 @@ export function EditExamForm({
     scheduler.startTime !== initialParsed.startTime ||
     scheduler.examDate !== initialParsed.examDate ||
     scheduler.primaryRoomId !== initialParsed.selectedRoomId ||
-    scheduler.selectedRoomIds.length > 1 ||
-    scheduler.isSharedRoomEnabled !== initialSharedFlag
+    scheduler.selectedRoomIds.length > 1
 
   const guard = useExamNavigationGuard(isDirty, busy)
 
@@ -114,9 +108,19 @@ export function EditExamForm({
       rules: '',
     })
 
+    if (scheduler.academicTermRange && !scheduler.isExamDateWithinTerm) {
+      validation.exam_date =
+        'La fecha seleccionada debe estar dentro del periodo académico vigente.'
+    }
+
+    if (scheduler.reservation && !scheduler.reservation.isValid) {
+      validation.start_time =
+        'Selecciona un periodo de reserva válido (máximo 3 periodos hasta las 21:45).'
+    }
+
     if (!scheduler.areAllSelectedRoomsValid) {
       validation.room_id =
-        'Selecciona un ambiente disponible o confirma el uso compartido para este horario.'
+        'Selecciona un ambiente disponible para este horario.'
     }
 
     setErrors(validation)
@@ -141,10 +145,6 @@ export function EditExamForm({
             scheduler.evaluationType === 'partial'
               ? Math.min(6, Math.max(1, Number(scheduler.partialNumber) || 1))
               : null,
-          is_shared_room: scheduler.isSharedRoomEnabled,
-          shared_consent: scheduler.selectedRoomIds.some((id) =>
-            scheduler.consentedSharedRoomIds.has(id),
-          ),
           additional_room_ids:
             scheduler.selectedRoomIds.length > 1
               ? scheduler.selectedRoomIds.slice(1).map(Number)

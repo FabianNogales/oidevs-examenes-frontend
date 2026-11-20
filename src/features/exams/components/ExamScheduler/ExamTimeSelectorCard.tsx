@@ -1,72 +1,89 @@
+import {
+  FormatBlockCountLabel,
+  FormatDurationLabel,
+  GetLatestStartBlockIndex,
+  MAX_RESERVATION_BLOCKS,
+  ROOM_RESERVATION_BLOCKS,
+  type ReservationWindow,
+} from '../../utils/examScheduleFormatters'
 import styles from './ExamTimeSelectorCard.module.css'
 
 export interface ExamTimeSelectorCardProps {
-  startTime: string
-  endTimeFormatted: string
+  reservation: ReservationWindow
+  examDurationMinutes: number
+  examEndTime: string
   disabled: boolean
   onStartTimeChange: (time: string) => void
 }
 
-const ACADEMIC_TIME_SLOTS = [
-  '08:15',
-  '09:45',
-  '11:15',
-  '14:15',
-  '15:45',
-  '17:15',
-] as const
-
 export function ExamTimeSelectorCard({
-  startTime,
-  endTimeFormatted,
+  reservation,
+  examDurationMinutes,
+  examEndTime,
   disabled,
   onStartTimeChange,
 }: ExamTimeSelectorCardProps) {
+  const latestStartIndex = GetLatestStartBlockIndex(reservation.blockCount)
+  const coveredSet = new Set(reservation.coveredIndexes)
+
   return (
     <div className={styles.panelCard}>
       <div className={styles.panelHeaderRow}>
-        <h3>Horario de inicio</h3>
+        <h3>Tiempo de reserva del aula</h3>
         <span className={styles.timeWindowBadge}>
-          {startTime} – {endTimeFormatted}
+          {reservation.startTime} – {reservation.endTime} •{' '}
+          {FormatBlockCountLabel(reservation.blockCount)}
         </span>
       </div>
 
       <div
         className={styles.timePresetsGrid}
         role="group"
-        aria-label="Turnos académicos frecuentes"
+        aria-label="Periodos obligatorios de reserva del aula"
       >
-        {ACADEMIC_TIME_SLOTS.map((slot) => (
-          <button
-            key={slot}
-            type="button"
-            disabled={disabled}
-            className={`${styles.timePresetBtn} ${
-              startTime === slot ? styles.timePresetBtnActive : ''
-            }`}
-            onClick={() => onStartTimeChange(slot)}
-          >
-            {slot}
-          </button>
-        ))}
+        {ROOM_RESERVATION_BLOCKS.map((block, index) => {
+          const isStartBlock = index === reservation.startIndex
+          const isCoveredContinuation = !isStartBlock && coveredSet.has(index)
+          const cannotStartHere = index > latestStartIndex
+
+          const buttonClasses = [
+            styles.timePresetBtn,
+            isStartBlock ? styles.timePresetBtnActive : '',
+            isCoveredContinuation ? styles.timePresetBtnCovered : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+
+          return (
+            <button
+              key={block.start}
+              type="button"
+              disabled={disabled || cannotStartHere}
+              className={buttonClasses}
+              onClick={() => onStartTimeChange(block.start)}
+              aria-pressed={isStartBlock || isCoveredContinuation}
+              title={
+                cannotStartHere
+                  ? `No disponible como inicio para ${FormatBlockCountLabel(reservation.blockCount)}`
+                  : `${block.start} a ${block.end}`
+              }
+            >
+              <span className={styles.blockStartText}>{block.start}</span>
+              <span className={styles.blockEndText}>a {block.end}</span>
+            </button>
+          )
+        })}
       </div>
 
-      <div className={styles.customTimeRow}>
-        <label htmlFor="exam-custom-start-time">
-          Hora personalizada de inicio:
-        </label>
-        <input
-          id="exam-custom-start-time"
-          type="time"
-          value={startTime}
-          disabled={disabled}
-          className={styles.customTimeInput}
-          onChange={(event) => {
-            if (event.target.value) {
-              onStartTimeChange(event.target.value)
-            }
-          }}
-        />
+      <div className={styles.reservationMetaRow}>
+        <span>
+          Examen:{' '}
+          <strong>
+            {FormatDurationLabel(examDurationMinutes)} ({reservation.startTime}–
+            {examEndTime})
+          </strong>
+        </span>
+        <span>Máx. {MAX_RESERVATION_BLOCKS} periodos (hasta 21:45)</span>
       </div>
     </div>
   )

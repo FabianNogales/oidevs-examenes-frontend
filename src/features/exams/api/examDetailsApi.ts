@@ -60,7 +60,7 @@ export function isExamDetail(value: unknown, id: number): value is ExamDetail {
     (exam.academic_term_name == null ||
       typeof exam.academic_term_name === 'string') &&
     (exam.evaluation_type == null ||
-      ['partial', 'final', 'makeup'].includes(String(exam.evaluation_type))) &&
+      ['partial', 'final', 'makeup', 'recovery'].includes(String(exam.evaluation_type))) &&
     (room == null ||
       (typeof room === 'object' &&
         'id' in room &&

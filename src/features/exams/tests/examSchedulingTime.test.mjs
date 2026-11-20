@@ -76,8 +76,13 @@ function schedulerState(overrides = {}) {
   return {
     examDate: values.exam_date, startTime: values.start_time, durationString: values.duration_minutes,
     durationMinutes: 90, evaluationType: 'partial', partialNumber: '1', defaultPartialNumber: '1',
-    primaryRoomId: values.room_id, selectedRoomIds: [values.room_id], consentedSharedRoomIds: new Set(),
-    isSharedRoomEnabled: false, isSelectionValid: true, areAllSelectedRoomsValid: true,
+    primaryRoomId: values.room_id, selectedRoomIds: [values.room_id],
+    reservation: {
+      startIndex: 2, blockCount: 1, coveredIndexes: [2],
+      startTime: values.start_time, endTime: '11:15', reservedMinutes: 90, isValid: true,
+    },
+    academicTermRange: null, isExamDateWithinTerm: true,
+    isSelectionValid: true, areAllSelectedRoomsValid: true,
     roomsState: { roomError: null, isReady: true, reload() {} },
     setPartialNumber() {}, setEvaluationType() {}, setSelectedRoomIds() {},
     ...overrides,
@@ -156,8 +161,8 @@ for (const skew of [-86_400_000, 0, 86_400_000]) {
     assert.equal(ui.calls[0][0], '/course-offerings/3/exams')
     assert.deepEqual(ui.calls[0][1], {
       name: ui.expectedName, exam_date: values.exam_date, start_time: '22:17:00', duration_minutes: 90,
-      room_id: 7, evaluation_type: 'partial', partial_number: 1, is_shared_room: false,
-      shared_consent: false, additional_room_ids: [], rules: null,
+      room_id: 7, evaluation_type: 'partial', partial_number: 1,
+      additional_room_ids: [], rules: null,
     })
     assert.deepEqual(ui.created, [1])
     ui.h.unmount()

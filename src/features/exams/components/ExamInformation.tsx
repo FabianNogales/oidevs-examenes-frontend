@@ -6,6 +6,7 @@ const evaluationLabels = {
   partial: 'Parcial',
   final: 'Final',
   makeup: '2da instancia',
+  recovery: 'Recuperatorio',
 }
 
 export function ExamInformation({ exam }: { exam: ManagedExam }) {

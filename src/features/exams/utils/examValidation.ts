@@ -29,7 +29,7 @@ export function validateCreateExamForm(
   if (!values.name.trim()) errors.name = 'El nombre del examen es obligatorio.'
   else if (values.name.trim().length > 255)
     errors.name = 'El nombre no puede superar los 255 caracteres.'
-  if (!['partial', 'final', 'makeup'].includes(values.evaluation_type)) {
+  if (!['partial', 'final', 'makeup', 'recovery'].includes(values.evaluation_type)) {
     errors.evaluation_type = 'Debes seleccionar el tipo de evaluación.'
   }
   if (!values.exam_date) errors.exam_date = 'La fecha es obligatoria.'

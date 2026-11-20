@@ -32,12 +32,6 @@ export function CreateExamForm({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const submittingRef = useRef(false)
 
-  const initialStudentsCount = Number(
-    (subject as unknown as Record<string, unknown>).studentsCount ??
-      (subject as unknown as Record<string, unknown>).enrolledCount ??
-      0,
-  )
-
   const ClearFieldErrors = (fields: string[]) => {
     setFieldErrors((current) => {
       const next = { ...current }
@@ -52,7 +46,6 @@ export function CreateExamForm({
   const scheduler = useExamSchedulerState({
     courseOfferingId: subject.courseOfferingId,
     autoDetectNextPartial: true,
-    initialEligibleStudentsCount: initialStudentsCount,
     onScheduleFieldChange: ClearFieldErrors,
   })
 
@@ -84,9 +77,19 @@ export function CreateExamForm({
       rules: '',
     })
 
+    if (scheduler.academicTermRange && !scheduler.isExamDateWithinTerm) {
+      validationErrors.exam_date =
+        'La fecha seleccionada debe estar dentro del periodo académico vigente.'
+    }
+
+    if (scheduler.reservation && !scheduler.reservation.isValid) {
+      validationErrors.start_time =
+        'Selecciona un periodo de reserva válido (máximo 3 periodos hasta las 21:45).'
+    }
+
     if (!scheduler.areAllSelectedRoomsValid) {
       validationErrors.room_id =
-        'Selecciona un aula disponible o confirma el uso compartido para este horario.'
+        'Selecciona un aula disponible para este horario.'
     }
 
     setFieldErrors(validationErrors)
@@ -108,10 +111,6 @@ export function CreateExamForm({
             scheduler.evaluationType === 'partial'
               ? Math.min(6, Math.max(1, Number(scheduler.partialNumber) || 1))
               : null,
-          is_shared_room: scheduler.isSharedRoomEnabled,
-          shared_consent: scheduler.selectedRoomIds.some((id) =>
-            scheduler.consentedSharedRoomIds.has(id),
-          ),
           additional_room_ids:
             scheduler.selectedRoomIds.length > 1
               ? scheduler.selectedRoomIds.slice(1).map(Number)

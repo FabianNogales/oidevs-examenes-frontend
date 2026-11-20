@@ -1,4 +1,4 @@
-export type EvaluationType = 'partial' | 'final' | 'makeup'
+export type EvaluationType = 'partial' | 'final' | 'makeup' | 'recovery'
 
 export type CreateExamPayload = {
   name: string
@@ -8,8 +8,6 @@ export type CreateExamPayload = {
   room_id: number
   evaluation_type: EvaluationType
   partial_number?: number | null
-  is_shared_room?: boolean
-  shared_consent?: boolean
   additional_room_ids?: number[]
   rules?: string | null
 }
@@ -35,6 +33,13 @@ export type Room = {
   schedules_list?: RoomBusySlot[]
 }
 
+export type OfferingAcademicTermMeta = {
+  id: number
+  name: string
+  start_date: string
+  end_date: string
+}
+
 export type OfferingSchedulingMeta = {
   next_partial_number: number
   last_partial_number: number
@@ -42,6 +47,7 @@ export type OfferingSchedulingMeta = {
   eligible_students_count: number
   safety_margin: number
   recommended_capacity: number
+  academic_term?: OfferingAcademicTermMeta | null
 }
 
 export type RoomsResponse = {

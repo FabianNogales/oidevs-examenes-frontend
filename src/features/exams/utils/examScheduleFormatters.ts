@@ -1,7 +1,44 @@
 import type { EvaluationType, Room, RoomBusySlot } from '../types/exam.types'
 
-export const EXAM_SAFETY_MARGIN_STUDENTS = 10
 export const MAX_ALLOWED_PARTIAL_NUMBER = 6
+
+// Periodos institucionales fijos de reserva de aula (90 min cada uno).
+export const ROOM_RESERVATION_BLOCKS = [
+  { start: '06:45', end: '08:15' },
+  { start: '08:15', end: '09:45' },
+  { start: '09:45', end: '11:15' },
+  { start: '11:15', end: '12:45' },
+  { start: '12:45', end: '14:15' },
+  { start: '14:15', end: '15:45' },
+  { start: '15:45', end: '17:15' },
+  { start: '17:15', end: '18:45' },
+  { start: '18:45', end: '20:15' },
+  { start: '20:15', end: '21:45' },
+] as const
+
+export const RESERVATION_BLOCK_MINUTES = 90
+export const MAX_RESERVATION_BLOCKS = 3
+export const MIN_EXAM_DURATION_MINUTES = 5
+export const MAX_EXAM_DURATION_MINUTES =
+  RESERVATION_BLOCK_MINUTES * MAX_RESERVATION_BLOCKS
+export const DEFAULT_EXAM_START_TIME = '09:45'
+export const ROOM_SEARCH_MAX_LENGTH = 25
+
+export interface ReservationWindow {
+  startIndex: number
+  blockCount: number
+  coveredIndexes: number[]
+  startTime: string
+  endTime: string
+  reservedMinutes: number
+  isValid: boolean
+}
+
+export interface AcademicTermRange {
+  name: string
+  startDate: string
+  endDate: string
+}
 
 export interface CalendarDayCell {
   key: string
@@ -9,6 +46,7 @@ export interface CalendarDayCell {
   isoDate: string
   isOutsideMonth: boolean
   isPastDate: boolean
+  isOutsideTerm: boolean
   isToday: boolean
 }
 
@@ -28,13 +66,6 @@ export interface InitialSchedulerState {
   startTime: string
   examDate: string
   selectedRoomId: string
-}
-
-export interface RoomSharingEvaluation {
-  hasTimeConflict: boolean
-  conflictingSlots: RoomBusySlot[]
-  isMarkedAsSharedByOtherTeacher: boolean
-  requiresConsentModal: boolean
 }
 
 const SPANISH_MONTHS = [
@@ -86,6 +117,7 @@ function CreateCalendarCell(
   dayNumber: number,
   isoDate = '',
   todayIso = '',
+  termRange: AcademicTermRange | null = null,
 ): CalendarDayCell {
   const isOutsideMonth = isoDate === ''
   return {
@@ -94,14 +126,26 @@ function CreateCalendarCell(
     isoDate,
     isOutsideMonth,
     isPastDate: isOutsideMonth || isoDate < todayIso,
+    isOutsideTerm:
+      !isOutsideMonth && !IsDateWithinAcademicTerm(isoDate, termRange),
     isToday: !isOutsideMonth && isoDate === todayIso,
   }
+}
+
+// Sin periodo conocido no se restringe en cliente; el backend sigue validando.
+export function IsDateWithinAcademicTerm(
+  isoDate: string,
+  termRange: AcademicTermRange | null,
+): boolean {
+  if (!termRange) return true
+  return isoDate >= termRange.startDate && isoDate <= termRange.endDate
 }
 
 export function BuildCalendarMonthCells(
   year: number,
   monthIndex: number,
   todayIso: string,
+  termRange: AcademicTermRange | null = null,
 ): CalendarDayCell[] {
   const startWeekday = (new Date(year, monthIndex, 1).getDay() + 6) % 7
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate()
@@ -116,7 +160,7 @@ export function BuildCalendarMonthCells(
   const monthPadded = String(monthIndex + 1).padStart(2, '0')
   for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
     const isoDate = `${year}-${monthPadded}-${String(dayNum).padStart(2, '0')}`
-    cells.push(CreateCalendarCell(isoDate, dayNum, isoDate, todayIso))
+    cells.push(CreateCalendarCell(isoDate, dayNum, isoDate, todayIso, termRange))
   }
 
   while (cells.length < 42) {
@@ -172,68 +216,118 @@ export function IsRoomAvailableOnDate(
   return GetConflictingSlots(daySlots, startTime, durationMinutes).length === 0
 }
 
-export function EvaluateRoomSharingStatus(
+// Número de periodos de 90 min que ocupa un examen (mínimo 1, máximo 3).
+export function CalculateRequiredBlocks(durationMinutes: number): number {
+  const blocks = Math.ceil(Math.max(durationMinutes, 1) / RESERVATION_BLOCK_MINUTES)
+  return Math.min(MAX_RESERVATION_BLOCKS, Math.max(1, blocks))
+}
+
+export function FindReservationBlockIndex(startTime: string): number {
+  return ROOM_RESERVATION_BLOCKS.findIndex((block) => block.start === startTime)
+}
+
+// Último periodo desde el cual el examen aún termina dentro de la jornada (21:45).
+export function GetLatestStartBlockIndex(blockCount: number): number {
+  return ROOM_RESERVATION_BLOCKS.length - Math.max(1, blockCount)
+}
+
+// Ajusta una hora libre (ej. registros antiguos) al periodo que la contiene.
+export function SnapToReservationBlock(timeText: string): string {
+  const targetMinutes = ConvertTimeToMinutes(timeText.slice(0, 5))
+  let selected: string = ROOM_RESERVATION_BLOCKS[0].start
+  for (const block of ROOM_RESERVATION_BLOCKS) {
+    if (ConvertTimeToMinutes(block.start) <= targetMinutes) selected = block.start
+  }
+  return selected
+}
+
+export function ClampExamDuration(totalMinutes: number): number {
+  return Math.min(
+    MAX_EXAM_DURATION_MINUTES,
+    Math.max(MIN_EXAM_DURATION_MINUTES, Math.round(totalMinutes) || 0),
+  )
+}
+
+export function ResolveReservationWindow(
+  startTime: string,
+  durationMinutes: number,
+): ReservationWindow {
+  const blockCount = CalculateRequiredBlocks(durationMinutes)
+  const startIndex = FindReservationBlockIndex(startTime)
+  const lastIndex = startIndex + blockCount - 1
+  const isValid =
+    startIndex >= 0 &&
+    lastIndex < ROOM_RESERVATION_BLOCKS.length &&
+    durationMinutes >= MIN_EXAM_DURATION_MINUTES &&
+    durationMinutes <= MAX_EXAM_DURATION_MINUTES
+
+  const coveredIndexes =
+    startIndex >= 0
+      ? Array.from({ length: blockCount }, (_, offset) => startIndex + offset).filter(
+          (index) => index < ROOM_RESERVATION_BLOCKS.length,
+        )
+      : []
+
+  return {
+    startIndex,
+    blockCount,
+    coveredIndexes,
+    startTime,
+    endTime: isValid
+      ? ROOM_RESERVATION_BLOCKS[lastIndex].end
+      : CalculateEndTime(startTime, blockCount * RESERVATION_BLOCK_MINUTES),
+    reservedMinutes: blockCount * RESERVATION_BLOCK_MINUTES,
+    isValid,
+  }
+}
+
+export function GetRoomConflictingSlots(
   room: Room,
   isoDate: string,
   startTime: string,
-  durationMinutes: number,
-): RoomSharingEvaluation {
-  const sourceSlots =
-    isoDate && room.schedules_list
-      ? room.schedules_list.filter((slot) => slot.date === isoDate)
-      : room.busy_slots ?? []
-
-  if (!isoDate || sourceSlots.length === 0) {
-    return {
-      hasTimeConflict: false,
-      conflictingSlots: [],
-      isMarkedAsSharedByOtherTeacher: false,
-      requiresConsentModal: false,
-    }
-  }
-
-  const conflictingSlots = GetConflictingSlots(sourceSlots, startTime, durationMinutes)
-  if (conflictingSlots.length === 0) {
-    return {
-      hasTimeConflict: false,
-      conflictingSlots: [],
-      isMarkedAsSharedByOtherTeacher: false,
-      requiresConsentModal: false,
-    }
-  }
-
-  const allConflictsAllowSharing = conflictingSlots.every((slot) => slot.is_shared === true)
-
-  return {
-    hasTimeConflict: true,
-    conflictingSlots,
-    isMarkedAsSharedByOtherTeacher: allConflictsAllowSharing,
-    requiresConsentModal: !allConflictsAllowSharing,
-  }
+  reservedMinutes: number,
+): RoomBusySlot[] {
+  if (!isoDate) return []
+  const sourceSlots = room.schedules_list
+    ? room.schedules_list.filter((slot) => slot.date === isoDate)
+    : (room.busy_slots ?? [])
+  return GetConflictingSlots(sourceSlots, startTime, reservedMinutes)
 }
 
-export function CalculateTargetRoomCapacity(
-  eligibleOrEnrolledCount: number,
-  safetyMargin = EXAM_SAFETY_MARGIN_STUDENTS,
-): number {
-  return eligibleOrEnrolledCount > 0 ? eligibleOrEnrolledCount + safetyMargin : 0
+// Búsqueda de aulas: solo letras minúsculas y números, máximo 25 caracteres.
+export function SanitizeRoomSearchQuery(rawValue: string): string {
+  return rawValue
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, ROOM_SEARCH_MAX_LENGTH)
 }
 
-export function SortRoomsByBestFitCapacity(
-  rooms: Room[],
-  targetCapacity: number,
-): Room[] {
-  if (targetCapacity <= 0) return [...rooms]
+export function RoomMatchesSearch(room: Room, sanitizedQuery: string): boolean {
+  if (!sanitizedQuery) return true
+  const haystack = SanitizeRoomSearchText(
+    [room.name, room.code, room.location, room.floor].filter(Boolean).join(' '),
+  )
+  return haystack.includes(sanitizedQuery)
+}
 
-  return [...rooms].sort((roomA, roomB) => {
-    const capA = Number(roomA.capacity) || 0
-    const capB = Number(roomB.capacity) || 0
-    const aCoversTarget = capA >= targetCapacity
-    const bCoversTarget = capB >= targetCapacity
+function SanitizeRoomSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+}
 
-    if (aCoversTarget !== bCoversTarget) return aCoversTarget ? -1 : 1
-    return aCoversTarget ? capA - capB : capB - capA
-  })
+export function FormatDurationLabel(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${hours}h ${String(minutes).padStart(2, '0')}m`
+}
+
+export function FormatBlockCountLabel(blockCount: number): string {
+  return blockCount === 1 ? '1 periodo' : `${blockCount} periodos`
 }
 
 export function FormatShortDateSpanish(isoDate: string): string {
@@ -249,6 +343,7 @@ export function BuildDefaultExamName(
 ): string {
   if (evaluationType === 'final') return 'Examen Final'
   if (evaluationType === 'makeup') return 'Examen de Instancia'
+  if (evaluationType === 'recovery') return 'Examen Recuperatorio'
 
   const numericVal = Math.min(
     MAX_ALLOWED_PARTIAL_NUMBER,
@@ -266,16 +361,25 @@ export function ParseExistingExamToSchedulerState(exam: {
   room?: { id: number } | null
   room_id?: number | string
 }): InitialSchedulerState {
-  const totalMinutes = Math.max(5, Number(exam.duration_minutes) || 90)
+  const totalMinutes = ClampExamDuration(Number(exam.duration_minutes) || 90)
   const partialMatch = exam.name.match(/([1-6])/)
   const resolvedRoomId = exam.room?.id ?? exam.room_id ?? ''
+  const blockCount = CalculateRequiredBlocks(totalMinutes)
+  const snappedStart = exam.start_time
+    ? SnapToReservationBlock(exam.start_time)
+    : DEFAULT_EXAM_START_TIME
+  const latestStart = ROOM_RESERVATION_BLOCKS[GetLatestStartBlockIndex(blockCount)].start
+  const startTime =
+    FindReservationBlockIndex(snappedStart) > GetLatestStartBlockIndex(blockCount)
+      ? latestStart
+      : snappedStart
 
   return {
     partialNumber: partialMatch ? partialMatch[1] : '1',
     evaluationType: exam.evaluation_type ?? 'partial',
     hours: Math.floor(totalMinutes / 60),
     minutes: totalMinutes % 60,
-    startTime: exam.start_time ? exam.start_time.slice(0, 5) : '09:45',
+    startTime,
     examDate: exam.exam_date ? exam.exam_date.slice(0, 10) : '',
     selectedRoomId: resolvedRoomId ? String(resolvedRoomId) : '',
   }

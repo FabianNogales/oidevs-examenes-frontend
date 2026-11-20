@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import type { Room } from '../../types/exam.types'
 import {
   BuildCalendarMonthCells,
+  FormatShortDateSpanish,
   GetSpanishMonthName,
   IsRoomAvailableOnDate,
+  type AcademicTermRange,
   type TimezoneDateInfo,
 } from '../../utils/examScheduleFormatters'
 import styles from './ExamCalendarCard.module.css'
@@ -12,8 +14,9 @@ export interface ExamCalendarCardProps {
   selectedDate: string
   selectedRoom: Room | null
   startTime: string
-  durationMinutes: number
+  reservedMinutes: number
   timezoneDate: TimezoneDateInfo
+  academicTermRange: AcademicTermRange | null
   disabled: boolean
   onSelectDate: (isoDate: string) => void
   onClearDate: () => void
@@ -21,12 +24,17 @@ export interface ExamCalendarCardProps {
 
 const WEEKDAY_INITIALS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'] as const
 
+function FormatIsoDate(year: number, monthIndex: number, day: number): string {
+  return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
 export function ExamCalendarCard({
   selectedDate,
   selectedRoom,
   startTime,
-  durationMinutes,
+  reservedMinutes,
   timezoneDate,
+  academicTermRange,
   disabled,
   onSelectDate,
   onClearDate,
@@ -46,11 +54,40 @@ export function ExamCalendarCard({
 
   const monthCells = useMemo(
     () =>
-      BuildCalendarMonthCells(viewYear, viewMonthIndex, timezoneDate.todayIso),
-    [viewYear, viewMonthIndex, timezoneDate.todayIso],
+      BuildCalendarMonthCells(
+        viewYear,
+        viewMonthIndex,
+        timezoneDate.todayIso,
+        academicTermRange,
+      ),
+    [viewYear, viewMonthIndex, timezoneDate.todayIso, academicTermRange],
   )
 
+  const canGoNextMonth = useMemo(() => {
+    if (!academicTermRange) return true
+    const nextMonthStart = new Date(viewYear, viewMonthIndex + 1, 1)
+    const nextMonthIso = FormatIsoDate(
+      nextMonthStart.getFullYear(),
+      nextMonthStart.getMonth(),
+      1,
+    )
+    return nextMonthIso <= academicTermRange.endDate
+  }, [academicTermRange, viewYear, viewMonthIndex])
+
+  const canGoPrevMonth = useMemo(() => {
+    if (!academicTermRange) return true
+    const prevMonthEnd = new Date(viewYear, viewMonthIndex, 0)
+    const prevMonthLastIso = FormatIsoDate(
+      prevMonthEnd.getFullYear(),
+      prevMonthEnd.getMonth(),
+      prevMonthEnd.getDate(),
+    )
+    return prevMonthLastIso >= academicTermRange.startDate
+  }, [academicTermRange, viewYear, viewMonthIndex])
+
   const HandleNavigateMonth = (monthOffset: number) => {
+    if (monthOffset > 0 && !canGoNextMonth) return
+    if (monthOffset < 0 && !canGoPrevMonth) return
     const nextDate = new Date(viewYear, viewMonthIndex + monthOffset, 1)
     setViewYear(nextDate.getFullYear())
     setViewMonthIndex(nextDate.getMonth())
@@ -62,7 +99,7 @@ export function ExamCalendarCard({
         <div className={styles.calendarNavGroup}>
           <button
             type="button"
-            disabled={disabled}
+            disabled={disabled || !canGoPrevMonth}
             className={styles.monthArrowBtn}
             onClick={() => HandleNavigateMonth(-1)}
             aria-label="Mes anterior"
@@ -74,7 +111,7 @@ export function ExamCalendarCard({
           </span>
           <button
             type="button"
-            disabled={disabled}
+            disabled={disabled || !canGoNextMonth}
             className={styles.monthArrowBtn}
             onClick={() => HandleNavigateMonth(1)}
             aria-label="Mes siguiente"
@@ -113,15 +150,16 @@ export function ExamCalendarCard({
           }
 
           const isSelected = selectedDate === cell.isoDate
+          const isUnavailableDate = cell.isPastDate || cell.isOutsideTerm
 
           // Si el usuario seleccionó un aula, marcamos en verde los días libres de esa aula
           let roomDayAvailabilityClass = ''
-          if (!cell.isPastDate && selectedRoom && !isSelected) {
+          if (!isUnavailableDate && selectedRoom && !isSelected) {
             const isRoomFreeThatDay = IsRoomAvailableOnDate(
               selectedRoom,
               cell.isoDate,
               startTime,
-              durationMinutes,
+              reservedMinutes,
             )
             roomDayAvailabilityClass = isRoomFreeThatDay
               ? styles.calendarDayRoomFree
@@ -131,6 +169,9 @@ export function ExamCalendarCard({
           const dayButtonClasses = [
             styles.calendarDayBtn,
             cell.isPastDate ? styles.calendarDayPast : '',
+            !cell.isPastDate && cell.isOutsideTerm
+              ? styles.calendarDayOutsideTerm
+              : '',
             roomDayAvailabilityClass,
             cell.isToday && !isSelected ? styles.calendarDayToday : '',
             isSelected ? styles.calendarDaySelected : '',
@@ -142,10 +183,15 @@ export function ExamCalendarCard({
             <button
               key={cell.key}
               type="button"
-              disabled={cell.isPastDate || disabled}
+              disabled={isUnavailableDate || disabled}
               className={dayButtonClasses}
               onClick={() => onSelectDate(cell.isoDate)}
               aria-pressed={isSelected}
+              title={
+                cell.isOutsideTerm
+                  ? 'Fuera del periodo académico vigente'
+                  : undefined
+              }
             >
               <span>{cell.dayNumber}</span>
             </button>
@@ -185,7 +231,15 @@ export function ExamCalendarCard({
             <span>Hoy</span>
           </span>
         </div>
-        <span>Zona: {timezoneDate.timeZoneName}</span>
+        <div className={styles.calendarMetaRight}>
+          {academicTermRange ? (
+            <span className={styles.termLimitTag}>
+              Periodo {academicTermRange.name}: hasta{' '}
+              {FormatShortDateSpanish(academicTermRange.endDate)}
+            </span>
+          ) : null}
+          <span>Zona: {timezoneDate.timeZoneName}</span>
+        </div>
       </div>
     </div>
   )

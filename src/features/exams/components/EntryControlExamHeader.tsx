@@ -14,6 +14,7 @@ const typeLabels: Record<EvaluationType, string> = {
   partial: 'Parcial',
   final: 'Final',
   makeup: '2da instancia',
+  recovery: 'Recuperatorio',
 }
 
 export function EntryControlExamHeader({ exam }: { exam: EntryControlExam }) {

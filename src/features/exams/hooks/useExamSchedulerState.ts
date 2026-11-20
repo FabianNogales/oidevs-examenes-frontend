@@ -1,14 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAvailableRooms } from './useAvailableRooms'
 import { getRoomsWithMeta } from '../api/teacherExamsApi'
-import type { EvaluationType, Room, RoomBusySlot } from '../types/exam.types'
+import type { EvaluationType, Room } from '../types/exam.types'
 import {
   CalculateEndTime,
-  CalculateTargetRoomCapacity,
-  EvaluateRoomSharingStatus,
+  CalculateRequiredBlocks,
+  ClampExamDuration,
+  DEFAULT_EXAM_START_TIME,
+  FindReservationBlockIndex,
   FormatShortDateSpanish,
   GetCurrentTimezoneDate,
-  SortRoomsByBestFitCapacity,
+  GetLatestStartBlockIndex,
+  IsDateWithinAcademicTerm,
+  ROOM_RESERVATION_BLOCKS,
+  ResolveReservationWindow,
+  RoomMatchesSearch,
+  SanitizeRoomSearchQuery,
+  type AcademicTermRange,
 } from '../utils/examScheduleFormatters'
 
 export interface UseExamSchedulerStateParams {
@@ -22,10 +30,10 @@ export interface UseExamSchedulerStateParams {
   initialStartTime?: string
   initialExamDate?: string
   initialSelectedRoomIds?: string[]
-  initialSharedRoomEnabled?: boolean
-  initialEligibleStudentsCount?: number
   onScheduleFieldChange?: (clearedFields: string[]) => void
 }
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 // Hook centralizado para el estado de programación y selección de ambientes
 export function useExamSchedulerState({
@@ -36,11 +44,9 @@ export function useExamSchedulerState({
   initialEvaluationType = 'partial',
   initialHours = 1,
   initialMinutes = 30,
-  initialStartTime = '09:45',
+  initialStartTime = DEFAULT_EXAM_START_TIME,
   initialExamDate = '',
   initialSelectedRoomIds = [],
-  initialSharedRoomEnabled = false,
-  initialEligibleStudentsCount = 0,
   onScheduleFieldChange,
 }: UseExamSchedulerStateParams) {
   const timezoneDate = useMemo(() => GetCurrentTimezoneDate(), [])
@@ -61,28 +67,20 @@ export function useExamSchedulerState({
   const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>(
     initialSelectedRoomIds,
   )
-  const [consentedSharedRoomIds, setConsentedSharedRoomIds] = useState<
-    Set<string>
-  >(() => new Set())
-  const [isSharedRoomEnabled, setIsSharedRoomEnabled] = useState<boolean>(
-    initialSharedRoomEnabled,
-  )
   const [isMultipleRoomsEnabled, setIsMultipleRoomsEnabled] =
     useState<boolean>(false)
   const [onlyFreeRooms, setOnlyFreeRooms] = useState<boolean>(false)
-  const [pendingConsentRoom, setPendingConsentRoom] = useState<{
-    room: Room
-    conflictingSlots: RoomBusySlot[]
-  } | null>(null)
+  const [roomSearchQuery, setRoomSearchQuery] = useState<string>('')
 
-  const [eligibleStudentsCount, setEligibleStudentsCount] = useState<number>(
-    initialEligibleStudentsCount,
-  )
   const [catalogRooms, setCatalogRooms] = useState<Room[]>([])
+  const [academicTermRange, setAcademicTermRange] =
+    useState<AcademicTermRange | null>(null)
 
-  const durationMinutes = Math.max(5, hours * 60 + minutes)
+  const durationMinutes = ClampExamDuration(hours * 60 + minutes)
   const durationString = String(durationMinutes)
-  const endTimeFormatted = CalculateEndTime(startTime, durationMinutes)
+  const reservation = ResolveReservationWindow(startTime, durationMinutes)
+  const reservedDurationString = String(reservation.reservedMinutes)
+  const examEndTime = CalculateEndTime(startTime, durationMinutes)
   const formattedDateLabel = FormatShortDateSpanish(examDate)
 
   useEffect(() => {
@@ -96,8 +94,17 @@ export function useExamSchedulerState({
         setCatalogRooms(roomsList)
 
         if (!meta) return
-        if (meta.eligible_students_count > 0) {
-          setEligibleStudentsCount(meta.eligible_students_count)
+        const term = meta.academic_term
+        if (
+          term &&
+          ISO_DATE_PATTERN.test(term.start_date) &&
+          ISO_DATE_PATTERN.test(term.end_date)
+        ) {
+          setAcademicTermRange({
+            name: term.name,
+            startDate: term.start_date,
+            endDate: term.end_date,
+          })
         }
         if (autoDetectNextPartial) {
           const nextNum = String(
@@ -113,16 +120,12 @@ export function useExamSchedulerState({
     return () => controller.abort()
   }, [courseOfferingId, autoDetectNextPartial])
 
-  const targetCapacityWithMargin = useMemo(
-    () => CalculateTargetRoomCapacity(eligibleStudentsCount),
-    [eligibleStudentsCount],
-  )
-
+  // La disponibilidad se consulta por el bloque completo de periodos reservados.
   const roomsState = useAvailableRooms(
     true,
     examDate,
     startTime,
-    durationString,
+    reservedDurationString,
     excludeExamId,
   )
 
@@ -131,73 +134,70 @@ export function useExamSchedulerState({
     [roomsState.rooms],
   )
 
-  const sortedMergedRooms = useMemo<Room[]>(() => {
+  const mergedRooms = useMemo<Room[]>(() => {
     const baseList = catalogRooms.length > 0 ? catalogRooms : roomsState.rooms
     const availableById = new Map(roomsState.rooms.map((item) => [item.id, item]))
-    const combined = baseList.map((room) => availableById.get(room.id) ?? room)
-    return SortRoomsByBestFitCapacity(combined, targetCapacityWithMargin)
-  }, [catalogRooms, roomsState.rooms, targetCapacityWithMargin])
+    return baseList.map((room) => availableById.get(room.id) ?? room)
+  }, [catalogRooms, roomsState.rooms])
 
   const visibleRooms = useMemo(() => {
-    if (!onlyFreeRooms || !roomsState.hasSchedule) return sortedMergedRooms
-    return sortedMergedRooms.filter((room) =>
-      availableRoomIds.has(String(room.id)),
-    )
-  }, [sortedMergedRooms, onlyFreeRooms, roomsState.hasSchedule, availableRoomIds])
+    return mergedRooms.filter((room) => {
+      if (!RoomMatchesSearch(room, roomSearchQuery)) return false
+      if (onlyFreeRooms && roomsState.hasSchedule) {
+        return availableRoomIds.has(String(room.id))
+      }
+      return true
+    })
+  }, [
+    mergedRooms,
+    roomSearchQuery,
+    onlyFreeRooms,
+    roomsState.hasSchedule,
+    availableRoomIds,
+  ])
 
   const selectedRooms = useMemo(
     () =>
-      sortedMergedRooms.filter((room) =>
+      mergedRooms.filter((room) =>
         selectedRoomIds.includes(String(room.id)),
       ),
-    [sortedMergedRooms, selectedRoomIds],
+    [mergedRooms, selectedRoomIds],
   )
 
   const primaryRoom = selectedRooms[0] ?? null
   const primaryRoomId = primaryRoom ? String(primaryRoom.id) : ''
 
-  const areAllSelectedRoomsValid = useMemo(() => {
-    if (
-      selectedRoomIds.length === 0 ||
-      !roomsState.hasSchedule ||
-      !roomsState.isReady
-    ) {
-      return false
-    }
-    return selectedRoomIds.every((idStr) => {
-      if (availableRoomIds.has(idStr) || consentedSharedRoomIds.has(idStr)) {
-        return true
-      }
-      const roomObj = sortedMergedRooms.find((r) => String(r.id) === idStr)
-      if (!roomObj) return false
-      return EvaluateRoomSharingStatus(
-        roomObj,
-        examDate,
-        startTime,
-        durationMinutes,
-      ).isMarkedAsSharedByOtherTeacher
-    })
-  }, [
-    selectedRoomIds,
-    roomsState.hasSchedule,
-    roomsState.isReady,
-    availableRoomIds,
-    consentedSharedRoomIds,
-    sortedMergedRooms,
-    examDate,
-    startTime,
-    durationMinutes,
-  ])
+  // Sin aula compartida: toda aula elegida debe estar libre en el bloque reservado.
+  const areAllSelectedRoomsValid =
+    selectedRoomIds.length > 0 &&
+    roomsState.hasSchedule &&
+    roomsState.isReady &&
+    selectedRoomIds.every((idStr) => availableRoomIds.has(idStr))
+
+  const isExamDateWithinTerm =
+    Boolean(examDate) && IsDateWithinAcademicTerm(examDate, academicTermRange)
 
   const isSelectionValid =
     Boolean(examDate) &&
+    isExamDateWithinTerm &&
     Boolean(startTime) &&
+    reservation.isValid &&
     selectedRoomIds.length > 0 &&
     areAllSelectedRoomsValid
 
   const HandleDurationChange = (nextHours: number, nextMinutes: number) => {
-    setHours(Math.max(0, Math.min(12, nextHours)))
-    setMinutes(Math.max(0, Math.min(59, nextMinutes)))
+    const safeHours = Math.max(0, Math.min(23, nextHours))
+    const safeMinutes = Math.max(0, Math.min(59, nextMinutes))
+    const total = ClampExamDuration(safeHours * 60 + safeMinutes)
+    setHours(Math.floor(total / 60))
+    setMinutes(total % 60)
+
+    // Si el examen ya no cabe antes de las 21:45, se mueve al último periodo válido.
+    const latestIndex = GetLatestStartBlockIndex(CalculateRequiredBlocks(total))
+    if (FindReservationBlockIndex(startTime) > latestIndex) {
+      setStartTime(ROOM_RESERVATION_BLOCKS[latestIndex].start)
+    }
+
     onScheduleFieldChange?.([
       'duration_minutes',
       'room_id',
@@ -224,47 +224,8 @@ export function useExamSchedulerState({
       ToggleRoomInSelection(roomIdStr)
       return
     }
-
-    if (roomsState.hasSchedule && !availableRoomIds.has(roomIdStr)) {
-      const sharingStatus = EvaluateRoomSharingStatus(
-        room,
-        examDate,
-        startTime,
-        durationMinutes,
-      )
-
-      if (sharingStatus.isMarkedAsSharedByOtherTeacher) {
-        setIsSharedRoomEnabled(true)
-        ToggleRoomInSelection(roomIdStr)
-        return
-      }
-
-      if (!consentedSharedRoomIds.has(roomIdStr)) {
-        setPendingConsentRoom({
-          room,
-          conflictingSlots:
-            sharingStatus.conflictingSlots.length > 0
-              ? sharingStatus.conflictingSlots
-              : [
-                  {
-                    start: startTime,
-                    end: endTimeFormatted,
-                    exam_name: 'Reserva existente en el bloque',
-                  },
-                ],
-        })
-        return
-      }
-    }
-
-    ToggleRoomInSelection(roomIdStr)
-  }
-
-  const HandleConfirmConsentModal = (room: Room) => {
-    const roomIdStr = String(room.id)
-    setConsentedSharedRoomIds((prev) => new Set(prev).add(roomIdStr))
-    setIsSharedRoomEnabled(true)
-    setPendingConsentRoom(null)
+    // Un aula ocupada en el bloque elegido no puede reservarse.
+    if (roomsState.hasSchedule && !availableRoomIds.has(roomIdStr)) return
     ToggleRoomInSelection(roomIdStr)
   }
 
@@ -276,13 +237,21 @@ export function useExamSchedulerState({
   }
 
   const HandleSelectDate = (isoDate: string) => {
+    if (isoDate && !IsDateWithinAcademicTerm(isoDate, academicTermRange)) return
     setExamDate((current) => (current === isoDate ? '' : isoDate))
     onScheduleFieldChange?.(['exam_date', 'start_time', 'room_id'])
   }
 
   const HandleStartTimeChange = (nextTime: string) => {
+    const index = FindReservationBlockIndex(nextTime)
+    if (index < 0) return
+    if (index > GetLatestStartBlockIndex(reservation.blockCount)) return
     setStartTime(nextTime)
     onScheduleFieldChange?.(['start_time', 'exam_date', 'room_id'])
+  }
+
+  const HandleRoomSearchChange = (rawValue: string) => {
+    setRoomSearchQuery(SanitizeRoomSearchQuery(rawValue))
   }
 
   return {
@@ -296,20 +265,19 @@ export function useExamSchedulerState({
     durationMinutes,
     durationString,
     startTime,
-    endTimeFormatted,
+    examEndTime,
+    reservation,
     examDate,
     formattedDateLabel,
+    academicTermRange,
+    isExamDateWithinTerm,
     selectedRoomIds,
     selectedRooms,
     primaryRoom,
     primaryRoomId,
-    consentedSharedRoomIds,
-    isSharedRoomEnabled,
     isMultipleRoomsEnabled,
     onlyFreeRooms,
-    pendingConsentRoom,
-    eligibleStudentsCount,
-    targetCapacityWithMargin,
+    roomSearchQuery,
     visibleRooms,
     availableRoomIds,
     roomsState,
@@ -319,13 +287,11 @@ export function useExamSchedulerState({
     setEvaluationType,
     setSelectedRoomIds,
     setOnlyFreeRooms,
-    setIsSharedRoomEnabled,
-    setPendingConsentRoom,
     HandleDurationChange,
     HandleSelectRoomCard,
-    HandleConfirmConsentModal,
     HandleToggleMultipleRooms,
     HandleSelectDate,
     HandleStartTimeChange,
+    HandleRoomSearchChange,
   }
 }

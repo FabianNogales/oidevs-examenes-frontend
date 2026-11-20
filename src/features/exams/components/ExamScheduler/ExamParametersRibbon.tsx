@@ -1,4 +1,12 @@
-import { MAX_ALLOWED_PARTIAL_NUMBER } from '../../utils/examScheduleFormatters'
+import {
+  CalculateRequiredBlocks,
+  FormatBlockCountLabel,
+  FormatDurationLabel,
+  MAX_ALLOWED_PARTIAL_NUMBER,
+  MAX_EXAM_DURATION_MINUTES,
+  MAX_RESERVATION_BLOCKS,
+  MIN_EXAM_DURATION_MINUTES,
+} from '../../utils/examScheduleFormatters'
 import type { EvaluationType } from '../../types/exam.types'
 import styles from './ExamParametersRibbon.module.css'
 
@@ -23,12 +31,14 @@ const EVALUATION_TYPE_OPTIONS: ReadonlyArray<{
   { value: 'partial', label: 'Parcial' },
   { value: 'final', label: 'Final' },
   { value: 'makeup', label: 'Instancia' },
+  { value: 'recovery', label: 'Recuperatorio' },
 ]
 
 const DURATION_PRESETS = [
   { label: '30 min', hours: 0, minutes: 30 },
-  { label: '1 hora', hours: 1, minutes: 0 },
+  { label: '1 h', hours: 1, minutes: 0 },
   { label: '1:30', hours: 1, minutes: 30 },
+  { label: '2 h', hours: 2, minutes: 0 },
 ] as const
 
 interface DurationWheelInputProps {
@@ -38,6 +48,8 @@ interface DurationWheelInputProps {
   incrementLabel: string
   decrementLabel: string
   disabled: boolean
+  incrementDisabled?: boolean
+  decrementDisabled?: boolean
   onInputChange: (rawValue: string) => void
   onIncrement: () => void
   onDecrement: () => void
@@ -50,6 +62,8 @@ function DurationWheelInput({
   incrementLabel,
   decrementLabel,
   disabled,
+  incrementDisabled = false,
+  decrementDisabled = false,
   onInputChange,
   onIncrement,
   onDecrement,
@@ -70,7 +84,7 @@ function DurationWheelInput({
       <div className={styles.wheelButtonsCol}>
         <button
           type="button"
-          disabled={disabled}
+          disabled={disabled || incrementDisabled}
           className={styles.wheelStepBtn}
           onClick={onIncrement}
           aria-label={incrementLabel}
@@ -79,7 +93,7 @@ function DurationWheelInput({
         </button>
         <button
           type="button"
-          disabled={disabled}
+          disabled={disabled || decrementDisabled}
           className={styles.wheelStepBtn}
           onClick={onDecrement}
           aria-label={decrementLabel}
@@ -108,9 +122,15 @@ export function ExamParametersRibbon({
   onDurationChange,
 }: ExamParametersRibbonProps) {
   const isPartialEvaluation = evaluationType === 'partial'
-  const totalMinutes = Math.max(5, hours * 60 + minutes)
+  const totalMinutes = Math.min(
+    MAX_EXAM_DURATION_MINUTES,
+    Math.max(MIN_EXAM_DURATION_MINUTES, hours * 60 + minutes),
+  )
+  const requiredBlocks = CalculateRequiredBlocks(totalMinutes)
   const isCustomPartialNumber =
     partialNumber !== '1' && partialNumber !== '2' && partialNumber !== ''
+  const isAtMaxDuration = totalMinutes >= MAX_EXAM_DURATION_MINUTES
+  const isAtMinDuration = totalMinutes <= MIN_EXAM_DURATION_MINUTES
 
   const HandleNumericPartialInput = (rawValue: string) => {
     const digitsOnly = rawValue.replace(/\D/g, '')
@@ -129,8 +149,36 @@ export function ExamParametersRibbon({
       className={styles.parametersRibbon}
       aria-label="Parámetros principales de la evaluación"
     >
+      {/* 1. Tipo de examen */}
+      <div className={`${styles.parameterBlock} ${styles.typeBlock}`}>
+        <div className={styles.parameterLabelRow}>
+          <span className={styles.parameterLabel}>Tipo de examen</span>
+          <span className={styles.parameterHint}>Modalidad</span>
+        </div>
+        <div
+          className={styles.segmentedTrack}
+          role="group"
+          aria-label="Tipo de examen"
+        >
+          {EVALUATION_TYPE_OPTIONS.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              disabled={disabled}
+              className={`${styles.segmentedBtn} ${
+                evaluationType === item.value ? styles.segmentedBtnActive : ''
+              }`}
+              onClick={() => onEvaluationTypeChange(item.value)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 2. Número de parcial */}
       <div
-        className={`${styles.parameterBlock} ${
+        className={`${styles.parameterBlock} ${styles.partialBlock} ${
           !isPartialEvaluation ? styles.parameterBlockDisabled : ''
         }`}
       >
@@ -139,8 +187,8 @@ export function ExamParametersRibbon({
           <span className={styles.parameterHint}>
             {isPartialEvaluation
               ? lastCreatedPartialNumber > 0
-                ? `Último creado: ${lastCreatedPartialNumber}º • Máx. 6`
-                : `${partialNumber || '1'}º Parcial (Máx. 6)`
+                ? `Último: ${lastCreatedPartialNumber}º • Máx. 6`
+                : `Máx. ${MAX_ALLOWED_PARTIAL_NUMBER}`
               : 'No aplica'}
           </span>
         </div>
@@ -177,42 +225,21 @@ export function ExamParametersRibbon({
               className={`${styles.customPartialInput} ${
                 isCustomPartialNumber ? styles.customPartialInputActive : ''
               }`}
-              onChange={(event) => HandleNumericPartialInput(event.target.value)}
+              onChange={(event) =>
+                HandleNumericPartialInput(event.target.value)
+              }
             />
           </div>
         </div>
       </div>
 
-      <div className={styles.parameterBlock}>
-        <div className={styles.parameterLabelRow}>
-          <span className={styles.parameterLabel}>Tipo de examen</span>
-          <span className={styles.parameterHint}>Modalidad</span>
-        </div>
-        <div
-          className={styles.segmentedTrack}
-          role="group"
-          aria-label="Tipo de examen"
-        >
-          {EVALUATION_TYPE_OPTIONS.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              disabled={disabled}
-              className={`${styles.segmentedBtn} ${
-                evaluationType === item.value ? styles.segmentedBtnActive : ''
-              }`}
-              onClick={() => onEvaluationTypeChange(item.value)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className={styles.parameterBlock}>
+      {/* 3. Duración del examen */}
+      <div className={`${styles.parameterBlock} ${styles.durationBlock}`}>
         <div className={styles.parameterLabelRow}>
           <span className={styles.parameterLabel}>Duración del examen</span>
-          <span className={styles.parameterHint}>{totalMinutes} min</span>
+          <span className={styles.parameterHint}>
+            {totalMinutes} min • {FormatBlockCountLabel(requiredBlocks)}
+          </span>
         </div>
 
         <div className={styles.durationRow}>
@@ -224,6 +251,8 @@ export function ExamParametersRibbon({
               incrementLabel="Incrementar horas"
               decrementLabel="Disminuir horas"
               disabled={disabled}
+              incrementDisabled={isAtMaxDuration}
+              decrementDisabled={hours <= 0}
               onInputChange={(raw) =>
                 onDurationChange(ParseDigitsToNumber(raw), minutes)
               }
@@ -240,6 +269,8 @@ export function ExamParametersRibbon({
               incrementLabel="Incrementar minutos"
               decrementLabel="Disminuir minutos"
               disabled={disabled}
+              incrementDisabled={isAtMaxDuration}
+              decrementDisabled={isAtMinDuration}
               onInputChange={(raw) =>
                 onDurationChange(hours, ParseDigitsToNumber(raw))
               }
@@ -272,6 +303,14 @@ export function ExamParametersRibbon({
             })}
           </div>
         </div>
+
+        <p className={styles.durationLimitHint}>
+          Duración máxima:{' '}
+          <strong>
+            {FormatDurationLabel(MAX_EXAM_DURATION_MINUTES)} (
+            {MAX_RESERVATION_BLOCKS} periodos)
+          </strong>
+        </p>
       </div>
     </section>
   )

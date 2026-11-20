@@ -1,4 +1,7 @@
+import { Search, X } from 'lucide-react'
+import { TextInput } from '@/shared/components/ui'
 import type { Room } from '../../types/exam.types'
+import { ROOM_SEARCH_MAX_LENGTH } from '../../utils/examScheduleFormatters'
 import { ExamRoomCard } from './ExamRoomCard'
 import styles from './ExamRoomsPanel.module.css'
 
@@ -7,20 +10,18 @@ export interface ExamRoomsPanelProps {
   availableRoomIds: ReadonlySet<string>
   selectedRoomIds: string[]
   onlyFreeRooms: boolean
-  isSharedRoomEnabled: boolean
   isMultipleRoomsEnabled: boolean
-  eligibleStudentsCount: number
-  targetCapacityWithMargin: number
+  roomSearchQuery: string
   hasSchedule: boolean
   isLoadingRooms: boolean
   selectedDate: string
   startTime: string
-  durationMinutes: number
+  reservedMinutes: number
   formattedDateLabel: string
   disabled: boolean
   onToggleOnlyFreeRooms: (checked: boolean) => void
-  onToggleSharedRoom: (checked: boolean) => void
   onToggleMultipleRooms: (checked: boolean) => void
+  onRoomSearchChange: (rawValue: string) => void
   onSelectRoom: (room: Room) => void
   onClearRooms: () => void
 }
@@ -55,25 +56,64 @@ function ToolbarToggleSwitch({
   )
 }
 
+interface RoomSearchBarProps {
+  value: string
+  disabled: boolean
+  onChange: (rawValue: string) => void
+}
+
+function RoomSearchBar({ value, disabled, onChange }: RoomSearchBarProps) {
+  return (
+    <div className={styles.searchToolbar}>
+      <div className={styles.searchInputWrap}>
+        <Search className={styles.searchIcon} aria-hidden="true" />
+        <TextInput
+          id="exam-room-search"
+          type="text"
+          inputMode="text"
+          autoComplete="off"
+          spellCheck={false}
+          maxLength={ROOM_SEARCH_MAX_LENGTH}
+          value={value}
+          disabled={disabled}
+          placeholder="Buscar aula"
+          aria-label="Buscar aula"
+          className={styles.searchInput}
+          onChange={(event) => onChange(event.currentTarget.value)}
+        />
+        {value.length > 0 ? (
+          <button
+            type="button"
+            className={styles.searchClearBtn}
+            disabled={disabled}
+            onClick={() => onChange('')}
+            aria-label="Limpiar búsqueda"
+          >
+            <X size={14} aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 export function ExamRoomsPanel({
   rooms,
   availableRoomIds,
   selectedRoomIds,
   onlyFreeRooms,
-  isSharedRoomEnabled,
   isMultipleRoomsEnabled,
-  eligibleStudentsCount,
-  targetCapacityWithMargin,
+  roomSearchQuery,
   hasSchedule,
   isLoadingRooms,
   selectedDate,
   startTime,
-  durationMinutes,
+  reservedMinutes,
   formattedDateLabel,
   disabled,
   onToggleOnlyFreeRooms,
-  onToggleSharedRoom,
   onToggleMultipleRooms,
+  onRoomSearchChange,
   onSelectRoom,
   onClearRooms,
 }: ExamRoomsPanelProps) {
@@ -100,13 +140,6 @@ export function ExamRoomsPanel({
           >
             {counterText}
           </span>
-
-          {targetCapacityWithMargin > 0 ? (
-            <span className={styles.capacityInfoBanner}>
-              Habilitados: {eligibleStudentsCount} (+10 margen ={' '}
-              <strong>{targetCapacityWithMargin} plazas sug.</strong>)
-            </span>
-          ) : null}
         </div>
 
         <div className={styles.panelControlsGroup}>
@@ -124,12 +157,6 @@ export function ExamRoomsPanel({
       <div className={styles.togglesToolbar}>
         <div className={styles.togglesGroup}>
           <ToolbarToggleSwitch
-            label="Aula compartida"
-            checked={isSharedRoomEnabled}
-            disabled={disabled}
-            onChange={onToggleSharedRoom}
-          />
-          <ToolbarToggleSwitch
             label="Aulas múltiples"
             checked={isMultipleRoomsEnabled}
             disabled={disabled}
@@ -145,17 +172,24 @@ export function ExamRoomsPanel({
         />
       </div>
 
+      <RoomSearchBar
+        value={roomSearchQuery}
+        disabled={disabled}
+        onChange={onRoomSearchChange}
+      />
+
       <div className={styles.roomsStack}>
         {rooms.length === 0 ? (
           <div className={styles.emptyRoomsState}>
             {isLoadingRooms
               ? 'Consultando disponibilidad de aulas...'
-              : 'No se encontraron aulas disponibles para el filtro seleccionado.'}
+              : roomSearchQuery
+                ? `No se encontraron aulas que coincidan con «${roomSearchQuery}».`
+                : 'No se encontraron aulas disponibles para el filtro seleccionado.'}
           </div>
         ) : (
           rooms.map((room, index) => {
             const roomIdString = String(room.id)
-            const roomCap = Number(room.capacity) || 0
             return (
               <ExamRoomCard
                 key={room.id}
@@ -165,15 +199,10 @@ export function ExamRoomsPanel({
                 isAvailable={
                   hasVerifiedSchedule && availableRoomIds.has(roomIdString)
                 }
-                isRecommendedForCapacity={
-                  targetCapacityWithMargin > 0 &&
-                  index === 0 &&
-                  roomCap >= targetCapacityWithMargin
-                }
                 hasVerifiedSchedule={hasVerifiedSchedule}
                 selectedDate={selectedDate}
                 startTime={startTime}
-                durationMinutes={durationMinutes}
+                reservedMinutes={reservedMinutes}
                 formattedDateLabel={formattedDateLabel}
                 disabled={disabled}
                 onSelectRoom={onSelectRoom}

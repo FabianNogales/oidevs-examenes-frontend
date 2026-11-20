@@ -2,8 +2,8 @@
   width: 100%;
   min-width: 0;
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: var(--space-5);
   box-shadow: var(--shadow-md);
 }
@@ -16,14 +16,14 @@
   gap: var(--space-3);
   padding-bottom: var(--space-3);
   margin-bottom: var(--space-4);
-  border-bottom: 1.5px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .panelHeaderRow h3 {
   margin: 0;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: var(--color-text-primary);
 }
 
 .timeWindowBadge {
@@ -39,21 +39,23 @@
 
 .timePresetsGrid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: var(--space-3);
 }
 
 .timePresetBtn {
-  min-height: 36px;
-  height: 36px;
-  padding: 0 4px;
+  min-height: 48px;
+  padding: 6px 4px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   background: var(--color-surface-muted);
-  color: var(--color-text);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition:
@@ -62,53 +64,75 @@
     border-color var(--transition-fast);
 }
 
-.timePresetBtn:hover:not(.timePresetBtnActive):not(:disabled) {
-  background: var(--color-surface-soft);
-  border-color: var(--color-primary-hover);
-  color: var(--color-primary-hover);
+.blockStartText {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.15;
 }
 
-/* Turno seleccionado en Rojo Carmesí EIDA */
+.blockEndText {
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-regular);
+  line-height: 1.15;
+  opacity: 0.85;
+}
+
+.timePresetBtn:hover:not(.timePresetBtnActive):not(.timePresetBtnCovered):not(
+    :disabled
+  ) {
+  background: var(--color-accent-soft);
+  border-color: var(--color-decorative);
+  color: var(--color-accent);
+}
+
+.timePresetBtn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* Periodo de inicio seleccionado (Burgundy Semi-Flat) */
 .timePresetBtnActive {
   background: var(--color-accent);
-  color: var(--color-on-primary);
+  color: var(--color-on-accent);
   border-color: var(--color-accent);
-  font-weight: var(--font-weight-semibold);
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  box-shadow: var(--shadow-sm);
 }
 
-.customTimeRow {
+/* Periodos adicionales marcados automáticamente según la duración del examen */
+.timePresetBtnCovered {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border-color: var(--color-decorative);
+  opacity: 1 !important;
+}
+
+.reservationMetaRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2);
   padding-top: var(--space-3);
-  border-top: 1.5px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
 }
 
-.customTimeInput {
-  min-height: 36px !important;
-  height: 36px !important;
-  padding: 0 12px !important;
-  border: 1.5px solid var(--color-border-strong) !important;
-  border-radius: var(--radius-sm) !important;
-  font-size: var(--font-size-xs);
+.reservationMetaRow strong {
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text) !important;
-  background: var(--color-surface-muted) !important;
-  cursor: pointer;
+  font-variant-numeric: tabular-nums;
 }
 
-.customTimeInput:focus {
-  border-color: var(--color-accent) !important;
-  background: var(--color-surface) !important;
+@media (max-width: 768px) {
+  .panelCard {
+    padding: var(--space-4);
+  }
 }
 
 @media (max-width: 640px) {
   .timePresetsGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
