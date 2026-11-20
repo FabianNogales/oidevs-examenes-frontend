@@ -7,12 +7,14 @@ import local from './AdminSubjectsTable.module.css'
 
 export function AdminSubjectsTable({
   subjects,
+  onDetail,
   onEdit,
   onStatusChange,
 }: {
   subjects: AdminSubject[]
-  onEdit: (id: number) => void
-  onStatusChange: (subject: AdminSubject) => void
+  onDetail?: (id: number) => void
+  onEdit?: (id: number) => void
+  onStatusChange?: (subject: AdminSubject) => void
 }) {
   const columns: TableColumnDef<AdminSubject>[] = [
     {
@@ -51,15 +53,17 @@ export function AdminSubjectsTable({
       width: '26%',
       cell: (subject) => (
         <div className={`${tableStyles.actionButtons} ${local.actions}`}>
-          <button
+          {onDetail && <button type="button" className={tableStyles.btnViewProfile}
+            onClick={() => onDetail(subject.id)} aria-label={`Ver materia ${subject.code}`}>Ver detalle</button>}
+          {onEdit && <button
             type="button"
             className={tableStyles.btnViewProfile}
             onClick={() => onEdit(subject.id)}
             aria-label={`Editar materia ${subject.code}`}
           >
             Editar materia
-          </button>
-          <button
+          </button>}
+          {onStatusChange && <button
             type="button"
             className={
               subject.status === 'ACTIVE'
@@ -70,7 +74,7 @@ export function AdminSubjectsTable({
             aria-label={`${subject.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} materia ${subject.code}`}
           >
             {subject.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
-          </button>
+          </button>}
         </div>
       ),
     },

@@ -8,7 +8,7 @@ export function RoomDetails({
   onClose,
 }: {
   room: Room
-  onEdit: () => void
+  onEdit?: () => void
   onClose: () => void
 }) {
   const fields = [
@@ -63,7 +63,7 @@ export function RoomDetails({
         <Button variant="secondary" onClick={onClose}>
           Cerrar
         </Button>
-        <Button onClick={onEdit}>Editar aula</Button>
+        {onEdit && <Button onClick={onEdit}>Editar aula</Button>}
       </footer>
     </>
   )

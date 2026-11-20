@@ -65,5 +65,7 @@ export interface RoomResponse {
   data: Room
 }
 
+export type RoomEditable = Pick<Room, 'id' | 'code' | 'name' | 'location' | 'description' | 'capacity' | 'floor'>
+
 export type RoomDialogSelection =
   { mode: 'create' } | { mode: 'detail' | 'edit'; roomId: number }

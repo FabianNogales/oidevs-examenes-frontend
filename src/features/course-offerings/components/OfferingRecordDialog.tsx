@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { AcademicTerm } from '@/features/academic-terms/types/academicTerm.types'
+import type { OfferingPeriod } from '../types/courseOffering.types'
 import type { CourseOffering } from '../types/courseOffering.types'
 import {
   getCourseOffering,
@@ -20,7 +20,7 @@ export function OfferingRecordDialog({
 }: {
   id: number
   mode: 'edit' | 'status'
-  periods: AcademicTerm[]
+  periods: OfferingPeriod[]
   onClose: () => void
   onSaved: () => void
   onBusy: (busy: boolean) => void

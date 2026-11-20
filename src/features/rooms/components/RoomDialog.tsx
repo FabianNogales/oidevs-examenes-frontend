@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { getAdminRoom, RoomApiError } from '../api/adminRoomsApi'
-import type { Room, RoomDialogSelection } from '../types/room.types'
+import { getAdminRoom, getAdminRoomForEdit, RoomApiError } from '../api/adminRoomsApi'
+import type { Room, RoomEditable, RoomDialogSelection } from '../types/room.types'
 import { RoomDetails } from './RoomDetails'
 import { RoomForm } from './RoomForm'
 import { RoomModal } from './RoomModal'
@@ -11,11 +11,15 @@ interface Props {
   selection: RoomDialogSelection
   onClose: () => void
   onSaved: (room: Room, created: boolean) => void
+  canView: boolean
+  canCreate: boolean
+  canEdit: boolean
 }
 
 type RecordState =
   | { status: 'loading' }
-  | { status: 'ready'; room: Room }
+  | { status: 'ready'; mode: 'detail'; room: Room }
+  | { status: 'ready'; mode: 'edit'; room: RoomEditable }
   | { status: 'error'; message: string; missing: boolean }
 
 function ExistingRoom({
@@ -29,7 +33,7 @@ function ExistingRoom({
   roomId: number
   editing: boolean
   onClose: () => void
-  onEdit: () => void
+  onEdit?: () => void
   onSaved: (room: Room) => void
   onBusyChange: (busy: boolean) => void
 }) {
@@ -37,25 +41,27 @@ function ExistingRoom({
   const [retry, setRetry] = useState(0)
   useEffect(() => {
     const controller = new AbortController()
-    getAdminRoom(roomId, controller.signal).then(
-      (room) => {
-        if (!controller.signal.aborted) setState({ status: 'ready', room })
-      },
-      (cause: unknown) => {
-        if (controller.signal.aborted) return
-        const error =
-          cause instanceof RoomApiError
-            ? cause
-            : new RoomApiError('No se pudo consultar el aula.')
-        setState({
-          status: 'error',
-          message: error.message,
-          missing: error.status === 404,
+    const loading = editing
+      ? getAdminRoomForEdit(roomId, controller.signal).then((room) => {
+          if (!controller.signal.aborted) setState({ status: 'ready', mode: 'edit', room })
         })
-      },
-    )
+      : getAdminRoom(roomId, controller.signal).then((room) => {
+          if (!controller.signal.aborted) setState({ status: 'ready', mode: 'detail', room })
+        })
+    loading.catch((cause: unknown) => {
+      if (controller.signal.aborted) return
+      const error =
+        cause instanceof RoomApiError
+          ? cause
+          : new RoomApiError('No se pudo consultar el aula.')
+      setState({
+        status: 'error',
+        message: error.message,
+        missing: error.status === 404,
+      })
+    })
     return () => controller.abort()
-  }, [roomId, retry])
+  }, [roomId, retry, editing])
 
   if (state.status === 'loading')
     return (
@@ -80,7 +86,7 @@ function ExistingRoom({
         )}
       </div>
     )
-  return editing ? (
+  return state.mode === 'edit' ? (
     <RoomForm
       room={state.room}
       onCancel={onClose}
@@ -92,7 +98,9 @@ function ExistingRoom({
   )
 }
 
-export function RoomDialog({ selection, onClose, onSaved }: Props) {
+export function RoomDialog({
+  selection, onClose, onSaved, canView, canCreate, canEdit,
+}: Props) {
   const busy = useRef(false)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(selection.mode === 'edit')
@@ -116,16 +124,21 @@ export function RoomDialog({ selection, onClose, onSaved }: Props) {
     onSaved(room, selection.mode === 'create')
   }
 
+  const allowed = selection.mode === 'create' ? canCreate : editing ? canEdit : canView
+
   return (
     <RoomModal title={title} busy={saving} onClose={close}>
-      {selection.mode === 'create' ? (
+      {!allowed ? (
+        <p role="alert">No tienes permiso vigente para esta operación.</p>
+      ) : selection.mode === 'create' ? (
         <RoomForm onCancel={close} onSaved={saved} onBusyChange={changeBusy} />
       ) : (
         <ExistingRoom
+          key={editing ? 'edit' : 'detail'}
           roomId={selection.roomId}
           editing={editing}
           onClose={close}
-          onEdit={() => setEditing(true)}
+          onEdit={canEdit ? () => setEditing(true) : undefined}
           onSaved={saved}
           onBusyChange={changeBusy}
         />

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getPortalAccess } from '@/features/portal-shared/utils/portalAccess'
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
@@ -66,7 +67,8 @@ const columns: readonly TableColumnDef<EventRow>[] = [
 ]
 
 export function AdminCalendarPage() {
-  const { notify } = useAuth()
+  const { user, notify } = useAuth()
+  const { isAdministrator: canManage } = getPortalAccess(user, 'events')
   const [query, setQuery] = useState({
     page: 1,
     search: '',
@@ -137,7 +139,7 @@ export function AdminCalendarPage() {
       <PageHeader title="Gestión del calendario" titleRef={heading} focusableTitle
         description="Eventos institucionales públicos y privados."
         breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Gestión del calendario' }]}
-        actions={<button
+        actions={canManage ? <button
           type="button"
           className={styles.primary}
           disabled={
@@ -146,10 +148,10 @@ export function AdminCalendarPage() {
           onClick={() => setSelected({ id: null })}
         >
           Crear evento
-        </button>} />
-      <p className={styles.categoriesLink}>
+        </button> : undefined} />
+      {canManage ? <p className={styles.categoriesLink}>
         <Link to="/admin/portal/events/categories">Gestionar categorías</Link>
-      </p>
+      </p> : null}
       {categories.loading ? (
         <p role="status">Cargando categorías…</p>
       ) : categories.error ? (
@@ -308,12 +310,13 @@ export function AdminCalendarPage() {
           emptyDescription={
             query.search || query.status || query.category || query.visibility
               ? 'Prueba otros términos o limpia los filtros.'
-              : 'Crea un borrador cuando el catálogo de categorías esté disponible.'
+              : canManage ? 'Crea un borrador cuando el catálogo de categorías esté disponible.' : 'No hay contenido para editar.'
           }
         />
       </div>
       {selected ? (
         <AdminEventDialog
+          canManage={canManage}
           key={selected.id ?? 'new'}
           eventId={selected.id}
           categories={categories.data ?? []}

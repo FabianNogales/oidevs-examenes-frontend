@@ -17,11 +17,13 @@ import { Button } from '@/shared/components/ui/Button/Button'
 
 export function AcademicTermForm({
   term,
+  allowActivation = false,
   onCancel,
   onSaved,
   onBusyChange,
 }: {
   term?: AcademicTerm
+  allowActivation?: boolean
   onCancel: () => void
   onSaved: (term: AcademicTerm) => void
   onBusyChange: (value: boolean) => void
@@ -64,7 +66,8 @@ export function AcademicTermForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending.current || unavailable) return
-    const payload = { ...values, name: values.name.trim() }
+    const payload = { ...values, name: values.name.trim(),
+      status: !term && !allowActivation ? 'INACTIVE' as const : values.status }
     const validation = validateAcademicTerm(payload)
     setErrors(validation)
     setError(null)
@@ -110,6 +113,9 @@ export function AcademicTermForm({
           <strong>{term.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}</strong>.
         </p>
       )}
+      {!term && !allowActivation && <p className={styles.help}>
+        El periodo se registrará inactivo. Su activación corresponde al administrador.
+      </p>}
       {error && (
         <div className={styles.error} role="alert">
           <p>{error}</p>
@@ -127,6 +133,7 @@ export function AcademicTermForm({
         values={values}
         errors={errors}
         editing={Boolean(term)}
+        allowActivation={allowActivation}
         disabled={saving || unavailable}
         onChange={change}
       />

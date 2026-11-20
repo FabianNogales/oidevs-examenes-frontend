@@ -1,6 +1,9 @@
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useCallback, useState } from 'react'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getHomeRouteForUser } from '@/features/auth/utils/authRoutes'
+import { getModuleAccess } from '@/features/roles/utils/moduleAccess'
 import { Link } from 'react-router'
 import { useAcademicTerms } from '../hooks/useAcademicTerms'
 import type {
@@ -22,6 +25,9 @@ import { Button } from '@/shared/components/ui/Button/Button'
 const INITIAL_QUERY: AcademicTermsQuery = { page: 1, search: '', status: '' }
 
 export function AdminAcademicTermsPage() {
+  const { user } = useAuth()
+  const access = getModuleAccess(user, 'academic_terms')
+  const home = user ? getHomeRouteForUser(user) : '/'
   const [query, setQuery] = useState(INITIAL_QUERY)
   const [selection, setSelection] = useState<AcademicTermSelection | null>(null)
   const [notice, setNotice] = useState<AuthNotice | null>(null)
@@ -61,21 +67,21 @@ export function AdminAcademicTermsPage() {
   }
   return (
     <PageContainer labelledBy="academic-terms-title">
-      <Link to="/admin" className={styles.backLink}>
+      <Link to={access.isAdministrator ? '/admin' : home} className={styles.backLink}>
         <span aria-hidden="true">←</span>Volver al inicio
       </Link>
       <PageHeader
         title="Periodos académicos"
         titleId="academic-terms-title"
         focusableTitle
-        eyebrow="Administrador"
+        eyebrow={access.isAdministrator ? 'Administrador' : 'Personal'}
         description="Consulta las gestiones disponibles para organizar las ofertas académicas y conservar su historial."
         breadcrumbs={[
-          { label: 'Inicio', to: '/admin' },
+          { label: 'Inicio', to: access.isAdministrator ? '/admin' : home },
           { label: 'Periodos académicos' },
         ]}
         actions={
-          <Button
+          access.canCreate && <Button
             onClick={() => setSelection({ mode: 'create' })}
           >
             + Registrar periodo
@@ -106,14 +112,15 @@ export function AdminAcademicTermsPage() {
             (state.result.data.length ? (
               <AcademicTermsTable
                 terms={state.result.data}
-                onEdit={(termId) => setSelection({ mode: 'edit', termId })}
-                onStatus={(term) =>
+                onDetail={(termId) => setSelection({ mode: 'detail', termId })}
+                onEdit={access.canEdit ? (termId) => setSelection({ mode: 'edit', termId }) : undefined}
+                onStatus={access.isAdministrator ? (term) =>
                   setStatusSelection({
                     termId: term.id,
                     targetStatus:
                       term.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
                   })
-                }
+                  : undefined}
               />
             ) : (
               <div className={styles.state} role="status">
@@ -173,7 +180,7 @@ export function AdminAcademicTermsPage() {
           onSaved={saved}
         />
       )}
-      {statusSelection !== null && (
+      {access.isAdministrator && statusSelection !== null && (
         <AcademicTermStatusDialog
           key={`${statusSelection.termId}:${statusSelection.targetStatus}`}
           {...statusSelection}

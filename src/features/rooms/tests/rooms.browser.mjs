@@ -67,7 +67,7 @@ try {
         const normalized = id.replaceAll('\\', '/')
         if (normalized.endsWith('/src/shared/api/httpClient.ts'))
           return 'export const httpClient={get:(...a)=>window.roomsQa.client.get(...a),post:(...a)=>window.roomsQa.client.post(...a),put:(...a)=>window.roomsQa.client.put(...a),patch:(...a)=>window.roomsQa.client.patch(...a),delete:(...a)=>window.roomsQa.client.delete(...a)};'
-        if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts')) return 'export const useAuth=()=>({notify(){}});'
+        if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts')) return 'export const useAuth=()=>({notify(){},user:{id:1,status:"ACTIVE",must_change_password:false,roles:["ADMINISTRADOR"],permissions:[]}});'
       },
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {

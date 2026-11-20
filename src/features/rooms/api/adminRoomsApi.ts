@@ -2,6 +2,7 @@ import axios from 'axios'
 import { httpClient } from '@/shared/api/httpClient'
 import type {
   Room,
+  RoomEditable,
   RoomFieldErrors,
   RoomPayload,
   RoomResponse,
@@ -138,6 +139,21 @@ export async function saveAdminRoom(
             payload,
           )
     return readRoom(response.data, roomId)
+  } catch (error) {
+    if (error instanceof RoomApiError) throw error
+    throw mapRoomError(error)
+  }
+}
+
+// Dependency of editing only: this never requests the catalog or the consultation DTO.
+export async function getAdminRoomForEdit(roomId: number, signal: AbortSignal): Promise<RoomEditable> {
+  try {
+    const { data } = await httpClient.get<{ data: RoomEditable }>(`${ROOMS_ENDPOINT}/${roomId}/edit`, { signal })
+    const room = data?.data
+    if (!room || room.id !== roomId || typeof room.code !== 'string' || (room.name !== null && typeof room.name !== 'string')) {
+      throw new RoomApiError('El servidor devolvió datos de edición no válidos.')
+    }
+    return room
   } catch (error) {
     if (error instanceof RoomApiError) throw error
     throw mapRoomError(error)

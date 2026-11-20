@@ -38,6 +38,7 @@ function draftOf(event: AdminPortalEvent | null) {
 }
 
 export function EventForm({
+  canManage = true,
   initial,
   categories,
   onSaved,
@@ -45,6 +46,7 @@ export function EventForm({
   onDirty,
   onCancel,
 }: {
+  canManage?: boolean
   initial: AdminPortalEvent | null
   categories: EventCategory[]
   onSaved: (event: AdminPortalEvent) => void
@@ -108,7 +110,7 @@ export function EventForm({
     setPending(null)
   }
   const emptyCategories = !snapshot && categories.length === 0
-  const locked = busy || conflict
+  const locked = busy || conflict || (!snapshot && !canManage)
   const fields = error?.fields ?? {}
 
   function update(field: keyof typeof draft, value: string | boolean) {
@@ -123,6 +125,7 @@ export function EventForm({
   }
 
   async function mutate(status?: EventStatus, visibilityConfirmed = false) {
+    if (!canManage && (status || !snapshot)) return
     if (submitting.current || conflict || (!status && emptyCategories)) return
     if (
       !status &&
@@ -186,10 +189,14 @@ export function EventForm({
         }
         // Omit an unchanged category when editing: its active catalog entry may have been retired.
         const { category_id, ...content } = input
+        const changes = category_id === snapshot?.category.id ? content : input
+        // Content editing never sends visibility, including its unchanged value.
+        const delegatedChanges: Partial<EventInput> = { ...changes }
+        delete delegatedChanges.visibility
         result = snapshot
           ? await editEvent(
               snapshot.id,
-              category_id === snapshot.category.id ? content : input,
+              canManage ? changes : delegatedChanges,
               snapshot.revision,
             )
           : await createEvent(input)
@@ -285,8 +292,8 @@ export function EventForm({
           {snapshot.status === 'PUBLISHED' &&
           snapshot.visibility === 'PUBLIC' ? (
             <p className={styles.notice}>
-              Los cambios serán públicos al guardar. Despublica primero si
-              necesitas preparar cambios fuera del público.
+              Los cambios serán públicos al guardar.
+              {canManage ? ' Despublica primero si necesitas preparar cambios fuera del público.' : ''}
             </p>
           ) : null}
         </>
@@ -364,29 +371,33 @@ export function EventForm({
             />
           </label>
           {fieldError('category_id')}
-          <label className={styles.field}>
-            Visibilidad
-            <Dropdown
-              name="visibility"
-              value={draft.visibility}
-              required
-              {...accessibility('visibility')}
-              options={[
-                { value: 'PUBLIC', label: 'Público' },
-                { value: 'PRIVATE', label: 'Privado — solo administradores' },
-              ]}
-              onChange={(nextValue) => {
-                if (nextValue === 'PUBLIC' || nextValue === 'PRIVATE')
-                  update('visibility', nextValue)
-              }}
-            />
-          </label>
-          {fieldError('visibility')}
-          <p className={styles.help}>
-            {draft.visibility === 'PUBLIC'
-              ? 'Visible en el calendario público una vez publicado.'
-              : 'Visible solo para usuarios autorizados.'}
-          </p>
+          {canManage ? (
+            <>
+              <label className={styles.field}>
+                Visibilidad
+                <Dropdown
+                  name="visibility"
+                  value={draft.visibility}
+                  required
+                  {...accessibility('visibility')}
+                  options={[
+                    { value: 'PUBLIC', label: 'Público' },
+                    { value: 'PRIVATE', label: 'Privado — solo administradores' },
+                  ]}
+                  onChange={(nextValue) => {
+                    if (nextValue === 'PUBLIC' || nextValue === 'PRIVATE')
+                      update('visibility', nextValue)
+                  }}
+                />
+              </label>
+              {fieldError('visibility')}
+              <p className={styles.help}>
+                {draft.visibility === 'PUBLIC'
+                  ? 'Visible en el calendario público una vez publicado.'
+                  : 'Visible solo para usuarios autorizados.'}
+              </p>
+            </>
+          ) : null}
           <h3 className={styles.sectionTitle}>Fecha y horario</h3>
           <p className={styles.help}>Zona horaria: Bolivia (America/La_Paz).</p>
           <label className={styles.checkbox}>
@@ -538,12 +549,12 @@ export function EventForm({
           </button>
         </div>
       </form>
-      {snapshot && dirty ? (
+      {canManage && snapshot && dirty ? (
         <p id={`${id}-status-blocked`} className={styles.help}>
           Guarda o descarta los cambios antes de cambiar el estado
         </p>
       ) : null}
-      {snapshot ? (
+      {canManage && snapshot ? (
         <div className={styles.actions} aria-label="Cambiar estado del evento">
           {(['DRAFT', 'PUBLISHED', 'CANCELLED'] as const)
             .filter((status) => status !== snapshot.status)
@@ -567,7 +578,7 @@ export function EventForm({
             ))}
         </div>
       ) : null}
-      {pending === 'visibility' ? (
+      {canManage && pending === 'visibility' ? (
         <section
           ref={confirmation}
           className={styles.notice}
@@ -597,7 +608,7 @@ export function EventForm({
             </button>
           </div>
         </section>
-      ) : pending ? (
+      ) : canManage && pending ? (
         <section
           ref={confirmation}
           className={styles.notice}

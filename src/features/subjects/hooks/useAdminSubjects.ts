@@ -54,14 +54,14 @@ export function useAdminSubjects(query: SubjectsQuery) {
   return { ...state, markLoading, reload }
 }
 
-export function useSubjectCareers() {
+export function useSubjectCareers(forForm = false) {
   const [careers, setCareers] = useState<SubjectCareer[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [retry, setRetry] = useState(0)
   useEffect(() => {
     const controller = new AbortController()
-    getSubjectCareers(controller.signal).then(
+    getSubjectCareers(controller.signal, forForm).then(
       (result) => {
         if (!controller.signal.aborted) {
           setCareers(result)
@@ -76,7 +76,7 @@ export function useSubjectCareers() {
       },
     )
     return () => controller.abort()
-  }, [retry])
+  }, [retry, forForm])
   function reload() {
     setError(null)
     setLoaded(false)

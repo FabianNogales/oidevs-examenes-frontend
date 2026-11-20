@@ -31,6 +31,7 @@ function formOf(item: AdminInformation | null) {
 }
 
 export function InformationEditor({
+  canManage = true,
   kind,
   initial,
   onSaved,
@@ -39,6 +40,7 @@ export function InformationEditor({
   onStateChange,
   formId,
 }: {
+  canManage?: boolean
   kind: InformationKind
   initial: AdminInformation | null
   onSaved: (item: AdminInformation) => void
@@ -54,8 +56,8 @@ export function InformationEditor({
   const generatedId = useId()
   const editorFormId = formId ?? generatedId
   const dirty = JSON.stringify(form) !== JSON.stringify(formOf(item)) || pending !== null
-  const submitLabel = item ? 'Guardar borrador' : 'Crear FAQ'
-  const submitDisabled = editor.locked || pending !== null
+  const submitLabel = item?.is_published ? 'Guardar cambios' : item ? 'Guardar borrador' : 'Crear FAQ'
+  const submitDisabled = editor.locked || pending !== null || (!item && !canManage)
   useEffect(() => {
     onBusy(editor.busy)
   }, [editor.busy, onBusy])
@@ -67,6 +69,7 @@ export function InformationEditor({
   }, [onStateChange, submitDisabled, submitLabel])
   const fields = editor.error?.fields ?? {}
   async function save() {
+    if (submitDisabled) return
     const input: SectionDraft | FaqDraft =
       kind === 'sections'
         ? {
@@ -92,7 +95,7 @@ export function InformationEditor({
     }
   }
   async function publish() {
-    if (!item || !pending) return
+    if (!canManage || !item || !pending) return
     const result = await editor.mutate(() =>
       publishInformation(kind, item.id, pending === 'publish', item.revision),
     )
@@ -148,6 +151,11 @@ export function InformationEditor({
       ) : (
         <p>La FAQ se creará como borrador, sin publicar.</p>
       )}
+      <p className={styles.notice}>
+        {item?.is_published
+          ? 'Al guardar, los cambios se verán inmediatamente en el portal público.'
+          : 'Guardar conserva el borrador sin publicarlo.'}
+      </p>
       <form
         id={editorFormId}
         onSubmit={(event) => {
@@ -159,7 +167,7 @@ export function InformationEditor({
           className={styles.editorFields}
           disabled={editor.locked || pending !== null}
         >
-          <legend>Borrador</legend>
+          <legend>{item?.is_published ? 'Contenido' : 'Borrador'}</legend>
           {(kind === 'sections'
             ? (['title', 'description'] as const)
             : (['question', 'answer'] as const)
@@ -286,7 +294,7 @@ export function InformationEditor({
           ) : null}
         </fieldset>
       </form>
-      {pending ? (
+      {canManage && pending ? (
         <section className={styles.notice}>
           <p>
             {pending === 'publish'
@@ -325,7 +333,7 @@ export function InformationEditor({
               {submitLabel}
             </button>
           ) : null}
-          {item ? (
+          {canManage && item ? (
             <>
               <button
                 type="button"

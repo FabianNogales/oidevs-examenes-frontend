@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Dropdown } from '@/shared/components/ui/Dropdown'
-import type { AcademicTerm } from '@/features/academic-terms/types/academicTerm.types'
+import type { OfferingPeriod } from '../types/courseOffering.types'
 import type { CourseOffering } from '../types/courseOffering.types'
 import { getSubjectChoices, getTeacherChoices } from '../api/offeringChoicesApi'
 import {
@@ -19,7 +19,7 @@ export function OfferingEditForm({
   onCancel,
 }: {
   offering: CourseOffering
-  periods: AcademicTerm[]
+  periods: OfferingPeriod[]
   onSaved: () => void
   onBusy: (busy: boolean) => void
   onCancel: () => void

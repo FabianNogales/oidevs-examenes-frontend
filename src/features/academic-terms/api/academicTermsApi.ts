@@ -127,10 +127,11 @@ export async function getActiveAcademicTerm(
 export async function getAcademicTerm(
   id: number,
   signal: AbortSignal,
+  forEdit = false,
 ): Promise<AcademicTerm> {
   try {
     const response = await httpClient.get<{ data: AcademicTerm }>(
-      `${BASE}/${id}`,
+      `${BASE}/${id}${forEdit ? '/edit' : ''}`,
       { signal },
     )
     if (!isAcademicTerm(response.data?.data) || response.data.data.id !== id)

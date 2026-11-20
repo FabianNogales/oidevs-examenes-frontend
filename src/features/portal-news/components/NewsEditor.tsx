@@ -37,6 +37,7 @@ export type NewsCategoryOptions = {
 }
 
 export function NewsEditor({
+  canManage = true,
   initial,
   categories,
   onSaved,
@@ -45,6 +46,7 @@ export function NewsEditor({
   onStateChange,
   formId,
 }: {
+  canManage?: boolean
   initial: AdminNews | null
   categories: NewsCategoryOptions
   onSaved: (news: AdminNews) => void
@@ -69,7 +71,7 @@ export function NewsEditor({
   // is no longer active (or is null for news created before categories).
   const currentCategory = news?.category ?? null
   const currentInactive =
-    !!currentCategory &&
+    canManage && !!currentCategory &&
     !activeCategories.some((category) => category.id === currentCategory.id)
   // Creating requires an active category; block it while none can be offered.
   const categoriesUnavailable = !news && activeCategories.length === 0
@@ -80,7 +82,7 @@ export function NewsEditor({
     dirtyText || file !== null || pending !== null || removing
   const locked = editor.locked || pending !== null || removing
   const submitLabel = news ? 'Guardar noticia' : 'Crear borrador'
-  const submitDisabled = locked || categoriesUnavailable
+  const submitDisabled = locked || categoriesUnavailable || (!news && !canManage)
   useEffect(() => {
     onBusy(editor.busy)
   }, [editor.busy, onBusy])
@@ -128,7 +130,7 @@ export function NewsEditor({
     if (submitDisabled) return
     const { category_id: selected, ...text } = draft
     const categoryId = Number(selected)
-    const changed = selected !== categoryValue(news)
+    const changed = canManage && selected !== categoryValue(news)
     // Only a newly chosen category must be active; an unchanged one is omitted.
     if (
       (!news || changed) &&
@@ -218,9 +220,12 @@ export function NewsEditor({
       {editor.busy ? <p role="status">Procesando noticia…</p> : null}
       {news?.status === 'PUBLISHED' ? (
         <p className={styles.notice}>
-          Guardar cambia el contenido público inmediatamente. Despublica primero
-          para preparar cambios fuera del portal.
+          Guardar cambia el contenido público inmediatamente.
+          {canManage ? ' Despublica primero para preparar cambios fuera del portal.' : ''}
         </p>
+      ) : null}
+      {!canManage && news?.image_url ? (
+        <AuthenticatedNewsImage url={news.image_url} title={news.title} revision={news.revision} />
       ) : null}
       <form
         id={editorFormId}
@@ -274,61 +279,65 @@ export function NewsEditor({
                 )}
               </PortalField>
             ))}
-            <PortalField
-              label="Categoría"
-              error={fields.category_id ?? categoryError ?? undefined}
-            >
-              <select
-                name="category_id"
-                value={draft.category_id}
-                // Only creation requires a category. Legacy news keep "Sin
-                // categoría" (value ""), which native validation would block.
-                required={!news}
-                aria-invalid={!!(fields.category_id ?? categoryError)}
-                onChange={(event) => {
-                  setDraft({ ...draft, category_id: event.target.value })
-                  setCategoryError(null)
-                  editor.clearError()
-                }}
-              >
-                {currentCategory ? null : (
-                  <option value="" disabled>
-                    {news ? 'Sin categoría' : 'Selecciona una categoría'}
-                  </option>
-                )}
-                {currentInactive && currentCategory ? (
-                  <option value={currentCategory.id} disabled>
-                    {currentCategory.name} (categoría actual)
-                  </option>
+            {canManage ? (
+              <>
+                <PortalField
+                  label="Categoría"
+                  error={fields.category_id ?? categoryError ?? undefined}
+                >
+                  <select
+                    name="category_id"
+                    value={draft.category_id}
+                    // Only creation requires a category. Legacy news keep "Sin
+                    // categoría" (value ""), which native validation would block.
+                    required={!news}
+                    aria-invalid={!!(fields.category_id ?? categoryError)}
+                    onChange={(event) => {
+                      setDraft({ ...draft, category_id: event.target.value })
+                      setCategoryError(null)
+                      editor.clearError()
+                    }}
+                  >
+                    {currentCategory ? null : (
+                      <option value="" disabled>
+                        {news ? 'Sin categoría' : 'Selecciona una categoría'}
+                      </option>
+                    )}
+                    {currentInactive && currentCategory ? (
+                      <option value={currentCategory.id} disabled>
+                        {currentCategory.name} (categoría actual)
+                      </option>
+                    ) : null}
+                    {activeCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </PortalField>
+                {categories.loading ? (
+                  <p role="status" className={styles.muted}>
+                    Cargando categorías…
+                  </p>
+                ) : categories.error ? (
+                  <div role="alert" className={styles.error}>
+                    <p>{categories.error.message}</p>
+                    <button type="button" onClick={categories.reload}>
+                      Reintentar
+                    </button>
+                  </div>
+                ) : activeCategories.length === 0 ? (
+                  <p role="status" className={styles.notice}>
+                    {news
+                      ? 'No hay categorías activas. Se conservará la categoría actual.'
+                      : 'No hay categorías activas. Activa o crea una categoría antes de crear noticias.'}
+                  </p>
                 ) : null}
-                {activeCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </PortalField>
-            {categories.loading ? (
-              <p role="status" className={styles.muted}>
-                Cargando categorías…
-              </p>
-            ) : categories.error ? (
-              <div role="alert" className={styles.error}>
-                <p>{categories.error.message}</p>
-                <button type="button" onClick={categories.reload}>
-                  Reintentar
-                </button>
-              </div>
-            ) : activeCategories.length === 0 ? (
-              <p role="status" className={styles.notice}>
-                {news
-                  ? 'No hay categorías activas. Se conservará la categoría actual.'
-                  : 'No hay categorías activas. Activa o crea una categoría antes de crear noticias.'}
-              </p>
+              </>
             ) : null}
           </fieldset>
         </section>
-        {news ? (
+        {news && canManage ? (
           <>
             <section className={adminStyles.editorSection}>
               <div className={adminStyles.editorSectionHeading}>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { RoomApiError, saveAdminRoom } from '../api/adminRoomsApi'
-import type { Room, RoomField, RoomFieldErrors } from '../types/room.types'
+import type { Room, RoomEditable, RoomField, RoomFieldErrors } from '../types/room.types'
 import {
   getRoomFormValues,
   getRoomPayload,
@@ -12,7 +12,7 @@ import { Button } from '@/shared/components/ui/Button/Button'
 import styles from './RoomDialog.module.css'
 
 interface Props {
-  room?: Room
+  room?: RoomEditable
   onCancel: () => void
   onSaved: (room: Room) => void
   onBusyChange: (busy: boolean) => void

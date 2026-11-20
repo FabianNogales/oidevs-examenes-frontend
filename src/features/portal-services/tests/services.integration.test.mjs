@@ -35,6 +35,13 @@ const auth = (authenticated = false) => ({
     }),
   },
 })
+const adminAuth = () => ({
+  '@/features/auth/hooks/useAuth': { useAuth: () => ({
+    isAuthenticated: true, isLoading: false,
+    user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] },
+    notify() {},
+  }) },
+})
 function editor(handlers = {}, initial = admin) {
   const c = client(handlers, auth())
   const saved = []
@@ -95,7 +102,7 @@ test('HU44 lists only active public services and preserves the backend order', a
 
 test('HU44 public access opens the exact external URL in a safe new tab', () => {
   const ui = component(
-    client({}, auth()),
+    client({}, adminAuth()),
     'features/portal-services/components/ServiceCard.tsx',
     'ServiceDestination',
     { service, horizontal: true },
@@ -110,7 +117,7 @@ test('HU44 public access opens the exact external URL in a safe new tab', () => 
 
 test('HU44 horizontal service card renders its icon, details, domain and detail link', () => {
   const ui = component(
-    client({}, auth()),
+    client({}, adminAuth()),
     'features/portal-services/components/ServiceCard.tsx',
     'ServiceCard',
     { service, horizontal: true },
@@ -274,7 +281,7 @@ test('HU45 creates an inactive service with a hidden link icon and final contrac
 
 test('D3 admin services table renders the shared status badge for ACTIVE and INACTIVE', () => {
   const ui = component(
-    client({}, auth()),
+    client({}, adminAuth()),
     'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
@@ -299,7 +306,7 @@ test('D3 admin services table renders the shared status badge for ACTIVE and INA
 
 test('D4.5 admin services filter lives in the collection filter slot and review text is not a live region', () => {
   const ui = component(
-    client({}, auth()),
+    client({}, adminAuth()),
     'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
@@ -345,7 +352,7 @@ test('D4.5 admin services filter lives in the collection filter slot and review 
 
 test('F2.1 admin services page uses the shared content width like News and Information', () => {
   const ui = component(
-    client({}, auth()),
+    client({}, adminAuth()),
     'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
@@ -377,7 +384,7 @@ test('F2.1 admin services page uses the shared content width like News and Infor
 
 test('F2.3 inline Estado filter and "Limpiar filtros" reset only the status through resetPageKey', () => {
   const ui = component(
-    client({}, auth()),
+    client({}, adminAuth()),
     'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
@@ -419,7 +426,7 @@ test('F2.3 inline Estado filter and "Limpiar filtros" reset only the status thro
 
 test('D4.7 service name cell renders one container so the mobile card grid keeps it in a single column', () => {
   const ui = component(
-    client({}, auth()),
+    client({}, adminAuth()),
     'features/portal-services/pages/AdminServicesPage.tsx',
     'AdminServicesPage',
   )
@@ -683,7 +690,7 @@ test('HU45 dirty state clears after saving or reloading', async () => {
 test('HU45 service Escape confirmation uses the native top layer and preserves the editor until discard', () => {
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
-    '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) },
     '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: () => ({ data: admin, loading: false, error: null }),
     },

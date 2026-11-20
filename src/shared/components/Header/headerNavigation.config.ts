@@ -21,6 +21,7 @@ export const navigationByRole: Record<
   HeaderRole,
   readonly HeaderNavigationItem[]
 > = {
+  staff: publicNavigation,
   teacher: [
     {
       label: 'Inicio',
@@ -103,6 +104,7 @@ export const navigationByRole: Record<
       children: [
         { label: 'Usuarios', to: '/admin/users/manage' },
         { label: 'Roles y permisos', to: '/admin/users/roles' },
+        { label: 'Asignar roles a cuentas', to: '/admin/users/assignments' },
         { label: 'Historial de cambios', to: '/admin/users/history' },
         { label: 'Docentes', to: '/admin/teachers', startsSection: true },
         { label: 'Asignación de materias', to: '/admin/teachers/assignments' },
@@ -154,6 +156,7 @@ export const roleLabelByRole: Record<HeaderRole, string> = {
   student: 'Estudiante',
   teacher: 'Docente',
   admin: 'Administrador',
+  staff: 'Personal',
 }
 
 export function getHeaderNavigation(

@@ -59,7 +59,7 @@ function adminList(visibility = 'PRIVATE') {
         }),
       },
       {
-        '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
+        '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) },
         '@/shared/components/DataTable/DataTable': { DataTable: 'table' },
       },
     ),

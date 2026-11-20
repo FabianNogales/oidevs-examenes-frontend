@@ -2,6 +2,9 @@ import { PageContainer } from '@/shared/components/ui/PageContainer/PageContaine
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { useCallback, useState, type FormEvent } from 'react'
 import { Snackbar } from '@/shared/components/Snackbar'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getHomeRouteForUser } from '@/features/auth/utils/authRoutes'
+import { getModuleAccess } from '@/features/roles/utils/moduleAccess'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { SubjectDialog } from '../components/SubjectDialog'
 import { SubjectStatusDialog } from '../components/SubjectStatusDialog'
@@ -26,6 +29,8 @@ const INITIAL_QUERY: SubjectsQuery = {
 }
 
 export function AdminSubjectsPage() {
+  const { user } = useAuth()
+  const access = getModuleAccess(user, 'subjects')
   const [query, setQuery] = useState<SubjectsQuery>(INITIAL_QUERY)
   const [search, setSearch] = useState('')
   const catalog = useAdminSubjects(query)
@@ -77,24 +82,24 @@ export function AdminSubjectsPage() {
         title="Gestión de materias"
         titleId="subjects-title"
         focusableTitle
-        eyebrow="Administrador"
+        eyebrow={access.isAdministrator ? 'Administrador' : 'Personal'}
         description="Consulta y administra el catálogo de materias por carrera."
         breadcrumbs={[
-          { label: 'Inicio', to: '/admin' },
+          { label: 'Inicio', to: access.isAdministrator ? '/admin' : user ? getHomeRouteForUser(user) : '/' },
           { label: 'Materias' },
           { label: 'Gestionar materias' },
         ]}
         actions={
           <>
-            <ButtonLink to="/admin/subjects/import">
+            {access.isAdministrator && <ButtonLink to="/admin/subjects/import">
               + Importar materias (CSV)
-            </ButtonLink>
-            <Button
+            </ButtonLink>}
+            {access.canCreate && <Button
               variant="secondary"
               onClick={() => setSelection({ mode: 'create' })}
             >
               + Registrar materia
-            </Button>
+            </Button>}
           </>
         }
       />
@@ -223,10 +228,11 @@ export function AdminSubjectsPage() {
             (catalog.result.data.length ? (
               <AdminSubjectsTable
                 subjects={catalog.result.data}
-                onEdit={(subjectId) =>
+                onDetail={(subjectId) => setSelection({ mode: 'detail', subjectId })}
+                onEdit={access.canEdit ? (subjectId) =>
                   setSelection({ mode: 'edit', subjectId })
-                }
-                onStatusChange={setStatusSubject}
+                  : undefined}
+                onStatusChange={access.isAdministrator ? setStatusSubject : undefined}
               />
             ) : (
               <div className={styles.state} role="status">
@@ -289,7 +295,7 @@ export function AdminSubjectsPage() {
           onSaved={saved}
         />
       )}
-      {statusSubject && (
+      {access.isAdministrator && statusSubject && (
         <SubjectStatusDialog
           subject={statusSubject}
           onClose={() => setStatusSubject(null)}

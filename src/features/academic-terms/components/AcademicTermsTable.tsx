@@ -7,12 +7,14 @@ import { AcademicTermStatusBadge } from './AcademicTermStatusBadge'
 
 export function AcademicTermsTable({
   terms,
+  onDetail,
   onEdit,
   onStatus,
 }: {
   terms: AcademicTerm[]
-  onEdit: (id: number) => void
-  onStatus: (term: AcademicTerm) => void
+  onDetail?: (id: number) => void
+  onEdit?: (id: number) => void
+  onStatus?: (term: AcademicTerm) => void
 }) {
   const columns: TableColumnDef<AcademicTerm>[] = [
     {
@@ -49,22 +51,24 @@ export function AcademicTermsTable({
         const action = isActive ? 'Desactivar' : 'Activar'
         return (
           <div className={tableStyles.actionButtons}>
-            <button
+            {onDetail && <button type="button" className={tableStyles.btnViewProfile}
+              onClick={() => onDetail(term.id)} aria-label={`Ver periodo ${term.name}`}>Ver detalle</button>}
+            {onEdit && <button
               type="button"
               className={tableStyles.btnViewProfile}
               aria-label={`Editar periodo ${term.name}`}
               onClick={() => onEdit(term.id)}
             >
               Editar
-            </button>
-            <button
+            </button>}
+            {onStatus && <button
               type="button"
               className={isActive ? tableStyles.btnDeactivate : tableStyles.btnActivate}
               aria-label={`${action} periodo ${term.name}`}
               onClick={() => onStatus(term)}
             >
               {action}
-            </button>
+            </button>}
           </div>
         )
       },

@@ -2,6 +2,7 @@ import { useCallback, useId, useRef, useState } from 'react'
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { PortalHistory } from '@/features/portal-shared/components/PortalHistory'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getPortalAccess } from '@/features/portal-shared/utils/portalAccess'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import {
   PortalAdminCollection,
@@ -50,10 +51,12 @@ const columns: readonly TableColumnDef<PortalRow<AdminService>>[] = [
 ]
 
 function ServiceDialog({
+  canManage,
   id,
   onClose,
   onSaved,
 }: {
+  canManage: boolean
   id: number | null
   onClose: () => void
   onSaved: () => void
@@ -101,10 +104,11 @@ function ServiceDialog({
         </>
       }
     >
-      {id !== null ? <PortalHistory resource="services" id={id} /> : null}
+      {canManage && id !== null ? <PortalHistory resource="services" id={id} /> : null}
       <PortalFeedback {...result} retry={result.reload} />
       {!result.loading && !result.error ? (
         <ServiceEditor
+          canManage={canManage}
           formId={formId}
           initial={result.data}
           onBusy={setBusy}
@@ -129,7 +133,8 @@ function ServiceDialog({
 }
 
 export function AdminServicesPage() {
-  const { notify } = useAuth()
+  const { user, notify } = useAuth()
+  const { isAdministrator: canManage } = getPortalAccess(user, 'services')
   const [version, setVersion] = useState(0)
   const [status, setStatus] = useState<ServiceStatus | ''>('')
   const statusSelect = useRef<HTMLElement>(null)
@@ -153,7 +158,7 @@ export function AdminServicesPage() {
         load={load}
         version={version}
         onSelect={(id) => setSelected({ id })}
-        onCreate={() => setSelected({ id: null })}
+        onCreate={canManage ? () => setSelected({ id: null }) : undefined}
         filterLayout="inline"
         filters={
           <>
@@ -191,6 +196,7 @@ export function AdminServicesPage() {
       />
       {selected ? (
         <ServiceDialog
+          canManage={canManage}
           key={selected.id ?? 'new'}
           id={selected.id}
           onClose={() => setSelected(null)}

@@ -74,7 +74,7 @@ try {
           if (normalized.endsWith('/src/shared/api/httpClient.ts'))
             return `export const httpClient={get:(...args)=>window.servicesEscapeQa.client.get(...args),post:(...args)=>window.servicesEscapeQa.client.post(...args),patch:(...args)=>window.servicesEscapeQa.client.patch(...args),delete:(...args)=>window.servicesEscapeQa.client.delete(...args)};`
           if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts'))
-            return 'export const useAuth=()=>({notify(){}});'
+            return 'export const useAuth=()=>({user:{status:"ACTIVE",must_change_password:false,roles:["ADMINISTRADOR"]},notify(){}});'
         },
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {

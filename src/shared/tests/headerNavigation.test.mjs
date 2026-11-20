@@ -107,12 +107,13 @@ test('header/AppLayout: temporal collaborator navigation retains the base role a
   assert.equal(header.navigation.some(item => item.to?.startsWith('/admin/')), false)
 })
 
-test('header/AppLayout: no recognized role uses public navigation without inventing permissions', () => {
+test('header/AppLayout: custom roles keep Home and session identity without inventing permissions', () => {
   const { config } = setup('/')
   for (const roles of [[], ['Docente'], ['EXTERNAL_ROLE']]) {
     const header = layoutHeader(roles, '/')
-    assert.equal(header.user, null)
-    assert.deepEqual(header.navigation, config.getHeaderNavigation(null))
+    assert.equal(header.user.role, 'staff')
+    assert.deepEqual(header.navigation, config.getHeaderNavigation('staff'))
+    assert.equal(header.navigation.some((item) => item.to === '/personal'), false)
   }
 })
 

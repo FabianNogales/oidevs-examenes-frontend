@@ -6,14 +6,14 @@ type RecordState =
   | { key: string; status: 'ready'; term: AcademicTerm }
   | { key: string; status: 'error'; message: string; unavailable: boolean }
 
-export function useAcademicTermRecord(termId: number | null) {
+export function useAcademicTermRecord(termId: number | null, forEdit = false) {
   const [state, setState] = useState<RecordState | null>(null)
   const [revision, setRevision] = useState(0)
-  const key = `${termId}:${revision}`
+  const key = `${termId}:${revision}:${forEdit}`
   useEffect(() => {
     if (termId === null) return
     const controller = new AbortController()
-    getAcademicTerm(termId, controller.signal).then(
+    getAcademicTerm(termId, controller.signal, forEdit).then(
       (term) => {
         if (!controller.signal.aborted) setState({ key, status: 'ready', term })
       },
@@ -33,7 +33,7 @@ export function useAcademicTermRecord(termId: number | null) {
       },
     )
     return () => controller.abort()
-  }, [termId, key])
+  }, [termId, key, forEdit])
   return {
     state: state?.key === key ? state : null,
     reload: () => setRevision((value) => value + 1),

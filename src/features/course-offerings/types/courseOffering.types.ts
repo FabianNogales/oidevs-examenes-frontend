@@ -3,6 +3,7 @@ import type { AcademicTerm } from '@/features/academic-terms/types/academicTerm.
 import type { AdminSubject } from '@/features/subjects/types/adminSubject.types'
 
 export type CourseOfferingStatus = 'ACTIVE' | 'INACTIVE'
+export type OfferingPeriod = Pick<AcademicTerm, 'id' | 'name' | 'status'>
 
 export interface CourseOffering {
   id: number

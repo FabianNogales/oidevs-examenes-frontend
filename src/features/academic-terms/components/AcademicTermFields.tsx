@@ -10,6 +10,7 @@ export function AcademicTermFields({
   values,
   errors,
   editing,
+  allowActivation = false,
   disabled,
   onChange,
 }: {
@@ -17,6 +18,7 @@ export function AcademicTermFields({
   values: CreateAcademicTermPayload
   errors: AcademicTermFieldErrors
   editing: boolean
+  allowActivation?: boolean
   disabled: boolean
   onChange: (field: keyof CreateAcademicTermPayload, value: string) => void
 }) {
@@ -63,7 +65,7 @@ export function AcademicTermFields({
           )}
         </div>
       ))}
-      {!editing && (
+      {!editing && allowActivation && (
         <div className={`${styles.field} ${styles.fullWidth}`}>
           <label htmlFor={`${id}-status`}>Estado inicial *</label>
           <Dropdown

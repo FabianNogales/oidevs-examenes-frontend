@@ -11,7 +11,7 @@ export function AcademicTermDetails({
 }: {
   term: AcademicTerm
   onClose: () => void
-  onEdit: () => void
+  onEdit?: () => void
 }) {
   return (
     <>
@@ -50,9 +50,9 @@ export function AcademicTermDetails({
         >
           Cerrar
         </Button>
-        <Button onClick={onEdit}>
+        {onEdit && <Button onClick={onEdit}>
           Editar periodo
-        </Button>
+        </Button>}
       </footer>
     </>
   )

@@ -6,6 +6,9 @@ import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
 import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { TextInput } from '@/shared/components/ui/Field/TextInput'
 import { Snackbar } from '@/shared/components/Snackbar'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getHomeRouteForUser } from '@/features/auth/utils/authRoutes'
+import { getRoomAccess } from '../utils/roomAccess'
 import type { AuthNotice } from '@/features/auth/types/auth'
 import { RoomDialog } from '../components/RoomDialog'
 import { RoomStatusDialog } from '../components/RoomStatusDialog'
@@ -20,6 +23,8 @@ import type {
 import styles from './AdminRoomsPage.module.css'
 
 export function AdminRoomsPage() {
+  const { user } = useAuth()
+  const access = getRoomAccess(user)
   const [search, setSearch] = useState('')
   const [query, setQuery] = useState<RoomsQuery>({
     page: 1,
@@ -84,19 +89,19 @@ export function AdminRoomsPage() {
         title="Gestión de aulas"
         titleId="rooms-title"
         focusableTitle
-        eyebrow="Administrador"
+        eyebrow={access.isAdministrator ? 'Administrador' : 'Personal'}
         description="Consulta y administra las aulas o ambientes disponibles en el sistema."
         breadcrumbs={[
-          { label: 'Inicio', to: '/admin' },
+          { label: 'Inicio', to: access.isAdministrator ? '/admin' : user ? getHomeRouteForUser(user) : '/' },
           { label: 'Aulas' },
           { label: 'Gestionar aulas' },
         ]}
         actions={
           <>
-            <ButtonLink to="/admin/rooms/import">+ Importar aulas (CSV)</ButtonLink>
-            <Button onClick={() => setSelection({ mode: 'create' })}>
+            {access.isAdministrator && <ButtonLink to="/admin/rooms/import">+ Importar aulas (CSV)</ButtonLink>}
+            {access.canCreate && <Button onClick={() => setSelection({ mode: 'create' })}>
               + Registrar aula
-            </Button>
+            </Button>}
           </>
         }
       />
@@ -179,8 +184,8 @@ export function AdminRoomsPage() {
                 onDetail={(roomId) =>
                   setSelection({ mode: 'detail', roomId })
                 }
-                onEdit={(roomId) => setSelection({ mode: 'edit', roomId })}
-                onStatusChange={setStatusRoom}
+                onEdit={access.canEdit ? (roomId) => setSelection({ mode: 'edit', roomId }) : undefined}
+                onStatusChange={access.isAdministrator ? setStatusRoom : undefined}
               />
             ) : (
               <div className={styles.state} role="status">
@@ -236,12 +241,15 @@ export function AdminRoomsPage() {
               : `${selection.mode}-${selection.roomId}`
           }
           selection={selection}
+          canView={access.canView}
+          canCreate={access.canCreate}
+          canEdit={access.canEdit}
           onClose={() => setSelection(null)}
           onSaved={handleSaved}
         />
       )}
       <Snackbar notice={notice} onDismiss={dismissNotice} />
-      {statusRoom && (
+      {access.isAdministrator && statusRoom && (
         <RoomStatusDialog
           room={statusRoom}
           onClose={() => setStatusRoom(null)}

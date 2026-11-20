@@ -9,7 +9,7 @@ export function SubjectDetails({
 }: {
   subject: AdminSubject
   onClose: () => void
-  onEdit: () => void
+  onEdit?: () => void
 }) {
   return (
     <>
@@ -47,9 +47,9 @@ export function SubjectDetails({
         >
           Cerrar
         </Button>
-        <Button onClick={onEdit}>
+        {onEdit && <Button onClick={onEdit}>
           Editar materia
-        </Button>
+        </Button>}
       </footer>
     </>
   )

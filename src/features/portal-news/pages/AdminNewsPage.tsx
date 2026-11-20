@@ -6,6 +6,7 @@ import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { PortalHistory } from '@/features/portal-shared/components/PortalHistory'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getPortalAccess } from '@/features/portal-shared/utils/portalAccess'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import {
   PortalAdminCollection,
@@ -90,11 +91,13 @@ function UnsavedNewsDialog({
 }
 
 function NewsDialog({
+  canManage,
   id,
   categories,
   onClose,
   onSaved,
 }: {
+  canManage: boolean
   id: number | null
   categories: NewsCategoryOptions
   onClose: () => void
@@ -144,7 +147,7 @@ function NewsDialog({
           </>
         }
       >
-        {id !== null ? (
+        {canManage && id !== null ? (
           <PortalHistory
             key={`${id}-${historyVersion}`}
             resource="news"
@@ -154,6 +157,7 @@ function NewsDialog({
         <PortalFeedback {...result} retry={result.reload} />
         {!result.loading && !result.error ? (
           <NewsEditor
+            canManage={canManage}
             formId={formId}
             initial={result.data}
             categories={categories}
@@ -181,12 +185,15 @@ function NewsDialog({
 }
 
 export function AdminNewsPage() {
-  const { notify } = useAuth()
+  const { user, notify } = useAuth()
+  const { isAdministrator: canManage } = getPortalAccess(user, 'news')
   const [status, setStatus] = useState('')
   const [category, setCategory] = useState('')
   const [version, setVersion] = useState(0)
   const [selected, setSelected] = useState<{ id: number | null } | null>(null)
-  const categories = usePortalResource(loadAdminNewsCategories)
+  const loadCategories = useCallback((signal: AbortSignal) =>
+    canManage ? loadAdminNewsCategories(signal) : Promise.resolve([]), [canManage])
+  const categories = usePortalResource(loadCategories)
   const activeCategories = categories.data ?? []
   // The backend applies category_id before paginating.
   const load = useCallback(
@@ -207,14 +214,14 @@ export function AdminNewsPage() {
         resetPageKey={category ? `${status}|${category}` : status}
         headerVariant="page"
         title="Gestión de noticias"
-        description="Crea, publica y archiva las noticias del portal institucional."
+        description={canManage ? 'Crea, publica y archiva las noticias del portal institucional.' : 'Edita las noticias existentes del portal institucional.'}
         className={adminStyles.newsAdminPage}
         searchPlaceholder="Buscar noticias"
         columns={columns}
         load={load}
         version={version}
         onSelect={(id) => setSelected({ id })}
-        onCreate={() => setSelected({ id: null })}
+        onCreate={canManage ? () => setSelected({ id: null }) : undefined}
         createLabel="Crear noticia"
         viewActionLabel="Gestionar"
         filterLayout="inline"
@@ -267,12 +274,13 @@ export function AdminNewsPage() {
           </>
         }
       >
-        <p className={adminStyles.categoriesLink}>
+        {canManage ? <p className={adminStyles.categoriesLink}>
           <Link to="/admin/portal/news/categories">Gestionar categorías</Link>
-        </p>
+        </p> : null}
       </PortalAdminCollection>
       {selected ? (
         <NewsDialog
+          canManage={canManage}
           key={selected.id ?? 'new'}
           id={selected.id}
           categories={categories}

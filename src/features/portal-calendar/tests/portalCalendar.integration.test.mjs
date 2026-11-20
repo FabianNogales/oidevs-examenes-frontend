@@ -435,7 +435,7 @@ function adminPage(categories = [category]) {
       }),
     },
     {
-      '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
+      '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) },
       '@/shared/components/DataTable/DataTable': { DataTable: 'table' },
       '@/shared/components/Breadcrumbs/Breadcrumbs': {
         Breadcrumbs: 'breadcrumbs',

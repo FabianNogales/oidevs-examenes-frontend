@@ -56,8 +56,8 @@ export function SubjectCareerSelector({
             />
           ) : (
             <p className={styles.help}>
-              No hay carreras activas disponibles. Registra una carrera antes de
-              continuar.
+              No hay carreras activas disponibles. Solicita una revisión del
+              catálogo de carreras para continuar.
             </p>
           )}
         </div>

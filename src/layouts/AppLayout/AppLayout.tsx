@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
 import { CollaborationsProvider } from '@/features/collaborations/components/CollaborationsProvider'
 import { useMyCollaborations } from '@/features/collaborations/hooks/useMyCollaborations'
 import { getHeaderNavigation } from '@/shared/components/Header/headerNavigation.config'
@@ -56,7 +57,7 @@ function AppLayoutContent() {
     const primaryRole = ROLE_PRIORITY.find((role) => user.roles.includes(role))
 
     if (!primaryRole) {
-      return null
+      return { name: user.display_name, role: 'staff', roleLabel: user.roles.join(' · ') || 'Personal' }
     }
 
     return {
@@ -66,13 +67,14 @@ function AppLayoutContent() {
     }
   }, [user, inCollaboratorContext])
 
-  const navigation = getHeaderNavigation(
+  const baseNavigation = getHeaderNavigation(
     headerUser?.role,
     collaborations.length > 0,
-    user?.roles
-      .filter((role) => ROLE_PRIORITY.includes(role))
-      .map((role) => HEADER_ROLE_BY_AUTH_ROLE[role]) ?? [],
+    ROLE_PRIORITY.filter((role) => user?.roles.includes(role))
+      .map((role) => HEADER_ROLE_BY_AUTH_ROLE[role]),
   )
+  const delegatedNavigation = getDelegatedNavigation(user)
+  const navigation = [...baseNavigation, ...delegatedNavigation]
 
   const navigationState = location.state as NavigationState | null
 

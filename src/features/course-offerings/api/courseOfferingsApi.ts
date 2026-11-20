@@ -4,6 +4,7 @@ import { isAcademicTerm } from '@/features/academic-terms/api/academicTermsApi'
 import { isAdminSubject } from '@/features/subjects/api/adminSubjectsApi'
 import type {
   CourseOffering,
+  OfferingPeriod,
   CourseOfferingsQuery,
   CourseOfferingsResponse,
 } from '../types/courseOffering.types'
@@ -13,6 +14,15 @@ export class CourseOfferingApiError extends Error {
     super(message)
     this.name = 'CourseOfferingApiError'
   }
+}
+
+export async function getOfferingPeriods(signal: AbortSignal): Promise<OfferingPeriod[]> {
+  const { data } = await httpClient.get<{ data: OfferingPeriod[] }>('/admin/course-offerings/periods', { signal })
+  if (!Array.isArray(data?.data) || !data.data.every((period) => Number.isSafeInteger(period.id)
+    && period.id > 0 && typeof period.name === 'string' && ['ACTIVE', 'INACTIVE'].includes(period.status))) {
+    throw new CourseOfferingApiError('No se pudieron verificar los periodos de las ofertas.')
+  }
+  return data.data
 }
 
 const positiveId = (value: number) => Number.isSafeInteger(value) && value > 0

@@ -39,7 +39,7 @@ const categoryOptions = (data = activeCategories, extra = {}) => ({
 test('HU41 news Escape confirmation uses the native top layer and preserves the editor until discard', () => {
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
-    '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) },
     '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: (load) =>
         load.name === 'loadAdminNewsCategories'
@@ -305,7 +305,7 @@ test('HU41 state filter no longer remounts the collection or drops the search', 
   const ui = component(
     client(
       {},
-      { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
+      { '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) } },
     ),
     'features/portal-news/pages/AdminNewsPage.tsx',
     'AdminNewsPage',

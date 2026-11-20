@@ -97,7 +97,7 @@ export function sourceHarness(overrides = {}) {
     return module.exports
   }
   return {
-    load, document, Element, timers,
+    load, document, window, Element, timers,
     now: () => now,
     jump: (delta) => { now += delta },
     render: (callback = renderCallback, attach = () => {}) => {

@@ -1,5 +1,5 @@
 import type {
-  Room,
+  RoomEditable,
   RoomField,
   RoomFieldErrors,
   RoomFormValues,
@@ -26,7 +26,7 @@ export const ROOM_FIELDS: {
   },
 ]
 
-export function getRoomFormValues(room?: Room): RoomFormValues {
+export function getRoomFormValues(room?: RoomEditable): RoomFormValues {
   return {
     code: room?.code ?? '',
     name: room?.name ?? '',

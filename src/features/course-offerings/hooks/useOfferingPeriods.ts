@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
-import {
-  getAcademicTerms,
-  getAcademicTermError,
-} from '@/features/academic-terms/api/academicTermsApi'
-import type { AcademicTerm } from '@/features/academic-terms/types/academicTerm.types'
+import { getOfferingPeriods, getCourseOfferingError } from '../api/courseOfferingsApi'
+import type { OfferingPeriod } from '../types/courseOffering.types'
 
 type PeriodState =
-  | { revision: number; status: 'ready'; periods: AcademicTerm[] }
+  | { revision: number; status: 'ready'; periods: OfferingPeriod[] }
   | { revision: number; status: 'error'; message: string }
 
 export function useOfferingPeriods() {
@@ -16,17 +13,8 @@ export function useOfferingPeriods() {
     const controller = new AbortController()
     async function load() {
       try {
-        const periods: AcademicTerm[] = []
-        let lastPage = 1
-        for (let page = 1; page <= lastPage; page++) {
-          const response = await getAcademicTerms(
-            { page, search: '', status: '' },
-            controller.signal,
-          )
-          if (controller.signal.aborted) return
-          periods.push(...response.data)
-          lastPage = response.meta.last_page
-        }
+        const periods = await getOfferingPeriods(controller.signal)
+        if (controller.signal.aborted) return
         if (new Set(periods.map((period) => period.id)).size !== periods.length)
           throw new Error('Duplicate periods')
         setResult({ revision, status: 'ready', periods })
@@ -35,7 +23,7 @@ export function useOfferingPeriods() {
           setResult({
             revision,
             status: 'error',
-            message: getAcademicTermError(error).message,
+            message: getCourseOfferingError(error),
           })
       }
     }

@@ -51,7 +51,7 @@ function OfferingCatalog({
   onBusy,
 }: {
   teacherId?: number
-  periods: import('@/features/academic-terms/types/academicTerm.types').AcademicTerm[]
+  periods: import('../types/courseOffering.types').OfferingPeriod[]
   editable: boolean
   onBusy?: (busy: boolean) => void
 }) {
@@ -95,7 +95,7 @@ function OfferingCatalog({
           {notice}
         </p>
       )}
-      {selection && (
+      {editable && selection && (
         <OfferingRecordDialog
           key={`${selection.id}-${selection.mode}`}
           {...selection}

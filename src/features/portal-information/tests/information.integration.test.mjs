@@ -137,7 +137,7 @@ test('HU42 unpublished sections and empty FAQ produce only compact empty states'
 test('F2.2 administration labels: search text and FAQ-only "Crear pregunta frecuente"', () => {
   const c = client(
     { get: () => ({ data: page([section]) }) },
-    { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
+    { '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) } },
   )
   const ui = component(
     c,
@@ -164,7 +164,7 @@ test('F2.2 administration labels: search text and FAQ-only "Crear pregunta frecu
 test('F2.3 "Limpiar filtros" resets only Visibilidad and keeps the Secciones/FAQ view', () => {
   const c = client(
     { get: () => ({ data: page([section]) }) },
-    { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
+    { '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) } },
   )
   const ui = component(
     c,
@@ -213,7 +213,7 @@ test('F2.3 "Limpiar filtros" resets only Visibilidad and keeps the Secciones/FAQ
 test('HU43 administration consults existing sections and does not offer section creation or seed fixed IDs', async () => {
   const c = client(
     { get: () => ({ data: page([section]) }) },
-    { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
+    { '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) } },
   )
   const ui = component(
     c,
@@ -280,7 +280,7 @@ test('HU43 administration consults existing sections and does not offer section 
 test('HU43 information Drawer protects dirty close and native Escape preserves the editor', () => {
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
-    '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) },
     '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: () => ({ data: section, loading: false, error: null }),
     },
@@ -371,7 +371,7 @@ test('HU43 information Drawer protects dirty close and native Escape preserves t
 test('HU43 created FAQ keeps its Drawer session, adopts its ID and refreshes its history', () => {
   const h = sourceHarness({
     '@/shared/api/httpClient': { httpClient: {} },
-    '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) },
+    '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) },
     '@/features/portal-shared/hooks/usePortalResource': {
       usePortalResource: () => ({ data: null, loading: false, error: null }),
     },
@@ -451,9 +451,9 @@ test('HU43 external Drawer footer owns submit state without duplicating save', a
   const ui = editor({}, section, 'sections', { formId: 'information-form' })
   await ui.ready()
   assert.equal(nodes(ui.tree, (node) => node.type === 'form')[0].props.id, 'information-form')
-  assert.equal(ui.button('Guardar borrador'), undefined)
+  assert.equal(ui.button('Guardar cambios'), undefined)
   assert.deepEqual(ui.stateChanges.at(-1), {
-    label: 'Guardar borrador',
+    label: 'Guardar cambios',
     disabled: false,
   })
   await ui.click('Publicar cambios')
@@ -463,12 +463,13 @@ test('HU43 external Drawer footer owns submit state without duplicating save', a
   ui.h.unmount()
 })
 
-test('HU43 saving a section changes only draft; public snapshot and pending changes are displayed separately', async () => {
+test('saving a published section refreshes its public snapshot without a publication action', async () => {
   const changed = {
     ...section,
     revision: 8,
-    has_unpublished_changes: true,
+    has_unpublished_changes: false,
     draft: { ...old, description: 'Nuevo borrador' },
+    published: { ...old, description: 'Nuevo borrador' },
   }
   const ui = editor({ patch: () => ({ data: { data: changed } }) })
   ui.edit('description', 'Nuevo borrador')
@@ -479,10 +480,10 @@ test('HU43 saving a section changes only draft; public snapshot and pending chan
   ])
   assert.equal(ui.calls.length, 1)
   assert.equal(ui.field('description').props.value, 'Nuevo borrador')
-  assert.ok(textContent(ui.tree).includes(old.description))
+  assert.ok(!textContent(ui.tree).includes(old.description))
   assert.match(
     textContent(ui.tree),
-    /Hay cambios guardados pendientes de publicar/,
+    /Sin cambios pendientes/,
   )
   assert.equal(ui.dirtyStates.at(-1), false, 'saved draft is the new baseline')
   assert.equal(ui.saved.length, 1)
@@ -493,7 +494,7 @@ test('HU43 editor distingue versión publicada y borrador y mantiene las accione
   const ui = editor()
   assert.match(textContent(ui.tree), /Versión publicada/)
   assert.match(textContent(ui.tree), /Sin cambios pendientes\./)
-  const save = ui.button('Guardar borrador')
+  const save = ui.button('Guardar cambios')
   const form = nodes(ui.tree, (node) => node.type === 'form')[0]
   assert.equal(save.props.type, 'submit')
   assert.equal(save.props.form, form.props.id)
@@ -503,14 +504,14 @@ test('HU43 editor distingue versión publicada y borrador y mantiene las accione
   assert.ok(actions)
   assert.match(
     textContent(actions),
-    /Guardar borrador.*Publicar cambios.*Despublicar/s,
+    /Guardar cambios.*Publicar cambios.*Despublicar/s,
   )
-  assert.equal(ui.button('Guardar borrador').props.disabled, false)
+  assert.equal(ui.button('Guardar cambios').props.disabled, false)
   assert.equal(ui.button('Publicar cambios').props.disabled, false)
   ui.h.unmount()
 })
 
-test('HU43 save never publishes and only explicit publish updates the public version', async () => {
+test('saving already published information updates the public version without posting to publish', async () => {
   let record = structuredClone(section)
   const c = client({
     patch: (_url, input) => {
@@ -518,8 +519,9 @@ test('HU43 save never publishes and only explicit publish updates the public ver
       record = {
         ...record,
         draft,
+        published: draft,
         revision: revision + 1,
-        has_unpublished_changes: true,
+        has_unpublished_changes: false,
       }
       return { data: { data: record } }
     },
@@ -552,7 +554,7 @@ test('HU43 save never publishes and only explicit publish updates the public ver
   await ui.submit()
   assert.equal(
     (await api.getInformation()).sections[0].description,
-    old.description,
+    'Borrador nuevo',
   )
   assert.equal(c.calls.filter((call) => call.method === 'post').length, 0)
   await ui.click('Publicar cambios')
@@ -685,7 +687,7 @@ test('HU43 409 preserves section draft and blocks publication until explicit rel
   await ui.submit()
   assert.equal(ui.field('title').props.value, 'Título local')
   assert.equal(ui.dirtyStates.at(-1), true)
-  assert.equal(ui.button('Guardar borrador').props.disabled, true)
+  assert.equal(ui.button('Guardar cambios').props.disabled, true)
   assert.equal(ui.button('Publicar cambios').props.disabled, true)
   await ui.submit()
   assert.equal(ui.calls.length, 1)

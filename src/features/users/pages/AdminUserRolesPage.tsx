@@ -44,20 +44,20 @@ export function AdminUserRolesPage() {
     } finally { inFlight.current = false; setBusy(false) }
   }
   const columns: readonly TableColumnDef<UserRoleItem>[] = [
-    { id: 'name', header: 'Rol permanente', cell: (role) => roleLabel(role.name) },
+    { id: 'name', header: 'Rol de cuenta', cell: (role) => roleLabel(role.name) },
     { id: 'assigned', header: 'Asignación actual', cell: (role) => role.assigned ? 'Asignado' : 'Sin asignación activa' },
     { id: 'actions', header: 'Acciones', cell: (role) => <button type="button" className={role.assigned ? tableStyles.btnDeactivate : tableStyles.btnActivate} disabled={busy || (!role.assigned && role.status !== 'ACTIVE') || (user?.id === id && role.name === 'ADMINISTRADOR' && role.assigned)} onClick={() => setPending({ ...role, userId: id })}>{role.assigned ? 'Retirar rol' : 'Asignar rol'}</button> },
   ]
   if (!Number.isSafeInteger(id) || id < 1) return <p role="alert">El identificador de cuenta no es válido.</p>
   return <PageContainer>
-    <PageHeader title="Gestionar roles y permisos"
+    <PageHeader title="Asignar o retirar roles"
       eyebrow={`${visible.account?.full_name ?? 'Cuenta seleccionada'} · HU22`}
-      description="La asignación requiere el perfil académico correspondiente. La colaboración temporal se gestiona por examen. Todo cambio revoca las sesiones anteriores."
-      breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Roles y permisos', to: '/admin/users/roles' }, { label: 'Gestionar roles y permisos' }]}
-      actions={<Link to="/admin/users/roles">Volver a roles y permisos</Link>} />
+      description="Docente y Estudiante requieren su perfil académico activo. Los roles personalizados no requieren perfil. La colaboración temporal se gestiona por examen. Todo cambio revoca las sesiones anteriores."
+      breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Asignaciones', to: '/admin/users/assignments' }, { label: 'Roles de cuenta' }]}
+      actions={<Link to="/admin/users/assignments">Volver a asignaciones</Link>} />
     <DataTable columns={columns} data={visible.roles} loading={visible.loading} error={visible.error} entityLabel="roles"
       onRetry={() => { setState((current) => ({ ...current, loading: true, error: null })); setVersion((value) => value + 1) }} />
-    <ConfirmDialog isOpen={pending?.userId === id} title={pending?.assigned ? 'Retirar rol permanente' : 'Asignar rol permanente'}
+    <ConfirmDialog isOpen={pending?.userId === id} title={pending?.assigned ? 'Retirar rol de cuenta' : 'Asignar rol de cuenta'}
       message={`${pending?.assigned ? 'Retirar' : 'Asignar'} ${pending ? roleLabel(pending.name) : ''} a esta cuenta. Se conservarán sus datos e historial y deberá iniciar sesión nuevamente.`}
       loading={busy} onConfirm={() => void confirm()} onCancel={() => { if (!busy) setPending(null) }} />
   </PageContainer>

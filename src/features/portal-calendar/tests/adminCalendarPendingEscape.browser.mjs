@@ -83,7 +83,7 @@ try {
           if (normalized.endsWith('/src/shared/api/httpClient.ts'))
             return `export const httpClient={get:(...args)=>window.calendarPendingQa.client.get(...args),patch:(...args)=>window.calendarPendingQa.client.patch(...args),post:(...args)=>window.calendarPendingQa.client.post(...args)};`
           if (normalized.endsWith('/src/features/auth/hooks/useAuth.ts'))
-            return 'export const useAuth=()=>({notify(){}});'
+            return 'export const useAuth=()=>({user:{status:"ACTIVE",must_change_password:false,roles:["ADMINISTRADOR"]},notify(){}});'
         },
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {

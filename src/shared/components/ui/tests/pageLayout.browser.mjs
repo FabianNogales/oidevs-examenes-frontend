@@ -80,11 +80,15 @@ const fixtures={
   ]),
   '/admin/academic-terms/1':{data:{id:1,name:'Periodo QA 2026',start_date:'2026-01-01',end_date:'2026-12-31',status:'ACTIVE'}},
   '/admin/course-offerings':page([]),
+  '/admin/course-offerings/periods':{data:[{id:1,name:'Periodo QA 2026',status:'ACTIVE'},{id:2,name:'Periodo QA histórico',status:'INACTIVE'}]},
   '/admin/portal/event-categories':{data:[]},
   '/admin/portal/events':page([]),
   '/admin/rooms':page([{id:1,code:'QA-101',name:'Aula QA 101',location:'Bloque QA',capacity:40,status:'ACTIVE'},{id:2,code:'QA-202',name:'Laboratorio QA 202',location:'Bloque QA',capacity:25,status:'INACTIVE'}]),
   '/admin/subjects':page([{id:1,code:'QA-111',name:'Materia QA de programación',status:'ACTIVE',careers:[career]}]),
   '/admin/subjects/careers':{data:[career]},
+  '/admin/subjects/form-careers':{data:[career]},
+  '/admin/subjects/1/edit':{data:{id:1,code:'QA-111',name:'Materia QA de programación',careers:[career]}},
+  '/admin/academic-terms/1/edit':{data:{id:1,name:'Periodo QA 2026',start_date:'2026-01-01',end_date:'2026-12-31',status:'ACTIVE'}},
   '/admin/careers':page([career,{id:2,code:'QA-IND',name:'Carrera QA Industrial',status:'INACTIVE'}]),
   '/admin/portal/news':{data:[{id:41,title:'Noticia QA publicada',summary:'Resumen QA.',image_url:null,published_at:'2026-11-04T10:00:00-04:00',status:'PUBLISHED',revision:1,created_by:1,updated_by:1,published_by:1},{id:42,title:'Noticia QA en borrador',summary:'Resumen QA.',image_url:null,published_at:null,status:'DRAFT',revision:1,created_by:1,updated_by:1,published_by:null}],meta:{current_page:1,last_page:1,per_page:15,total:2}},
   '/admin/portal/news-categories':{data:[]},
@@ -170,7 +174,7 @@ const routes=[
 routes.push({path:'/',element:e('main',{'data-qa-home':true},e('h1',null,'Inicio QA'),
   e(Link,{to:'/students/profile'},'Mi perfil'),e(Link,{to:'/students/qr'},'Mis exámenes'))});
 const root=createRoot(document.getElementById('root'));
-qa.show=(path)=>{qa.calls=[];qa.unexpected=[];qa.overrides=qa.nextOverrides??{};qa.authUser=qa.nextAuthUser;qa.nextOverrides=undefined;qa.nextAuthUser=undefined;root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
+qa.show=(path)=>{qa.calls=[];qa.unexpected=[];qa.overrides=qa.nextOverrides??{};qa.authUser=qa.nextAuthUser??(path.startsWith('/admin/')?{id:1,status:'ACTIVE',must_change_password:false,roles:['ADMINISTRADOR'],permissions:[]}:undefined);qa.nextOverrides=undefined;qa.nextAuthUser=undefined;root.render(e(RouterProvider,{key:path+Math.random(),router:createMemoryRouter(routes,{initialEntries:[path]})}));};
 `
 
 const screens = [

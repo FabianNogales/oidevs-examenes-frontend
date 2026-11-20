@@ -5,6 +5,8 @@ import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
 import dialogBase from '@/shared/styles/dialogBase.module.css'
 import detailDialog from './AdminDetailDialog.module.css'
 import { AdminUserHistoryPage } from './AdminUserHistoryPage'
+import { CreateStaffAccountDialog } from '../components/CreateStaffAccountDialog'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import {
@@ -79,7 +81,7 @@ const USER_COLUMNS: readonly TableColumnDef<AdminUserItem>[] = [
 
 export function AdminManageUsersPage() {
   const path = useLocation().pathname
-  return path === '/admin/users/history' ? <AdminUserHistoryPage /> : <ManageAccounts rolesView={path === '/admin/users/roles'} />
+  return path === '/admin/users/history' ? <AdminUserHistoryPage /> : <ManageAccounts rolesView={path === '/admin/users/assignments'} />
 }
 
 export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = {}) {
@@ -91,6 +93,7 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
   const [pagination, setPagination] = useState<TablePaginationMeta | null>(null)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [creatingStaff, setCreatingStaff] = useState(false)
 
   // Estados para el cuadro de diálogo de confirmación de Activar/Desactivar
   const [pendingToggle, setPendingToggle] = useState<AdminUserItem | null>(null)
@@ -223,15 +226,16 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
   return (
     <PageContainer>
       <PageHeader
-        title={rolesView ? 'Roles y permisos' : 'Gestión de usuarios'}
+        title={rolesView ? 'Asignar roles a cuentas' : 'Gestión de usuarios'}
         description={rolesView
-          ? 'Selecciona una cuenta para consultar y administrar sus roles permanentes.'
+          ? 'Selecciona una cuenta para asignar, retirar o reactivar roles de cuenta. La colaboración temporal se gestiona por examen.'
           : 'Cuentas institucionales. El estado de cuenta es global y no modifica el estado particular de sus perfiles. Los roles se administran por separado en HU22.'}
         breadcrumbs={[
           { label: 'Inicio', to: '/' },
           { label: 'Usuarios', to: '/admin/users/manage' },
-          { label: rolesView ? 'Roles y permisos' : 'Gestionar usuarios' },
+          { label: rolesView ? 'Asignar roles a cuentas' : 'Gestionar usuarios' },
         ]}
+        actions={!rolesView ? <Button onClick={() => setCreatingStaff(true)}>Crear cuenta de personal</Button> : undefined}
       />
 
       <>
@@ -268,11 +272,17 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
             <dt>CI</dt><dd>{detail.account.identity_number ?? 'No registrado'}</dd><dt>Correo</dt><dd>{detail.account.email}</dd>
             <dt>Estado global</dt><dd>{detail.account.status}</dd><dt>Roles permanentes</dt><dd>{detail.account.role_label}</dd>
             <dt>Perfil docente</dt><dd>{detail.account.teacher_status ?? 'Sin perfil'}</dd><dt>Perfil estudiantil</dt><dd>{detail.account.student_status ?? 'Sin perfil'}</dd></dl>
-          <Link to={`/admin/users/${detail.account.id}/roles`} onClick={closeDetail}>Gestionar roles y permisos (HU22)</Link>
+          <Link to={`/admin/users/${detail.account.id}/roles`} onClick={closeDetail}>Asignar o retirar roles (HU22)</Link>
           {detail.account.teacher_id && <p><Link to={`/admin/teachers/${detail.account.teacher_id}`} onClick={closeDetail}>Ver perfil docente</Link></p>}
           {detail.account.student_id && <p><Link to={`/admin/students/${detail.account.student_id}`} onClick={closeDetail}>Ver perfil estudiantil</Link></p>}
         </> : <p role="status">Cargando cuenta…</p>}
       </PortalDialog>}
+
+      {creatingStaff && <CreateStaffAccountDialog onClose={() => setCreatingStaff(false)} onCreated={(account) => {
+        setCreatingStaff(false)
+        notify('success', `Cuenta de personal creada para ${account.full_name}. Debe cambiar su contraseña en el primer acceso.`)
+        void loadUsers(currentPage, searchTerm)
+      }} />}
 
       {/* Cuadro de diálogo de confirmación para Activar / Desactivar */}
       <ConfirmDialog

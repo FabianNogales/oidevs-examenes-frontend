@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { getAdminSubject, SubjectApiError } from '../api/subjectMutationsApi'
+import { getAdminSubject, getSubjectForEdit, SubjectApiError } from '../api/subjectMutationsApi'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getModuleAccess } from '@/features/roles/utils/moduleAccess'
 import type {
   AdminSubject,
+  SubjectEditable,
   SubjectDialogSelection,
 } from '../types/adminSubject.types'
 import { SubjectDetails } from './SubjectDetails'
@@ -18,7 +21,8 @@ interface Props {
 
 type RecordState =
   | { status: 'loading' }
-  | { status: 'ready'; subject: AdminSubject }
+  | { status: 'ready'; mode: 'detail'; subject: AdminSubject }
+  | { status: 'ready'; mode: 'edit'; subject: SubjectEditable }
   | { status: 'error'; message: string; missing: boolean }
 
 function ExistingSubject({
@@ -32,7 +36,7 @@ function ExistingSubject({
   subjectId: number
   editing: boolean
   onClose: () => void
-  onEdit: () => void
+  onEdit?: () => void
   onSaved: (subject: AdminSubject) => void
   onBusyChange: (busy: boolean) => void
 }) {
@@ -40,25 +44,27 @@ function ExistingSubject({
   const [retry, setRetry] = useState(0)
   useEffect(() => {
     const controller = new AbortController()
-    getAdminSubject(subjectId, controller.signal).then(
-      (subject) => {
-        if (!controller.signal.aborted) setState({ status: 'ready', subject })
-      },
-      (cause: unknown) => {
-        if (controller.signal.aborted) return
-        const error =
-          cause instanceof SubjectApiError
-            ? cause
-            : new SubjectApiError('No se pudo consultar la materia.')
-        setState({
-          status: 'error',
-          message: error.message,
-          missing: error.status === 404,
+    const loading = editing
+      ? getSubjectForEdit(subjectId, controller.signal).then((subject) => {
+          if (!controller.signal.aborted) setState({ status: 'ready', mode: 'edit', subject })
         })
-      },
-    )
+      : getAdminSubject(subjectId, controller.signal).then((subject) => {
+          if (!controller.signal.aborted) setState({ status: 'ready', mode: 'detail', subject })
+        })
+    loading.catch((cause: unknown) => {
+      if (controller.signal.aborted) return
+      const error =
+        cause instanceof SubjectApiError
+          ? cause
+          : new SubjectApiError('No se pudo consultar la materia.')
+      setState({
+        status: 'error',
+        message: error.message,
+        missing: error.status === 404,
+      })
+    })
     return () => controller.abort()
-  }, [subjectId, retry])
+  }, [subjectId, retry, editing])
 
   if (state.status === 'loading')
     return (
@@ -83,7 +89,7 @@ function ExistingSubject({
         )}
       </div>
     )
-  return editing ? (
+  return state.mode === 'edit' ? (
     <SubjectForm
       subject={state.subject}
       onCancel={onClose}
@@ -96,6 +102,8 @@ function ExistingSubject({
 }
 
 export function SubjectDialog({ selection, onClose, onSaved }: Props) {
+  const { user } = useAuth()
+  const access = getModuleAccess(user, 'subjects')
   const busy = useRef(false)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(selection.mode === 'edit')
@@ -119,9 +127,11 @@ export function SubjectDialog({ selection, onClose, onSaved }: Props) {
     onSaved(subject, selection.mode === 'create')
   }
 
+  const allowed = selection.mode === 'create' ? access.canCreate : editing ? access.canEdit : access.canView
+
   return (
     <SubjectModal title={title} busy={saving} onClose={close}>
-      {selection.mode === 'create' ? (
+      {!allowed ? <p role="alert">No tienes permiso vigente para esta operación.</p> : selection.mode === 'create' ? (
         <SubjectForm
           onCancel={close}
           onSaved={saved}
@@ -129,10 +139,11 @@ export function SubjectDialog({ selection, onClose, onSaved }: Props) {
         />
       ) : (
         <ExistingSubject
+          key={editing ? 'edit' : 'detail'}
           subjectId={selection.subjectId}
           editing={editing}
           onClose={close}
-          onEdit={() => setEditing(true)}
+          onEdit={access.canEdit ? () => setEditing(true) : undefined}
           onSaved={saved}
           onBusyChange={changeBusy}
         />

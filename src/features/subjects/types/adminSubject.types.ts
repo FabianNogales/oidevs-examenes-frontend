@@ -20,6 +20,8 @@ export interface AdminSubject {
   status: SubjectStatus
   careers: SubjectCareer[]
 }
+
+export type SubjectEditable = Pick<AdminSubject, 'id' | 'code' | 'name' | 'careers'>
 export interface SubjectsQuery {
   page: number
   search: string

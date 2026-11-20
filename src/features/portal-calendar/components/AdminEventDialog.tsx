@@ -32,11 +32,13 @@ function UnsavedChangesDialog({
 }
 
 export function AdminEventDialog({
+  canManage = true,
   eventId,
   categories,
   onClose,
   onSaved,
 }: {
+  canManage?: boolean
   eventId: number | null
   categories: EventCategory[]
   onClose: () => void
@@ -69,7 +71,7 @@ export function AdminEventDialog({
         closeBlocked={confirmClose}
         onClose={requestClose}
       >
-        {eventId !== null ? (
+        {canManage && eventId !== null ? (
           <PortalHistory resource="events" id={eventId} />
         ) : null}
         {resource.loading ? (
@@ -83,6 +85,7 @@ export function AdminEventDialog({
           </div>
         ) : (
           <EventForm
+            canManage={canManage}
             key={eventId ?? 'new'}
             initial={resource.data}
             categories={categories}

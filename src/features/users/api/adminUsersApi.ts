@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { httpClient } from '@/shared/api/httpClient'
+import { managementError } from '@/features/roles/api/rolesApi'
 
 export type AccountRole = { id: number; name: string; status?: 'ACTIVE' | 'INACTIVE' }
 export type AdminUserItem = {
@@ -17,7 +18,7 @@ export type AccountEvent = {
 export type ReadMeta = { current_page: number; last_page: number; total: number; from: number | null; to: number | null }
 export type ReadPage<T> = { data: T[]; meta: ReadMeta }
 export const roleLabel = (name: string) => ({ ADMINISTRADOR: 'Administrador', DOCENTE: 'Docente', ESTUDIANTE: 'Estudiante', COLLABORATOR: 'Colaboración temporal' }[name] ?? name)
-export const eventLabel = (name: string) => ({ USER_STATUS_CHANGED: 'Cambio de estado de cuenta', USER_ROLE_ASSIGNED: 'Asignación de rol', USER_ROLE_REVOKED: 'Retiro de rol', EXAM_COLLABORATOR_ASSIGNED: 'Designación temporal', EXAM_COLLABORATOR_REASSIGNED: 'Nueva designación temporal', EXAM_COLLABORATOR_REVOKED: 'Revocación temporal' }[name] ?? name)
+export const eventLabel = (name: string) => ({ USER_STATUS_CHANGED: 'Cambio de estado de cuenta', USER_ROLE_ASSIGNED: 'Asignación de rol', USER_ROLE_REVOKED: 'Retiro de rol', STAFF_ACCOUNT_CREATED: 'Alta de cuenta de personal', EXAM_COLLABORATOR_ASSIGNED: 'Designación temporal', EXAM_COLLABORATOR_REASSIGNED: 'Nueva designación temporal', EXAM_COLLABORATOR_REVOKED: 'Revocación temporal' }[name] ?? name)
 
 export class AdminAccountError extends Error {
   readonly status: number | null
@@ -41,7 +42,7 @@ const validRole = (value: unknown): value is AccountRole => isObject(value) && i
 const validUserRole = (value: unknown): value is UserRoleItem => {
   if (!isObject(value)) return false
   const record: Record<string, unknown> = value
-  return validRole(value) && ['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE'].includes(value.name) &&
+  return validRole(value) &&
     typeof record.assigned === 'boolean' && ['ACTIVE', 'INACTIVE'].includes(String(record.status))
 }
 function user(value: unknown): AdminUserItem {
@@ -84,6 +85,23 @@ export async function updateAdminUserStatus(id: number, status: AdminUserItem['s
     if (result.id !== id || result.status !== status) throw new AdminAccountError('No se pudo verificar el cambio de estado. Consulta la cuenta.')
     return result
   } catch (cause) { throw accountError(cause) }
+}
+export type StaffAccountDraft = {
+  first_names: string
+  last_names: string
+  identity_number: string
+  email: string
+  role_id: number
+}
+export async function createStaffAccount(payload: StaffAccountDraft): Promise<AdminUserItem> {
+  try {
+    const { data } = await httpClient.post('/admin/users/staff', payload)
+    const result = user(data?.data)
+    if (result.student_id !== null || result.teacher_id !== null || !result.roles.some((role) => role.id === payload.role_id)) {
+      throw new AdminAccountError('No se pudo verificar el alta de personal. Consulta la cuenta antes de reintentar.')
+    }
+    return result
+  } catch (cause) { throw managementError(cause) }
 }
 export async function getUserRoles(id: number, signal?: AbortSignal): Promise<UserRoleItem[]> {
   try {

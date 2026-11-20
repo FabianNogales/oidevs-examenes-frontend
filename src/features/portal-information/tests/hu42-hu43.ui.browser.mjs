@@ -109,7 +109,7 @@ try {
           if (path.endsWith('/src/shared/api/httpClient.ts'))
             return 'export const httpClient={get:(...args)=>hu42.client.get(...args),patch:(...args)=>hu42.client.patch(...args),post:(...args)=>hu42.client.post(...args)};'
           if (path.endsWith('/src/features/auth/hooks/useAuth.ts'))
-            return 'export const useAuth=()=>({notify(){}});'
+            return 'export const useAuth=()=>({user:{status:"ACTIVE",must_change_password:false,roles:["ADMINISTRADOR"]},notify(){}});'
         },
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {
@@ -282,7 +282,7 @@ try {
   await evaluate(
     `(()=>{const f=document.querySelector('textarea[name="description"]');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(f,'Descripción de prueba');f.dispatchEvent(new Event('input',{bubbles:true}))})()`,
   )
-  await click('Guardar borrador')
+  await click('Guardar cambios')
   await wait(`hu42.calls.some(call=>call.method==='patch')`)
   const payload = await evaluate(
     `hu42.calls.find(call=>call.method==='patch').payload`,

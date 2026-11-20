@@ -13,8 +13,8 @@ export function RoomsTable({
 }: {
   rooms: Room[]
   onDetail: (roomId: number) => void
-  onEdit: (roomId: number) => void
-  onStatusChange: (room: Room) => void
+  onEdit?: (roomId: number) => void
+  onStatusChange?: (room: Room) => void
 }) {
   const columns: TableColumnDef<Room>[] = [
     {
@@ -81,15 +81,15 @@ export function RoomsTable({
           >
             Ver detalle
           </button>
-          <button
+          {onEdit && <button
             type="button"
             className={tableStyles.btnViewProfile}
             onClick={() => onEdit(room.id)}
             aria-label={`Editar ${room.code}`}
           >
             Editar
-          </button>
-          <button
+          </button>}
+          {onStatusChange && <button
             type="button"
             className={
               room.status === 'ACTIVE'
@@ -100,7 +100,7 @@ export function RoomsTable({
             aria-label={`${room.status === 'ACTIVE' ? 'Desactivar' : 'Activar'} ${room.code}`}
           >
             {room.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
-          </button>
+          </button>}
         </div>
       ),
     },

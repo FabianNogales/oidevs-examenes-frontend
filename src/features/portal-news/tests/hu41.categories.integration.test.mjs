@@ -304,7 +304,7 @@ test('D1.1 admin list shows category or "Sin categoría" and filters by category
             ? { data: { data: active } }
             : { data: page([]) },
       },
-      { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
+      { '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) } },
     ),
     'features/portal-news/pages/AdminNewsPage.tsx',
     'AdminNewsPage',

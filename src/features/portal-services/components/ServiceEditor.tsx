@@ -75,6 +75,7 @@ function validationIssues(item: AdminService) {
 }
 
 export function ServiceEditor({
+  canManage = true,
   formId,
   initial,
   onSaved,
@@ -82,6 +83,7 @@ export function ServiceEditor({
   onDirty,
   onStateChange,
 }: {
+  canManage?: boolean
   formId: string
   initial: AdminService | null
   onSaved: () => void
@@ -118,12 +120,13 @@ export function ServiceEditor({
   useEffect(() => {
     onStateChange({
       label,
-      disabled: editor.locked || !hasChanges || pending !== null,
+      disabled: editor.locked || !hasChanges || pending !== null || (!item && !canManage),
       pending: pending !== null,
     })
-  }, [editor.locked, hasChanges, pending, label, onStateChange])
+  }, [editor.locked, hasChanges, pending, label, onStateChange, item, canManage])
 
   async function save() {
+    if (!item && !canManage) return
     const input: ServiceInput = { ...form, icon: 'link' }
     const changes: Partial<ServiceInput> = {}
     if (item) {
@@ -147,7 +150,7 @@ export function ServiceEditor({
   }
 
   async function changeStatus() {
-    if (!item || !pending) return
+    if (!canManage || !item || !pending) return
     const result = await editor.mutate(() =>
       setServiceStatus(item.id, pending, item.revision),
     )
@@ -274,7 +277,7 @@ export function ServiceEditor({
           </PortalField>
         </fieldset>
         <div className={`${styles.editorActions} ${styles.serviceActions}`}>
-          {item ? (
+          {canManage && item ? (
             <div className={styles.serviceStatusAction}>
               <button
                 type="button"
@@ -296,7 +299,7 @@ export function ServiceEditor({
       </form>
       <ConfirmDialog
         native
-        isOpen={pending !== null}
+        isOpen={canManage && pending !== null}
         title={
           pending === 'ACTIVE'
             ? '¿Activar este servicio?'

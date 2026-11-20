@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
-export type HeaderRole = 'student' | 'teacher' | 'admin'
+// Presentation context only: "staff" is not a global authorization role.
+export type HeaderRole = 'student' | 'teacher' | 'admin' | 'staff'
 
 export interface HeaderNavigationItem {
   label: string

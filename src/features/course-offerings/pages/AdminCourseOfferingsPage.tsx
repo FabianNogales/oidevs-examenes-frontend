@@ -3,12 +3,18 @@ import { PageContainer } from '@/shared/components/ui/PageContainer/PageContaine
 
 import { Link, useSearchParams } from 'react-router'
 import { useCallback, useState } from 'react'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getHomeRouteForUser } from '@/features/auth/utils/authRoutes'
+import { getModuleAccess } from '@/features/roles/utils/moduleAccess'
 import { CourseOfferingsPanel } from '../components/CourseOfferingsPanel'
 import { OfferingCreateDialog } from '../components/OfferingCreateDialog'
 import { useOfferingNavigationGuard } from '../hooks/useOfferingNavigationGuard'
 import styles from './AdminCourseOfferingsPage.module.css'
 
 export function AdminCourseOfferingsPage() {
+  const { user } = useAuth()
+  const access = getModuleAccess(user, 'course_offerings')
+  const home = user ? getHomeRouteForUser(user) : '/'
   const [busy, setBusy] = useState(false)
   const [revision, setRevision] = useState(0)
   const [creating, setCreating] = useState(false)
@@ -33,9 +39,13 @@ export function AdminCourseOfferingsPage() {
   return (
     <section>
       <PageContainer>
-        <PageHeader title="Materias asignadas a docentes" eyebrow="Administración" description="Consulta y administra las asignaciones de materias por docente y periodo académico."
-          breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Docentes', to: '/admin/teachers' }, { label: 'Asignación de materias' }]}
-          actions={<div className={styles.headerActions}>
+        <PageHeader title="Materias asignadas a docentes" eyebrow={access.isAdministrator ? 'Administración' : 'Personal'}
+          description={access.isAdministrator ? 'Consulta y administra las asignaciones de materias por docente y periodo académico.'
+            : 'Consulta las asignaciones de materias por docente y periodo académico.'}
+          breadcrumbs={access.isAdministrator
+            ? [{ label: 'Inicio', to: '/' }, { label: 'Docentes', to: '/admin/teachers' }, { label: 'Asignación de materias' }]
+            : [{ label: 'Inicio', to: home }, { label: 'Ofertas' }]}
+          actions={access.isAdministrator && <div className={styles.headerActions}>
             <button
               type="button"
               className={styles.secondaryButton}
@@ -51,13 +61,12 @@ export function AdminCourseOfferingsPage() {
               + Importar asignaciones (CSV)
             </Link>
           </div>} />
-        <Link to="/admin/teachers" className={styles.backLink}>
-          ← Volver a Gestión de docentes
+        <Link to={access.isAdministrator ? '/admin/teachers' : home} className={styles.backLink}>
+          ← {access.isAdministrator ? 'Volver a Gestión de docentes' : 'Volver al Inicio'}
         </Link>
         {invalidTeacher ? (
           <p role="alert">
-            El identificador del docente no es válido. Vuelve a Gestión de
-            docentes.
+            El identificador del docente no es válido. Revisa el enlace de consulta.
           </p>
         ) : (
           <>
@@ -75,7 +84,7 @@ export function AdminCourseOfferingsPage() {
               <legend className={styles.srOnly}>
                 Gestionar asignaciones de materias
               </legend>
-              {creating && (
+              {access.isAdministrator && creating && (
                 <OfferingCreateDialog
                   key={teacherId ?? 'all'}
                   teacherId={teacherId}
@@ -95,7 +104,7 @@ export function AdminCourseOfferingsPage() {
               <CourseOfferingsPanel
                 key={`${teacherId ?? 'all'}-${revision}`}
                 teacherId={teacherId}
-                editable
+                editable={access.isAdministrator}
                 onBusy={setBusy}
               />
             </fieldset>

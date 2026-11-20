@@ -3,6 +3,7 @@ import { mapSubjectError, saveAdminSubject } from '../api/subjectMutationsApi'
 import { useSubjectCareers } from '../hooks/useAdminSubjects'
 import type {
   AdminSubject,
+  SubjectEditable,
   SubjectFieldErrors,
   SubjectPayload,
 } from '../types/adminSubject.types'
@@ -17,7 +18,7 @@ export function SubjectForm({
   onSaved,
   onBusyChange,
 }: {
-  subject?: AdminSubject
+  subject?: SubjectEditable
   onCancel: () => void
   onSaved: (subject: AdminSubject) => void
   onBusyChange: (busy: boolean) => void
@@ -34,7 +35,7 @@ export function SubjectForm({
   const pending = useRef(false)
   const form = useRef<HTMLFormElement>(null)
   const id = useId()
-  const careers = useSubjectCareers()
+  const careers = useSubjectCareers(true)
   // Preserve historical associations even if absent from the current career catalog.
   const options = [
     ...careers.careers,

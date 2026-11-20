@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { httpClient } from '@/shared/api/httpClient'
-import { isAdminSubject } from './adminSubjectsApi'
+import { isAdminSubject, isSubjectCareer } from './adminSubjectsApi'
 import type {
   AdminSubject,
+  SubjectEditable,
   SubjectFieldErrors,
   SubjectPayload,
   SubjectStatus,
@@ -92,6 +93,20 @@ export async function saveAdminSubject(
         ? await httpClient.post('/admin/subjects', payload)
         : await httpClient.put(`/admin/subjects/${id}`, payload)
     return readSubject(response.data, id)
+  } catch (error) {
+    throw mapSubjectError(error)
+  }
+}
+
+export async function getSubjectForEdit(id: number, signal: AbortSignal): Promise<SubjectEditable> {
+  try {
+    const { data } = await httpClient.get<{ data: SubjectEditable }>(`/admin/subjects/${id}/edit`, { signal })
+    const subject = data?.data
+    if (!subject || subject.id !== id || typeof subject.code !== 'string' || typeof subject.name !== 'string'
+      || !Array.isArray(subject.careers) || !subject.careers.every(isSubjectCareer)) {
+      throw new SubjectApiError('El servidor devolvió datos de edición no válidos.')
+    }
+    return subject
   } catch (error) {
     throw mapSubjectError(error)
   }

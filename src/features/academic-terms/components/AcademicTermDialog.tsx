@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getModuleAccess } from '@/features/roles/utils/moduleAccess'
 import { useAcademicTermRecord } from '../hooks/useAcademicTermRecord'
 import type {
   AcademicTerm,
@@ -19,10 +21,13 @@ export function AcademicTermDialog({
   onClose: () => void
   onSaved: (term: AcademicTerm, created: boolean) => void
 }) {
-  const record = useAcademicTermRecord(
-    selection.mode === 'create' ? null : selection.termId,
-  )
+  const { user } = useAuth()
+  const access = getModuleAccess(user, 'academic_terms')
   const [editing, setEditing] = useState(selection.mode === 'edit')
+  const allowed = selection.mode === 'create' ? access.canCreate : editing ? access.canEdit : access.canView
+  const record = useAcademicTermRecord(
+    selection.mode === 'create' || !allowed ? null : selection.termId, editing,
+  )
   const [saving, setSaving] = useState(false)
   const busy = useRef(false)
   const title =
@@ -43,8 +48,9 @@ export function AcademicTermDialog({
   }
   return (
     <AcademicTermModal title={title} busy={saving} onClose={close}>
-      {selection.mode === 'create' ? (
+      {!allowed ? <p role="alert">No tienes permiso vigente para esta operación.</p> : selection.mode === 'create' ? (
         <AcademicTermForm
+          allowActivation={access.isAdministrator}
           onCancel={close}
           onSaved={saved}
           onBusyChange={changeBusy}
@@ -83,6 +89,7 @@ export function AcademicTermDialog({
             (editing ? (
               <AcademicTermForm
                 term={record.state.term}
+                allowActivation={access.isAdministrator}
                 onCancel={close}
                 onSaved={saved}
                 onBusyChange={changeBusy}
@@ -91,10 +98,10 @@ export function AcademicTermDialog({
               <AcademicTermDetails
                 term={record.state.term}
                 onClose={close}
-                onEdit={() => {
+                onEdit={access.canEdit ? () => {
                   record.reload()
                   setEditing(true)
-                }}
+                } : undefined}
               />
             ))}
         </>

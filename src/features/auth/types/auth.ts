@@ -9,7 +9,8 @@ export type AuthenticatedUser = {
   id: number
   display_name: string
   email: string
-  roles: AuthRole[]
+  roles: string[]
+  permissions?: string[]
   status: string
   must_change_password: boolean
 }

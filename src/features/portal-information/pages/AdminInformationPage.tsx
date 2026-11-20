@@ -3,6 +3,7 @@ import { PortalHistory } from '@/features/portal-shared/components/PortalHistory
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getPortalAccess } from '@/features/portal-shared/utils/portalAccess'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import {
   PortalAdminCollection,
@@ -72,11 +73,13 @@ function UnsavedInformationDialog({
 }
 
 function InformationDialog({
+  canManage,
   kind,
   id,
   onClose,
   onSaved,
 }: {
+  canManage: boolean
   kind: InformationKind
   id: number | null
   onClose: () => void
@@ -129,7 +132,7 @@ function InformationDialog({
           </>
         }
       >
-        {id !== null ? (
+        {canManage && id !== null ? (
           <PortalHistory
             key={`${id}-${historyVersion}`}
             resource={`information/${kind}`}
@@ -139,6 +142,7 @@ function InformationDialog({
         <PortalFeedback {...result} retry={result.reload} />
         {!result.loading && !result.error ? (
           <InformationEditor
+            canManage={canManage}
             kind={kind}
             initial={result.data}
             onBusy={setBusy}
@@ -161,9 +165,12 @@ function InformationDialog({
   )
 }
 
-export function AdminInformationPage() {
-  const { notify } = useAuth()
-  const [kind, setKind] = useState<InformationKind>('sections')
+export function AdminInformationPage({ initialKind = 'sections' }: { initialKind?: InformationKind } = {}) {
+  const { user, notify } = useAuth()
+  const { isAdministrator: canManage } = getPortalAccess(user, initialKind)
+  const allowedKinds = (['sections', 'faqs'] as const).filter((entry) => getPortalAccess(user, entry).canEdit)
+  const [selectedKind, setKind] = useState<InformationKind>(initialKind)
+  const kind = allowedKinds.includes(selectedKind) ? selectedKind : (allowedKinds[0] ?? initialKind)
   const [published, setPublished] = useState('')
   const visibilitySelect = useRef<HTMLElement>(null)
   const [version, setVersion] = useState(0)
@@ -203,7 +210,7 @@ export function AdminInformationPage() {
         load={load}
         onSelect={(id) => setSelected({ kind, id, dialogKey: `${kind}-${id}` })}
         onCreate={
-          kind === 'faqs'
+          canManage && kind === 'faqs'
             ? () => setSelected({ kind, id: null, dialogKey: `${kind}-new` })
             : undefined
         }
@@ -216,7 +223,7 @@ export function AdminInformationPage() {
                 options={[
                   { value: 'sections', label: 'Secciones institucionales' },
                   { value: 'faqs', label: 'Preguntas frecuentes' },
-                ]}
+                ].filter((entry) => allowedKinds.includes(entry.value as InformationKind))}
                 onChange={(nextValue) =>
                   setKind(nextValue as InformationKind)
                 }
@@ -255,13 +262,14 @@ export function AdminInformationPage() {
       >
         {kind === 'sections' ? (
           <p className={styles.informationSectionNote}>
-            Consulta las secciones existentes. Guardar un borrador no publica
-            sus cambios.
+            Guardar contenido publicado actualiza el portal público. Guardar
+            un borrador conserva su estado sin publicar.
           </p>
         ) : null}
       </PortalAdminCollection>
       {selected ? (
         <InformationDialog
+          canManage={canManage}
           key={selected.dialogKey}
           kind={selected.kind}
           id={selected.id}

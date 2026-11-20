@@ -69,9 +69,10 @@ export async function getAdminSubjects(
 
 export async function getSubjectCareers(
   signal: AbortSignal,
+  forForm = false,
 ): Promise<SubjectCareer[]> {
   const response = await httpClient.get<{ data: SubjectCareer[] }>(
-    '/admin/subjects/careers',
+    forForm ? '/admin/subjects/form-careers' : '/admin/subjects/careers',
     { signal },
   )
   if (
