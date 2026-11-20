@@ -23,6 +23,7 @@ const EVALUATION_LABELS: Record<EvaluationType, string> = {
   partial: 'Parcial',
   final: 'Final',
   makeup: '2da instancia',
+  recovery: 'Recuperatorio',
 }
 
 function formatDate(value: string): string {

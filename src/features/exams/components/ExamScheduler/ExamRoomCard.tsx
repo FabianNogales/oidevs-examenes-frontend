@@ -1,5 +1,5 @@
 import type { Room, RoomBusySlot } from '../../types/exam.types'
-import { EvaluateRoomSharingStatus } from '../../utils/examScheduleFormatters'
+import { GetRoomConflictingSlots } from '../../utils/examScheduleFormatters'
 import styles from './ExamRoomCard.module.css'
 
 export interface ExamRoomCardProps {
@@ -7,11 +7,10 @@ export interface ExamRoomCardProps {
   index: number
   isSelected: boolean
   isAvailable: boolean
-  isRecommendedForCapacity: boolean
   hasVerifiedSchedule: boolean
   selectedDate: string
   startTime: string
-  durationMinutes: number
+  reservedMinutes: number
   formattedDateLabel: string
   disabled: boolean
   onSelectRoom: (room: Room) => void
@@ -21,7 +20,6 @@ function ResolveRoomBadge(
   isSelected: boolean,
   hasVerifiedSchedule: boolean,
   isAvailable: boolean,
-  isSharedByOther: boolean,
 ): { badgeClass: string; badgeText: string } {
   if (isSelected) {
     return {
@@ -41,15 +39,9 @@ function ResolveRoomBadge(
       badgeText: '✓ Disponible',
     }
   }
-  if (isSharedByOther) {
-    return {
-      badgeClass: styles.roomStatusBadgeValid,
-      badgeText: 'Disponible para compartir',
-    }
-  }
   return {
     badgeClass: styles.roomStatusBadgeBusy,
-    badgeText: 'Ocupada • Clic para compartir',
+    badgeText: 'Ocupada',
   }
 }
 
@@ -74,16 +66,11 @@ function RenderRoomSlotsStatus(
     return busySlots.map((slot, slotIdx) => (
       <span
         key={`${slot.start}-${slotIdx}`}
-        className={
-          slot.is_shared
-            ? styles.sharedSlotChip
-            : `${styles.slotMetaChip} ${
-                !isAvailable ? styles.slotMetaChipConflict : ''
-              }`
-        }
+        className={`${styles.slotMetaChip} ${
+          !isAvailable ? styles.slotMetaChipConflict : ''
+        }`}
       >
-        {slot.is_shared ? 'Compartida ' : 'Ocupado '}
-        {slot.start}–{slot.end}
+        Ocupado {slot.start}–{slot.end}
       </span>
     ))
   }
@@ -98,7 +85,7 @@ function RenderRoomSlotsStatus(
 
   return (
     <span className={`${styles.slotMetaChip} ${styles.slotMetaChipConflict}`}>
-      Horario reservado (requiere consentimiento para compartir)
+      Horario reservado en este bloque
     </span>
   )
 }
@@ -108,27 +95,28 @@ export function ExamRoomCard({
   index,
   isSelected,
   isAvailable,
-  isRecommendedForCapacity,
   hasVerifiedSchedule,
   selectedDate,
   startTime,
-  durationMinutes,
+  reservedMinutes,
   formattedDateLabel,
   disabled,
   onSelectRoom,
 }: ExamRoomCardProps) {
-  const sharingEval = EvaluateRoomSharingStatus(
+  const conflictingSlots = GetRoomConflictingSlots(
     room,
     selectedDate,
     startTime,
-    durationMinutes,
+    reservedMinutes,
   )
+  const displaySlots =
+    conflictingSlots.length > 0 ? conflictingSlots : (room.busy_slots ?? [])
+  const isUnavailable = hasVerifiedSchedule && !isAvailable && !isSelected
 
   const { badgeClass, badgeText } = ResolveRoomBadge(
     isSelected,
     hasVerifiedSchedule,
     isAvailable,
-    sharingEval.isMarkedAsSharedByOtherTeacher,
   )
 
   const cardStateClasses = [
@@ -143,7 +131,7 @@ export function ExamRoomCard({
   return (
     <button
       type="button"
-      disabled={disabled}
+      disabled={disabled || isUnavailable}
       className={cardStateClasses}
       onClick={() => onSelectRoom(room)}
     >
@@ -154,9 +142,6 @@ export function ExamRoomCard({
           <span className={styles.roomCapacityTag}>
             {room.capacity ? `${room.capacity} plazas` : room.code}
           </span>
-          {isRecommendedForCapacity ? (
-            <span className={styles.recommendedBadge}>★ Adecuada a tu cupo</span>
-          ) : null}
         </div>
 
         <span className={`${styles.roomStatusBadge} ${badgeClass}`}>
@@ -173,7 +158,7 @@ export function ExamRoomCard({
         <div className={styles.roomSlotsRow}>
           {RenderRoomSlotsStatus(
             hasVerifiedSchedule,
-            room.busy_slots ?? [],
+            displaySlots,
             isAvailable,
             isSelected,
             formattedDateLabel,

@@ -1,4 +1,8 @@
 import type { Room } from '../../types/exam.types'
+import {
+  FormatBlockCountLabel,
+  type ReservationWindow,
+} from '../../utils/examScheduleFormatters'
 import styles from './ExamSummaryFooter.module.css'
 
 export interface ExamSummaryFooterProps {
@@ -6,12 +10,10 @@ export interface ExamSummaryFooterProps {
   hours: number
   minutes: number
   selectedRooms: Room[]
-  isSharedRoomEnabled: boolean
   isSelectionValid: boolean
   canSubmit?: boolean
   formattedDateLabel: string
-  startTime: string
-  endTimeFormatted: string
+  reservation: ReservationWindow
   isSubmitting: boolean
   submitLabel?: string
   submittingLabel?: string
@@ -23,12 +25,10 @@ export function ExamSummaryFooter({
   hours,
   minutes,
   selectedRooms,
-  isSharedRoomEnabled,
   isSelectionValid,
   canSubmit,
   formattedDateLabel,
-  startTime,
-  endTimeFormatted,
+  reservation,
   isSubmitting,
   submitLabel = 'Confirmar Programación',
   submittingLabel = 'Programando...',
@@ -75,13 +75,6 @@ export function ExamSummaryFooter({
           <strong>{roomsLabel}</strong>
         </div>
 
-        {isSharedRoomEnabled ? (
-          <div className={styles.summaryChip}>
-            <span>Modalidad aula:</span>
-            <strong>Compartida</strong>
-          </div>
-        ) : null}
-
         <div
           className={`${styles.summaryChip} ${
             formattedDateLabel
@@ -89,10 +82,10 @@ export function ExamSummaryFooter({
               : styles.summaryChipPending
           }`}
         >
-          <span>Horario:</span>
+          <span>Reserva:</span>
           <strong>
             {formattedDateLabel
-              ? `${formattedDateLabel} • ${startTime} – ${endTimeFormatted}`
+              ? `${formattedDateLabel} • ${reservation.startTime} – ${reservation.endTime} (${FormatBlockCountLabel(reservation.blockCount)})`
               : 'Selecciona un día'}
           </strong>
         </div>

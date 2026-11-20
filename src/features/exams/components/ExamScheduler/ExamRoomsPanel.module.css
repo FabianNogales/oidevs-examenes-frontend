@@ -2,8 +2,8 @@
   width: 100%;
   min-width: 0;
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   overflow: hidden;
   display: flex;
@@ -18,7 +18,7 @@
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
-  border-bottom: 1.5px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .panelTitleGroup {
@@ -32,23 +32,23 @@
   margin: 0;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: var(--color-text-primary);
 }
 
 .counterBadgeNeutral {
-  font-size: var(--font-size-xs);
+  font-size: 0.75rem;
   font-weight: var(--font-weight-semibold);
-  padding: 3px 10px;
+  padding: 2px 10px;
   border-radius: var(--radius-pill);
   background: var(--color-surface-soft);
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .counterBadgeValid {
-  font-size: var(--font-size-xs);
+  font-size: 0.75rem;
   font-weight: var(--font-weight-semibold);
-  padding: 3px 10px;
+  padding: 2px 10px;
   border-radius: var(--radius-pill);
   background: var(--color-success-soft);
   border: 1px solid var(--color-success);
@@ -61,7 +61,7 @@
   gap: var(--space-3);
 }
 
-/* Barra de Toggles (Aula compartida, Aulas múltiples y Solo libres) */
+/* Barra de Toggles (Aulas múltiples y Solo libres) */
 .togglesToolbar {
   display: flex;
   align-items: center;
@@ -70,7 +70,65 @@
   gap: var(--space-3);
   padding: 10px var(--space-5);
   background: var(--color-surface-soft);
-  border-bottom: 1.5px solid var(--color-border-strong);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Buscador de aulas debajo de las opciones */
+.searchToolbar {
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.searchInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-3);
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 36px 0 36px !important;
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+}
+
+.searchClearBtn {
+  position: absolute;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.searchClearBtn:hover:not(:disabled) {
+  background: var(--color-accent-soft);
+  border-color: var(--color-decorative);
+  color: var(--color-accent);
 }
 
 .togglesGroup {
@@ -80,14 +138,14 @@
   gap: var(--space-4);
 }
 
-/* Switch Toggle estilo Flat 2.0 */
+/* Switch Toggle estilo Semi-Flat */
 .toggleSwitchLabel {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: var(--color-text-primary);
   cursor: pointer;
   user-select: none;
 }
@@ -129,25 +187,15 @@
   transform: translateX(16px);
 }
 
-.capacityInfoBanner {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
-}
-
 .clearSelectionBtn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 30px;
-  height: 30px;
+  min-height: 32px;
+  height: 32px;
   padding: 0 12px;
-  border-radius: var(--radius-pill);
-  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-decorative);
   background: var(--color-accent-soft);
   color: var(--color-accent);
   font-size: var(--font-size-xs);
@@ -155,16 +203,18 @@
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
-    color var(--transition-fast);
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .clearSelectionBtn:hover:not(:disabled) {
   background: var(--color-accent);
-  color: var(--color-on-primary);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
 .clearSelectionBtn:disabled {
-  border-color: var(--color-border-strong);
+  border-color: var(--color-border);
   background: var(--color-surface-muted);
   color: var(--color-text-muted);
   opacity: 0.55;
@@ -174,20 +224,36 @@
 .roomsStack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface-muted);
-  min-height: 460px;
-  max-height: 560px;
+  min-height: 360px;
+  max-height: 680px;
   overflow-y: auto;
+  flex: 1 1 auto;
 }
 
 .emptyRoomsState {
   padding: var(--space-6) var(--space-4);
   text-align: center;
   background: var(--color-surface);
-  border: 1.5px dashed var(--color-border-strong);
+  border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+}
+
+@media (max-width: 768px) {
+  .panelHeaderRow,
+  .togglesToolbar,
+  .searchToolbar,
+  .roomsStack {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .roomsStack {
+    min-height: 220px;
+    max-height: 420px;
+  }
 }

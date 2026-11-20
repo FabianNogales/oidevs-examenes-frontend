@@ -5,7 +5,6 @@ import { ExamRoomsPanel } from './ExamRoomsPanel'
 import { ExamTimeSelectorCard } from './ExamTimeSelectorCard'
 import { ExamCalendarCard } from './ExamCalendarCard'
 import { ExamSummaryFooter } from './ExamSummaryFooter'
-import { SharedRoomConsentModal } from './SharedRoomConsentModal'
 import layoutStyles from './ExamSchedulerLayout.module.css'
 
 export interface ExamSchedulerWorkspaceProps {
@@ -45,13 +44,6 @@ export function ExamSchedulerWorkspace({
 }: ExamSchedulerWorkspaceProps) {
   return (
     <>
-      <SharedRoomConsentModal
-        room={scheduler.pendingConsentRoom?.room ?? null}
-        conflictingSlots={scheduler.pendingConsentRoom?.conflictingSlots ?? []}
-        onCancel={() => scheduler.setPendingConsentRoom(null)}
-        onConfirmConsent={scheduler.HandleConfirmConsentModal}
-      />
-
       <ExamParametersRibbon
         partialNumber={scheduler.partialNumber}
         evaluationType={scheduler.evaluationType}
@@ -94,43 +86,47 @@ export function ExamSchedulerWorkspace({
       ) : null}
 
       <div className={layoutStyles.workspaceGrid}>
-        <ExamRoomsPanel
-          rooms={scheduler.visibleRooms}
-          availableRoomIds={scheduler.availableRoomIds}
-          selectedRoomIds={scheduler.selectedRoomIds}
-          onlyFreeRooms={scheduler.onlyFreeRooms}
-          isSharedRoomEnabled={scheduler.isSharedRoomEnabled}
-          isMultipleRoomsEnabled={scheduler.isMultipleRoomsEnabled}
-          eligibleStudentsCount={scheduler.eligibleStudentsCount}
-          targetCapacityWithMargin={scheduler.targetCapacityWithMargin}
-          hasSchedule={scheduler.roomsState.hasSchedule}
-          isLoadingRooms={scheduler.roomsState.isLoadingRooms}
-          selectedDate={scheduler.examDate}
-          startTime={scheduler.startTime}
-          durationMinutes={scheduler.durationMinutes}
-          formattedDateLabel={scheduler.formattedDateLabel}
-          disabled={controlsDisabled}
-          onToggleOnlyFreeRooms={scheduler.setOnlyFreeRooms}
-          onToggleSharedRoom={scheduler.setIsSharedRoomEnabled}
-          onToggleMultipleRooms={scheduler.HandleToggleMultipleRooms}
-          onSelectRoom={scheduler.HandleSelectRoomCard}
-          onClearRooms={() => scheduler.setSelectedRoomIds([])}
-        />
-
-        <div className={layoutStyles.rightColumnStack}>
+        <div className={layoutStyles.timeArea}>
           <ExamTimeSelectorCard
-            startTime={scheduler.startTime}
-            endTimeFormatted={scheduler.endTimeFormatted}
+            reservation={scheduler.reservation}
+            examDurationMinutes={scheduler.durationMinutes}
+            examEndTime={scheduler.examEndTime}
             disabled={controlsDisabled}
             onStartTimeChange={scheduler.HandleStartTimeChange}
           />
+        </div>
 
+        <div className={layoutStyles.roomsArea}>
+          <ExamRoomsPanel
+            rooms={scheduler.visibleRooms}
+            availableRoomIds={scheduler.availableRoomIds}
+            selectedRoomIds={scheduler.selectedRoomIds}
+            onlyFreeRooms={scheduler.onlyFreeRooms}
+            isMultipleRoomsEnabled={scheduler.isMultipleRoomsEnabled}
+            roomSearchQuery={scheduler.roomSearchQuery}
+            hasSchedule={scheduler.roomsState.hasSchedule}
+            isLoadingRooms={scheduler.roomsState.isLoadingRooms}
+            selectedDate={scheduler.examDate}
+            startTime={scheduler.startTime}
+            reservedMinutes={scheduler.reservation.reservedMinutes}
+            formattedDateLabel={scheduler.formattedDateLabel}
+            disabled={controlsDisabled}
+            onToggleOnlyFreeRooms={scheduler.setOnlyFreeRooms}
+            onToggleMultipleRooms={scheduler.HandleToggleMultipleRooms}
+            onRoomSearchChange={scheduler.HandleRoomSearchChange}
+            onSelectRoom={scheduler.HandleSelectRoomCard}
+            onClearRooms={() => scheduler.setSelectedRoomIds([])}
+          />
+        </div>
+
+        <div className={layoutStyles.calendarArea}>
           <ExamCalendarCard
             selectedDate={scheduler.examDate}
             selectedRoom={scheduler.primaryRoom}
             startTime={scheduler.startTime}
-            durationMinutes={scheduler.durationMinutes}
+            reservedMinutes={scheduler.reservation.reservedMinutes}
             timezoneDate={scheduler.timezoneDate}
+            academicTermRange={scheduler.academicTermRange}
             disabled={controlsDisabled}
             onSelectDate={scheduler.HandleSelectDate}
             onClearDate={() => scheduler.HandleSelectDate('')}
@@ -143,12 +139,10 @@ export function ExamSchedulerWorkspace({
         hours={scheduler.hours}
         minutes={scheduler.minutes}
         selectedRooms={scheduler.selectedRooms}
-        isSharedRoomEnabled={scheduler.isSharedRoomEnabled}
         isSelectionValid={scheduler.isSelectionValid}
         canSubmit={canSubmit}
         formattedDateLabel={scheduler.formattedDateLabel}
-        startTime={scheduler.startTime}
-        endTimeFormatted={scheduler.endTimeFormatted}
+        reservation={scheduler.reservation}
         isSubmitting={isSubmitting}
         submitLabel={submitLabel}
         submittingLabel={submittingLabel}

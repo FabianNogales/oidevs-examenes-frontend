@@ -36,7 +36,7 @@ function isManagedExam(value: unknown): value is ManagedExam {
     (exam.academic_term_name == null ||
       typeof exam.academic_term_name === 'string') &&
     (exam.evaluation_type == null ||
-      ['partial', 'final', 'makeup'].includes(String(exam.evaluation_type))) &&
+      ['partial', 'final', 'makeup', 'recovery'].includes(String(exam.evaluation_type))) &&
     (exam.room == null ||
       (typeof exam.room === 'object' &&
         'id' in exam.room &&

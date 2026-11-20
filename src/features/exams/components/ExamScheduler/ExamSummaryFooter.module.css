@@ -3,18 +3,18 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(1300px, calc(100vw - 32px));
+  width: min(1200px, calc(100vw - 32px));
   background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   backdrop-filter: blur(10px);
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-5);
   box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: var(--space-3);
   z-index: 90;
 }
 
@@ -30,7 +30,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 11px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
   background: var(--color-surface-muted);
   border: 1px solid var(--color-border);
@@ -38,7 +38,7 @@
 }
 
 .summaryChip strong {
-  color: var(--color-text);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -54,7 +54,7 @@
 
 .summaryChipPending {
   background: var(--color-surface-soft);
-  border-color: var(--color-border-strong);
+  border-color: var(--color-border);
   color: var(--color-text-secondary);
 }
 
@@ -65,13 +65,13 @@
 }
 
 .secondaryActionBtn {
-  min-height: 42px;
-  height: 42px;
+  min-height: 44px;
+  height: 44px;
   padding: 0 var(--space-5);
   border-radius: var(--button-radius);
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-decorative);
   background: var(--color-surface);
-  color: var(--color-text);
+  color: var(--color-accent);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
@@ -82,14 +82,13 @@
 }
 
 .secondaryActionBtn:hover:not(:disabled) {
-  background: var(--color-surface-soft);
-  border-color: var(--color-primary-hover);
-  color: var(--color-primary-hover);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
 }
 
 .primaryActionBtn {
-  min-height: 42px;
-  height: 42px;
+  min-height: 44px;
+  height: 44px;
   padding: 0 var(--space-6);
   border-radius: var(--button-radius);
   border: none;
@@ -98,19 +97,22 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgb(37 99 235 / 22%);
   transition:
     background-color var(--transition-fast),
-    transform var(--transition-fast);
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .primaryActionBtn:hover:not(:disabled) {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgb(37 99 235 / 28%);
 }
 
 .primaryActionBtn:active:not(:disabled) {
   background: var(--color-primary-active);
+  transform: scale(0.98);
 }
 
 .primaryActionBtn:disabled {
@@ -120,9 +122,45 @@
   cursor: not-allowed;
 }
 
+@media (max-width: 768px) {
+  .summaryFooterBar {
+    bottom: 10px;
+    width: calc(100vw - 20px);
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
 @media (max-width: 640px) {
+  .summaryFooterBar {
+    position: static;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    padding: var(--space-4);
+    box-shadow: var(--shadow-md);
+  }
+
+  .summaryChipsList {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .summaryChip {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
   .footerActionsGroup {
     width: 100%;
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: var(--space-2);
+  }
+
+  .secondaryActionBtn,
+  .primaryActionBtn {
+    width: 100%;
+    padding: 0 var(--space-3);
   }
 }

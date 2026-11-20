@@ -1,15 +1,17 @@
 .parametersRibbon {
   width: 100%;
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: var(--space-5) var(--space-6);
   box-shadow: var(--shadow-md);
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr) minmax(0, 1.55fr);
-  /* Mayor separación entre Número de parcial, Tipo de examen y Duración */
-  gap: 44px;
-  align-items: center;
+  grid-template-columns: minmax(340px, 1.25fr) minmax(220px, 0.85fr) minmax(
+      340px,
+      1.3fr
+    );
+  gap: var(--space-8);
+  align-items: start;
 }
 
 .parameterBlock {
@@ -21,19 +23,19 @@
   transition: opacity var(--transition-fast);
 }
 
-/* Línea divisoria vertical bien marcada entre los 3 módulos */
+/* Línea divisoria vertical sutil entre bloques (Semi-Flat) */
 .parameterBlock:not(:last-child)::after {
   content: '';
   position: absolute;
-  right: -22px;
-  top: 6%;
-  height: 88%;
-  width: 1.5px;
-  background: var(--color-border-strong);
+  right: calc(var(--space-4) * -1);
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: var(--color-border);
 }
 
 .parameterBlockDisabled {
-  opacity: 0.42;
+  opacity: 0.48;
   pointer-events: none;
 }
 
@@ -42,61 +44,69 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  min-height: 24px;
 }
 
 .parameterLabel {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: var(--color-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .parameterHint {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
   color: var(--color-accent);
   background: var(--color-accent-soft);
   border: 1px solid var(--color-decorative);
-  padding: 1px 8px;
+  padding: 2px 10px;
   border-radius: var(--radius-pill);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* Pista segmentada para Parcial (1, 2 + Input numérico) y Modalidad */
+/* Pista segmentada para Modalidad (sin truncar "Recuperatorio") */
 .segmentedTrack {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  display: flex;
+  align-items: center;
   background: var(--color-surface-muted);
-  border: 1.5px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   padding: 4px;
   border-radius: var(--radius-md);
-  gap: 6px;
-  align-items: center;
+  gap: 4px;
+}
+
+.segmentedTrack .segmentedBtn {
+  flex: 1 1 auto;
 }
 
 .partialTrackWithCustom {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.35fr;
+  grid-template-columns: 1fr 1fr 1.4fr;
   background: var(--color-surface-muted);
-  border: 1.5px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   padding: 4px;
   border-radius: var(--radius-md);
-  gap: 6px;
+  gap: 4px;
   align-items: center;
 }
 
 .segmentedBtn {
   min-height: 36px;
   height: 36px;
-  padding: 0 var(--space-2);
-  border: 1.5px solid transparent;
+  padding: 0 10px;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
@@ -105,24 +115,25 @@
 }
 
 .segmentedBtn:hover:not(.segmentedBtnActive):not(:disabled) {
-  background: var(--color-surface-soft);
-  color: var(--color-primary-hover);
+  background: var(--color-accent-soft);
+  border-color: var(--color-decorative);
+  color: var(--color-accent);
 }
 
-/* Color Rojo Carmesí de EIDA cuando está seleccionado */
+/* Estado activo en burdeos (Semi-Flat) */
 .segmentedBtnActive {
   background: var(--color-accent);
-  color: var(--color-on-primary);
+  color: var(--color-on-accent);
   border-color: var(--color-accent);
-  font-weight: var(--font-weight-semibold);
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Input numérico para colocar cualquier número de parcial */
+/* Input numérico para parcial del 3 al 6 */
 .customPartialInputWrap {
   position: relative;
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .customPartialInput {
@@ -131,9 +142,9 @@
   height: 36px !important;
   padding: 0 8px !important;
   border-radius: var(--radius-sm) !important;
-  border: 1.5px solid var(--color-border-strong) !important;
+  border: 1px solid var(--color-border) !important;
   background: var(--color-surface) !important;
-  color: var(--color-text) !important;
+  color: var(--color-text-primary) !important;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   text-align: center;
@@ -142,6 +153,7 @@
 
 .customPartialInput:focus {
   border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
   outline: none;
 }
 
@@ -151,23 +163,23 @@
   color: var(--color-accent) !important;
 }
 
-/* Duración del Examen: Sin flechas nativas duplicadas */
+/* Duración del examen */
 .durationRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-wrap: nowrap;
 }
 
 .digitalDurationBox {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   background: var(--color-surface-muted);
-  border: 1.5px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 4px 10px;
-  gap: 6px;
+  padding: 4px 8px;
+  gap: 5px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -177,18 +189,17 @@
   gap: 3px;
 }
 
-/* Oculta por completo las flechas internas nativas del navegador */
 .wheelNumberInput {
-  width: 40px !important;
-  min-height: 30px !important;
-  height: 30px !important;
+  width: 36px !important;
+  min-height: 34px !important;
+  height: 34px !important;
   padding: 0 2px !important;
-  border: 1.5px solid var(--color-border-strong) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-sm) !important;
   background: var(--color-surface) !important;
-  color: var(--color-text) !important;
+  color: var(--color-text-primary) !important;
   text-align: center;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   appearance: textfield;
   -moz-appearance: textfield;
@@ -203,11 +214,12 @@
 
 .wheelNumberInput:focus {
   border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
   outline: none;
 }
 
 .wheelUnitLabel {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
@@ -216,15 +228,15 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-left: 2px;
+  margin-left: 1px;
 }
 
 .wheelStepBtn {
-  min-height: 14px !important;
-  width: 18px;
-  height: 14px;
+  min-height: 16px !important;
+  width: 20px;
+  height: 16px;
   padding: 0;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   border-radius: 3px;
   background: var(--color-surface);
   color: var(--color-text-secondary);
@@ -233,36 +245,48 @@
   display: grid;
   place-items: center;
   cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .wheelStepBtn:hover:not(:disabled) {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-on-primary);
+  color: var(--color-on-accent);
+}
+
+.wheelStepBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .durationColon {
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
 }
 
 .durationPresetList {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .durationPresetChip {
-  min-height: 34px;
-  height: 34px;
-  padding: 0 12px;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 6px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
+  font-size: 0.75rem;
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
@@ -271,25 +295,90 @@
 }
 
 .durationPresetChip:hover:not(.durationPresetChipActive):not(:disabled) {
-  background: var(--color-surface-soft);
-  border-color: var(--color-primary-hover);
-  color: var(--color-primary-hover);
+  background: var(--color-accent-soft);
+  border-color: var(--color-decorative);
+  color: var(--color-accent);
 }
 
-/* Rojo Carmesí EIDA cuando la duración rápida está seleccionada */
 .durationPresetChipActive {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-on-primary);
+  color: var(--color-on-accent);
+}
+
+.durationLimitHint {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+.durationLimitHint strong {
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
 }
 
-@media (max-width: 1150px) {
+/* Tablet: 2 columnas arriba (Tipo + Parcial), Duración en fila completa abajo */
+@media (max-width: 1180px) {
+  .parametersRibbon {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .parameterBlock::after {
+    display: none;
+  }
+
+  .durationBlock {
+    grid-column: 1 / -1;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+/* Móvil: orden vertical exacto (Tipo -> Parcial -> Duración) */
+@media (max-width: 768px) {
   .parametersRibbon {
     grid-template-columns: 1fr;
     gap: var(--space-4);
+    padding: var(--space-4);
   }
-  .parameterBlock::after {
-    display: none;
+
+  .partialBlock {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .durationBlock {
+    grid-column: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .durationRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .digitalDurationBox {
+    justify-content: center;
+    padding: 6px 12px;
+  }
+
+  .durationPresetList {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .segmentedTrack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .parameterLabelRow {
+    flex-wrap: wrap;
   }
 }

@@ -26,7 +26,7 @@ export async function getProfileRecords(type: 'students' | 'teachers', id: numbe
       careers: Array.isArray(row.careers) ? row.careers.filter((name): name is string => typeof name === 'string') : [],
       teacherFullName: text(row.teacher_name), teacherEmail: text(row.teacher_email),
       examName: text(row.exam_name), examDate: row.exam_date ? `${text(row.exam_date)} ${text(row.start_time)}` : 'No registrada',
-      examType: ({ partial: 'Parcial', final: 'Examen final', makeup: 'Recuperatorio' }[String(row.evaluation_type)] ?? 'No registrado'),
+      examType: ({ partial: 'Parcial', final: 'Examen final', makeup: 'Segunda instancia', recovery: 'Recuperatorio' }[String(row.evaluation_type)] ?? 'No registrado'),
       assignedAt: date(row.assigned_at), collaborationStatus: row.collaboration_status === 'ACTIVE' ? 'ACTIVE' : 'COMPLETED',
       // TODO(HU21-P03): validate the persisted result contract before mapping APPROVED/FAILED.
       // AcademicResultBadge preserves both original visual states without fabricating data.
