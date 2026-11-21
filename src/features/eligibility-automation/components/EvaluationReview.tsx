@@ -542,7 +542,7 @@ export function EvaluationReview({
             ? 'Sin estudiantes para este filtro.'
             : `${current.total} de ${summary.total} estudiantes con el filtro «${REVIEW_FILTERS.find(({ id }) => id === filter)?.label}»${query ? ` y la búsqueda «${query}»` : ''}.`}
         </p>
-        <DataTable<ReviewRow>
+        <DataTable<ReviewRow> searchMaxLength={50}
           columns={columns}
           data={rows}
           loading={querying}

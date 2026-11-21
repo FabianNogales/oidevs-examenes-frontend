@@ -113,7 +113,7 @@ function ExamCollaboratorsContent({ examId }: { examId: string | undefined }) {
                   </button>
                 </div>
                 <div className={styles.search}>
-                  <SearchBar
+                  <SearchBar maxLength={50}
                     id={searchId}
                     label="Buscar colaboradores"
                     showLabel

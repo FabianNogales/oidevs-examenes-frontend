@@ -54,7 +54,7 @@ export function EntryControlStudentsList({
       >
         <div className={styles.studentToolbar}>
           <div className={styles.field}>
-            <SearchBar
+            <SearchBar maxLength={50}
               id={searchId}
               label="Buscar estudiante"
               showLabel

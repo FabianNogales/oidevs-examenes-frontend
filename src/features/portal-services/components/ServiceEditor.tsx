@@ -154,8 +154,8 @@ export function ServiceEditor({
     const result = await editor.mutate(() =>
       setServiceStatus(item.id, pending, item.revision),
     )
+    setPending(null)
     if (result) {
-      setPending(null)
       onSaved()
     }
   }
@@ -274,6 +274,7 @@ export function ServiceEditor({
                 })
               }
             />
+            <small>Los valores menores aparecen primero. Si se repite el orden, se mantiene el orden de registro de los servicios.</small>
           </PortalField>
         </fieldset>
         <div className={`${styles.editorActions} ${styles.serviceActions}`}>

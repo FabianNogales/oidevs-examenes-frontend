@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { Dropdown } from '@/shared/components/ui/Dropdown'
@@ -742,9 +743,21 @@ export function EligibilityAutomationPage() {
   const [historyPage, setHistoryPage] = useState(1)
   const [historyError, setHistoryError] = useState('')
   const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyDetailLoading, setHistoryDetailLoading] = useState(false)
+  const historyDetailRequest = useRef(0)
   const [historyDetail, setHistoryDetail] = useState<EvaluationView | null>(
     null,
   )
+  useEffect(() => {
+    let active = true
+    void Promise.resolve().then(() => {
+      if (active) {
+        setHistoryDetail(null)
+        setHistoryDetailLoading(false)
+      }
+    })
+    return () => { active = false; historyDetailRequest.current += 1 }
+  }, [examId])
   const offeringId = examState.detail?.course_offering_id
   const {
     schema,
@@ -1115,15 +1128,21 @@ export function EligibilityAutomationPage() {
   }
 
   async function openEvaluationHistory(entry: EvaluationHistoryEntry) {
+    const request = ++historyDetailRequest.current
+    setHistoryDetailLoading(true)
     setHistoryError('')
     setHistoryDetail(null)
     try {
       const firstPage = await getEvaluationDetail(entry.exam_id, entry.id)
-      setHistoryDetail(await getAllEvaluationResults(entry.exam_id, firstPage))
+      const detail = await getAllEvaluationResults(entry.exam_id, firstPage)
+      if (request === historyDetailRequest.current) setHistoryDetail(detail)
     } catch (error) {
+      if (request !== historyDetailRequest.current) return
       setHistoryError(
         getErrorMessage(error, 'No se pudo consultar el detalle histórico.'),
       )
+    } finally {
+      if (request === historyDetailRequest.current) setHistoryDetailLoading(false)
     }
   }
 
@@ -1741,6 +1760,7 @@ export function EligibilityAutomationPage() {
                       <button
                         type="button"
                         className={sharedStyles.secondaryButton}
+                        disabled={historyDetailLoading}
                         onClick={() => void openEvaluationHistory(entry)}
                       >
                         Ver resultados
@@ -1760,9 +1780,9 @@ export function EligibilityAutomationPage() {
                   />
                 </div>
               ) : null}
+              {historyDetailLoading ? <p role="status">Cargando resultados de la evaluación…</p> : null}
               {historyDetail ? (
-                <div className={styles.panel}>
-                  <h3>Detalle histórico de la evaluación</h3>
+                <PortalDialog drawer title="Detalle histórico de la evaluación" onClose={() => { historyDetailRequest.current += 1; setHistoryDetail(null) }} closeOnBackdrop>
                   {historyDetail.confirmation ? (
                     <p>
                       Resultado de confirmación: actualizadas{' '}
@@ -1788,7 +1808,7 @@ export function EligibilityAutomationPage() {
                       />
                     ))}
                   </div>
-                </div>
+                </PortalDialog>
               ) : null}
             </section>
           ) : null}

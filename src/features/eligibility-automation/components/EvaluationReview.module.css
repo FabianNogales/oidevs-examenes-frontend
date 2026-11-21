@@ -66,6 +66,7 @@
 
 .statusCell {
   display: grid;
+  min-width: 0;
   justify-items: start;
   gap: var(--space-1);
 }
@@ -78,7 +79,10 @@
   background: var(--color-surface-soft);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  white-space: nowrap;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .badgeEligible {

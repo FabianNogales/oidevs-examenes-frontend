@@ -7,6 +7,7 @@ import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { SearchBar } from '@/shared/components/ui/SearchBar'
+import { Button } from '@/shared/components/ui/Button/Button'
 
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
@@ -140,16 +141,15 @@ export function AdminCalendarPage() {
       <PageHeader title="Gestión del calendario" titleRef={heading} focusableTitle
         description="Eventos institucionales públicos y privados."
         breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Gestión del calendario' }]}
-        actions={canManage ? <button
+        actions={canManage ? <Button
           type="button"
-          className={styles.primary}
           disabled={
             categories.loading || !!categories.error || !categories.data?.length
           }
           onClick={() => setSelected({ id: null })}
         >
           Crear evento
-        </button> : undefined} />
+        </Button> : undefined} />
       {canManage ? <p className={styles.categoriesLink}>
         <Link to="/admin/portal/events/categories">Gestionar categorías</Link>
       </p> : null}
@@ -171,7 +171,7 @@ export function AdminCalendarPage() {
         className={styles.filterPanel}
         aria-label="Buscar y filtrar eventos"
       >
-        <SearchBar
+        <SearchBar maxLength={50}
           name="search"
           className={styles.searchRow}
           value={searchInput}

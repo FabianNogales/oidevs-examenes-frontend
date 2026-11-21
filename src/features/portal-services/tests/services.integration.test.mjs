@@ -609,6 +609,19 @@ test('HU45 URL validation errors remain visible and preserve the entered URL', a
   ui.h.unmount()
 })
 
+test('QA05 activation rejection releases the confirmation so missing data can be saved', async () => {
+  const ui = editor({ patch: () => { throw httpError(422, { errors: { description: ['Completa la descripción.'] } }) } }, { ...admin, description: '' })
+  await ui.click('Activar')
+  await ui.confirmation().props.onConfirm()
+  await ui.ready()
+  assert.equal(ui.confirmation().props.isOpen, false)
+  assert.equal(ui.editorStates.at(-1).pending, false)
+  ui.edit('description', 'Descripción institucional completa')
+  assert.equal(ui.editorStates.at(-1).disabled, false)
+  assert.match(textContent(ui.tree), /Completa la descripción/)
+  ui.h.unmount()
+})
+
 test('HU45 legacy migrated services expose review status and readable validation issues', () => {
   const ui = editor(
     {},
@@ -849,7 +862,7 @@ test('HU45 service Escape confirmation uses the native top layer and preserves t
 })
 
 
-test('HU45 history is available with humanized fields and a secondary technical detail', async () => {
+test('HU45 history is available with humanized fields without exposing internal JSON', async () => {
   const entry = {
     id: 1,
     entity_type: 'service',
@@ -879,7 +892,7 @@ test('HU45 history is available with humanized fields and a secondary technical 
   assert.match(textContent(ui.tree), /Servicio actualizado/)
   assert.match(textContent(ui.tree), /Administradora/)
   assert.match(textContent(ui.tree), /URL institucional/)
-  assert.match(textContent(ui.tree), /Detalle técnico/)
+  assert.doesNotMatch(textContent(ui.tree), /Detalle técnico|old_values|new_values/)
   ui.h.unmount()
 })
 

@@ -643,6 +643,8 @@
 .academicImportPanel {
   min-width: 0;
   max-width: 100%;
+  display: grid;
+  gap: var(--space-4);
 }
 
 .academicImportDescription {
@@ -663,12 +665,11 @@
 
 .academicColumnsGuide {
   max-width: 100%;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  flex-wrap: wrap;
 }
 
 .academicColumnsGuide > span {
-  flex: 0 0 auto;
+  flex: 1 1 150px;
   min-width: 115px;
   padding-inline: var(--space-2);
 }

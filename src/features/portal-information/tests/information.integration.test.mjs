@@ -463,6 +463,19 @@ test('HU43 external Drawer footer owns submit state without duplicating save', a
   ui.h.unmount()
 })
 
+test('QA05 rejected publication releases fields and external Save without losing the draft', async () => {
+  const ui = editor({ post: () => { throw httpError(422, { errors: { description: ['Completa la descripción antes de publicar.'] } }) } }, { ...section, is_published: false, draft: { ...old, description: '' }, published: null }, 'sections', { formId: 'information-form' })
+  await ui.click('Publicar')
+  assert.equal(ui.stateChanges.at(-1).disabled, true)
+  await ui.click('Confirmar operación')
+  assert.equal(ui.stateChanges.at(-1).disabled, false)
+  assert.match(textContent(ui.tree), /Completa la descripción/)
+  ui.edit('description', 'Descripción corregida')
+  assert.equal(ui.field('description').props.value, 'Descripción corregida')
+  assert.equal(ui.stateChanges.at(-1).disabled, false)
+  ui.h.unmount()
+})
+
 test('saving a published section refreshes its public snapshot without a publication action', async () => {
   const changed = {
     ...section,

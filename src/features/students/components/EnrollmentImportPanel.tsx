@@ -39,9 +39,9 @@ export function EnrollmentImportPanel({
     setConfirmed(false)
     setError(null)
     setUncertain(false)
-    if (next && next.size > 10 * 1024 * 1024) {
+    if (next && next.size > 5 * 1024 * 1024) {
       setFile(null)
-      setError('El archivo no debe superar los 10 MB.')
+      setError('El archivo no debe superar los 5 MB.')
       return
     }
     if (next && (!next.name.toLowerCase().endsWith('.csv') || !next.size)) {

@@ -30,7 +30,7 @@ export function OfflineStudentList({
     >
       <h2>Buscar en mi lista</h2>
 
-      <SearchBar
+      <SearchBar maxLength={50}
         id={searchId}
         className={captureStyles.searchField}
         label="SIS, CI, nombre o apellidos"

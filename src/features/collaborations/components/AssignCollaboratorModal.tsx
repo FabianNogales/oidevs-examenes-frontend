@@ -134,7 +134,7 @@ export function AssignCollaboratorModal({
         <p className={modalStyles.description}>
           Busca y selecciona un usuario para autorizarlo temporalmente en este examen.
         </p>
-        <SearchBar
+        <SearchBar maxLength={50}
           id={searchId}
           className={modalStyles.searchForm}
           label="Buscar por nombre, CI o correo"

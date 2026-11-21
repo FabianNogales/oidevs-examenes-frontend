@@ -113,7 +113,7 @@ export function DisciplineWorkspace({ examId }: { examId: number }) {
         {permissions?.can_export && (
           <CaseExport examId={examId} filters={{ kind, measure, search }} />
         )}
-        <DataTable<Row>
+        <DataTable<Row> searchMaxLength={50}
           columns={columns}
           data={
             query.data?.data.map(({ status, ...row }) => ({
