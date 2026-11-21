@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { ExamTools } from '@/features/exams/components/ExamTools'
@@ -11,6 +11,7 @@ import {
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { Dropdown } from '@/shared/components/ui/Dropdown'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import management from './ExamManagement.module.css'
 
 import styles from './TeacherExamsPage.module.css'
@@ -23,6 +24,7 @@ export function TeacherExamsPage() {
     ? (params.get('view') as ExamView)
     : 'upcoming'
   const search = params.get('search') ?? ''
+  const [searchInput, setSearchInput] = useState(search)
   const rawPage = Number(params.get('page') ?? 1)
   const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? rawPage : 1
   const {
@@ -33,17 +35,13 @@ export function TeacherExamsPage() {
   } = useManagedExams({ view, search, page })
   const exams = result?.data ?? []
   function updateFilters(nextView: ExamView, nextSearch: string, nextPage = 1) {
-    setParams({
-      view: nextView,
-      ...(nextSearch ? { search: nextSearch } : {}),
-      page: String(nextPage),
-    })
-  }
-  function submitSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    updateFilters(
-      view,
-      String(new FormData(event.currentTarget).get('search') ?? '').trim(),
+    setParams(
+      {
+        view: nextView,
+        ...(nextSearch ? { search: nextSearch } : {}),
+        page: String(nextPage),
+      },
+      { replace: true },
     )
   }
 
@@ -60,41 +58,44 @@ export function TeacherExamsPage() {
           ]}
         />
         <section className={`${styles.content} ${styles.contentFull}`}>
-          <form className={management.filters} onSubmit={submitSearch}>
-            <label>
-              Buscar examen o materia
-              <input
-                key={search}
-                defaultValue={search}
-                name="search"
-                placeholder="Nombre del examen, materia o código"
-                maxLength={255}
-              />
-            </label>
-            <label htmlFor="exam-view">
-              Mostrar
-              <Dropdown<ExamView>
-                id="exam-view"
-                value={view}
-                options={[
-                  { value: 'upcoming', label: 'Próximos y en curso' },
-                  { value: 'past', label: 'Anteriores' },
-                  { value: 'cancelled', label: 'Cancelados' },
-                  { value: 'all', label: 'Todos' },
-                ]}
-                onChange={(nextView) => updateFilters(nextView, search)}
-              />
-            </label>
-
-            <button type="submit">Buscar</button>
-          </form>
+          <div className={management.filters}>
+            <SearchBar
+              name="search"
+              value={searchInput}
+              onChange={setSearchInput}
+              onSubmit={(nextSearch) => updateFilters(view, nextSearch)}
+              onClear={() => {
+                setSearchInput('')
+                updateFilters(view, '')
+              }}
+              label="Buscar examen o materia"
+              showLabel
+              placeholder="Nombre del examen, materia o código"
+            />
+            <div role="group" aria-label="Filtros de exámenes">
+              <label htmlFor="exam-view">
+                Mostrar
+                <Dropdown<ExamView>
+                  id="exam-view"
+                  value={view}
+                  options={[
+                    { value: 'upcoming', label: 'Próximos y en curso' },
+                    { value: 'past', label: 'Anteriores' },
+                    { value: 'cancelled', label: 'Cancelados' },
+                    { value: 'all', label: 'Todos' },
+                  ]}
+                  onChange={(nextView) => updateFilters(nextView, search)}
+                />
+              </label>
+            </div>
+          </div>
           {result?.legacy ? (
             <p className={management.notice} role="status">
               El servidor aún no dispone del historial completo. Solo se
               muestran los registros de la consulta actual de próximos exámenes.
             </p>
           ) : null}
-          {isLoading ? <ExamsSkeleton /> : null}
+          {isLoading && !result ? <ExamsSkeleton /> : null}
 
           {errorMessage ? (
             <section className={styles.state} role="alert">
@@ -110,8 +111,12 @@ export function TeacherExamsPage() {
             </section>
           ) : null}
 
-          {!isLoading && !errorMessage && exams.length > 0 ? (
-            <section aria-label="Exámenes del docente" className={styles.list}>
+          {!errorMessage && exams.length > 0 ? (
+            <section
+              aria-label="Exámenes del docente"
+              aria-busy={isLoading}
+              className={styles.list}
+            >
               {exams.map((exam) => (
                 <ExamCard
                   key={exam.id}

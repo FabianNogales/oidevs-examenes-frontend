@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
-import { Bell, LogOut, Menu, X } from 'lucide-react'
+import { LogOut, Menu, X } from 'lucide-react'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { Avatar } from '@/shared/components/ui'
@@ -17,7 +17,6 @@ import styles from './Header.module.css'
 export function Header({
   user,
   navigation,
-  notifications,
   onLogout,
   isLoggingOut = false,
 }: HeaderProps) {
@@ -30,7 +29,6 @@ export function Header({
   const menuButton = useRef<HTMLButtonElement>(null)
   const headerRef = useRef<HTMLElement>(null)
   const navigationRef = useRef<HTMLElement>(null)
-  const [smallScreen, setSmallScreen] = useState(() => window.matchMedia('(max-width: 479px)').matches)
 
   useLayoutEffect(() => {
     const header = headerRef.current
@@ -54,13 +52,6 @@ export function Header({
         rootStyle.removeProperty('--app-header-height')
       }
     }
-  }, [])
-
-  useEffect(() => {
-    const media = window.matchMedia('(max-width: 479px)')
-    const update = () => setSmallScreen(media.matches)
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
   }, [])
 
   useEffect(() => {
@@ -159,7 +150,6 @@ export function Header({
 
         <HeaderAccount
           user={user}
-          notifications={smallScreen ? <></> : notifications}
           onLogoutRequest={onLogout ? requestLogout : undefined}
           isLoggingOut={isLoggingOut}
           accountOpen={accountOpen}
@@ -210,12 +200,6 @@ export function Header({
           items={navigationItems}
           onNavigate={closeMenus}
         />
-        {smallScreen && user ? (
-          <div className={styles.mobileNotifications}>
-            <Bell aria-hidden="true" className={styles.navigationItemIcon} />
-            <span className={styles.navigationLabel}>Notificaciones</span>
-          </div>
-        ) : null}
         {user && onLogout ? (
           <button
             type="button"

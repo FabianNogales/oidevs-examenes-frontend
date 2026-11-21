@@ -1,5 +1,4 @@
-import { Search, X } from 'lucide-react'
-import { TextInput } from '@/shared/components/ui'
+import { SearchBar } from '@/shared/components/ui'
 import type { Room } from '../../types/exam.types'
 import { ROOM_SEARCH_MAX_LENGTH } from '../../utils/examScheduleFormatters'
 import { ExamRoomCard } from './ExamRoomCard'
@@ -65,34 +64,21 @@ interface RoomSearchBarProps {
 function RoomSearchBar({ value, disabled, onChange }: RoomSearchBarProps) {
   return (
     <div className={styles.searchToolbar}>
-      <div className={styles.searchInputWrap}>
-        <Search className={styles.searchIcon} aria-hidden="true" />
-        <TextInput
-          id="exam-room-search"
-          type="text"
-          inputMode="text"
-          autoComplete="off"
-          spellCheck={false}
-          maxLength={ROOM_SEARCH_MAX_LENGTH}
-          value={value}
-          disabled={disabled}
-          placeholder="Buscar aula"
-          aria-label="Buscar aula"
-          className={styles.searchInput}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        />
-        {value.length > 0 ? (
-          <button
-            type="button"
-            className={styles.searchClearBtn}
-            disabled={disabled}
-            onClick={() => onChange('')}
-            aria-label="Limpiar búsqueda"
-          >
-            <X size={14} aria-hidden="true" />
-          </button>
-        ) : null}
-      </div>
+      <SearchBar
+        id="exam-room-search"
+        type="text"
+        inputMode="text"
+        autoComplete="off"
+        spellCheck={false}
+        maxLength={ROOM_SEARCH_MAX_LENGTH}
+        value={value}
+        disabled={disabled}
+        placeholder="Buscar aula"
+        label="Buscar aula"
+        clearLabel="Limpiar búsqueda"
+        onChange={onChange}
+        onClear={() => onChange('')}
+      />
     </div>
   )
 }

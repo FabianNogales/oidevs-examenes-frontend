@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { Link, useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -112,13 +113,13 @@ function ExamCollaboratorsContent({ examId }: { examId: string | undefined }) {
                   </button>
                 </div>
                 <div className={styles.search}>
-                  <label htmlFor={searchId}>Buscar colaboradores</label>
-                  <input
+                  <SearchBar
                     id={searchId}
-                    type="search"
+                    label="Buscar colaboradores"
+                    showLabel
                     placeholder="Buscar por nombre, CI o correo..."
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onChange={setQuery}
                   />
                 </div>
                 {list.error ? (

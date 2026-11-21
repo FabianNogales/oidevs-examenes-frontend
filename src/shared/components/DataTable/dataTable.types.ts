@@ -46,6 +46,7 @@ export interface DataTableProps<T extends BaseTableEntity> {
   pagination?: TablePaginationMeta | null
   entityLabel?: string
   searchPlaceholder?: string
+  searchMaxLength?: number
   searchLayout?: 'standard' | 'wide'
   initialSearch?: string
   onSearch?: (query: string) => void

@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Dropdown } from '@/shared/components/ui/Dropdown'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import type {
   AcademicTermsQuery,
   AcademicTermStatus,
@@ -15,71 +16,55 @@ export function AcademicTermsFilters({
   onChange: (query: AcademicTermsQuery) => void
 }) {
   const [search, setSearch] = useState(query.search)
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    onChange({ ...query, search: search.trim(), page: 1 })
-  }
+
   return (
-    <form
-      className={styles.searchBar}
-      role="search"
-      aria-label="Buscar periodos académicos"
-      onSubmit={submit}
-    >
-      <div className={styles.searchField}>
-        <label className={styles.srOnly} htmlFor="academic-terms-search">
-          Buscar por nombre del periodo
+    <div className={styles.searchBar}>
+      <SearchBar
+        id="academic-terms-search"
+        value={search}
+        onChange={setSearch}
+        onSubmit={(nextSearch) =>
+          onChange({ ...query, search: nextSearch, page: 1 })
+        }
+        onClear={() => {
+          setSearch('')
+          onChange({ ...query, search: '', page: 1 })
+        }}
+        placeholder="Buscar por nombre del periodo"
+        label="Buscar periodos académicos"
+        showClear={Boolean(query.search)}
+      />
+      <div className={styles.filterGroup} role="group" aria-label="Filtros">
+        <label className={styles.filter}>
+          Estado
+          <Dropdown<AcademicTermStatus | ''>
+            value={query.status}
+            options={[
+              { value: '', label: 'Todos los estados' },
+              { value: 'ACTIVE', label: 'Activos' },
+              { value: 'INACTIVE', label: 'Inactivos' },
+            ]}
+            onChange={(status) =>
+              onChange({
+                ...query,
+                status,
+                page: 1,
+              })
+            }
+          />
         </label>
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <circle cx="10.5" cy="10.5" r="6.5" />
-          <path d="m16 16 5 5" />
-        </svg>
-        <input
-          id="academic-terms-search"
-          type="search"
-          maxLength={150}
-          placeholder="Buscar por nombre del periodo"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
+        {(query.search || query.status || search) && (
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setSearch('')
+              onChange({ page: 1, search: '', status: '' })
+            }}
+          >
+            Limpiar filtros
+          </Button>
+        )}
       </div>
-      <label className={styles.filter}>
-        Estado
-        <Dropdown<AcademicTermStatus | ''>
-          value={query.status}
-          options={[
-            { value: '', label: 'Todos los estados' },
-            { value: 'ACTIVE', label: 'Activos' },
-            { value: 'INACTIVE', label: 'Inactivos' },
-          ]}
-          onChange={(status) =>
-            onChange({
-              ...query,
-              status,
-              page: 1,
-            })
-          }
-        />
-      </label>
-      <Button type="submit">
-        Buscar
-      </Button>
-      {(query.search || query.status || search) && (
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setSearch('')
-            onChange({ page: 1, search: '', status: '' })
-          }}
-        >
-          Limpiar filtros
-        </Button>
-      )}
-    </form>
+    </div>
   )
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { Dropdown } from '@/shared/components/ui/Dropdown'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseExamId } from '@/features/exams/api/examDetailsApi'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -1457,30 +1458,18 @@ export function EligibilityAutomationPage() {
               <div className={styles.panel}>
                 <h3 className={styles.recordsHeading}>Registros académicos</h3>
                 <div className={styles.recordsToolbar}>
-                  <form
-                    onSubmit={(event) => {
-                      event.preventDefault()
-                      void loadRecords(1, recordSearch)
+                  <SearchBar
+                    value={recordSearch}
+                    onChange={setRecordSearch}
+                    onSubmit={(nextSearch) => void loadRecords(1, nextSearch)}
+                    onClear={() => {
+                      setRecordSearch('')
+                      void loadRecords(1, '')
                     }}
-                  >
-                    <label>
-                      Buscar por SIS o estudiante
-                      <input
-                        type="search"
-                        placeholder="SIS o nombre del estudiante"
-                        value={recordSearch}
-                        onChange={(event) =>
-                          setRecordSearch(event.currentTarget.value)
-                        }
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className={sharedStyles.secondaryButton}
-                    >
-                      Buscar
-                    </button>
-                  </form>
+                    label="Buscar por SIS o estudiante"
+                    showLabel
+                    placeholder="SIS o nombre del estudiante"
+                  />
                 </div>
                 {recordsError ? (
                   <div role="alert" className={styles.error}>

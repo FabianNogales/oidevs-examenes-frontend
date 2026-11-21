@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react'
-
 // Presentation context only: "staff" is not a global authorization role.
 export type HeaderRole = 'student' | 'teacher' | 'admin' | 'staff'
 
@@ -22,7 +20,6 @@ export interface HeaderUser {
 export interface HeaderProps {
   user?: HeaderUser | null
   navigation?: readonly HeaderNavigationItem[]
-  notifications?: ReactNode
   onLogout?: () => void | Promise<void>
   isLoggingOut?: boolean
 }
@@ -34,7 +31,6 @@ export interface HeaderNavigationProps {
 
 export interface HeaderAccountProps {
   user?: HeaderUser | null
-  notifications?: ReactNode
   /** Abre la confirmación de cierre de sesión (la gestiona Header). */
   onLogoutRequest?: () => void
   isLoggingOut?: boolean

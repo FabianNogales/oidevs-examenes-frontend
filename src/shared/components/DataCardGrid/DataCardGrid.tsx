@@ -1,6 +1,6 @@
-import { useState, useMemo, type FormEvent } from 'react'
+import { useState, useMemo } from 'react'
 import { useRetryFocus } from '@/shared/hooks/useRetryFocus'
-import { SearchIcon } from '@/assets/icons/SearchIcon'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import type { BaseTableEntity } from '@/shared/components/DataTable/dataTable.types'
 import type { DataCardGridProps } from './dataCardGrid.types'
 import { DataCardItem } from './DataCardItem'
@@ -36,9 +36,7 @@ export function DataCardGrid<T extends BaseTableEntity>({
 
   const routeContext = useRouteAccessContext(forcedModuleScope)
 
-  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const trimmed = searchInput.trim().slice(0, searchMaxLength)
+  const handleSearchSubmit = (trimmed: string) => {
     setActiveSearch(trimmed)
     setInternalPage(1)
     onSearch?.(trimmed)
@@ -105,44 +103,18 @@ export function DataCardGrid<T extends BaseTableEntity>({
       {/* BARRA DE BÚSQUEDA UNIVERSAL */}
       {onSearch && (
         <>
-          <form className={styles.searchBar} onSubmit={handleSearchSubmit}>
-            <label className={styles.searchInputWrapper}>
-              <span className={styles.visuallyHidden}>{searchPlaceholder}</span>
-              <SearchIcon className={styles.searchIcon} />
-              <input
-                type="search"
-                className={styles.searchInput}
-                placeholder={searchPlaceholder}
-                maxLength={searchMaxLength}
-                value={searchInput}
-                onChange={(e) =>
-                  setSearchInput(e.target.value.slice(0, searchMaxLength))
-                }
-              />
-              <span className={styles.searchCounter} aria-live="polite">
-                {searchInput.length}/{searchMaxLength}
-              </span>
-            </label>
-
-            <button
-              type="submit"
-              className={styles.searchButton}
-              disabled={loading}
-            >
-              Buscar
-            </button>
-
-            {(activeSearch || searchInput) && (
-              <button
-                type="button"
-                className={styles.clearButton}
-                onClick={handleClearSearch}
-                disabled={loading}
-              >
-                Limpiar
-              </button>
-            )}
-          </form>
+          <div className={styles.searchBar}>
+            <SearchBar
+              value={searchInput}
+              onChange={setSearchInput}
+              onSubmit={handleSearchSubmit}
+              onClear={handleClearSearch}
+              placeholder={searchPlaceholder}
+              maxLength={searchMaxLength}
+              loading={loading}
+              showClear={Boolean(activeSearch)}
+            />
+          </div>
 
           {activeSearch && (
             <div className={styles.searchResultBanner}>

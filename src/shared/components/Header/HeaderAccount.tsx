@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { NavLink } from 'react-router'
-import { Bell, ChevronDown, LogOut } from 'lucide-react'
+import { ChevronDown, LogOut } from 'lucide-react'
 import { Avatar, Button, Card } from '@/shared/components/ui'
 import { roleLabelByRole } from './headerNavigation.config'
 import type { HeaderAccountProps } from './header.types'
@@ -8,7 +8,6 @@ import styles from './Header.module.css'
 
 export function HeaderAccount({
   user,
-  notifications,
   onLogoutRequest,
   isLoggingOut = false,
   accountOpen = false,
@@ -49,10 +48,6 @@ export function HeaderAccount({
         }
       }}
     >
-      <div className={styles.notifications}>
-        <HeaderNotifications notifications={notifications} />
-      </div>
-
       <div className={styles.accountMenu}>
         <button
           ref={accountButton}
@@ -102,22 +97,5 @@ export function HeaderAccount({
         )}
       </div>
     </div>
-  )
-}
-export function HeaderNotifications({ notifications }: Pick<HeaderAccountProps, 'notifications'>) {
-  return (
-    <>
-      {notifications ?? (
-        <Button
-          variant="secondary"
-          className={styles.iconButton}
-          disabled
-          aria-label="Notificaciones no disponibles"
-          title="Notificaciones no disponibles"
-        >
-          <Bell aria-hidden="true" />
-        </Button>
-      )}
-    </>
   )
 }

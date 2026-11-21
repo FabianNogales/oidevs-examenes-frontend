@@ -1,1 +1,5 @@
-export { SearchBar, type SearchBarProps } from './SearchBar'
+export {
+  SearchBar,
+  DEFAULT_SEARCH_MAX_LENGTH,
+  type SearchBarProps,
+} from './SearchBar'

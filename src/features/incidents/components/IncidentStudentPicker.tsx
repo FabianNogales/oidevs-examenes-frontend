@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import {
   getEntryControlStudents,
   getEntryControlErrorMessage,
@@ -95,14 +96,15 @@ export function IncidentStudentPicker({
         </div>
       ) : (
         <>
-          <label htmlFor={id}>Buscar estudiante por nombre, SIS o CI</label>
-          <input
+          <SearchBar
             id={id}
-            type="search"
+            label="Buscar estudiante por nombre, SIS o CI"
+            showLabel
+            placeholder="Buscar estudiante por nombre, SIS o CI"
             value={query}
             disabled={disabled}
             autoComplete="off"
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={setQuery}
           />
           {!search ? (
             <p>Busca y selecciona un estudiante del examen.</p>

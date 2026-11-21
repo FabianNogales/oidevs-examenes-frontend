@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
-import { Search, UserCheck } from 'lucide-react'
+import { UserCheck } from 'lucide-react'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { EntryConditionBadge } from '@/features/exams/components/EntryConditionBadge'
 import { eligibilityDisplay } from '@/features/exams/utils/entryControlDisplay'
 import type { LocalEntry, OfflineStudent } from '../types/offline.types'
@@ -29,28 +30,19 @@ export function OfflineStudentList({
     >
       <h2>Buscar en mi lista</h2>
 
-      <label className={captureStyles.searchField} htmlFor={searchId}>
-        SIS, CI, nombre o apellidos
-        <div className={captureStyles.searchInputBox}>
-          <Search
-            size={18}
-            strokeWidth={1.75}
-            className={captureStyles.searchInputIcon}
-            aria-hidden="true"
-          />
-          <input
-            id={searchId}
-            type="search"
-            autoComplete="off"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value)
-              setLimit(25)
-            }}
-            placeholder="Buscar estudiante…"
-          />
-        </div>
-      </label>
+      <SearchBar
+        id={searchId}
+        className={captureStyles.searchField}
+        label="SIS, CI, nombre o apellidos"
+        showLabel
+        autoComplete="off"
+        value={query}
+        onChange={(nextQuery) => {
+          setQuery(nextQuery)
+          setLimit(25)
+        }}
+        placeholder="Buscar estudiante…"
+      />
 
       <p className={shared.muted}>
         {filtered.length} estudiantes encontrados · Consulta local

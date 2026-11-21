@@ -1,10 +1,10 @@
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
-import { useCallback, useState, type FormEvent } from 'react'
+import { useCallback, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button/Button'
 import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
 import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
-import { TextInput } from '@/shared/components/ui/Field/TextInput'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { Snackbar } from '@/shared/components/Snackbar'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getHomeRouteForUser } from '@/features/auth/utils/authRoutes'
@@ -71,13 +71,12 @@ export function AdminRoomsPage() {
     setQuery(next)
   }
 
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (query.page === 1 && query.search === search.trim()) {
+  function handleSearch(nextSearch: string) {
+    if (query.page === 1 && query.search === nextSearch) {
       rooms.reload()
       return
     }
-    changeQuery({ ...query, search: search.trim(), page: 1 })
+    changeQuery({ ...query, search: nextSearch, page: 1 })
   }
 
   const filtered = Boolean(query.search || query.status)
@@ -106,60 +105,52 @@ export function AdminRoomsPage() {
         }
       />
       <div className={styles.card}>
-        <form
-          className={styles.searchBar}
-          onSubmit={handleSearch}
-          role="search"
-          aria-label="Buscar aulas"
-        >
-          <div className={styles.searchField}>
-            <label className={styles.srOnly} htmlFor="rooms-search">
-              Buscar por nombre o código de aula
+        <div className={styles.searchBar}>
+          <SearchBar
+            id="rooms-search"
+            value={search}
+            onChange={setSearch}
+            onSubmit={handleSearch}
+            onClear={() => {
+              setSearch('')
+              changeQuery({ ...query, page: 1, search: '' })
+            }}
+            placeholder="Buscar por nombre o código de aula"
+            label="Buscar aulas"
+            showClear={Boolean(query.search)}
+          />
+          <div className={styles.filterGroup} role="group" aria-label="Filtros">
+            <label className={styles.filter}>
+              Estado
+              <Dropdown
+                value={query.status}
+                options={[
+                  { value: '', label: 'Todos' },
+                  { value: 'ACTIVE', label: 'Activos' },
+                  { value: 'INACTIVE', label: 'Inactivos' },
+                ]}
+                onChange={(nextValue) =>
+                  changeQuery({
+                    ...query,
+                    page: 1,
+                    status: nextValue as RoomStatus | '',
+                  })
+                }
+              />
             </label>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="m16 16 5 5" />
-            </svg>
-            <TextInput
-              id="rooms-search"
-              type="search"
-              value={search}
-              maxLength={150}
-              placeholder="Buscar por nombre o código de aula"
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            {filtered && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setSearch('')
+                  changeQuery({ page: 1, search: '', status: '' })
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            )}
           </div>
-          <Button type="submit">Buscar</Button>
-          <label className={styles.filter}>
-            Estado
-            <Dropdown
-              value={query.status}
-              options={[
-                { value: '', label: 'Todos' },
-                { value: 'ACTIVE', label: 'Activos' },
-                { value: 'INACTIVE', label: 'Inactivos' },
-              ]}
-              onChange={(nextValue) =>
-                changeQuery({
-                  ...query,
-                  page: 1,
-                  status: nextValue as RoomStatus | '',
-                })
-              }
-            />
-          </label>
-          {filtered && (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setSearch('')
-                changeQuery({ page: 1, search: '', status: '' })
-              }}
-            >
-              Limpiar filtros
-            </Button>
-          )}
-        </form>
+        </div>
         <p className={styles.hint}>
           El estado indica si el aula está habilitada. La disponibilidad
           corresponde al momento de la consulta.

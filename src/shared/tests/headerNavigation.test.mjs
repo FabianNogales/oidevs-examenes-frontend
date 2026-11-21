@@ -299,7 +299,7 @@ const destinations = (items) => items.flatMap(item => item.children ? destinatio
 test('admin header: seven primary entries and every existing destination retained inside its group', () => {
   const { config } = setup('/')
   const items = config.getHeaderNavigation('admin')
-  assert.deepEqual(items.map(item => item.label), ['Inicio', 'Contenidos', 'Usuarios', 'Académico', 'Auditoría', 'Información', 'Servicios'])
+  assert.deepEqual(items.map(item => item.label), ['Inicio', 'Contenidos', 'Usuarios', 'Académico', 'Auditoría', 'Información', 'Enlaces'])
   for (const [label, paths] of Object.entries(ADMIN_GROUPS)) {
     assert.deepEqual(items.find(item => item.label === label).children.map(child => child.to), paths)
   }
@@ -316,7 +316,7 @@ test('admin header: seven primary entries and every existing destination retaine
     ],
   )
   assert.equal(items.find(item => item.label === 'Información').to, '/information')
-  assert.equal(items.find(item => item.label === 'Servicios').to, '/services')
+  assert.equal(items.find(item => item.label === 'Enlaces').to, '/services')
   assert.equal(items.find(item => item.label === 'Auditoría').to, '/admin/audit-logs')
   assert.equal(new Set(destinations(items)).size, destinations(items).length)
 })

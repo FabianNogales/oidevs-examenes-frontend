@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import {
   getCollaborationError,
   searchCollaborationUsers,
@@ -133,34 +134,29 @@ export function AssignCollaboratorModal({
         <p className={modalStyles.description}>
           Busca y selecciona un usuario para autorizarlo temporalmente en este examen.
         </p>
-        <form
+        <SearchBar
+          id={searchId}
           className={modalStyles.searchForm}
-          onSubmit={(event) => {
-            event.preventDefault()
-            search(query)
+          label="Buscar por nombre, CI o correo"
+          showLabel
+          placeholder="Nombre, CI o correo"
+          value={query}
+          disabled={busy}
+          submitDisabled={!query.trim()}
+          onChange={(nextQuery) => {
+            setQuery(nextQuery)
+            setLookup(null)
+            setUserId(null)
+            setActionError(null)
           }}
-        >
-          <div className={styles.search}>
-            <label htmlFor={searchId}>Buscar por nombre, CI o correo</label>
-            <input
-              id={searchId}
-              type="search"
-              placeholder="Nombre, CI o correo"
-              maxLength={255}
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value)
-                setLookup(null)
-                setUserId(null)
-                setActionError(null)
-              }}
-              disabled={busy}
-            />
-          </div>
-          <button type="submit" className={styles.primaryButton} disabled={busy || !query.trim()}>
-            Buscar
-          </button>
-        </form>
+          onSubmit={(nextQuery) => search(nextQuery)}
+          onClear={() => {
+            setQuery('')
+            setLookup(null)
+            setUserId(null)
+            setActionError(null)
+          }}
+        />
         <div className={modalStyles.results} aria-busy={loading}>
           {lookup === null ? (
             <p className={styles.empty} role="status">Busca un usuario para asignarlo como colaborador.</p>

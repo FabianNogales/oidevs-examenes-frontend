@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import type { ChoicePage, OfferingChoice } from '../api/offeringChoicesApi'
 import styles from '../pages/AdminCourseOfferingsPage.module.css'
 
@@ -65,20 +66,19 @@ export function OfferingEntityPicker({
   return (
     <fieldset disabled={disabled}>
       <legend>{title} *</legend>
-      <label className={styles.filter} htmlFor={`${id}-search`}>
-        Buscar por nombre o código
-        <input
-          id={`${id}-search`}
-          type="search"
-          placeholder={`Escribe el nombre o código de ${title.toLowerCase()}`}
-          value={search}
-          maxLength={100}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            setPage(1)
-          }}
-        />
-      </label>
+      <SearchBar
+        id={`${id}-search`}
+        className={styles.filter}
+        label="Buscar por nombre o código"
+        showLabel
+        placeholder={`Escribe el nombre o código de ${title.toLowerCase()}`}
+        value={search}
+        disabled={disabled}
+        onChange={(nextSearch) => {
+          setSearch(nextSearch)
+          setPage(1)
+        }}
+      />
       {selected.length > 0 && (
         <div className={styles.selection} aria-label="Selección actual">
           <span className={styles.selectionLabel}>Selección actual:</span>

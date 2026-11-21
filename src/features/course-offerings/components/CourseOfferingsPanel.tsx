@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
-import type { FormEvent } from 'react'
 import { Dropdown } from '@/shared/components/ui/Dropdown'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { useCourseOfferings } from '../hooks/useCourseOfferings'
 import { useOfferingPeriods } from '../hooks/useOfferingPeriods'
 import { CourseOfferingsTable } from './CourseOfferingsTable'
@@ -76,9 +76,8 @@ function OfferingCatalog({
     academic_term_id: termId,
     teacher_id: teacherId,
   })
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    setSearch(searchInput.trim())
+  function handleSearch(nextSearch: string) {
+    setSearch(nextSearch)
     setPage(1)
     reload()
   }
@@ -110,62 +109,62 @@ function OfferingCatalog({
           }}
         />
       )}
-      <form className={styles.searchBar} onSubmit={submit}>
-        <label className={styles.searchField} htmlFor={`${id}-search`}>
-          <span className={styles.srOnly}>
-            Buscar materia{!teacherId && ' o docente'}
-          </span>
-          <input
-            id={`${id}-search`}
-            value={searchInput}
-            maxLength={100}
-            placeholder={
-              teacherId
-                ? 'Buscar por código o nombre de materia'
-                : 'Buscar por materia o docente'
-            }
-            onChange={(event) => setSearchInput(event.target.value)}
-          />
-        </label>
-        <label className={styles.filter} htmlFor={`${id}-term`}>
-          Periodo académico
-          <Dropdown<string | number>
-            id={`${id}-term`}
-            value={termId}
-            options={[
-              { value: '', label: 'Todos los periodos' },
-              ...periods.map((period) => ({
-                value: period.id,
-                label: `${period.name}${period.status === 'INACTIVE' ? ' — Inactivo' : ' — Activo'}`,
-              })),
-            ]}
-            onChange={(nextTerm) => {
-              setTermId(String(nextTerm))
-              setPage(1)
-            }}
-          />
-        </label>
-        <label className={styles.filter} htmlFor={`${id}-status`}>
-          Estado de la asignación
-          <Dropdown<CourseOfferingStatus | ''>
-            id={`${id}-status`}
-            value={status}
-            options={[
-              { value: '', label: 'Todos los estados' },
-              { value: 'ACTIVE', label: 'Activa' },
-              { value: 'INACTIVE', label: 'Inactiva' },
-            ]}
-            onChange={(nextStatus) => {
-              setStatus(nextStatus)
-              setPage(1)
-            }}
-          />
-        </label>
-
-        <button type="submit" className={styles.primaryButton}>
-          Buscar
-        </button>
-      </form>
+      <div className={styles.searchBar}>
+        <SearchBar
+          id={`${id}-search`}
+          value={searchInput}
+          onChange={setSearchInput}
+          onSubmit={handleSearch}
+          onClear={() => {
+            setSearchInput('')
+            setSearch('')
+            setPage(1)
+          }}
+          label={`Buscar materia${!teacherId ? ' o docente' : ''}`}
+          placeholder={
+            teacherId
+              ? 'Buscar por código o nombre de materia'
+              : 'Buscar por materia o docente'
+          }
+          showClear={Boolean(search)}
+        />
+        <div className={styles.filterGroup} role="group" aria-label="Filtros">
+          <label className={styles.filter} htmlFor={`${id}-term`}>
+            Periodo académico
+            <Dropdown<string | number>
+              id={`${id}-term`}
+              value={termId}
+              options={[
+                { value: '', label: 'Todos los periodos' },
+                ...periods.map((period) => ({
+                  value: period.id,
+                  label: `${period.name}${period.status === 'INACTIVE' ? ' — Inactivo' : ' — Activo'}`,
+                })),
+              ]}
+              onChange={(nextTerm) => {
+                setTermId(String(nextTerm))
+                setPage(1)
+              }}
+            />
+          </label>
+          <label className={styles.filter} htmlFor={`${id}-status`}>
+            Estado de la asignación
+            <Dropdown<CourseOfferingStatus | ''>
+              id={`${id}-status`}
+              value={status}
+              options={[
+                { value: '', label: 'Todos los estados' },
+                { value: 'ACTIVE', label: 'Activa' },
+                { value: 'INACTIVE', label: 'Inactiva' },
+              ]}
+              onChange={(nextStatus) => {
+                setStatus(nextStatus)
+                setPage(1)
+              }}
+            />
+          </label>
+        </div>
+      </div>
       <p className={styles.hint}>
         Cada asignación vincula un docente, una materia y un periodo. Las
         asignaciones inactivas conservan su historial.

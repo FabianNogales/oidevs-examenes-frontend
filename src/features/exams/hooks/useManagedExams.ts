@@ -36,7 +36,7 @@ export function useManagedExams(filters: ExamListFilters) {
   }, [view, search, page, key])
   const current = state?.key === key ? state : null
   return {
-    result: current?.result ?? null,
+    result: current?.result ?? state?.result ?? null,
     error: current?.error ?? null,
     loading: current === null,
     reload: () => setAttempt((value) => value + 1),
