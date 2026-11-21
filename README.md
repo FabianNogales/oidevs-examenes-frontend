@@ -44,6 +44,18 @@ Application code should read environment values from `src/app/config/env.ts` ins
 
 ## Development
 
+The institutional target remains Node.js 20. The existing Vite 8 / ESLint 10
+toolchain accepts Node 20 starting at 20.19. The current dependency lock also has
+an existing incompatibility: the `@zxing/library@0.23.0` peer declares Node >=24.
+Compatibility of the complete dependency tree with Node 20 is therefore pending
+a separate dependency review; no versions or Node requirements were changed by
+the backups integration.
+
+The external backup download Worker has its own package and GitHub Actions
+environment using Node 24 (Node 22+). Its `node:sqlite` tests and Wrangler deploy
+are not part of this frontend's build or institutional deployment. See
+[the backups environment notes](docs/BACKUPS_RNF7_RNF10.md).
+
 Install dependencies:
 
 ```bash

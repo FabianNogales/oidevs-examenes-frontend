@@ -1,0 +1,39 @@
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.summary > div {
+  padding: 1.25rem;
+  border: 1px solid var(--color-border, #dbe3ee);
+  border-radius: 0.75rem;
+  background: var(--color-surface, #fff);
+}
+
+.summary dt {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #475569);
+}
+
+.summary dd {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+  color: var(--color-text-primary, #172554);
+}
+
+.filename {
+  overflow-wrap: anywhere;
+}
+
+.failure {
+  display: block;
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 760px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+}

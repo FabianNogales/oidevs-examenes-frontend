@@ -141,6 +141,7 @@ export const navigationByRole: Record<
       ],
     },
     { label: 'Auditoría', to: '/admin/audit-logs' },
+    { label: 'Respaldos', to: '/admin/backups' },
     {
       label: 'Información',
       to: '/information',

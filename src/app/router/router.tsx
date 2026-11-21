@@ -230,6 +230,13 @@ export const router = createBrowserRouter([
                     element: <HomePage embedded />,
                   },
                   {
+                    path: 'backups',
+                    lazy: async () => {
+                      const { AdminBackupsPage } = await import('@/features/backups/pages/AdminBackupsPage')
+                      return { Component: AdminBackupsPage }
+                    },
+                  },
+                  {
                     path: 'users/manage',
                     element: <AdminManageUsersPage />,
                   },
