@@ -1,5 +1,7 @@
 export type EligibilityStatus = 'ELIGIBLE' | 'INELIGIBLE'
 
+export type StudentWithoutDecision = { id: number; sis_code: string; first_names: string; last_names: string }
+
 export type ExamEligibility = {
   id: number
   student_id: number
@@ -22,6 +24,7 @@ export type ExamEligibility = {
 export type EligibilitiesResponse = {
   exam?: {
     id: number
+    students_without_decision?: StudentWithoutDecision[]
     manual_review_conditions: string | null
   }
   data: (Omit<ExamEligibility, 'reason_code' | 'observations'> & {
@@ -31,7 +34,7 @@ export type EligibilitiesResponse = {
 }
 
 export type ExamEligibilitiesSnapshot = {
-  exam: { id: number; manual_review_conditions: string | null } | null
+  exam: { id: number; manual_review_conditions: string | null; students_without_decision?: StudentWithoutDecision[] } | null
   data: ExamEligibility[]
 }
 

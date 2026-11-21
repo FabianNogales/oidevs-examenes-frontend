@@ -114,6 +114,9 @@ export async function getExamEligibilitiesSnapshot(
       }
     })
     const exam = response.data.exam
+    if (exam?.students_without_decision !== undefined && (!Array.isArray(exam.students_without_decision) || exam.students_without_decision.some((student) => !student || !Number.isSafeInteger(student.id) || typeof student.sis_code !== 'string' || typeof student.first_names !== 'string' || typeof student.last_names !== 'string'))) {
+      throw new Error('Invalid students without eligibility decision')
+    }
     if (
       exam &&
       (!Number.isSafeInteger(exam.id) ||

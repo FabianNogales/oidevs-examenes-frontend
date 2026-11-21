@@ -68,7 +68,7 @@ export function CreateStaffAccountDialog({ onClose, onCreated }: {
           {(['first_names', 'last_names', 'identity_number', 'email'] as const).map((key) => (
             <Field key={key} label={{ first_names: 'Nombres', last_names: 'Apellidos', identity_number: 'CI', email: 'Correo institucional' }[key]}
               required error={error?.fields[key]}>
-              {(control) => <TextInput {...control} name={key} type={key === 'email' ? 'email' : 'text'} maxLength={255}
+              {(control) => <TextInput {...control} name={key} type={key === 'email' ? 'email' : 'text'} maxLength={key === 'identity_number' ? 20 : key === 'email' ? 255 : 100}
                 inputMode={key === 'identity_number' ? 'numeric' : undefined} pattern={key === 'identity_number' ? '[0-9]+' : undefined}
                 value={values[key]} disabled={busy} autoComplete="off"
                 onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))} />}

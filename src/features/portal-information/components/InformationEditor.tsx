@@ -99,8 +99,8 @@ export function InformationEditor({
     const result = await editor.mutate(() =>
       publishInformation(kind, item.id, pending === 'publish', item.revision),
     )
+    setPending(null)
     if (result) {
-      setPending(null)
       onSaved(result)
     }
   }

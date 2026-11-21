@@ -451,7 +451,7 @@ function adminPage(categories = [category]) {
     const expand = (node) => {
       if (Array.isArray(node)) return node.map(expand)
       if (!node || typeof node !== 'object') return node
-      if (node.type?.name === 'PageHeader') return expand(node.type(node.props))
+        if (['PageHeader', 'Button'].includes(node.type?.name)) return expand(node.type(node.props))
       return { ...node, props: { ...node.props, children: expand(node.props?.children) } }
     }
     tree = expand(tree)

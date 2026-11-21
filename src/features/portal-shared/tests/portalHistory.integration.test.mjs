@@ -98,7 +98,7 @@ for (const [criterion, resource, action, old_values, new_values] of resources) {
     assert.deepEqual(ui.calls[0].args[1].params, { page: 1, per_page: 15 })
     assert.ok(ui.calls[0].args[1].signal instanceof AbortSignal)
     const text = textContent(ui.tree)
-    assert.ok(text.includes(action))
+    if (!resource.startsWith('information/') && resource !== 'services') assert.ok(text.includes(action))
     assert.match(text, /Responsable: Administradora de prueba/)
     const date = nodes(ui.tree, (node) => node.type === 'time')[0]
     assert.equal(date.props.dateTime, '2026-11-01T15:00:00.000000Z')
@@ -118,15 +118,15 @@ for (const [criterion, resource, action, old_values, new_values] of resources) {
     for (const value of [...leaves(old_values), ...leaves(new_values)])
       assert.ok(text.includes(value), value)
     if (resource.startsWith('information/')) {
-      assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 1)
-      assert.match(text, /Detalle técnico/)
+      assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 0)
+      assert.doesNotMatch(text, /Detalle técnico|old_values|new_values/)
       assert.equal(
         textContent(nodes(ui.tree, (node) => node.type === 'h3')[0]),
         resource.endsWith('/faqs') ? 'FAQ actualizada' : 'Sección actualizada',
       )
     } else if (resource === 'services') {
-      assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 1)
-      assert.match(text, /Detalle técnico/)
+      assert.equal(nodes(ui.tree, (node) => node.type === 'details').length, 0)
+      assert.doesNotMatch(text, /Detalle técnico|old_values|new_values/)
       assert.equal(
         textContent(nodes(ui.tree, (node) => node.type === 'h3')[0]),
         'Servicio actualizado',
@@ -144,7 +144,7 @@ for (const [criterion, resource, action, old_values, new_values] of resources) {
   })
 }
 
-test('HU42/HU43 muestra resumen humano antes del JSON técnico y conserva la entrada completa', async () => {
+test('HU42/HU43 muestra cambios y responsable sin exponer el JSON técnico', async () => {
   const audit = entry({
     entity_type: 'PortalInformationSection',
     action: 'SECTION_UPDATED',
@@ -174,22 +174,8 @@ test('HU42/HU43 muestra resumen humano antes del JSON técnico y conserva la ent
   assert.match(text, /Descripción: Texto anterior → Texto actualizado/)
   assert.match(text, /Orden: 3 → 2/)
   assert.match(text, /Responsable: Usuario #20/)
-  const summaryIndex = text.indexOf('Sección actualizada')
-  const detailIndex = text.indexOf('Detalle técnico')
-  const jsonIndex = text.indexOf('"entity_type"')
-  assert.ok(
-    summaryIndex >= 0 && summaryIndex < detailIndex && detailIndex < jsonIndex,
-  )
-  assert.doesNotMatch(
-    text.slice(0, detailIndex),
-    /SECTION_UPDATED|old_values|new_values/,
-  )
-  assert.ok(text.slice(detailIndex).includes('"action": "SECTION_UPDATED"'))
-  assert.ok(
-    text
-      .slice(detailIndex)
-      .includes('"entity_type": "PortalInformationSection"'),
-  )
+  assert.doesNotMatch(text, /Detalle técnico|old_values|new_values|entity_type/)
+  assert.equal(nodes(ui.tree, (node) => node.type === 'pre').length, 0)
   ui.h.unmount()
 })
 
@@ -230,7 +216,7 @@ test('HU43 humaniza FAQ y publicación; presenta el cambio de estado sin inventa
     /FAQ publicada.*Revisión 3.*Estado: Despublicado → Publicado/s,
   )
   assert.doesNotMatch(text, /Responsable:/)
-  assert.match(text, /"action": "FAQ_PUBLISHED"/)
+  assert.doesNotMatch(text, /"action"|old_values|new_values/)
   ui.h.unmount()
 })
 

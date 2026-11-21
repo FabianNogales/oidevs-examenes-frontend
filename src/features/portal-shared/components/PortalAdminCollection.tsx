@@ -153,7 +153,7 @@ export function PortalAdminCollection<T extends { id: number }>({
       )}
       {children}
       <div className={styles.collectionList} aria-busy={refreshing}>
-        <DataTable<PortalRow<T>>
+        <DataTable<PortalRow<T>> searchMaxLength={50}
           filters={filters}
           filterLayout={filterLayout}
           searchPlaceholder={searchPlaceholder}
@@ -169,7 +169,7 @@ export function PortalAdminCollection<T extends { id: number }>({
           onSearch={(search) =>
             setQuery({
               page: 1,
-              search: search.slice(0, 200),
+              search: search.slice(0, 50),
               version,
               resetPageKey,
             })

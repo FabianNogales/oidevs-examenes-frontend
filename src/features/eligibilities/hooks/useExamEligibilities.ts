@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getExamEligibilitiesSnapshot } from '../api/eligibilitiesApi'
-import type { ExamEligibility } from '../types/eligibility.types'
+import type { ExamEligibility, StudentWithoutDecision } from '../types/eligibility.types'
 
 type ListState = {
   examId: number
   items: ExamEligibility[]
   manualReviewConditions: string | null
+  studentsWithoutDecision?: StudentWithoutDecision[]
   loading: boolean
   error: string | null
 }
@@ -44,6 +45,7 @@ export function useExamEligibilities(examId: number) {
         setState({
           examId,
           items: snapshot.data,
+          studentsWithoutDecision: snapshot.exam?.students_without_decision ?? [],
           manualReviewConditions:
             snapshot.exam?.manual_review_conditions ?? null,
           loading: false,
@@ -83,6 +85,7 @@ export function useExamEligibilities(examId: number) {
   const current = state.examId === examId
   return {
     items: current ? state.items : [],
+    studentsWithoutDecision: current ? state.studentsWithoutDecision ?? [] : [],
     manualReviewConditions: current ? state.manualReviewConditions : null,
     loading: !current || state.loading,
     error: current ? state.error : null,

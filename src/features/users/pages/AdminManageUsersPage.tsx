@@ -239,7 +239,7 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
       />
 
       <>
-        <DataTable<AdminUserItem>
+        <DataTable<AdminUserItem> searchMaxLength={50}
           columns={USER_COLUMNS}
           data={users}
           loading={loading}
@@ -270,9 +270,9 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
         {detail.error ? <p role="alert">{detail.error}</p> : detail.account ? <>
           <dl><dt>Nombre</dt><dd>{detail.account.full_name}</dd><dt>Código institucional</dt><dd>{detail.account.institutional_code ?? 'No registrado'}</dd>
             <dt>CI</dt><dd>{detail.account.identity_number ?? 'No registrado'}</dd><dt>Correo</dt><dd>{detail.account.email}</dd>
-            <dt>Estado global</dt><dd>{detail.account.status}</dd><dt>Roles permanentes</dt><dd>{detail.account.role_label}</dd>
-            <dt>Perfil docente</dt><dd>{detail.account.teacher_status ?? 'Sin perfil'}</dd><dt>Perfil estudiantil</dt><dd>{detail.account.student_status ?? 'Sin perfil'}</dd></dl>
-          <Link to={`/admin/users/${detail.account.id}/roles`} onClick={closeDetail}>Asignar o retirar roles (HU22)</Link>
+            <dt>Estado global</dt><dd>{detail.account.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}</dd><dt>Roles permanentes</dt><dd>{detail.account.role_label}</dd>
+            <dt>Perfil docente</dt><dd>{detail.account.teacher_status === 'ACTIVE' ? 'Activo' : detail.account.teacher_status === 'INACTIVE' ? 'Inactivo' : 'Sin perfil'}</dd><dt>Perfil estudiantil</dt><dd>{detail.account.student_status === 'ACTIVE' ? 'Activo' : detail.account.student_status === 'INACTIVE' ? 'Inactivo' : 'Sin perfil'}</dd></dl>
+          <Link to={`/admin/users/${detail.account.id}/roles`} onClick={closeDetail}>Asignar o retirar roles</Link>
           {detail.account.teacher_id && <p><Link to={`/admin/teachers/${detail.account.teacher_id}`} onClick={closeDetail}>Ver perfil docente</Link></p>}
           {detail.account.student_id && <p><Link to={`/admin/students/${detail.account.student_id}`} onClick={closeDetail}>Ver perfil estudiantil</Link></p>}
         </> : <p role="status">Cargando cuenta…</p>}

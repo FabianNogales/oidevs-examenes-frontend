@@ -226,7 +226,7 @@ export function AssignedListStudentsView({
         </div>
       </div>
 
-      <DataTable
+      <DataTable searchMaxLength={50}
         columns={studentColumns}
         data={paginatedStudents}
         loading={false}

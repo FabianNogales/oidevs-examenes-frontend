@@ -55,7 +55,7 @@ export function AdminUserRolesPage() {
       description="Docente y Estudiante requieren su perfil académico activo. Los roles personalizados no requieren perfil. La colaboración temporal se gestiona por examen. Todo cambio revoca las sesiones anteriores."
       breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Asignaciones', to: '/admin/users/assignments' }, { label: 'Roles de cuenta' }]}
       actions={<Link to="/admin/users/assignments">Volver a asignaciones</Link>} />
-    <DataTable columns={columns} data={visible.roles} loading={visible.loading} error={visible.error} entityLabel="roles"
+    <DataTable searchMaxLength={50} columns={columns} data={visible.roles} loading={visible.loading} error={visible.error} entityLabel="roles"
       onRetry={() => { setState((current) => ({ ...current, loading: true, error: null })); setVersion((value) => value + 1) }} />
     <ConfirmDialog isOpen={pending?.userId === id} title={pending?.assigned ? 'Retirar rol de cuenta' : 'Asignar rol de cuenta'}
       message={`${pending?.assigned ? 'Retirar' : 'Asignar'} ${pending ? roleLabel(pending.name) : ''} a esta cuenta. Se conservarán sus datos e historial y deberá iniciar sesión nuevamente.`}

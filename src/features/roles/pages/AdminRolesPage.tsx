@@ -57,8 +57,8 @@ export function AdminRolesPage() {
     <p className={styles.notice}>Consulta, creación y edición se asignan por separado en los módulos habilitados. Carreras y Ofertas ofrecen solo consulta. Los periodos delegados se crean inactivos. Importación y cambios de estado siguen reservados al administrador.</p>
     <p><Link to="/admin/users/assignments">Asignar o retirar roles de una cuenta</Link></p>
     {opening && <p role="status">Consultando el rol…</p>}
-    <DataTable columns={columns} data={roles.filter((role) => role.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()))}
-      loading={loading} error={error} entityLabel="roles" viewActionLabel="Ver o editar rol"
+    <DataTable searchMaxLength={50} columns={columns} data={roles.filter((role) => role.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()))}
+      loading={loading} error={error} entityLabel="roles" viewActionLabel="Ver rol"
       onSearch={setSearch} searchPlaceholder="Buscar por nombre del rol"
       onViewProfile={(role) => { if (!opening) void open(role) }}
       onRetry={() => { setLoading(true); setError(null); setVersion((value) => value + 1) }}

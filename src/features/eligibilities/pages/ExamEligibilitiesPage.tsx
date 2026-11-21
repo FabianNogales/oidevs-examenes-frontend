@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { SearchBar } from '@/shared/components/ui/SearchBar'
+import { DataTable } from '@/shared/components/DataTable/DataTable'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -242,7 +243,7 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
             </div>
             <div className={styles.filters}>
               <div className={styles.field}>
-                <SearchBar
+                <SearchBar maxLength={50}
                   id={searchId}
                   label="Buscar estudiante"
                   showLabel
@@ -323,6 +324,18 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
               </nav>
             ) : null}
           </section>
+          {!list.loading && !list.error && (list.studentsWithoutDecision?.length ?? 0) > 0 ? (
+            <section className={sharedStyles.section} aria-labelledby="students-without-decision-title">
+              <h2 id="students-without-decision-title">Inscritos sin decisión para este examen ({list.studentsWithoutDecision.length})</h2>
+              <p>Estos estudiantes están inscritos en la materia, pero no tienen una decisión de habilitación en este examen. Las inscripciones posteriores no alteran automáticamente el historial de un examen concluido. No se cuentan como habilitados ni inhabilitados.</p>
+              <DataTable loading={false} data={list.studentsWithoutDecision} entityLabel="estudiantes sin decisión"
+                columns={[
+                  { id: 'sis', header: 'SIS', accessorKey: 'sis_code' },
+                  { id: 'name', header: 'Estudiante', cell: (student) => `${student.last_names} ${student.first_names}` },
+                  { id: 'decision', header: 'Habilitación', cell: () => 'Sin decisión registrada' },
+                ]} />
+            </section>
+          ) : null}
           {selected ? (
             <ManageEligibilityModal
               key={selected.id}

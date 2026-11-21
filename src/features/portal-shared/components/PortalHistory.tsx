@@ -251,10 +251,6 @@ function serviceEntry(entry: PortalHistoryEntry) {
       {entry.actor_name !== null || entry.actor_id !== null ? (
         <p>Responsable: {entry.actor_name ?? `Usuario #${entry.actor_id}`}</p>
       ) : null}
-      <details className={styles.technicalDetails}>
-        <summary>Detalle técnico</summary>
-        <pre>{JSON.stringify(entry, null, 2)}</pre>
-      </details>
     </>
   )
 }
@@ -308,10 +304,6 @@ function informationEntry(
       {entry.actor_name !== null || entry.actor_id !== null ? (
         <p>Responsable: {entry.actor_name ?? `Usuario #${entry.actor_id}`}</p>
       ) : null}
-      <details className={styles.technicalDetails}>
-        <summary>Detalle técnico</summary>
-        <pre>{JSON.stringify(entry, null, 2)}</pre>
-      </details>
     </>
   )
 }

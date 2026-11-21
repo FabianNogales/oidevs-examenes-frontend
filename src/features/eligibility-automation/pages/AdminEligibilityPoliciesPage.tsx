@@ -398,6 +398,7 @@ export function AdminEligibilityPoliciesPage() {
                 onSubmit={(event) => void saveCriterion(event)}
               >
                 <h3>Editar criterio</h3>
+                <p>Estos campos cambian el nombre y la explicación del criterio. No modifican su fórmula ni los requisitos del examen: el docente configura las evaluaciones y los valores mínimos en la habilitación automática de cada examen.</p>
                 <label>
                   Nombre
                   <input

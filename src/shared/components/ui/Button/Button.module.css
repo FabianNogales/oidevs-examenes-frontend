@@ -40,10 +40,12 @@
 
 .primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
+  color: var(--color-on-primary);
 }
 
 .primary:active:not(:disabled) {
   background: var(--color-primary-active);
+  color: var(--color-on-primary);
 }
 
 .secondary {
