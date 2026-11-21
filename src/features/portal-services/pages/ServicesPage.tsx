@@ -37,7 +37,7 @@ export function ServicesPage() {
           title="Servicios institucionales"
           breadcrumbs={[
             { label: 'Inicio', to: '/' },
-            { label: 'Servicios institucionales' },
+            { label: 'Enlaces' },
           ]}
         />
         <div className={`${styles.page} ${servicesStyles.pageBody}`}>

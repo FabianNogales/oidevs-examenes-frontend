@@ -6,6 +6,7 @@ import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatu
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 
 import { DataTable } from '@/shared/components/DataTable/DataTable'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
@@ -170,32 +171,32 @@ export function AdminCalendarPage() {
         className={styles.filterPanel}
         aria-label="Buscar y filtrar eventos"
       >
-        <form
+        <SearchBar
+          name="search"
           className={styles.searchRow}
-          onSubmit={(event) => {
-            event.preventDefault()
+          value={searchInput}
+          onChange={setSearchInput}
+          onSubmit={(nextSearch) =>
             setQuery({
               ...query,
               page: 1,
-              search: searchInput.trim().slice(0, 200),
+              search: nextSearch,
+            })
+          }
+          onClear={() => {
+            setSearchInput('')
+            setQuery({
+              ...query,
+              page: 1,
+              search: '',
             })
           }}
-        >
-          <label className={styles.field}>
-            Buscar eventos
-            <input
-              type="search"
-              name="search"
-              maxLength={200}
-              placeholder="Título, descripción o ubicación"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-            />
-          </label>
-          <button type="submit" disabled={list.loading}>
-            Buscar
-          </button>
-        </form>
+          label="Buscar eventos"
+          showLabel
+          placeholder="Título, descripción o ubicación"
+          loading={list.loading}
+          showClear={Boolean(query.search)}
+        />
         <div className={styles.filters}>
           <label className={styles.field}>
             Visibilidad

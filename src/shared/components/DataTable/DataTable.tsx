@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useRetryFocus } from '@/shared/hooks/useRetryFocus'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import type { BaseTableEntity, DataTableProps } from './dataTable.types'
 import { DataTableRow } from './DataTableRow'
 import styles from './DataTable.module.css'
@@ -15,6 +16,7 @@ export function DataTable<T extends BaseTableEntity>({
   pagination = null,
   entityLabel = 'registros',
   searchPlaceholder = 'Buscar por nombre, apellido, correo o código institucional',
+  searchMaxLength,
   searchLayout = 'standard',
   initialSearch = '',
   onSearch,
@@ -32,9 +34,7 @@ export function DataTable<T extends BaseTableEntity>({
 
   const hasActions = Boolean(getProfilePath || onViewProfile || onToggleStatus)
 
-  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const trimmed = searchInput.trim()
+  const handleSearchSubmit = (trimmed: string) => {
     setActiveSearch(trimmed)
     onSearch?.(trimmed)
   }
@@ -72,46 +72,22 @@ export function DataTable<T extends BaseTableEntity>({
     ) : null
 
   const searchForm = onSearch ? (
-    <form
+    <div
       className={`${styles.searchBar} ${
         searchLayout === 'wide' ? styles.searchBarWide : ''
       }`}
-      onSubmit={handleSearchSubmit}
     >
-      <label className={styles.searchInputWrapper}>
-        <span className={styles.visuallyHidden}>{searchPlaceholder}</span>
-        <svg
-          className={styles.searchIcon}
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
-          type="search"
-          className={styles.searchInput}
-          placeholder={searchPlaceholder}
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-        />
-      </label>
-
-      <button type="submit" className={styles.searchButton} disabled={loading}>
-        Buscar
-      </button>
-
-      {(activeSearch || searchInput) && (
-        <button
-          type="button"
-          className={styles.clearButton}
-          onClick={handleClearSearch}
-          disabled={loading}
-        >
-          Limpiar
-        </button>
-      )}
-    </form>
+      <SearchBar
+        value={searchInput}
+        onChange={setSearchInput}
+        onSubmit={handleSearchSubmit}
+        onClear={handleClearSearch}
+        placeholder={searchPlaceholder}
+        maxLength={searchMaxLength}
+        loading={loading}
+        showClear={Boolean(activeSearch)}
+      />
+    </div>
   ) : null
 
   return (

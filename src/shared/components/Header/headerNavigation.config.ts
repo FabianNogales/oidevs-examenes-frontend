@@ -12,7 +12,7 @@ export const publicNavigation: readonly HeaderNavigationItem[] = [
     to: '/information',
   },
   {
-    label: 'Servicios',
+    label: 'Enlaces',
     to: '/services',
   },
 ]
@@ -52,7 +52,7 @@ export const navigationByRole: Record<
       to: '/information',
     },
     {
-      label: 'Servicios',
+      label: 'Enlaces',
       to: '/services',
     },
   ],
@@ -77,7 +77,7 @@ export const navigationByRole: Record<
       to: '/information',
     },
     {
-      label: 'Servicios',
+      label: 'Enlaces',
       to: '/services',
     },
   ],
@@ -146,7 +146,7 @@ export const navigationByRole: Record<
       to: '/information',
     },
     {
-      label: 'Servicios',
+      label: 'Enlaces',
       to: '/services',
     },
   ],
@@ -203,10 +203,10 @@ export function getHeaderNavigation(
       : entries
   const navigation = [
     ...adminEntries.filter(
-      (item) => !['Información', 'Servicios'].includes(item.label),
+      (item) => !['Información', 'Enlaces'].includes(item.label),
     ),
     ...adminEntries.filter((item) =>
-      ['Información', 'Servicios'].includes(item.label),
+      ['Información', 'Enlaces'].includes(item.label),
     ),
   ]
   if (!hasCollaborations) return navigation

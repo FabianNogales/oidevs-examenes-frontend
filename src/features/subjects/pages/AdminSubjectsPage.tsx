@@ -1,6 +1,6 @@
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
-import { useCallback, useState, type FormEvent } from 'react'
+import { useCallback, useState } from 'react'
 import { Snackbar } from '@/shared/components/Snackbar'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getHomeRouteForUser } from '@/features/auth/utils/authRoutes'
@@ -20,6 +20,7 @@ import styles from './AdminSubjectsPage.module.css'
 import { Button } from '@/shared/components/ui/Button/Button'
 import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
 import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 
 const INITIAL_QUERY: SubjectsQuery = {
   page: 1,
@@ -70,10 +71,6 @@ export function AdminSubjectsPage() {
     catalog.markLoading()
     setQuery(next)
   }
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    changeQuery({ ...query, search: search.trim(), page: 1 })
-  }
   const filtered = Boolean(query.search || query.status || query.career_id)
   const meta = catalog.result?.meta
   return (
@@ -104,95 +101,82 @@ export function AdminSubjectsPage() {
         }
       />
       <div className={styles.card}>
-        <form
-          className={styles.searchBar}
-          onSubmit={handleSearch}
-          role="search"
-          aria-label="Buscar materias"
-        >
-          <div className={styles.searchField}>
-            <label className={styles.srOnly} htmlFor="subjects-search">
-              Buscar por nombre o código de materia
+        <div className={styles.searchBar}>
+          <SearchBar
+            id="subjects-search"
+            value={search}
+            onChange={setSearch}
+            onSubmit={(nextSearch) =>
+              changeQuery({ ...query, page: 1, search: nextSearch })
+            }
+            onClear={() => {
+              setSearch('')
+              changeQuery({ ...query, page: 1, search: '' })
+            }}
+            placeholder="Buscar por nombre o código de materia"
+            label="Buscar materias"
+            showClear={Boolean(query.search)}
+          />
+          <div className={styles.filterGroup} role="group" aria-label="Filtros">
+            <label className={styles.filter}>
+              Carrera
+              <Dropdown
+                value={String(query.career_id ?? '')}
+                disabled={!careers.loaded || Boolean(careers.error)}
+                options={[
+                  {
+                    value: '',
+                    label: careers.loaded
+                      ? 'Todas las carreras'
+                      : 'Cargando carreras…',
+                  },
+                  ...careers.careers.map((career) => ({
+                    value: String(career.id),
+                    label: `${career.name}${
+                      career.status === 'INACTIVE' ? ' (inactiva)' : ''
+                    }`,
+                  })),
+                ]}
+                onChange={(nextValue) =>
+                  changeQuery({
+                    ...query,
+                    career_id: nextValue,
+                    page: 1,
+                  })
+                }
+              />
             </label>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="m16 16 5 5" />
-            </svg>
-            <input
-              id="subjects-search"
-              type="search"
-              maxLength={150}
-              value={search}
-              placeholder="Buscar por nombre o código de materia"
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            <label className={styles.filter}>
+              Estado
+              <Dropdown
+                value={query.status}
+                options={[
+                  { value: '', label: 'Todos los estados' },
+                  { value: 'ACTIVE', label: 'Activos' },
+                  { value: 'INACTIVE', label: 'Inactivos' },
+                ]}
+                onChange={(nextValue) =>
+                  changeQuery({
+                    ...query,
+                    status: nextValue as SubjectStatus | '',
+                    page: 1,
+                  })
+                }
+              />
+            </label>
+            {filtered && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setSearch('')
+                  changeQuery(INITIAL_QUERY)
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            )}
           </div>
-          <label className={styles.filter}>
-            Carrera
-            <Dropdown
-              value={String(query.career_id ?? '')}
-              disabled={!careers.loaded || Boolean(careers.error)}
-              options={[
-                {
-                  value: '',
-                  label: careers.loaded
-                    ? 'Todas las carreras'
-                    : 'Cargando carreras…',
-                },
-                ...careers.careers.map((career) => ({
-                  value: String(career.id),
-                  label: `${career.name}${
-                    career.status === 'INACTIVE' ? ' (inactiva)' : ''
-                  }`,
-                })),
-              ]}
-              onChange={(nextValue) =>
-                changeQuery({
-                  ...query,
-                  career_id: nextValue,
-                  page: 1,
-                })
-              }
-            />
-          </label>
-          <label className={styles.filter}>
-            Estado
-            <Dropdown
-              value={query.status}
-              options={[
-                { value: '', label: 'Todos los estados' },
-                { value: 'ACTIVE', label: 'Activos' },
-                { value: 'INACTIVE', label: 'Inactivos' },
-              ]}
-              onChange={(nextValue) =>
-                changeQuery({
-                  ...query,
-                  status: nextValue as SubjectStatus | '',
-                  page: 1,
-                })
-              }
-            />
-          </label>
-          <Button type="submit">
-            Buscar
-          </Button>
-          {filtered && (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setSearch('')
-                changeQuery(INITIAL_QUERY)
-              }}
-            >
-              Limpiar filtros
-            </Button>
-          )}
-        </form>
+        </div>
         {careers.error && (
           <div className={styles.state} role="alert">
             <p>

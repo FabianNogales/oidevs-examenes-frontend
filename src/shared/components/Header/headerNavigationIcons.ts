@@ -25,7 +25,7 @@ const iconByLabel: Record<string, LucideIcon> = {
   'Mis datos': UserRound,
   'Estudiantes de mis materias': Users,
   Información: Info,
-  Servicios: LayoutGrid,
+  Enlaces: LayoutGrid,
   Contenidos: FolderOpen,
   Usuarios: Users,
   Académico: GraduationCap,

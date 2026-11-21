@@ -29,8 +29,28 @@ function setup({ multiple = false, initialSelected = [], disabled = false } = {}
     },
   }
   const module = { exports: {} }
+  const searchBarStub = {
+    SearchBar: ({ id, value, placeholder, disabled: isDisabled, onChange }) => ({
+      type: 'input',
+      props: {
+        id,
+        type: 'search',
+        value,
+        placeholder,
+        disabled: isDisabled,
+        onChange: (event) => onChange?.((event.currentTarget ?? event.target).value),
+      },
+    }),
+  }
   new Function('require', 'module', 'exports', 'window', source)(
-    name => name === 'react' ? hooks : name.endsWith('.css') ? { default: {} } : require(name),
+    name =>
+      name === 'react'
+        ? hooks
+        : name === '@/shared/components/ui/SearchBar'
+          ? searchBarStub
+          : name.endsWith('.css')
+            ? { default: {} }
+            : require(name),
     module, module.exports,
     { setTimeout: callback => { timers.add(callback); return callback }, clearTimeout: callback => timers.delete(callback) },
   )
@@ -45,7 +65,7 @@ function setup({ multiple = false, initialSelected = [], disabled = false } = {}
   render()
   return {
     requests, render, runTimers,
-    search(value) { nodes(tree, node => node.type === 'input' && node.props.type === 'search')[0].props.onChange({ target: { value } }); render() },
+    search(value) { nodes(tree, node => node.type === searchBarStub.SearchBar)[0].props.onChange(value); render() },
     choices() { return nodes(tree, node => node.type === 'input' && ['radio', 'checkbox'].includes(node.props.type)) },
     tree: () => tree,
     selected: () => selected,

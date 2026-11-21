@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { CollaborationModal } from '@/features/collaborations/components/CollaborationModal'
 import { AnnulEntryConfirmation } from '@/features/entry-annulments/components/AnnulEntryConfirmation'
 import type { AnnulmentHistoryRecord } from '@/features/entry-annulments/types/entryAnnulment.types'
@@ -84,13 +85,13 @@ export function EntryHistoryModal({
               {notice && <p role="status">{notice}</p>}
               <div className={modalStyles.toolbar}>
                 <div className={entryStyles.field}>
-                  <label htmlFor={searchId}>Buscar estudiante</label>
-                  <input
+                  <SearchBar
                     id={searchId}
-                    type="search"
+                    label="Buscar estudiante"
+                    showLabel
                     placeholder="Nombre, apellido o SIS"
                     value={history.query}
-                    onChange={(event) => history.setQuery(event.target.value)}
+                    onChange={(nextQuery) => history.setQuery(nextQuery)}
                   />
                 </div>
                 <button

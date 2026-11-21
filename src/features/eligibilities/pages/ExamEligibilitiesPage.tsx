@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ExamCard } from '@/features/exams/components/ExamCard'
 import { useExamDetail } from '@/features/exams/hooks/useExamDetail'
@@ -241,19 +242,19 @@ function ExamEligibilitiesContent({ examId }: { examId: number }) {
             </div>
             <div className={styles.filters}>
               <div className={styles.field}>
-                <label htmlFor={searchId}>Buscar estudiante</label>
-                <input
+                <SearchBar
                   id={searchId}
-                  type="search"
+                  label="Buscar estudiante"
+                  showLabel
                   placeholder="Buscar por nombre, apellido o SIS..."
                   value={query}
-                  onChange={(event) => {
-                    setQuery(event.target.value)
+                  onChange={(nextQuery) => {
+                    setQuery(nextQuery)
                     setPage(1)
                   }}
                 />
               </div>
-              <div className={styles.field}>
+              <div className={styles.field} role="group" aria-label="Filtros">
                 <label htmlFor={filterId}>Habilitación</label>
                 <Dropdown<'ALL' | EligibilityStatus>
                   id={filterId}

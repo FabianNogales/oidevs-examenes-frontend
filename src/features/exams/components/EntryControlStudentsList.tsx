@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import type { useEntryControlStudents } from '../hooks/useEntryControlStudents'
 import type { EntryControlFilter } from '../types/entryControl.types'
 import { EntryControlTable } from './EntryControlTable'
@@ -53,14 +54,14 @@ export function EntryControlStudentsList({
       >
         <div className={styles.studentToolbar}>
           <div className={styles.field}>
-            <label htmlFor={searchId}>Buscar estudiante</label>
-            <input
+            <SearchBar
               id={searchId}
-              type="search"
+              label="Buscar estudiante"
+              showLabel
               disabled={disabled}
               value={list.query}
               placeholder="Nombre, apellido, SIS o CI"
-              onChange={(event) => list.setQuery(event.target.value)}
+              onChange={(nextQuery) => list.setQuery(nextQuery)}
             />
           </div>
           {!manual ? (

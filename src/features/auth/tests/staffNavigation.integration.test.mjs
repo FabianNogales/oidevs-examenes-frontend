@@ -223,7 +223,7 @@ for (const width of [1280, 390]) {
     tree = h.render()
     nav = nodes(tree, (node) => node.type === 'nav')[0]
     assert.equal(nav.props['data-open'], true)
-    assert.equal(nodes(tree, (node) => node.type === 'div' && String(node.props.className).includes('mobileNotifications')).length, width <= 479 ? 1 : 0)
+    assert.equal(nodes(tree, (node) => node.type === 'div' && String(node.props.className).includes('mobileNotifications')).length, 0)
 
     // The same actual HeaderNavigation renders links at both widths; CSS owns their layout.
     const menu = setup(['rooms.view', 'rooms.create'], ['Apoyo operativo'], width)

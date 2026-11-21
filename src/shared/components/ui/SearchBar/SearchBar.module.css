@@ -1,4 +1,23 @@
-.form {
+.form,
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  min-width: 0;
+}
+
+.withLabel {
+  gap: var(--space-2);
+}
+
+.visibleLabel {
+  color: var(--color-text-primary);
+  font: var(--type-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -11,21 +30,101 @@
   position: relative;
   display: flex;
   align-items: center;
+  gap: var(--space-2);
   flex: 1 1 240px;
   min-width: 0;
+  min-height: var(--input-height);
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--input-radius);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.inputGroup:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.inputGroupDisabled {
+  background: var(--color-surface-soft);
+  opacity: 0.72;
 }
 
 .searchIcon {
-  position: absolute;
-  left: var(--space-3);
   width: var(--space-4);
   height: var(--space-4);
   color: var(--color-text-secondary);
+  flex-shrink: 0;
   pointer-events: none;
 }
 
-.input {
-  padding-left: var(--space-10);
+.inputGroup .input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-primary);
+  font: var(--type-body);
+  outline: none;
+}
+
+.inputGroup .input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.inputGroup .input:hover,
+.inputGroup .input:focus,
+.inputGroup .input:focus-visible {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.counter {
+  color: var(--color-text-secondary);
+  font: var(--type-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.counterLimit {
+  color: var(--color-error);
+  font-weight: var(--font-weight-semibold);
+}
+
+.inlineClearButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.inlineClearButton:hover:not(:disabled) {
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
 }
 
 .actions {

@@ -239,7 +239,7 @@ test('Molecules: FormField, SearchBar, Card, Tabs, Accordion, Breadcrumb, Pagina
   assert.match(formFieldHtml, /aria-describedby="subj-code-hint subj-code-error"/)
   assert.match(formFieldHtml, /aria-invalid="true"/)
 
-  // SearchBar
+  // SearchBar (default 80-char limit + remaining counter)
   const searchHtml = render(
     h(SearchBar, {
       defaultValue: 'redes',
@@ -249,8 +249,36 @@ test('Molecules: FormField, SearchBar, Card, Tabs, Accordion, Breadcrumb, Pagina
   )
   assert.match(searchHtml, /role="search"/)
   assert.match(searchHtml, /value="redes"/)
+  assert.match(searchHtml, /maxLength="80"/i)
+  assert.match(searchHtml, />75 restantes<\/span>/)
   assert.match(searchHtml, />Buscar<\/button>/)
-  assert.match(searchHtml, />Limpiar<\/span><\/button>/)
+  assert.doesNotMatch(searchHtml, />Limpiar<\/span><\/button>/)
+
+  // SearchBar with custom maxLength (e.g. 50)
+  const customSearchHtml = render(
+    h(SearchBar, {
+      defaultValue: 'redes',
+      maxLength: 50,
+      placeholder: 'Buscar materia',
+      onSubmit: () => {},
+    }),
+  )
+  assert.match(customSearchHtml, /maxLength="50"/i)
+  assert.match(customSearchHtml, />45 restantes<\/span>/)
+
+  // SearchBar in live-search mode (without onSubmit)
+  const liveSearchHtml = render(
+    h(SearchBar, {
+      value: 'aula',
+      maxLength: 25,
+      placeholder: 'Buscar aula',
+      onChange: () => {},
+    }),
+  )
+  assert.match(liveSearchHtml, /role="search"/)
+  assert.match(liveSearchHtml, /maxLength="25"/i)
+  assert.match(liveSearchHtml, />21 restantes<\/span>/)
+  assert.doesNotMatch(liveSearchHtml, /type="submit"/)
 
   // Card composition
   const cardHtml = render(

@@ -155,15 +155,12 @@ test('HU29 filter draft needs Buscar; reversed dates do not apply and clear rese
       onApply: (filters) => applied.push(filters),
     }),
   )
-  nodes(
-    tree,
-    (n) => n.type === 'input' && n.props.name === 'search',
-  )[0].props.onChange({ target: { value: '00123' } })
+  const searchBarNode = () =>
+    nodes(tree, (n) => n.props?.name === 'search')[0]
+  searchBarNode().props.onChange('00123')
   assert.equal(applied.length, 0)
   tree = ui.h.render()
-  nodes(tree, (n) => n.type === 'form')[0].props.onSubmit({
-    preventDefault() {},
-  })
+  searchBarNode().props.onSubmit('00123')
   assert.equal(applied[0].search, '00123')
   nodes(tree, (n) => n.props?.name === 'date_from')[0].props.onChange({
     target: { value: '2026-11-05' },

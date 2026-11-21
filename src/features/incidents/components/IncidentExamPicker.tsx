@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { SearchBar } from '@/shared/components/ui/SearchBar'
 import { useRetryFocus } from '@/shared/hooks/useRetryFocus'
 import type { IncidentsPage } from '../types/incident.types'
 import { useIncidentExamCatalog } from '../hooks/useIncidentExamCatalog'
@@ -26,13 +27,13 @@ export function IncidentExamPicker({
       aria-label="Seleccionar examen para consultar incidencias"
     >
       <h2>Seleccionar examen</h2>
-      <label htmlFor={id}>Buscar por examen o materia</label>
-      <input
+      <SearchBar
         id={id}
-        type="search"
+        label="Buscar por examen o materia"
+        showLabel
         value={catalog.query}
         placeholder="Escribe el nombre del examen o materia"
-        onChange={(e) => catalog.setQuery(e.target.value)}
+        onChange={(nextQuery) => catalog.setQuery(nextQuery)}
       />
       {selectedId && (
         <p>
