@@ -1,6 +1,8 @@
 .roomCard {
   position: relative;
   width: 100%;
+  height: auto;
+  flex-shrink: 0;
   text-align: left;
   display: flex;
   flex-direction: column;
@@ -16,7 +18,7 @@
     background-color var(--transition-fast),
     box-shadow var(--transition-fast),
     transform var(--transition-fast);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .roomCard::before {
@@ -26,6 +28,7 @@
   top: 0;
   bottom: 0;
   width: 5px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
   background: var(--color-border-strong);
   transition:
     background-color var(--transition-fast),
@@ -75,6 +78,7 @@
 
 .roomCardHeader {
   width: 100%;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -82,6 +86,7 @@
   padding: 10px 14px 10px 18px;
   background: var(--color-surface-muted);
   border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .roomCardSelected .roomCardHeader {
@@ -123,6 +128,7 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  overflow-wrap: anywhere;
 }
 
 .roomCapacityTag {
@@ -138,6 +144,7 @@
 
 .roomCardBody {
   width: 100%;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -150,6 +157,8 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .roomSlotsRow {
