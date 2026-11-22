@@ -80,7 +80,6 @@ export function HeaderAccount({
           <Card padding="sm" className={styles.accountDropdown} role="menu">
             <div className={styles.accountSummary}>
               <strong>{user.name}</strong>
-              <span>{roleLabel}</span>
             </div>
             <Button
               variant="ghost"

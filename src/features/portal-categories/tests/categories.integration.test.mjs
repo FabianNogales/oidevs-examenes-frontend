@@ -140,8 +140,10 @@ for (const [catalog, spec] of Object.entries(CATALOGS)) {
       })
     assert.deepEqual(render(academic), ['Académico', 'Activa'])
     assert.deepEqual(render(retired), ['Antigua', 'Inactiva'])
-    const link = nodes(ui.collection().props.children, (node) => node.type === 'link')[0]
+    // «Volver a gestión…» es un ButtonLink secundario en las acciones de la cabecera.
+    const link = nodes(ui.collection().props.headerActions, (node) => node.props?.to === spec.back)[0]
     assert.equal(link.props.to, spec.back)
+    assert.equal(link.props.variant, 'secondary')
     ui.h.unmount()
   })
 
@@ -430,14 +432,27 @@ test('D1.2 admin routes exist for both catalogs without touching the Contenidos 
 })
 
 test('D1.2 news and calendar admin pages link to their category management', async () => {
+  // El acceso a categorías es solo de administradores activos (getPortalAccess).
+  const adminAuth = {
+    '@/features/auth/hooks/useAuth': {
+      useAuth: () => ({
+        user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'], permissions: [] },
+        notify() {},
+      }),
+    },
+  }
   const news = component(
-    client({ get: () => ({ data: { data: [] } }) }, auth),
+    client({ get: () => ({ data: { data: [] } }) }, adminAuth),
     'features/portal-news/pages/AdminNewsPage.tsx',
     'AdminNewsPage',
   )
   const newsCollection = nodes(news.tree, (node) => node.props?.load && node.props?.onSelect)[0]
-  const newsLink = nodes(newsCollection.props.children, (node) => node.type === 'link')[0]
+  const newsLink = nodes(
+    newsCollection.props.headerActions,
+    (node) => node.props?.to === '/admin/portal/news/categories',
+  )[0]
   assert.equal(newsLink.props.to, '/admin/portal/news/categories')
+  assert.equal(newsLink.props.variant, 'secondary')
   assert.equal(textContent(newsLink), 'Gestionar categorías')
   news.h.unmount()
   const calendar = component(
@@ -449,16 +464,19 @@ test('D1.2 news and calendar admin pages link to their category management', asy
             : page([], params?.page ?? 1),
         }),
       },
-      { ...auth, '@/shared/components/DataTable/DataTable': { DataTable: 'table' } },
+      { ...adminAuth, '@/shared/components/DataTable/DataTable': { DataTable: 'table' } },
     ),
     'features/portal-calendar/pages/AdminCalendarPage.tsx',
     'AdminCalendarPage',
   )
+  // El enlace vive en las acciones de la cabecera (PageHeader.actions), junto a «Crear evento».
+  const calendarHeader = nodes(calendar.tree, (node) => node.props?.actions)[0]
   const calendarLink = nodes(
-    calendar.tree,
-    (node) => node.type === 'link' && node.props.to === '/admin/portal/events/categories',
+    calendarHeader.props.actions,
+    (node) => node.props?.to === '/admin/portal/events/categories',
   )[0]
   assert.ok(calendarLink)
+  assert.equal(calendarLink.props.variant, 'secondary')
   assert.equal(textContent(calendarLink), 'Gestionar categorías')
   calendar.h.unmount()
 })

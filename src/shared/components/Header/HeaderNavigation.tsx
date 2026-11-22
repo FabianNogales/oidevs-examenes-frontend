@@ -11,6 +11,17 @@ import { getHeaderNavigationIcon } from './headerNavigationIcons'
 import styles from './Header.module.css'
 import { useStudentImportDraft } from '@/features/students/utils/studentImportDraft'
 
+/** Consecutive links that share a `section`; links without one stay ungrouped, as before. */
+function groupBySection(children: readonly HeaderNavigationItem[]) {
+  const sections: { section?: string; links: HeaderNavigationItem[] }[] = []
+  for (const child of children) {
+    const last = sections.at(-1)
+    if (last && last.section === child.section) last.links.push(child)
+    else sections.push({ section: child.section, links: [child] })
+  }
+  return sections
+}
+
 export function HeaderNavigation(props: HeaderNavigationProps) {
   const location = useLocation()
   return (
@@ -144,38 +155,65 @@ function HeaderNavigationContent({ items, onNavigate }: HeaderNavigationProps) {
                 {openDropdown === item.label && (
                   <div
                     id={dropdownId}
-                    className={styles.navigationDropdownMenu}
+                    className={`${styles.navigationDropdownMenu} ${
+                      item.children?.some((child) => child.section)
+                        ? styles.navigationDropdownMenuSections
+                        : ''
+                    }`}
                   >
-                    {item.children?.map((child) => {
-                      const linkState =
-                        child.label === 'Importar estudiantes'
-                          ? { view: 'new' }
-                          : child.label === 'Ultima importacion'
-                            ? { view: 'resume' }
-                            : undefined
+                    {groupBySection(item.children ?? []).map(
+                      ({ section, links }, sectionIndex) => {
+                        const renderedLinks = links.map((child) => {
+                          const linkState =
+                            child.label === 'Importar estudiantes'
+                              ? { view: 'new' }
+                              : child.label === 'Ultima importacion'
+                                ? { view: 'resume' }
+                                : undefined
 
-                      return (
-                        <NavLink
-                          key={child.label}
-                          to={child.to!}
-                          state={linkState}
-                          aria-current={activeChild === child ? 'page' : false}
-                          className={() =>
-                            `${styles.navigationDropdownItem} ${child.startsSection ? styles.navigationDropdownSection : ''} ${
-                              activeChild === child
-                                ? styles.navigationDropdownItemActive
-                                : ''
-                            }`
-                          }
-                          onClick={() => {
-                            setOpenDropdown(null)
-                            onNavigate?.()
-                          }}
-                        >
-                          {child.label}
-                        </NavLink>
-                      )
-                    })}
+                          return (
+                            <NavLink
+                              key={child.label}
+                              to={child.to!}
+                              state={linkState}
+                              aria-current={activeChild === child ? 'page' : false}
+                              className={() =>
+                                `${styles.navigationDropdownItem} ${child.startsSection ? styles.navigationDropdownSection : ''} ${
+                                  activeChild === child
+                                    ? styles.navigationDropdownItemActive
+                                    : ''
+                                }`
+                              }
+                              onClick={() => {
+                                setOpenDropdown(null)
+                                onNavigate?.()
+                              }}
+                            >
+                              {child.label}
+                            </NavLink>
+                          )
+                        })
+                        if (!section) return renderedLinks
+                        // Sección interna con encabezado (no es un submenú): un grupo con nombre accesible.
+                        const headingId = `${dropdownId}-section-${sectionIndex}`
+                        return (
+                          <div
+                            key={section}
+                            role="group"
+                            aria-labelledby={headingId}
+                            className={styles.navigationDropdownGroup}
+                          >
+                            <span
+                              id={headingId}
+                              className={styles.navigationDropdownHeading}
+                            >
+                              {section}
+                            </span>
+                            {renderedLinks}
+                          </div>
+                        )
+                      },
+                    )}
                   </div>
                 )}
               </>

@@ -1,5 +1,5 @@
 import { useCallback, useId, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -188,11 +188,13 @@ export function AdminCategoriesPage({ catalog }: { catalog: CategoryCatalog }) {
             </select>
           </label>
         }
-      >
-        <p className={categoryStyles.backLink}>
-          <Link to={config.backTo}>{config.backLabel}</Link>
-        </p>
-      </PortalAdminCollection>
+        headerActions={
+          <ButtonLink variant="secondary" size="sm" className={categoryStyles.backLink}
+            to={config.backTo}>
+            {config.backLabel}
+          </ButtonLink>
+        }
+      />
       {selected ? (
         <CategoryDialog
           key={selected.category?.id ?? 'new'}

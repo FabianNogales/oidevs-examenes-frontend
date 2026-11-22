@@ -228,8 +228,10 @@ for (const width of [1280, 390]) {
     // The same actual HeaderNavigation renders links at both widths; CSS owns their layout.
     const menu = setup(['rooms.view', 'rooms.create'], ['Apoyo operativo'], width)
     let menuTree = renderNavigation(menu, items, component(tree, 'HeaderNavigation').props.onNavigate)
-    find(menuTree, 'button', 'Aulas').props.onClick()
+    // Delegated catalog actions live in «Gestión delegada», section «Académico».
+    find(menuTree, 'button', 'Gestión delegada').props.onClick()
     menuTree = menu.render()
+    assert.equal(find(menuTree, 'NavLink', 'Aulas').props.to, '/admin/rooms')
     find(menuTree, 'NavLink', 'Crear aulas').props.onClick()
     assert.equal(nodes(h.render(), (node) => node.type === 'nav')[0].props['data-open'], false)
 
@@ -273,7 +275,9 @@ for (const width of [1280, 390]) {
     assert.doesNotMatch(textContent(tree), /Mi cuenta/)
     const items = component(tree, 'HeaderNavigation').props.items
     const menu = setup([], ['Comunicaciones'], width)
-    const navigation = renderNavigation(menu, items)
+    // Portal editors live in «Gestión delegada», section «Contenidos».
+    find(renderNavigation(menu, items), 'button', 'Gestión delegada').props.onClick()
+    const navigation = menu.render()
     assert.equal(find(navigation, 'NavLink', 'Editar noticias').props.to, '/admin/portal/news')
     assert.equal(find(navigation, 'NavLink', 'Editar preguntas frecuentes').props.to, '/admin/portal/information/faqs')
     assert.equal(find(navigation, 'NavLink', 'Editar calendario'), undefined)
@@ -291,7 +295,7 @@ for (const width of [1280, 390]) {
 
 test('portal permission withdrawal and mandatory password change remove delegated header links', () => {
   const h = setup(['portal.news.update'])
-  assert.equal(h.getDelegatedNavigation(h.auth.user)[0].to, '/admin/portal/news')
+  assert.equal(h.getDelegatedNavigation(h.auth.user)[0].children[0].to, '/admin/portal/news')
   h.auth.user.permissions = []
   assert.deepEqual(h.getDelegatedNavigation(h.auth.user), [])
   h.auth.user.permissions = ['portal.news.update']

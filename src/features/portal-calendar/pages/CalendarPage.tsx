@@ -5,7 +5,7 @@ import { InstitutionalCalendar } from '../components/InstitutionalCalendar'
 export function CalendarPage() {
   return (
     <main>
-      <PageContainer width="narrow">
+      <PageContainer>
         <PageHeader
           title="Calendario institucional"
           description="Consulta las actividades publicadas por la institución. Horarios de Bolivia."

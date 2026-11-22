@@ -7,181 +7,6 @@
   margin-inline: auto;
 }
 
-.calendar {
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-  overflow-wrap: anywhere;
-}
-
-.calendar a,
-.eventTitle {
-  color: var(--color-primary);
-}
-
-.calendar button:where(:not([data-ds-button])) {
-  min-height: 36px;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-primary);
-  cursor: pointer;
-  font: inherit;
-}
-
-.calendar button:where(:not([data-ds-button])):disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.month {
-  display: grid;
-  grid-template-columns: 32px 32px minmax(0, 1fr) 32px 32px;
-  align-items: center;
-  gap: 4px;
-  margin: 16px 0;
-  text-align: center;
-  text-transform: capitalize;
-}
-
-.month button {
-  padding-inline: 0;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 3px;
-  text-align: center;
-  margin-block: 12px;
-}
-
-.weekday {
-  color: var(--color-text-secondary);
-  font-size: 0.75rem;
-}
-
-.grid .day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 3px 0;
-  border-color: transparent;
-  font-size: 0.85rem;
-}
-
-.grid .dayWithEvents {
-  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-  background: color-mix(
-    in srgb,
-    var(--color-primary) 12%,
-    var(--color-surface)
-  );
-}
-
-.dayWithEvents .dayNumber {
-  font-weight: var(--font-weight-semibold);
-}
-
-.day[aria-current='date'] {
-  border-color: var(--color-primary);
-  box-shadow: inset 0 0 0 1px var(--color-primary);
-}
-
-.grid .day[aria-pressed='true'] {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-
-.grid .day[aria-pressed='true'][aria-current='date'] {
-  box-shadow: inset 0 0 0 2px var(--color-on-primary);
-}
-
-.grid .day:focus-visible {
-  outline: 3px solid var(--color-focus, var(--color-primary));
-  outline-offset: 2px;
-}
-
-.dot {
-  height: 9px;
-  line-height: 9px;
-}
-
-.dayWithEvents .dot {
-  font-size: 1rem;
-  font-weight: var(--font-weight-semibold);
-}
-
-.calendarLegend {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 12px;
-  color: var(--color-text-secondary);
-  font-size: 0.75rem;
-}
-
-.legendMarker {
-  display: inline-grid;
-  width: 18px;
-  height: 18px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(
-    in srgb,
-    var(--color-primary) 12%,
-    var(--color-surface)
-  );
-  color: var(--color-primary);
-  font-size: 1rem;
-  font-weight: var(--font-weight-semibold);
-  line-height: 1;
-}
-
-.agenda {
-  max-height: 280px;
-  overflow-y: auto;
-  padding: 0;
-  margin: 12px 0 0;
-  list-style: none;
-}
-
-.agenda li {
-  padding-block: 10px;
-  border-top: 1px solid var(--color-border);
-}
-
-.agenda p {
-  margin: 4px 0 0;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
-
-.agendaDescription {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  white-space: pre-wrap;
-}
-
-.calendar .eventTitle {
-  border: 0;
-  padding: 0;
-  min-height: 32px;
-  font-weight: var(--font-weight-semibold);
-  text-align: left;
-  overflow-wrap: anywhere;
-}
-
 .details,
 .details dd {
   min-width: 0;
@@ -232,14 +57,17 @@
   }
 }
 
-@media (max-width: 480px) {
-  .calendar {
-    padding: 12px;
-  }
+/* «Gestionar categorías»: ButtonLink secundario junto a la acción primaria de la cabecera.
+   En móvil la cabecera apila sus acciones a ancho completo; la primaria queda primero. */
+.categoriesLink {
+  white-space: nowrap;
 }
 
-.categoriesLink {
-  margin: 0 0 12px;
+@media (max-width: 640px) {
+  .categoriesLink {
+    order: 1;
+    white-space: normal;
+  }
 }
 
 .filterPanel {
@@ -360,4 +188,49 @@
     white-space: normal;
     text-align: center;
   }
+}
+
+/* Cabecera con acción secundaria y primaria: mismo alto en fila (escritorio) y en columna (móvil),
+   con la primaria primero al apilarse. */
+.headerActionGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .headerActionGroup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+  }
+}
+
+/* «Crear evento»: la página no tiene un ancestro .page, así que .page .primary nunca se aplicaba
+   y el botón quedaba con el estilo nativo. Se le da localmente el aspecto primario del portal. */
+.createAction {
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.createAction:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.createAction:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.createAction:disabled {
+  opacity: 0.5;
+  cursor: default;
 }

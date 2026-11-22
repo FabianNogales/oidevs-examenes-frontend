@@ -1,7 +1,7 @@
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { useCallback, useId, useState } from 'react'
-import { Link } from 'react-router'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { PortalHistory } from '@/features/portal-shared/components/PortalHistory'
@@ -223,6 +223,12 @@ export function AdminNewsPage() {
         onSelect={(id) => setSelected({ id })}
         onCreate={canManage ? () => setSelected({ id: null }) : undefined}
         createLabel="Crear noticia"
+        headerActions={canManage ? (
+          <ButtonLink variant="secondary" size="sm" className={adminStyles.categoriesLink}
+            to="/admin/portal/news/categories">
+            Gestionar categorías
+          </ButtonLink>
+        ) : undefined}
         viewActionLabel="Gestionar"
         filterLayout="inline"
         filters={
@@ -273,11 +279,7 @@ export function AdminNewsPage() {
             ) : null}
           </>
         }
-      >
-        {canManage ? <p className={adminStyles.categoriesLink}>
-          <Link to="/admin/portal/news/categories">Gestionar categorías</Link>
-        </p> : null}
-      </PortalAdminCollection>
+      />
       {selected ? (
         <NewsDialog
           canManage={canManage}

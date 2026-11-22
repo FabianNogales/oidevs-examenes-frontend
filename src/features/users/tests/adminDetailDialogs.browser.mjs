@@ -158,7 +158,7 @@ try {
   }
   const screens = [
     { path: '/admin/users/manage', h1: 'Gestión de usuarios', row: 'QA-15', title: 'Detalle de cuenta', slug: 'cuenta',
-      content: ['Persona QA de prueba', 'Roles permanentes', 'Docente'], links: ['Gestionar roles y permisos (HU22)', 'Ver perfil docente', 'Ver perfil estudiantil'] },
+      content: ['Persona QA de prueba', 'Roles permanentes', 'Docente'], links: ['Asignar o retirar roles', 'Ver perfil docente', 'Ver perfil estudiantil'] },
     { path: '/admin/careers', h1: 'Carreras', row: 'QA-SIS', title: 'Detalle del registro', slug: 'carrera',
       content: ['QA-SIS', 'Carrera QA Sistemas', 'Activa'], links: [] },
     { path: '/admin/audit-logs', h1: 'Auditoría', row: 'UPDATE', title: 'Detalle del registro', slug: 'auditoria',

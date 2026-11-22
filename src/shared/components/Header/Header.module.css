@@ -334,17 +334,6 @@
   white-space: nowrap;
 }
 
-.accountSummary span {
-  overflow: hidden;
-
-  color: var(--color-text-secondary);
-
-  font: var(--type-small);
-
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .logoutError {
   margin: 0;
 
@@ -805,6 +794,15 @@ a.navigationLink:active {
   }
 }
 
+/* Cuentas con roles base y permisos delegados (p. ej. Docente + Secretaría: 8 entradas) necesitan
+   ≈1058px con 28px por lado. Entre 1024 y 1099px se reduce solo el relleno horizontal (texto, altura
+   de 44px y estados intactos) para mantener una sola fila. El header del administrador no cambia. */
+@media (min-width: 1024px) and (max-width: 1099px) {
+  .header:not([data-admin='true']) .navigationLink {
+    padding-inline: 24px;
+  }
+}
+
 /* ==================================================
    PANTALLAS GRANDES
    ================================================== */
@@ -947,6 +945,43 @@ button.navigationLink.active:hover {
   height: 1px;
   background: var(--color-border-strong);
   pointer-events: none;
+}
+
+/* «Gestión delegada»: secciones internas con encabezado (Académico, Contenidos) en el mismo
+   desplegable, sin submenús anidados. Con muchos permisos el desplegable se desplaza, como el del administrador. */
+.navigationDropdownMenuSections {
+  max-height: min(70dvh, 480px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.navigationDropdownGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.navigationDropdownGroup + .navigationDropdownGroup {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.navigationDropdownHeading {
+  padding: var(--space-1) var(--space-3) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* En el acordeón móvil los enlaces se alinean a la izquierda: el encabezado los acompaña. */
+@media (max-width: 767px) {
+  .navigationDropdownHeading {
+    text-align: left;
+  }
 }
 
 .header[data-admin='true'] .navigationDropdownMenu {

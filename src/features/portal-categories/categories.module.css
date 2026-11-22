@@ -11,8 +11,16 @@
   min-height: 44px;
 }
 
+/* «Volver a gestión…»: ButtonLink secundario en la cabecera, antes de la acción de creación. */
 .backLink {
-  margin: 0 0 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .backLink {
+    order: 1;
+    white-space: normal;
+  }
 }
 
 .editor {

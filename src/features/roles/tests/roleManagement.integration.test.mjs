@@ -48,9 +48,10 @@ test('catalog management loads real roles separately from account assignments an
   h.render(AdminRolesPage); await settle(); let tree = h.render()
   const table = nodes(tree, (node) => node.props?.entityLabel === 'roles')[0]
   assert.equal(table.props.data.length, 2)
-  assert.equal(table.props.columns.find((column) => column.id === 'type').cell(base), 'Base protegido')
+  assert.equal(textContent(table.props.columns.find((column) => column.id === 'type').cell(base)), 'Base protegido')
   assert.match(textContent(tree), /Importación y cambios de estado siguen reservados/)
-  assert.ok(nodes(tree, (node) => node.props?.to === '/admin/users/assignments').length)
+  const header = nodes(tree, (node) => node.type?.name === 'PageHeader')[0]
+  assert.ok(nodes(header.props.actions, (node) => node.props?.to === '/admin/users/assignments').length)
   table.props.onViewProfile(custom); await settle(); tree = h.render()
   assert.equal(nodes(tree, (node) => node.type?.name === 'RoleEditorDialog')[0].props.role.id, custom.id)
   assert.ok(h.calls.some(([, path]) => path === '/admin/roles/10'))

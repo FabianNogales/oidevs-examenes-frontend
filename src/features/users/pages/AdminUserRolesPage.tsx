@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { DataTable } from '@/shared/components/DataTable/DataTable'
@@ -8,7 +8,10 @@ import type { AdminUserItem, UserRoleItem } from '../api/adminUsersApi'
 import type { TableColumnDef } from '@/shared/components/DataTable/dataTable.types'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
-import tableStyles from '@/shared/components/DataTable/DataTable.module.css'
+import { Button } from '@/shared/components/ui/Button/Button'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
+import { Badge } from '@/shared/components/ui/Badge/Badge'
+import styles from './AdminUserRolesPage.module.css'
 
 export function AdminUserRolesPage() {
   const id = Number(useParams().userId)
@@ -45,18 +48,20 @@ export function AdminUserRolesPage() {
   }
   const columns: readonly TableColumnDef<UserRoleItem>[] = [
     { id: 'name', header: 'Rol de cuenta', cell: (role) => roleLabel(role.name) },
-    { id: 'assigned', header: 'Asignación actual', cell: (role) => role.assigned ? 'Asignado' : 'Sin asignación activa' },
-    { id: 'actions', header: 'Acciones', cell: (role) => <button type="button" className={role.assigned ? tableStyles.btnDeactivate : tableStyles.btnActivate} disabled={busy || (!role.assigned && role.status !== 'ACTIVE') || (user?.id === id && role.name === 'ADMINISTRADOR' && role.assigned)} onClick={() => setPending({ ...role, userId: id })}>{role.assigned ? 'Retirar rol' : 'Asignar rol'}</button> },
+    { id: 'assigned', header: 'Asignación actual', cell: (role) => <Badge className={styles.cellBadge} tone={role.assigned ? 'success' : 'neutral'} size="sm">{role.assigned ? 'Asignado' : 'Sin asignación activa'}</Badge> },
+    { id: 'actions', header: 'Acciones', cell: (role) => <Button type="button" size="sm" className={styles.cellAction} variant={role.assigned ? 'danger' : 'secondary'} disabled={busy || (!role.assigned && role.status !== 'ACTIVE') || (user?.id === id && role.name === 'ADMINISTRADOR' && role.assigned)} onClick={() => setPending({ ...role, userId: id })}>{role.assigned ? 'Retirar rol' : 'Asignar rol'}</Button> },
   ]
   if (!Number.isSafeInteger(id) || id < 1) return <p role="alert">El identificador de cuenta no es válido.</p>
   return <PageContainer>
     <PageHeader title="Asignar o retirar roles"
-      eyebrow={`${visible.account?.full_name ?? 'Cuenta seleccionada'} · HU22`}
+      eyebrow={visible.account?.full_name ?? 'Cuenta seleccionada'}
       description="Docente y Estudiante requieren su perfil académico activo. Los roles personalizados no requieren perfil. La colaboración temporal se gestiona por examen. Todo cambio revoca las sesiones anteriores."
       breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Asignaciones', to: '/admin/users/assignments' }, { label: 'Roles de cuenta' }]}
-      actions={<Link to="/admin/users/assignments">Volver a asignaciones</Link>} />
-    <DataTable searchMaxLength={50} columns={columns} data={visible.roles} loading={visible.loading} error={visible.error} entityLabel="roles"
-      onRetry={() => { setState((current) => ({ ...current, loading: true, error: null })); setVersion((value) => value + 1) }} />
+      actions={<ButtonLink variant="secondary" to="/admin/users/assignments">Volver a asignaciones</ButtonLink>} />
+    <div className={styles.cardTable}>
+      <DataTable searchMaxLength={50} columns={columns} data={visible.roles} loading={visible.loading} error={visible.error} entityLabel="roles"
+        onRetry={() => { setState((current) => ({ ...current, loading: true, error: null })); setVersion((value) => value + 1) }} />
+    </div>
     <ConfirmDialog isOpen={pending?.userId === id} title={pending?.assigned ? 'Retirar rol de cuenta' : 'Asignar rol de cuenta'}
       message={`${pending?.assigned ? 'Retirar' : 'Asignar'} ${pending ? roleLabel(pending.name) : ''} a esta cuenta. Se conservarán sus datos e historial y deberá iniciar sesión nuevamente.`}
       loading={busy} onConfirm={() => void confirm()} onCancel={() => { if (!busy) setPending(null) }} />

@@ -160,6 +160,23 @@ export const roleLabelByRole: Record<HeaderRole, string> = {
   staff: 'Personal',
 }
 
+const BASE_ROLE_LABELS: Readonly<Record<string, string>> = {
+  ADMINISTRADOR: 'Administrador',
+  DOCENTE: 'Docente',
+  ESTUDIANTE: 'Estudiante',
+}
+
+/**
+ * Display names of the account's roles: base roles first (Administrador, Docente, Estudiante,
+ * the header priority), then custom roles in their original order. Values are not altered.
+ * The header shows the first custom name for accounts without a base role.
+ */
+export function getAccountRoleLabels(roles: readonly string[]): string[] {
+  const base = Object.keys(BASE_ROLE_LABELS).filter((role) => roles.includes(role))
+  const custom = roles.filter((role) => !(role in BASE_ROLE_LABELS) && role.trim() !== '')
+  return [...new Set([...base.map((role) => BASE_ROLE_LABELS[role]), ...custom])]
+}
+
 export function getHeaderNavigation(
   role?: HeaderRole | null,
   hasCollaborations = false,

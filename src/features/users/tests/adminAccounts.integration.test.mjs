@@ -35,7 +35,8 @@ test('HU21 loads actual IDs, searches on the API, paginates and preserves distin
   table(tree).props.onPageChange(2); h.render(); await settle(); tree = h.render()
   assert.equal(h.calls.at(-1)[2].params.page, 2)
   table(tree).props.onViewProfile(table(tree).props.data[0]); await settle(); tree = h.render()
-  const links = nodes(tree, (node) => node.type === 'link').map((node) => node.props.to)
+  // Detail actions render through ButtonLink (a real <a> via react-router's Link): collect every navigation target.
+  const links = nodes(tree, (node) => node.type === 'link' || node.type?.name === 'ButtonLink').map((node) => node.props.to)
   assert.ok(links.includes('/admin/teachers/30')); assert.ok(links.includes('/admin/students/70'))
   assert.ok(links.includes('/admin/users/15/roles')); h.unmount()
 })

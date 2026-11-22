@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getPortalAccess } from '@/features/portal-shared/utils/portalAccess'
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { Dropdown } from '@/shared/components/ui/Dropdown/Dropdown'
 import { SearchBar } from '@/shared/components/ui/SearchBar'
@@ -141,18 +141,21 @@ export function AdminCalendarPage() {
       <PageHeader title="Gestión del calendario" titleRef={heading} focusableTitle
         description="Eventos institucionales públicos y privados."
         breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Gestión del calendario' }]}
-        actions={canManage ? <Button
-          type="button"
-          disabled={
-            categories.loading || !!categories.error || !categories.data?.length
-          }
-          onClick={() => setSelected({ id: null })}
-        >
-          Crear evento
-        </Button> : undefined} />
-      {canManage ? <p className={styles.categoriesLink}>
-        <Link to="/admin/portal/events/categories">Gestionar categorías</Link>
-      </p> : null}
+        actions={canManage ? <div className={styles.headerActionGroup}>
+          <ButtonLink variant="secondary" className={styles.categoriesLink}
+            to="/admin/portal/events/categories">
+            Gestionar categorías
+          </ButtonLink>
+          <Button
+            type="button"
+            disabled={
+              categories.loading || !!categories.error || !categories.data?.length
+            }
+            onClick={() => setSelected({ id: null })}
+          >
+            Crear evento
+          </Button>
+        </div> : undefined} />
       {categories.loading ? (
         <p role="status">Cargando categorías…</p>
       ) : categories.error ? (

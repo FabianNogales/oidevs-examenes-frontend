@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  BriefcaseBusiness,
   ClipboardList,
   FileText,
   FolderOpen,
@@ -31,6 +32,7 @@ const iconByLabel: Record<string, LucideIcon> = {
   Académico: GraduationCap,
   Auditoría: ShieldCheck,
   Colaborador: Handshake,
+  'Gestión delegada': BriefcaseBusiness,
 }
 
 export function getHeaderNavigationIcon(label: string): LucideIcon {

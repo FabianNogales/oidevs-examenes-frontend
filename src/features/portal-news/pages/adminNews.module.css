@@ -23,8 +23,17 @@
   min-height: 44px;
 }
 
+/* «Gestionar categorías»: ButtonLink secundario junto a la acción primaria de la cabecera.
+   En móvil la cabecera apila sus acciones a ancho completo; la primaria queda primero. */
 .categoriesLink {
-  margin: 0 0 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .categoriesLink {
+    order: 1;
+    white-space: normal;
+  }
 }
 
 .newsAdminPage .statusFilter [data-ds-dropdown] {

@@ -2,10 +2,13 @@ import { useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { getDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
+import { withDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
 import { CollaborationsProvider } from '@/features/collaborations/components/CollaborationsProvider'
 import { useMyCollaborations } from '@/features/collaborations/hooks/useMyCollaborations'
-import { getHeaderNavigation } from '@/shared/components/Header/headerNavigation.config'
+import {
+  getAccountRoleLabels,
+  getHeaderNavigation,
+} from '@/shared/components/Header/headerNavigation.config'
 import { Footer } from '@/shared/components/Footer/Footer'
 import { Header } from '@/shared/components/Header/Header'
 import { Snackbar } from '@/shared/components/Snackbar'
@@ -57,7 +60,12 @@ function AppLayoutContent() {
     const primaryRole = ROLE_PRIORITY.find((role) => user.roles.includes(role))
 
     if (!primaryRole) {
-      return { name: user.display_name, role: 'staff', roleLabel: user.roles.join(' · ') || 'Personal' }
+      // Solo roles personalizados: se muestra el primero real de la cuenta, sin inventar un rol base.
+      return {
+        name: user.display_name,
+        role: 'staff',
+        roleLabel: getAccountRoleLabels(user.roles)[0] ?? 'Personal',
+      }
     }
 
     return {
@@ -73,8 +81,7 @@ function AppLayoutContent() {
     ROLE_PRIORITY.filter((role) => user?.roles.includes(role))
       .map((role) => HEADER_ROLE_BY_AUTH_ROLE[role]),
   )
-  const delegatedNavigation = getDelegatedNavigation(user)
-  const navigation = [...baseNavigation, ...delegatedNavigation]
+  const navigation = withDelegatedNavigation(baseNavigation, user)
 
   const navigationState = location.state as NavigationState | null
 

@@ -53,6 +53,9 @@ export function InformationPage() {
           {result.data ? (
             result.data.sections.length > 0 || result.data.faqs.length > 0 ? (
               <div className={informationStyles.content}>
+                {result.data.sections.length > 0 ? (
+                  // Cuadrícula de 2 columnas en escritorio; el orden de lectura es el del backend.
+                  <div className={informationStyles.sections}>
                 {result.data.sections.map((section) => (
                   <section key={section.id} className={informationStyles.section}>
                     <h2>{section.title}</h2>
@@ -68,9 +71,14 @@ export function InformationPage() {
                     ) : null}
                   </section>
                 ))}
+                  </div>
+                ) : null}
                 {result.data.faqs.length > 0 ? (
                   <section className={informationStyles.faqSection}>
                     <h2>Preguntas frecuentes</h2>
+                    <p className={informationStyles.faqHint}>
+                      Selecciona una pregunta para ver su respuesta.
+                    </p>
                     <div className={informationStyles.faqList}>
                       {result.data.faqs.map((faq) => (
                         <details key={faq.id} className={informationStyles.faq}>

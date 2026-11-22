@@ -1,0 +1,27 @@
+/* Asignar o retirar roles: ajustes locales para las tarjetas de DataTable (≤768px), sin tocar su CSS.
+   Cada celda es una rejilla; el badge y el botón se alinean al inicio en lugar de estirarse. */
+.cellBadge {
+  justify-self: start;
+  max-width: 100%;
+}
+
+.cellAction {
+  justify-self: start;
+  min-width: 9rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  /* Objetivo táctil de 44px en tarjetas; la clase duplicada gana a .sm de Button sin depender del orden. */
+  .cellAction.cellAction {
+    min-height: 44px;
+  }
+}
+
+/* En teléfonos cada valor pasa bajo su etiqueta: la columna de valor (≈110px) no admite el badge completo. */
+@media (max-width: 480px) {
+  .cardTable td {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-1);
+  }
+}

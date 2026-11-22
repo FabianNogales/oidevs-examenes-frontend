@@ -143,6 +143,8 @@ const authorizedConsumers = {
     'features/course-offerings/components/OfferingImportPanel.tsx',
     'features/course-offerings/components/OfferingImportReport.tsx',
     'features/eligibility-automation/components/AcademicCsvImportPanel.tsx',
+    'features/roles/components/RoleEditorDialog.tsx',
+    'features/roles/pages/AdminRolesPage.tsx',
     'features/rooms/components/RoomDetails.tsx',
     'features/rooms/components/RoomDialog.tsx',
     'features/rooms/components/RoomForm.tsx',
@@ -166,11 +168,19 @@ const authorizedConsumers = {
     'features/subjects/components/import/SubjectImportPanel.tsx',
     'features/subjects/components/import/SubjectImportTable.tsx',
     'features/subjects/pages/AdminSubjectsPage.tsx',
+    'features/users/components/CreateStaffAccountDialog.tsx',
+    'features/users/pages/AdminManageUsersPage.tsx',
+    'features/users/pages/AdminUserRolesPage.tsx',
   ],
   ButtonLink: [
+    'features/portal-calendar/pages/AdminCalendarPage.tsx',
+    'features/portal-news/pages/AdminNewsPage.tsx',
+    'features/roles/pages/AdminRolesPage.tsx',
     'features/rooms/pages/AdminRoomsPage.tsx',
     'features/students/pages/TeacherSubjectStudentsPage.tsx',
     'features/subjects/pages/AdminSubjectsPage.tsx',
+    'features/users/pages/AdminManageUsersPage.tsx',
+    'features/users/pages/AdminUserRolesPage.tsx',
   ],
 }
 // Migrated scopes: any new consumer outside them needs its own Design System subetapa.
@@ -180,6 +190,10 @@ const migratedScopes = [
   'features/course-offerings/components/OfferingImportPanel.tsx',
   'features/course-offerings/components/OfferingImportReport.tsx',
   'features/eligibility-automation/components/AcademicCsvImportPanel.tsx',
+  'features/portal-calendar/pages/AdminCalendarPage.tsx',
+  'features/portal-news/pages/AdminNewsPage.tsx',
+  'features/roles/components/RoleEditorDialog.tsx',
+  'features/roles/pages/AdminRolesPage.tsx',
   'features/rooms/',
   'features/rooms/components/import/RoomCsvDropzone.tsx',
   'features/rooms/components/import/RoomImportPanel.tsx',
@@ -195,6 +209,9 @@ const migratedScopes = [
   'features/subjects/components/import/SubjectCsvDropzone.tsx',
   'features/subjects/components/import/SubjectImportPanel.tsx',
   'features/subjects/components/import/SubjectImportTable.tsx',
+  'features/users/components/CreateStaffAccountDialog.tsx',
+  'features/users/pages/AdminManageUsersPage.tsx',
+  'features/users/pages/AdminUserRolesPage.tsx',
 ]
 const consumersOf = (sources, component) =>
   [...sources].filter(([, text]) => new RegExp(`components/ui/Button/${component}['"]`).test(text)).map(([file]) => file).sort()

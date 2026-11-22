@@ -6,6 +6,7 @@ import { TextInput } from '@/shared/components/ui/Field/TextInput'
 import { Button } from '@/shared/components/ui/Button/Button'
 import { ManagementError, saveRole, type ManagedRole, type RolePermission } from '../api/rolesApi'
 import { PermissionPicker } from './PermissionPicker'
+import dialogBase from '@/shared/styles/dialogBase.module.css'
 import styles from './RoleManagement.module.css'
 
 export function RoleEditorDialog({ role, permissions, onClose, onSaved }: {
@@ -41,6 +42,8 @@ export function RoleEditorDialog({ role, permissions, onClose, onSaved }: {
   return <>
     <PortalDialog title={protectedRole ? 'Rol base protegido' : role ? 'Editar rol personalizado' : 'Crear rol personalizado'}
       busy={busy} closeBlocked={discard} onClose={close}
+      className={styles.editor} headerClassName={styles.editorHeader} bodyClassName={styles.editorBody}
+      closeClassName={dialogBase.closeButton}
       footer={<div className={styles.actions}>
         <Button variant="secondary" disabled={busy} onClick={close}>{protectedRole ? 'Cerrar' : 'Cancelar'}</Button>
         {!protectedRole && <Button type="submit" form={formId} loading={busy} disabled={!name.trim() || !dirty}>
@@ -55,7 +58,7 @@ export function RoleEditorDialog({ role, permissions, onClose, onSaved }: {
         </Field>
         <p className={styles.notice}>{protectedRole
           ? 'Este rol conserva sus reglas actuales. Su nombre y sus privilegios no se editan desde este catálogo.'
-          : 'Selecciona las acciones del catálogo y revisa su estado de habilitación. Consultar, crear y editar son permisos independientes por módulo. Los cambios en un rol asignado revocan las sesiones anteriores de sus cuentas.'}</p>
+          : 'Consultar, crear y editar son permisos independientes por módulo. Los cambios en un rol asignado revocan las sesiones anteriores de sus cuentas.'}</p>
         {!protectedRole && <>
           <PermissionPicker permissions={permissions} selected={keys} disabled={busy} onChange={setKeys} />
           {error?.fields.permission_keys && <p role="alert">{error.fields.permission_keys}</p>}

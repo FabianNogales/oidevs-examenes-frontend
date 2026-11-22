@@ -31,6 +31,7 @@ export function PortalAdminCollection<T extends { id: number }>({
   filterLayout,
   resetPageKey,
   headerVariant = 'legacy',
+  headerActions,
   children,
 }: {
   title: string
@@ -52,6 +53,8 @@ export function PortalAdminCollection<T extends { id: number }>({
   resetPageKey?: string
   /** 'page' renders the shared PageHeader (same title, description, breadcrumbs and create action). Default: legacy toolbar. */
   headerVariant?: 'legacy' | 'page'
+  /** Optional secondary actions shown before the create action (e.g. «Gestionar categorías»). */
+  headerActions?: ReactNode
   children?: ReactNode
 }) {
   const [query, setQuery] = useState({
@@ -114,7 +117,21 @@ export function PortalAdminCollection<T extends { id: number }>({
           description={description}
           breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: title }]}
           actions={
-            onCreate ? (
+            headerActions ? (
+              <div className={styles.headerActionGroup}>
+                {headerActions}
+                {onCreate ? (
+                  <button
+                    type="button"
+                    className={styles.primary}
+                    disabled={createDisabled}
+                    onClick={onCreate}
+                  >
+                    {createLabel}
+                  </button>
+                ) : null}
+              </div>
+            ) : onCreate ? (
               <button
                 type="button"
                 className={styles.primary}
@@ -138,7 +155,21 @@ export function PortalAdminCollection<T extends { id: number }>({
           ) : (
             <h1>{title}</h1>
           )}
-          {onCreate ? (
+          {headerActions ? (
+            <div className={styles.headerActionGroup}>
+              {headerActions}
+              {onCreate ? (
+                <button
+                  type="button"
+                  className={styles.primary}
+                  disabled={createDisabled}
+                  onClick={onCreate}
+                >
+                  {createLabel}
+                </button>
+              ) : null}
+            </div>
+          ) : onCreate ? (
             <button
               type="button"
               className={styles.primary}

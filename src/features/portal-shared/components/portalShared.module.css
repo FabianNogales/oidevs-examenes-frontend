@@ -571,3 +571,22 @@
 .portalPageBody.portalPageBody {
   padding: 0;
 }
+
+/* Cabecera con acción secundaria y primaria: mismo alto en fila (escritorio) y en columna (móvil),
+   con la primaria primero al apilarse. */
+.headerActionGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .headerActionGroup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+    width: 100%;
+  }
+}

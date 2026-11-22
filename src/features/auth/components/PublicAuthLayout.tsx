@@ -5,8 +5,8 @@ import { Footer } from '@/shared/components/Footer/Footer'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { AuthRole } from '@/features/auth/types/auth'
 import { Header } from '@/shared/components/Header/Header'
-import { publicNavigation } from '@/shared/components/Header/headerNavigation.config'
-import { getDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
+import { getAccountRoleLabels, publicNavigation } from '@/shared/components/Header/headerNavigation.config'
+import { withDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
 import type {
   HeaderRole,
   HeaderUser,
@@ -43,12 +43,12 @@ export function PublicAuthLayout({
           name: user.display_name,
           role: HEADER_ROLE_BY_AUTH_ROLE[primaryRole],
         }
-      : user ? { name: user.display_name, role: 'staff', roleLabel: user.roles.join(' · ') || 'Personal' } : null
+      : user ? { name: user.display_name, role: 'staff', roleLabel: getAccountRoleLabels(user.roles)[0] ?? 'Personal' } : null
 
   return (
     <div className="auth-shell">
       <Header user={headerUser} navigation={headerUser?.role === 'staff'
-        ? [...publicNavigation, ...getDelegatedNavigation(user)] : publicNavigation} isLoggingOut={isLoggingOut}
+        ? withDelegatedNavigation(publicNavigation, user) : publicNavigation} isLoggingOut={isLoggingOut}
         onLogout={async () => { await logout(); navigate('/login', { replace: true }) }} />
       <main className="auth-shell__body">
         <AuthInfoPanel isPasswordVisible={isPasswordVisible} />

@@ -8,12 +8,15 @@ export interface HeaderNavigationItem {
   defaultSearchParams?: Readonly<Record<string, string>>
   activePrefixes?: readonly string[]
   startsSection?: boolean
+  /** Título de la sección interna del desplegable a la que pertenece este enlace (p. ej. «Académico»). */
+  section?: string
   children?: HeaderNavigationItem[]
 }
 
 export interface HeaderUser {
   name: string
   role: HeaderRole
+  /** Label shown under the name instead of the base role (e.g. «Colaborador temporal» or a custom role). */
   roleLabel?: string
 }
 

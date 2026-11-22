@@ -234,14 +234,16 @@ test('staff header reflects effective actions and removes links after withdrawal
   const { AppLayout } = h.load('layouts/AppLayout/AppLayout.tsx')
   const content = AppLayout().props.children
   const header = nodes(h.render(() => content.type(content.props)), (node) => node.type === 'Header')[0]
-  assert.ok(header.props.navigation.some((entry) => entry.to === '/admin/subjects/create'))
-  assert.equal(header.props.navigation.some((entry) => entry.to === '/admin/subjects'), false)
-  assert.equal(header.props.navigation.some((entry) => entry.to === '/admin/academic-terms'), false)
-  assert.ok(header.props.navigation.some((entry) => entry.to === '/admin/careers'))
-  assert.equal(header.props.navigation.some((entry) => entry.to === '/admin/rooms'), false)
+  // Delegated actions are grouped («Académico»): check every destination, including group children.
+  const entries = (navigation) => navigation.flatMap((entry) => [entry, ...(entry.children ?? [])])
+  assert.ok(entries(header.props.navigation).some((entry) => entry.to === '/admin/subjects/create'))
+  assert.equal(entries(header.props.navigation).some((entry) => entry.to === '/admin/subjects'), false)
+  assert.equal(entries(header.props.navigation).some((entry) => entry.to === '/admin/academic-terms'), false)
+  assert.ok(entries(header.props.navigation).some((entry) => entry.to === '/admin/careers'))
+  assert.equal(entries(header.props.navigation).some((entry) => entry.to === '/admin/rooms'), false)
   h.auth.user.permissions = []
   const next = nodes(h.render(), (node) => node.type === 'Header')[0]
-  assert.equal(next.props.navigation.some((entry) => entry.to?.startsWith('/admin')), false)
+  assert.equal(entries(next.props.navigation).some((entry) => entry.to?.startsWith('/admin')), false)
   h.unmount()
 })
 

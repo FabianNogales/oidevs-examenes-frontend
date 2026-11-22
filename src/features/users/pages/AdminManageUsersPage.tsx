@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { PortalDialog } from '@/shared/components/PortalDialog/PortalDialog'
 import dialogBase from '@/shared/styles/dialogBase.module.css'
@@ -7,6 +7,8 @@ import detailDialog from './AdminDetailDialog.module.css'
 import { AdminUserHistoryPage } from './AdminUserHistoryPage'
 import { CreateStaffAccountDialog } from '../components/CreateStaffAccountDialog'
 import { Button } from '@/shared/components/ui/Button/Button'
+import { ButtonLink } from '@/shared/components/ui/Button/ButtonLink'
+import { Badge } from '@/shared/components/ui/Badge/Badge'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import {
@@ -78,6 +80,15 @@ const USER_COLUMNS: readonly TableColumnDef<AdminUserItem>[] = [
     accessorKey: 'status',
   },
 ]
+
+/** Estado legible de la cuenta o de un perfil; sin perfil se muestra como texto neutro. */
+function StatusBadge({ status, feminine = false }: { status: string | null; feminine?: boolean }) {
+  if (!status) return <>Sin perfil</>
+  const value = status.toUpperCase()
+  if (value === 'ACTIVE') return <Badge tone="success" size="sm">{feminine ? 'Activa' : 'Activo'}</Badge>
+  if (value === 'INACTIVE') return <Badge tone="neutral" size="sm">{feminine ? 'Inactiva' : 'Inactivo'}</Badge>
+  return <Badge tone="neutral" size="sm">{status}</Badge>
+}
 
 export function AdminManageUsersPage() {
   const path = useLocation().pathname
@@ -229,7 +240,7 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
         title={rolesView ? 'Asignar roles a cuentas' : 'Gestión de usuarios'}
         description={rolesView
           ? 'Selecciona una cuenta para asignar, retirar o reactivar roles de cuenta. La colaboración temporal se gestiona por examen.'
-          : 'Cuentas institucionales. El estado de cuenta es global y no modifica el estado particular de sus perfiles. Los roles se administran por separado en HU22.'}
+          : 'Cuentas institucionales. El estado de cuenta es global y no modifica el estado particular de sus perfiles. Los roles se administran por separado en Asignar roles a cuentas.'}
         breadcrumbs={[
           { label: 'Inicio', to: '/' },
           { label: 'Usuarios', to: '/admin/users/manage' },
@@ -267,15 +278,31 @@ export function ManageAccounts({ rolesView = false }: { rolesView?: boolean } = 
       </>
       {detail.open && <PortalDialog title="Detalle de cuenta" onClose={closeDetail} closeOnBackdrop
         className={detailDialog.dialog} closeClassName={dialogBase.closeButton}>
-        {detail.error ? <p role="alert">{detail.error}</p> : detail.account ? <>
-          <dl><dt>Nombre</dt><dd>{detail.account.full_name}</dd><dt>Código institucional</dt><dd>{detail.account.institutional_code ?? 'No registrado'}</dd>
-            <dt>CI</dt><dd>{detail.account.identity_number ?? 'No registrado'}</dd><dt>Correo</dt><dd>{detail.account.email}</dd>
-            <dt>Estado global</dt><dd>{detail.account.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}</dd><dt>Roles permanentes</dt><dd>{detail.account.role_label}</dd>
-            <dt>Perfil docente</dt><dd>{detail.account.teacher_status === 'ACTIVE' ? 'Activo' : detail.account.teacher_status === 'INACTIVE' ? 'Inactivo' : 'Sin perfil'}</dd><dt>Perfil estudiantil</dt><dd>{detail.account.student_status === 'ACTIVE' ? 'Activo' : detail.account.student_status === 'INACTIVE' ? 'Inactivo' : 'Sin perfil'}</dd></dl>
-          <Link to={`/admin/users/${detail.account.id}/roles`} onClick={closeDetail}>Asignar o retirar roles</Link>
-          {detail.account.teacher_id && <p><Link to={`/admin/teachers/${detail.account.teacher_id}`} onClick={closeDetail}>Ver perfil docente</Link></p>}
-          {detail.account.student_id && <p><Link to={`/admin/students/${detail.account.student_id}`} onClick={closeDetail}>Ver perfil estudiantil</Link></p>}
-        </> : <p role="status">Cargando cuenta…</p>}
+        {detail.error ? <p role="alert">{detail.error}</p> : detail.account ? <div className={detailDialog.content}>
+          <section className={detailDialog.section} aria-labelledby="account-detail-account">
+            <h3 id="account-detail-account" className={detailDialog.sectionTitle}>Cuenta</h3>
+            <dl className={detailDialog.details}>
+              <div className={detailDialog.wide}><dt>Nombre</dt><dd>{detail.account.full_name}</dd></div>
+              <div><dt>Código institucional</dt><dd>{detail.account.institutional_code ?? 'No registrado'}</dd></div>
+              <div><dt>CI</dt><dd>{detail.account.identity_number ?? 'No registrado'}</dd></div>
+              <div className={detailDialog.wide}><dt>Correo</dt><dd>{detail.account.email}</dd></div>
+              <div><dt>Estado global</dt><dd><StatusBadge status={detail.account.status} feminine /></dd></div>
+              <div><dt>Roles permanentes</dt><dd>{detail.account.role_label}</dd></div>
+            </dl>
+          </section>
+          <section className={detailDialog.section} aria-labelledby="account-detail-profiles">
+            <h3 id="account-detail-profiles" className={detailDialog.sectionTitle}>Perfiles</h3>
+            <dl className={detailDialog.details}>
+              <div><dt>Perfil docente</dt><dd><StatusBadge status={detail.account.teacher_status} /></dd></div>
+              <div><dt>Perfil estudiantil</dt><dd><StatusBadge status={detail.account.student_status} /></dd></div>
+            </dl>
+          </section>
+          <div className={detailDialog.actions}>
+            {detail.account.teacher_id && <ButtonLink variant="secondary" to={`/admin/teachers/${detail.account.teacher_id}`} onClick={closeDetail}>Ver perfil docente</ButtonLink>}
+            {detail.account.student_id && <ButtonLink variant="secondary" to={`/admin/students/${detail.account.student_id}`} onClick={closeDetail}>Ver perfil estudiantil</ButtonLink>}
+            <ButtonLink to={`/admin/users/${detail.account.id}/roles`} onClick={closeDetail}>Asignar o retirar roles</ButtonLink>
+          </div>
+        </div> : <p role="status">Cargando cuenta…</p>}
       </PortalDialog>}
 
       {creatingStaff && <CreateStaffAccountDialog onClose={() => setCreatingStaff(false)} onCreated={(account) => {

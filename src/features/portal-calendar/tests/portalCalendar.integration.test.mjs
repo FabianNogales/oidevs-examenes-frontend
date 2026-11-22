@@ -1280,6 +1280,11 @@ test('responsive contract uses seven shrinkable calendar columns, bounded dialog
       resolve(sourceRoot, 'features/portal-calendar/pages/portalCalendar.module.css'),
       'utf8',
     ) +
+    // HU38 rediseño: la rejilla pública vive en su propio módulo.
+    readFileSync(
+      resolve(sourceRoot, 'features/portal-calendar/components/InstitutionalCalendar.module.css'),
+      'utf8',
+    ) +
     readFileSync(
       resolve(
         sourceRoot,

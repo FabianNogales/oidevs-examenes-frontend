@@ -1,0 +1,551 @@
+/* Calendario institucional público (HU38): página /calendar e Inicio (compact).
+   Estilos propios del calendario público; la administración (HU39) usa portalCalendar.module.css.
+   Solo clases explícitas: ningún selector genérico de button (Dropdown y Button conservan su aspecto). */
+
+.calendar {
+  min-width: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Cabecera (modo compacto de Inicio) ---------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.compact .header {
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.seeAll {
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ---------- Distribución ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.monthPanel,
+.agendaPanel {
+  min-width: 0;
+}
+
+.agendaPanel {
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+/* /calendar desde 1024px: mes a la izquierda, agenda a la derecha. Inicio (compact) siempre en una columna. */
+@media (min-width: 1024px) {
+  .full .layout {
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: stretch;
+  }
+
+  /* Con pocas actividades la agenda sigue ocupando la altura del mes como un panel propio,
+     en lugar de dejar un vacío; con muchas, el mes permanece visible al desplazar. */
+  .full .monthPanel {
+    position: sticky;
+    top: calc(var(--app-header-height, 0px) + var(--space-4));
+    align-self: start;
+  }
+
+  .full .agendaPanel {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .full .agendaPanel > .state {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    min-height: 12rem;
+  }
+}
+
+/* ---------- Barra del mes ---------- */
+
+.monthBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.monthLabel {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.iconButton,
+.todayButton,
+.textButton {
+  font: inherit;
+  cursor: pointer;
+}
+
+.iconButton {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+/* El año sigue disponible, con menor peso visual que el mes. */
+.yearButton {
+  color: var(--color-text-secondary);
+}
+
+.iconButton:hover,
+.todayButton:hover,
+.textButton:hover {
+  background: var(--color-surface-soft);
+}
+
+.todayButton {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.textButton {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.iconButton:focus-visible,
+.todayButton:focus-visible,
+.textButton:focus-visible,
+.eventTitle:focus-visible,
+.day:focus-visible,
+.seeAll:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Filtro ---------- */
+
+.filter {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-4);
+  min-width: 0;
+}
+
+.filterLabel {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.muted {
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* ---------- Rejilla del mes ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 2px;
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+.weekday {
+  padding-bottom: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Celdas neutras: sin fondo ni borde; el estado vive en el número y en los puntos. */
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 3px 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dayNumber {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.day:not(:disabled):hover .dayNumber {
+  background: var(--color-surface-soft);
+}
+
+.outside {
+  color: var(--color-text-secondary);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.day[aria-disabled='true'] {
+  cursor: progress;
+}
+
+/* Hoy: círculo relleno. */
+.today .dayNumber,
+.day.today:not(:disabled):hover .dayNumber {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Seleccionado: anillo de acento (forma distinta de hoy, no solo color). */
+.selected .dayNumber {
+  box-shadow: 0 0 0 2px var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+.selected:not(.today) .dayNumber {
+  background: var(--color-accent-soft);
+}
+
+.dots {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.legendDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+/* ---------- Agenda ---------- */
+
+.agendaHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.agendaTitle {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.agenda {
+  display: grid;
+  gap: var(--space-5);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agendaDate {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.agendaEvents {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agendaItem {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.time {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.time span:first-child {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.eventBody {
+  min-width: 0;
+}
+
+.eventTitle {
+  display: block;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.eventTitle:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.range {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: var(--space-1) 0 0;
+}
+
+/* Nombres de categoría largos se parten dentro del badge en lugar de desbordar. */
+.category.category {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.location {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+/* Vista limitada a dos líneas; el texto completo sigue en el DOM y en el detalle. */
+.description {
+  display: -webkit-box;
+  margin: var(--space-1) 0 0;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* Inicio: conteo cuando la lista compacta muestra solo parte de las actividades. */
+.more {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.more a {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.more a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Estados ---------- */
+
+.state {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.error {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--color-error);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.error p {
+  margin: 0;
+}
+
+/* ---------- Móvil ---------- */
+
+@media (max-width: 640px) {
+  .iconButton,
+  .todayButton,
+  .textButton {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .iconButton {
+    height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .monthBar {
+    gap: var(--space-1);
+  }
+
+  .navigation {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .grid {
+    margin-top: var(--space-3);
+  }
+
+  .layout {
+    gap: var(--space-4);
+  }
+
+  .agendaPanel {
+    padding-top: var(--space-4);
+  }
+
+  .agenda {
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+  }
+
+  .agendaItem {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+    padding: var(--space-3);
+  }
+
+  .eventTitle {
+    line-height: 1.35;
+  }
+
+  .time {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .time span + span::before {
+    content: '– ';
+  }
+}

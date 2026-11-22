@@ -17,7 +17,7 @@
   min-width: 0;
 }
 
-.dialog dl {
+.dialog dl:not(.details) {
   display: grid;
   grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
   gap: var(--space-3) var(--space-4);
@@ -29,6 +29,66 @@
   color: var(--color-text-secondary);
 }
 
+/* Detalle de cuenta: secciones con rejilla de etiqueta y valor. Clases propias; .dialog no cambia,
+   así que el detalle de registro (Carreras, Auditoría) conserva su presentación. */
+.content {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+  margin: 0;
+}
+
+.details > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.details .wide {
+  grid-column: 1 / -1;
+}
+
+.details dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.details dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
 @media (max-width: 640px) {
   .dialog.dialog {
     padding: var(--space-4);
@@ -36,6 +96,16 @@
 }
 
 @media (max-width: 400px) {
-  .dialog dl { grid-template-columns: minmax(0, 1fr); }
-  .dialog dd { margin-bottom: var(--space-2); }
+  .dialog dl:not(.details) { grid-template-columns: minmax(0, 1fr); }
+  .dialog dl:not(.details) > dd { margin-bottom: var(--space-2); }
+}
+
+@media (max-width: 480px) {
+  .details {
+    grid-template-columns: 1fr;
+  }
+
+  .actions > * {
+    flex: 1 1 100%;
+  }
 }

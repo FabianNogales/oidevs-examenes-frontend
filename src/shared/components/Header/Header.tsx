@@ -188,12 +188,12 @@ export function Header({
               className={styles.mobileProfileAvatar}
               aria-hidden="true"
             />
-            <span className={styles.mobileProfileDetails}>
+            <div className={styles.mobileProfileDetails}>
               <span className={styles.mobileProfileName}>{user.name}</span>
               <span className={styles.mobileProfileRole}>
                 {user.roleLabel ?? roleLabelByRole[user.role]}
               </span>
-            </span>
+            </div>
           </div>
         ) : null}
         <HeaderNavigation
