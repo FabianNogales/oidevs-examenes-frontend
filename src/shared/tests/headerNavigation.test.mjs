@@ -82,7 +82,7 @@ test('header/AppLayout: supported additional roles retain their routes, order an
   const { config } = setup('/docente')
   const header = layoutHeader(['ESTUDIANTE', 'EXTERNAL_ROLE', 'DOCENTE', 'ADMINISTRADOR', 'DOCENTE'], '/docente')
   assert.equal(header.user.role, 'admin')
-  assert.deepEqual(header.navigation, config.getHeaderNavigation('admin', false, ['student', 'teacher', 'admin', 'teacher']))
+  assert.deepEqual(header.navigation, config.getHeaderNavigation('admin', false, ['admin', 'teacher', 'student']))
   assert.equal(header.navigation.filter(item => item.to === '/').length, 1)
   assert.ok(header.navigation.some(item => item.to === '/students/qr'))
   assert.ok(header.navigation.some(item => item.to === '/teacher/subjects'))
@@ -291,15 +291,15 @@ test('header: HU33 report navigation preserves incident access and has a teacher
 
 const ADMIN_GROUPS = {
   Contenidos: ['/news', '/admin/portal/news', '/admin/portal/events', '/admin/portal/information', '/admin/portal/services'],
-  Usuarios: ['/admin/users/manage', '/admin/users/roles', '/admin/users/history', '/admin/teachers', '/admin/teachers/assignments', '/admin/teachers/assignments/import', '/admin/students/manage', '/admin/students/import'],
+  Usuarios: ['/admin/users/manage', '/admin/users/roles', '/admin/users/assignments', '/admin/users/history', '/admin/teachers', '/admin/teachers/assignments', '/admin/teachers/assignments/import', '/admin/students/manage', '/admin/students/import'],
   Académico: ['/admin/rooms', '/admin/rooms/import', '/admin/subjects', '/admin/subjects/import', '/admin/careers', '/admin/eligibility-policies', '/admin/incidents', '/admin/exam-reports'],
 }
 const destinations = (items) => items.flatMap(item => item.children ? destinations(item.children) : [item.to])
 
-test('admin header: seven primary entries and every existing destination retained inside its group', () => {
+test('admin header: eight primary entries including Respaldos and every existing destination retained inside its group', () => {
   const { config } = setup('/')
   const items = config.getHeaderNavigation('admin')
-  assert.deepEqual(items.map(item => item.label), ['Inicio', 'Contenidos', 'Usuarios', 'Académico', 'Auditoría', 'Información', 'Enlaces'])
+  assert.deepEqual(items.map(item => item.label), ['Inicio', 'Contenidos', 'Usuarios', 'Académico', 'Auditoría', 'Respaldos', 'Información', 'Enlaces'])
   for (const [label, paths] of Object.entries(ADMIN_GROUPS)) {
     assert.deepEqual(items.find(item => item.label === label).children.map(child => child.to), paths)
   }
@@ -318,6 +318,7 @@ test('admin header: seven primary entries and every existing destination retaine
   assert.equal(items.find(item => item.label === 'Información').to, '/information')
   assert.equal(items.find(item => item.label === 'Enlaces').to, '/services')
   assert.equal(items.find(item => item.label === 'Auditoría').to, '/admin/audit-logs')
+  assert.equal(items.find(item => item.label === 'Respaldos').to, '/admin/backups')
   assert.equal(new Set(destinations(items)).size, destinations(items).length)
 })
 

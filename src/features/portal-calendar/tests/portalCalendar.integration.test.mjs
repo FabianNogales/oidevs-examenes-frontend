@@ -491,11 +491,13 @@ test('administration lists backend events, renders calendar status, paginates an
   table = byType(ui.tree, 'table')[0]
   assert.equal(table.props.pagination.from, 16)
   assert.equal(table.props.pagination.to, 16)
-  byType(ui.tree, 'input')
-    .find((node) => node.props.name === 'search')
-    .props.onChange({ target: { value: 'Auditorio' } })
+  const searchBar = () => nodes(ui.tree, (node) => node.type?.name === 'SearchBar')[0]
+  assert.equal(searchBar().props.name, 'search')
+  assert.equal(searchBar().props.maxLength, 50)
+  searchBar().props.onChange('Auditorio')
   ui.render()
-  byType(ui.tree, 'form')[0].props.onSubmit({ preventDefault() {} })
+  assert.equal(searchBar().props.value, 'Auditorio')
+  searchBar().props.onSubmit('Auditorio')
   ui.render()
   await ui.ready()
   assert.equal(ui.calls.at(-1).args[1].params.page, 1)
@@ -1333,7 +1335,7 @@ test('public route and admin route integrate without changing the existing autho
       ]
       if (
         path &&
-        ["'calendar'", "'portal/events'"].includes(
+        ["'calendar'", "'admin/portal/events'"].includes(
           path.initializer.getText(ast),
         )
       )
@@ -1343,16 +1345,42 @@ test('public route and admin route integrate without changing the existing autho
   }
   visit(ast)
   const publicRoute = routes.find((route) => route.path === 'calendar')
-  const adminRoute = routes.find((route) => route.path === 'portal/events')
+  const adminRoute = routes.find((route) => route.path === 'admin/portal/events')
   assert.ok(publicRoute)
   assert.ok(
     !publicRoute.parents.some((parent) => parent.includes('ProtectedRoute')),
   )
-  assert.ok(
-    adminRoute.parents.some((parent) =>
-      parent.includes("allowedRoles={['ADMINISTRADOR']}"),
-    ),
-  )
+  assert.ok(adminRoute, 'ruta administrativa del calendario')
+  assert.ok(adminRoute.parents.some((parent) => parent.includes('<ProtectedRoute')),
+    'el calendario administrativo requiere sesión')
+  assert.ok(adminRoute.parents.some((parent) => parent.includes('<PortalRoute section="events"')),
+    'el calendario administrativo exige el permiso específico de eventos')
+
+  // Verificar el guarda real además de su ubicación en el router: no basta con encontrar un JSX.
+  const auth = { user: { id: 20, status: 'ACTIVE', must_change_password: false,
+    roles: ['Secretaría'], permissions: [] } }
+  const h = sourceHarness({
+    '@/features/auth/hooks/useAuth': { useAuth: () => auth },
+    '@/layouts/AdminLayout/AdminLayout': { AdminLayout: 'AdminLayout' },
+    'react-router': { Navigate: 'Navigate', Outlet: 'Outlet' },
+  })
+  const { PortalRoute } = h.load('features/portal-shared/components/PortalRoute.tsx')
+  const route = () => PortalRoute({ section: 'events' })
+  assert.equal(route().type, 'Navigate', 'sin permiso no se abre el calendario administrativo')
+  auth.user.permissions = ['portal.news.update']
+  assert.equal(route().type, 'Navigate', 'un permiso de otro módulo no autoriza eventos')
+  auth.user.permissions = ['portal.events.update']
+  assert.equal(route().type, 'main', 'la edición delegada autorizada conserva su acceso')
+  auth.user.status = 'INACTIVE'
+  assert.equal(route().type, 'Navigate', 'una cuenta inactiva pierde el acceso')
+  auth.user.status = 'ACTIVE'
+  auth.user.must_change_password = true
+  assert.equal(route().type, 'Navigate', 'el cambio obligatorio de contraseña impide el acceso')
+  auth.user.must_change_password = false
+  auth.user.roles = ['ADMINISTRADOR']
+  auth.user.permissions = []
+  assert.equal(route().type, 'AdminLayout', 'el administrador mantiene su layout y acceso')
+  h.unmount()
 })
 
 test('client validation rejects equal and reversed event times without sending a request', async () => {

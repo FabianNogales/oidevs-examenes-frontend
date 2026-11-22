@@ -189,16 +189,24 @@ for (const status of [403, 409, 422]) test(`HU22 keeps assignments unchanged aft
 
 test('reconciliation preserves result badge styles without treating missing data as a failure', () => {
   const h = harness(), { AcademicResultBadge } = h.load('features/users/profile/components/AcademicResultBadge.tsx')
-  for (const [result, label, style] of [['APPROVED', 'Aprobado', 'statusActive'], ['FAILED', 'Reprobado', 'statusInactive']]) {
+  for (const [result, label, tone] of [['APPROVED', 'Aprobado', 'success'], ['FAILED', 'Reprobado', 'danger']]) {
     const tree = h.render(() => AcademicResultBadge({ result }))
-    assert.equal(textContent(tree), label)
-    assert.ok(tree.props.className.includes(style))
+    assert.equal(tree.type.name, 'Badge')
+    assert.equal(tree.props.tone, tone)
+    assert.equal(tree.props.size, 'sm')
+    assert.ok(tree.props.icon, 'el estado también tiene un icono, no depende solo del color')
+    const rendered = tree.type(tree.props)
+    assert.equal(rendered.type, 'span')
+    assert.equal(textContent(rendered), label)
+    assert.ok(rendered.props.className.split(' ').includes(tone))
   }
   for (const result of ['NOT_RECORDED', null, 'UNKNOWN']) {
     const tree = h.render(() => AcademicResultBadge({ result }))
     assert.match(textContent(tree), /Sin resultado registrado/)
     assert.doesNotMatch(textContent(tree), /Aprobado|Reprobado/)
-    assert.equal(tree.props.className, undefined)
+    assert.equal(tree.type.name, 'Text')
+    assert.equal(tree.props.as, 'span')
+    assert.equal(tree.props.tone, 'secondary', 'la ausencia se presenta como texto neutro')
   }
   h.unmount()
 })
@@ -231,7 +239,10 @@ test('profile period errors retain an explicit unavailable state and allow a rea
   await settle(); let tree = h.render()
   assert.match(textContent(tree), /Información no disponible/)
   h.setHandler(async () => ({ data: { data: null } }))
-  nodes(tree, (node) => node.type === 'button')[0].props.onClick()
+  const retry = nodes(tree, (node) => node.type?.name === 'Button' && /Reintentar período/.test(textContent(node)))[0]
+  assert.ok(retry, 'hay una acción de reintento con nombre accesible')
+  assert.equal(retry.type(retry.props).type, 'button')
+  retry.props.onClick()
   tree = h.render(); assert.match(textContent(tree), /Consultando/)
   await settle(); tree = h.render()
   assert.match(textContent(tree), /Sin período activo/)

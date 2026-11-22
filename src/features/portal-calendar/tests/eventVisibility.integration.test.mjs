@@ -162,10 +162,13 @@ for (const visibility of ['PUBLIC', 'PRIVATE']) {
   test(`HU39 filtro ${visibility}: server-side, reinicia página y conserva búsqueda/estado/categoría`, async () => {
     const ui = adminList()
     await ui.ready()
-    ui.edit('search', 'Jornada')
-    nodes(ui.tree, (node) => node.type === 'form')[0].props.onSubmit({
-      preventDefault() {},
-    })
+    const searchBar = () => nodes(ui.tree, (node) => node.type?.name === 'SearchBar')[0]
+    assert.equal(searchBar().props.name, 'search')
+    assert.equal(searchBar().props.maxLength, 50)
+    searchBar().props.onChange('Jornada')
+    ui.render()
+    assert.equal(searchBar().props.value, 'Jornada')
+    searchBar().props.onSubmit('Jornada')
     ui.render()
     await ui.ready()
     ui.edit('status', 'PUBLISHED')
@@ -494,7 +497,7 @@ test('HU39 422 de visibility mantiene selección y muestra validación en el sel
   ui.edit('visibility', 'PUBLIC')
   await ui.submit()
   assert.equal(ui.field('visibility').props.value, 'PUBLIC')
-  assert.equal(ui.field('visibility').props['aria-invalid'], true)
+  assert.equal(String(ui.field('visibility').props['aria-invalid']), 'true')
   assert.match(textContent(ui.tree), /La visibilidad no está permitida/)
   ui.h.unmount()
 })

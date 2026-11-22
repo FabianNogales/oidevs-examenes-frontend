@@ -49,7 +49,7 @@ test('028: manual creation uses actual API mapping, preserves leading zeros, acc
   let finish
   h.setPost(() => new Promise((resolve) => { finish = resolve }))
   const tree = fill(h, render)
-  const option = nodes(tree, (node) => node.type === 'option' && node.props.value === 2)[0]
+  const option = nodes(tree, (node) => node.type === 'option' && node.props.value === String(career.id))[0]
   assert.match(textContent(option), /Inactiva/); assert.ok(!option.props.disabled)
   submit(tree); submit(tree)
   assert.equal(h.calls.filter((call) => call[0] === 'post').length, 1)
@@ -89,7 +89,7 @@ test('028: catalog failure blocks submission and can retry without filtering ina
   h.setCatalog(async () => [career])
   nodes(tree, (node) => node.type === 'button' && textContent(node) === 'Reintentar')[0].props.onClick()
   h.render(); await settle(); tree = h.render()
-  assert.ok(nodes(tree, (node) => node.type === 'option' && node.props.value === career.id).length)
+  assert.ok(nodes(tree, (node) => node.type === 'option' && node.props.value === String(career.id)).length)
   h.unmount()
 })
 

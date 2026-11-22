@@ -51,7 +51,8 @@ function setup(permissions = [], roles = ['Apoyo académico']) {
     'react-router': { Link: 'Link', Outlet: 'Outlet', Navigate: 'Navigate',
       useLocation: () => ({ pathname: '/', search: '', state: null }),
       useNavigate: () => (...args) => navigation.push(args), useParams: () => ({ recordId: '7' }),
-      useSearchParams: () => [new URLSearchParams()] },
+      useSearchParams: () => [new URLSearchParams()],
+      useBlocker: () => ({ state: 'unblocked' }), useBeforeUnload() {} },
   })
   return Object.assign(h, { auth, calls, navigation, notices, setHandler: (next) => { handler = next } })
 }
