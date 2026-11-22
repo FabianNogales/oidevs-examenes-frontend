@@ -9,6 +9,7 @@ const TRAILING_LABELS = ['Información', 'Enlaces', 'Servicios']
 export const DELEGATED_GROUP_LABEL = 'Gestión delegada'
 const ACADEMIC_SECTION = 'Académico'
 const CONTENTS_SECTION = 'Contenidos'
+const BASE_ROLES = new Set(['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE'])
 
 /**
  * One «Gestión delegada» group whose links keep their section (Académico, Contenidos).
@@ -49,6 +50,33 @@ export function getDelegatedNavigation(user: AuthenticatedUser | null): HeaderNa
   const contents = getPortalNavigation(user).map((link) => ({ ...link, section: CONTENTS_SECTION }))
   if (contents.length) prefixes.push('/admin/portal')
   return delegatedGroup([...academic, ...contents], prefixes)
+}
+
+/** Presentation only: label for an authorised delegated screen; never changes roles or access.
+ * Effective permissions do not identify which custom role granted them, so multiple custom roles
+ * use the neutral «Gestión delegada» label rather than attributing the permission to one role.
+ */
+export function getDelegatedRoleLabel(
+  user: AuthenticatedUser | null,
+  pathname: string,
+): string | undefined {
+  if (!user || user.roles.includes('ADMINISTRADOR')) return undefined
+  const customRoles = [...new Set(user.roles.filter((role) => !BASE_ROLES.has(role) && role.trim()))]
+  if (customRoles.length === 0) return undefined
+
+  const path = pathname.replace(/\/+$/, '')
+  const catalogAccess = DELEGATED_MODULES.some(({ key, path: catalogPath }) => {
+    const access = getModuleAccess(user, key)
+    if (path === catalogPath) return access.canAccess
+    if (path === `${catalogPath}/create`) return access.canCreate
+    if (path.startsWith(`${catalogPath}/`) && /^\/[1-9]\d*\/edit$/.test(path.slice(catalogPath.length))) {
+      return access.canEdit
+    }
+    return false
+  })
+  const portalAccess = getPortalNavigation(user).some((item) => item.to === path)
+  if (!catalogAccess && !portalAccess) return undefined
+  return customRoles.length === 1 ? customRoles[0] : DELEGATED_GROUP_LABEL
 }
 
 const destinationsOf = (items: readonly HeaderNavigationItem[]): string[] =>

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { withDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
+import { getDelegatedRoleLabel, withDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
 import { CollaborationsProvider } from '@/features/collaborations/components/CollaborationsProvider'
 import { useMyCollaborations } from '@/features/collaborations/hooks/useMyCollaborations'
 import {
@@ -58,22 +58,23 @@ function AppLayoutContent() {
     }
 
     const primaryRole = ROLE_PRIORITY.find((role) => user.roles.includes(role))
+    const delegatedRoleLabel = getDelegatedRoleLabel(user, location.pathname)
 
     if (!primaryRole) {
       // Solo roles personalizados: se muestra el primero real de la cuenta, sin inventar un rol base.
       return {
         name: user.display_name,
         role: 'staff',
-        roleLabel: getAccountRoleLabels(user.roles)[0] ?? 'Personal',
+        roleLabel: delegatedRoleLabel ?? getAccountRoleLabels(user.roles)[0] ?? 'Personal',
       }
     }
 
     return {
       name: user.display_name,
       role: HEADER_ROLE_BY_AUTH_ROLE[primaryRole],
-      roleLabel: inCollaboratorContext ? 'Colaborador temporal' : undefined,
+      roleLabel: inCollaboratorContext ? 'Colaborador temporal' : delegatedRoleLabel,
     }
-  }, [user, inCollaboratorContext])
+  }, [user, inCollaboratorContext, location.pathname])
 
   const baseNavigation = getHeaderNavigation(
     headerUser?.role,

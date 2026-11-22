@@ -19,6 +19,7 @@ function setup(roles, permissions = [], overrides = {}, { pathname = '/', collab
       status: 'ACTIVE', must_change_password: false, ...overrides },
     isAuthenticated: true, isLoading: false, isLoggingOut: false, notify() {}, logout: async () => {},
   }
+  const location = { pathname, search: '', state: null }
   const h = sourceHarness({
     '@/features/auth/hooks/useAuth': { useAuth: () => auth },
     '@/shared/components/ui': { Button: 'Button', Card: 'Card', Avatar: 'Avatar' },
@@ -32,7 +33,7 @@ function setup(roles, permissions = [], overrides = {}, { pathname = '/', collab
     '@/assets/images/logo-home.png': { __esModule: true, default: 'home-qa.png' },
     '@/assets/images/umss-logo.svg': { __esModule: true, default: 'umss-qa.svg' },
     'react-router': { Link: 'Link', NavLink: 'NavLink', Navigate: 'Navigate', Outlet: 'Outlet',
-      useLocation: () => ({ pathname, search: '', state: null }), useNavigate: () => () => {} },
+      useLocation: () => location, useNavigate: () => () => {} },
   })
   h.window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} })
   const config = h.load('shared/components/Header/headerNavigation.config.ts')
@@ -45,7 +46,7 @@ function setup(roles, permissions = [], overrides = {}, { pathname = '/', collab
     })
     return component(tree, 'Header').props
   }
-  return Object.assign(h, { auth, config, delegated, header })
+  return Object.assign(h, { auth, config, delegated, header, location })
 }
 
 /**
@@ -283,3 +284,100 @@ test('HeaderNavigation renders sections as labelled groups inside the same dropd
   assert.equal(nodes(tree, (node) => node.type === 'button' && textContent(node).trim() === 'Gestión delegada')[0].props['aria-expanded'], true)
   h.unmount()
 })
+
+for (const [path, permission] of [
+  ['/admin/rooms', 'rooms.view'],
+  ['/admin/rooms/create', 'rooms.create'],
+  ['/admin/rooms/7/edit', 'rooms.update'],
+  ['/admin/subjects', 'subjects.view'],
+  ['/admin/subjects/9/edit', 'subjects.update'],
+  ['/admin/careers', 'careers.view'],
+  ['/admin/academic-terms/create', 'academic_terms.create'],
+  ['/admin/teachers/assignments', 'course_offerings.view'],
+  ['/admin/portal/news', 'portal.news.update'],
+  ['/admin/portal/events', 'portal.events.update'],
+  ['/admin/portal/information', 'portal.information.sections.update'],
+  ['/admin/portal/information/faqs', 'portal.information.faqs.update'],
+  ['/admin/portal/services', 'portal.services.update'],
+]) {
+  test(`contextual role: authorised ${path} shows the custom role, desktop and mobile`, () => {
+    const h = setup(['ESTUDIANTE', 'Secretaría'], [permission], {}, { pathname: path })
+    const props = h.header()
+    assertAccount(h, props, 'Secretaría')
+    assert.equal(props.user.role, 'student', 'el contexto no cambia el rol base ni la navegación')
+    assert.deepEqual(h.auth.user.roles, ['ESTUDIANTE', 'Secretaría'])
+    assert.deepEqual(h.auth.user.permissions, [permission])
+    assert.deepEqual(props.navigation, h.delegated.withDelegatedNavigation(
+      h.config.getHeaderNavigation('student', false, ['student']), h.auth.user))
+    h.unmount()
+  })
+}
+
+test('contextual role changes on navigation and permission withdrawal without changing the account', () => {
+  const h = setup(['ESTUDIANTE', 'Secretaría'], ['portal.services.update'])
+  let props = h.header()
+  assert.equal(props.user.roleLabel, undefined)
+  const initialNavigation = props.navigation
+  h.location.pathname = '/admin/portal/services'
+  props = h.header()
+  assert.equal(props.user.roleLabel, 'Secretaría')
+  assert.deepEqual(props.navigation, initialNavigation)
+  h.location.pathname = '/students/qr'
+  props = h.header()
+  assert.equal(props.user.roleLabel, undefined, 'volver a Mis exámenes recupera Estudiante')
+  h.location.pathname = '/admin/portal/services/'
+  assert.equal(h.header().user.roleLabel, 'Secretaría', 'admite la barra final')
+  h.auth.user.permissions = []
+  assert.equal(h.header().user.roleLabel, undefined, 'retirar el permiso elimina el contexto delegado')
+  h.unmount()
+})
+
+for (const [roles, expected] of [
+  [['DOCENTE', 'Secretaría'], 'Secretaría'],
+  [['ESTUDIANTE', 'Apoyo académico'], 'Apoyo académico'],
+  [['Secretaría'], 'Secretaría'],
+  [['ESTUDIANTE', 'Secretaría', 'Comunicaciones'], 'Gestión delegada'],
+  [['Secretaría', 'Comunicaciones'], 'Gestión delegada'],
+  [['ESTUDIANTE', 'Secretaría', 'Secretaría'], 'Secretaría'],
+  [['ADMINISTRADOR', 'Secretaría'], 'Administrador'],
+  [['ESTUDIANTE'], 'Estudiante'],
+]) {
+  test(`contextual role: ${roles.join(' + ')} shows ${expected} on a delegated screen`, () => {
+    const h = setup(roles, ['portal.services.update'], {}, { pathname: '/admin/portal/services' })
+    assertAccount(h, h.header(), expected)
+    assert.deepEqual(h.auth.user.roles, roles)
+    h.unmount()
+  })
+}
+
+for (const [path, permissions] of [
+  ['/', ['portal.services.update']],
+  ['/information', ['portal.information.sections.update']],
+  ['/services', ['portal.services.update']],
+  ['/students/qr', ['course_offerings.view']],
+  ['/teacher/subjects', ['subjects.view']],
+  ['/admin/portal/news', ['portal.services.update']],
+  ['/admin/portal/information/faqs', ['portal.information.sections.update']],
+  ['/admin/portal/services-other', ['portal.services.update']],
+  ['/admin/portal/news/categories', ['portal.news.update']],
+  ['/admin/rooms/create', ['rooms.view']],
+  ['/admin/rooms/7/edit', ['rooms.view']],
+  ['/admin/rooms/import', ['rooms.view']],
+  ['/admin/rooms-other', ['rooms.view']],
+  ['/admin/teachers/assignments/import', ['course_offerings.view']],
+]) {
+  test(`contextual role does not replace the base role on ${path} without the matching delegated access`, () => {
+    const h = setup(['ESTUDIANTE', 'Secretaría'], permissions, {}, { pathname: path })
+    assertAccount(h, h.header(), 'Estudiante')
+    h.unmount()
+  })
+}
+
+for (const state of [{ status: 'INACTIVE' }, { must_change_password: true }]) {
+  test(`contextual role respects account state ${JSON.stringify(state)}`, () => {
+    const h = setup(['ESTUDIANTE', 'Secretaría'], ['portal.services.update'], state,
+      { pathname: '/admin/portal/services' })
+    assertAccount(h, h.header(), 'Estudiante')
+    h.unmount()
+  })
+}
