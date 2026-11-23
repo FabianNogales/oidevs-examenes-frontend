@@ -162,7 +162,7 @@ export function AdminBackupsPage() {
       target = prepareBackupDownload()
       const ticket = await downloadBackup(backup.id)
       if (!mounted.current) {
-        target.popup.close()
+        target.frame.remove()
         return
       }
       downloadFeedback.current?.()
@@ -175,10 +175,10 @@ export function AdminBackupsPage() {
       )
       setNotice({
         danger: false,
-        text: 'La descarga se ha solicitado en otra ventana. Si no se inicia o la autorización caduca, pulsa Descargar nuevamente.',
+        text: 'Se solicitó la descarga. Si no se inicia, pulsa Descargar nuevamente para obtener una nueva autorización.',
       })
     } catch (cause) {
-      target?.popup.close()
+      target?.frame.remove()
       if (mounted.current) setNotice({ danger: true, text: backupError(cause) })
     } finally {
       downloadLock.current = false
