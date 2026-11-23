@@ -19,6 +19,8 @@
 .previewTableWrap {
   width: 100%;
   min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-block: var(--space-4);
 }
 .previewTable {
@@ -45,35 +47,5 @@
 @media (max-width: 640px) {
   .panel {
     padding: var(--space-3);
-  }
-  .previewTable {
-    min-width: 0;
-  }
-  .previewTable thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .previewTable tbody,
-  .previewTable tr {
-    display: block;
-  }
-  .previewTable tbody td {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border-right: 0;
-    text-align: left;
-  }
-  .previewTable td::before {
-    content: attr(data-label);
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
-  }
-  .previewTable tr + tr {
-    border-top: 2px solid var(--color-border-strong);
   }
 }

@@ -1,6 +1,5 @@
 import { useCallback, useId, useState, type ReactNode } from 'react'
 import { PortalFeedback } from './PortalUi'
-import { publicationDate } from '../api/portalApi'
 import {
   getPortalHistory,
   type HistoryValue,
@@ -8,6 +7,11 @@ import {
   type PortalHistoryResource,
 } from '../api/portalHistoryApi'
 import { usePortalResource } from '../hooks/usePortalResource'
+import {
+  formatAuditAction,
+  formatAuditDate,
+  formatAuditScalarValue,
+} from '../utils/portalHistoryFormat'
 import styles from './portalHistory.module.css'
 
 const fieldLabels: Record<string, string> = {
@@ -217,9 +221,7 @@ function serviceEntry(entry: PortalHistoryEntry) {
         <p>
           Fecha:{' '}
           <time dateTime={entry.created_at}>
-            {Number.isNaN(Date.parse(entry.created_at))
-              ? entry.created_at
-              : publicationDate(entry.created_at)}
+            {formatAuditDate(entry.created_at)}
           </time>
         </p>
       ) : null}
@@ -277,9 +279,7 @@ function informationEntry(
         <p>
           Fecha:{' '}
           <time dateTime={entry.created_at}>
-            {Number.isNaN(Date.parse(entry.created_at))
-              ? entry.created_at
-              : publicationDate(entry.created_at)}
+            {formatAuditDate(entry.created_at)}
           </time>
         </p>
       ) : null}
@@ -309,10 +309,9 @@ function informationEntry(
 }
 
 // Historical URLs and markup remain escaped text, never active links or HTML.
-function valueContent(value: HistoryValue): ReactNode {
-  if (value === null) return 'Sin valor'
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No'
-  if (typeof value !== 'object') return value === '' ? 'Vacío' : String(value)
+function valueContent(value: HistoryValue, field?: string): ReactNode {
+  const scalar = formatAuditScalarValue(field, value)
+  if (scalar !== null) return scalar
   if (Array.isArray(value)) {
     return (
       <ol>
@@ -324,12 +323,12 @@ function valueContent(value: HistoryValue): ReactNode {
   }
   return (
     <dl>
-      {Object.entries(value)
+      {Object.entries(value as Record<string, HistoryValue>)
         .filter(([, item]) => presentable(item))
         .map(([key, item]) => (
           <div key={key}>
             <dt>{label(key)}</dt>
-            <dd>{valueContent(item)}</dd>
+            <dd>{valueContent(item, key)}</dd>
           </div>
         ))}
     </dl>
@@ -348,17 +347,17 @@ function changes(entry: PortalHistoryEntry) {
       return (
         <div className={styles.change} key={field}>
           <h4>{label(field)}</h4>
-          <dl>
+          <dl className={styles.diffList}>
             {hasOld ? (
-              <div>
-                <dt>Anterior</dt>
-                <dd>{valueContent(previous[field])}</dd>
+              <div className={styles.diffRow}>
+                <dt className={styles.diffBadgePrevious}>Anterior</dt>
+                <dd>{valueContent(previous[field], field)}</dd>
               </div>
             ) : null}
             {hasNew ? (
-              <div>
-                <dt>Nuevo</dt>
-                <dd>{valueContent(next[field])}</dd>
+              <div className={styles.diffRow}>
+                <dt className={styles.diffBadgeNext}>Nuevo</dt>
+                <dd>{valueContent(next[field], field)}</dd>
               </div>
             ) : null}
           </dl>
@@ -404,21 +403,21 @@ export function PortalHistoryPanel({
                     serviceEntry(entry)
                   ) : (
                     <>
-                      <h3>Acción: {entry.action}</h3>
+                      <header className={styles.entryHeader}>
+                        <h3>{formatAuditAction(entry.action, resource)}</h3>
+                        {entry.created_at ? (
+                          <p className={styles.entryMeta}>
+                            Fecha:{' '}
+                            <time dateTime={entry.created_at}>
+                              {formatAuditDate(entry.created_at)}
+                            </time>
+                          </p>
+                        ) : null}
+                      </header>
                       {entry.actor_name !== null || entry.actor_id !== null ? (
-                        <p>
+                        <p className={styles.entryMeta}>
                           Responsable:
-                          {` ${entry.actor_name ?? `ID ${entry.actor_id}`}`}
-                        </p>
-                      ) : null}
-                      {entry.created_at ? (
-                        <p>
-                          Fecha:{' '}
-                          <time dateTime={entry.created_at}>
-                            {Number.isNaN(Date.parse(entry.created_at))
-                              ? entry.created_at
-                              : publicationDate(entry.created_at)}
-                          </time>
+                          {` ${entry.actor_name ?? `Usuario #${entry.actor_id}`}`}
                         </p>
                       ) : null}
                       {changes(entry)}

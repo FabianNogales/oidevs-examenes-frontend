@@ -1067,6 +1067,24 @@ test('review blocks an expired snapshot and labels statuses without inventing an
   )
   assert.equal(review.briefReason(''), '—')
   assert.equal(review.briefReason('x'.repeat(200)).length, 90)
+  assert.deepEqual(
+    review.resolveProposedStatusDisplay(
+      reviewResult(10, 'PENDING', null, null),
+    ),
+    { status: 'PENDING', label: 'Pendiente' },
+  )
+  assert.deepEqual(
+    review.resolveProposedStatusDisplay(
+      reviewResult(11, 'INELIGIBLE', null, 'INELIGIBLE', { will: true }),
+    ),
+    { status: 'INELIGIBLE', label: 'Inhabilitado' },
+  )
+  assert.deepEqual(
+    review.resolveProposedStatusDisplay(
+      reviewResult(12, 'ELIGIBLE', null, 'ELIGIBLE', { will: true }),
+    ),
+    { status: 'ELIGIBLE', label: 'Habilitado' },
+  )
 })
 
 test('historical detail can still load all backend pages', async () => {

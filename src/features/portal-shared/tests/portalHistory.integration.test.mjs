@@ -98,7 +98,8 @@ for (const [criterion, resource, action, old_values, new_values] of resources) {
     assert.deepEqual(ui.calls[0].args[1].params, { page: 1, per_page: 15 })
     assert.ok(ui.calls[0].args[1].signal instanceof AbortSignal)
     const text = textContent(ui.tree)
-    if (!resource.startsWith('information/') && resource !== 'services') assert.ok(text.includes(action))
+    if (resource === 'events') assert.match(text, /Evento actualizado/)
+    else if (resource === 'news') assert.match(text, /Noticia actualizada/)
     assert.match(text, /Responsable: Administradora de prueba/)
     const date = nodes(ui.tree, (node) => node.type === 'time')[0]
     assert.equal(date.props.dateTime, '2026-11-01T15:00:00.000000Z')
@@ -220,22 +221,28 @@ test('HU43 humaniza FAQ y publicación; presenta el cambio de estado sin inventa
   ui.h.unmount()
 })
 
-test('HU39 CA13: modificación y cancelación conservadas se muestran en el orden entregado', async () => {
+test('HU39 CA13: modificación y cancelación conservadas se muestran en el orden entregado y traducidas al español', async () => {
   const ui = panel([
     entry({
       id: 36,
       action: 'PORTAL_EVENT_STATUS_CHANGED',
-      old_values: { status: 'PUBLISHED' },
-      new_values: { status: 'CANCELLED' },
+      old_values: { status: 'PUBLISHED', visibility: 'PUBLIC', all_day: true },
+      new_values: { status: 'CANCELLED', visibility: 'PRIVATE', all_day: false },
     }),
-    entry(),
+    entry({
+      id: 35,
+      action: 'PORTAL_EVENT_CREATED',
+      old_values: { title: 'Jornada institucional', status: 'DRAFT' },
+      new_values: { title: 'Jornada académica', status: 'PUBLISHED' },
+    }),
   ])
   await ui.ready()
   const text = textContent(ui.tree)
   assert.match(
     text,
-    /PUBLISHED.*CANCELLED.*Jornada institucional.*Jornada académica/s,
+    /Estado del evento actualizado.*Publicado.*Cancelado.*Público.*Privado.*Sí.*No.*Evento creado.*Jornada institucional.*Jornada académica.*Borrador.*Publicado/s,
   )
+  assert.doesNotMatch(text, /PORTAL_EVENT_CREATED|PORTAL_EVENT_STATUS_CHANGED|DRAFT|CANCELLED/)
   assert.equal(nodes(ui.tree, (node) => node.type === 'h3').length, 2)
   ui.h.unmount()
 })
@@ -275,7 +282,7 @@ for (const [name, old_values, new_values, oldCount, newCount] of [
     assert.equal(terms.filter((text) => text === 'Nuevo').length, newCount)
     assert.match(
       textContent(ui.tree),
-      /PORTAL_EVENT_UPDATED.*Responsable: Administradora de prueba.*Fecha:/s,
+      /Evento actualizado.*Fecha:.*Responsable: Administradora de prueba/s,
     )
     if (name.startsWith('null explícito'))
       assert.match(textContent(ui.tree), /Sin valor.*No.*0.*Vacío/s)
@@ -307,7 +314,7 @@ test('responsable sin nombre utiliza únicamente el ID entregado; fecha no váli
   await ui.ready()
   assert.match(
     textContent(ui.tree),
-    /Responsable: ID 10.*Fecha: fecha recibida/s,
+    /Fecha: fecha recibida.*Responsable: Usuario #10/s,
   )
   ui.h.unmount()
 })

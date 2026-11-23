@@ -4,6 +4,7 @@ import { useRevisionEditor } from '@/features/portal-shared/hooks/useRevisionEdi
 import { EditorFeedback, PortalField } from '@/features/portal-shared/components/PortalUi'
 import {
   createFaq,
+  createSection,
   getInformationContent,
   publishInformation,
   saveInformation,
@@ -56,7 +57,13 @@ export function InformationEditor({
   const generatedId = useId()
   const editorFormId = formId ?? generatedId
   const dirty = JSON.stringify(form) !== JSON.stringify(formOf(item)) || pending !== null
-  const submitLabel = item?.is_published ? 'Guardar cambios' : item ? 'Guardar borrador' : 'Crear FAQ'
+  const submitLabel = item?.is_published
+    ? 'Guardar cambios'
+    : item
+      ? 'Guardar borrador'
+      : kind === 'sections'
+        ? 'Crear información'
+        : 'Crear FAQ'
   const submitDisabled = editor.locked || pending !== null || (!item && !canManage)
   useEffect(() => {
     onBusy(editor.busy)
@@ -83,11 +90,12 @@ export function InformationEditor({
             answer: form.answer,
             sort_order: form.sort_order,
           }
-    if (!item && kind !== 'faqs') return
     const result = await editor.mutate(() =>
       item
         ? saveInformation(kind, item.id, input, item.revision)
-        : createFaq(input as FaqDraft),
+        : kind === 'sections'
+          ? createSection(input as SectionDraft)
+          : createFaq(input as FaqDraft),
     )
     if (result) {
       setForm(formOf(result))
@@ -149,7 +157,11 @@ export function InformationEditor({
           </section>
         </>
       ) : (
-        <p>La FAQ se creará como borrador, sin publicar.</p>
+        <p>
+          {kind === 'sections'
+            ? 'La sección se creará como borrador, sin publicar.'
+            : 'La FAQ se creará como borrador, sin publicar.'}
+        </p>
       )}
       <p className={styles.notice}>
         {item?.is_published

@@ -78,6 +78,32 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback
 }
 
+function normalizeSelectedCriteria(
+  selected: readonly SelectedCriterion[],
+  catalog: readonly AutomationCriterion[] = [],
+): SelectedCriterion[] {
+  return selected
+    .filter((item) => !item.required && !item.locked)
+    .map((item) => {
+      const metadata = catalog.find((criterion) => criterion.code === item.code)
+      if (!metadata) return item
+      const parameters = Object.fromEntries(
+        Object.entries(item.parameters ?? {}).map(([key, value]) => {
+          if (
+            metadata.parameters[key]?.type === 'number' &&
+            typeof value === 'string' &&
+            value.trim() !== '' &&
+            Number.isFinite(Number(value))
+          ) {
+            return [key, Number(value)]
+          }
+          return [key, value]
+        }),
+      )
+      return { ...item, parameters }
+    })
+}
+
 function criteriaValidationMessage(
   criterion: AutomationCriterion,
   values: Record<string, unknown>,
@@ -780,7 +806,7 @@ export function EligibilityAutomationPage() {
     : null
 
   const configurationDirty = configuration !== null && (
-    JSON.stringify(selectedCriteria) !== JSON.stringify(configuration.selected_criteria.filter((item) => !item.required && !item.locked)) ||
+    JSON.stringify(selectedCriteria) !== JSON.stringify(normalizeSelectedCriteria(configuration.selected_criteria, options?.criteria)) ||
     manualReviewConditions !== (configuration.manual_review_conditions ?? '')
   )
   // El servidor solo evalúa una configuración guardada (revisión >= 1) y sin
@@ -804,9 +830,7 @@ export function EligibilityAutomationPage() {
     setConfiguration(current)
     setManualReviewConditions(current.manual_review_conditions ?? '')
     setSelectedCriteria(
-      current.selected_criteria.filter(
-        (item) => !item.required && !item.locked,
-      ),
+      normalizeSelectedCriteria(current.selected_criteria, available.criteria),
     )
   }, [examId])
 
@@ -827,8 +851,9 @@ export function EligibilityAutomationPage() {
         setConfiguration(current)
         setManualReviewConditions(current.manual_review_conditions ?? '')
         setSelectedCriteria(
-          current.selected_criteria.filter(
-            (item) => !item.required && !item.locked,
+          normalizeSelectedCriteria(
+            current.selected_criteria,
+            available.criteria,
           ),
         )
         setInitialError('')
@@ -969,9 +994,7 @@ export function EligibilityAutomationPage() {
       setConfiguration(updated)
       setManualReviewConditions(updated.manual_review_conditions ?? '')
       setSelectedCriteria(
-        updated.selected_criteria.filter(
-          (item) => !item.required && !item.locked,
-        ),
+        normalizeSelectedCriteria(updated.selected_criteria, options?.criteria),
       )
       setConfigurationSaved(true)
       notify(
@@ -1510,53 +1533,55 @@ export function EligibilityAutomationPage() {
                   <p role="status">Cargando registros…</p>
                 ) : null}
                 {isPage(records) && records.data.length > 0 ? (
-                  <div className={styles.tableWrap}>
-                    <table
-                      className={`${sharedStyles.table} ${styles.academicRecordsTable}`}
-                    >
-                      <thead>
-                        <tr>
-                          <th>Estudiante</th>
-                          <th>SIS</th>
-                          {csvLayout?.fields.map(({ key, column }) => <th key={key}>{column.label}</th>)}
-                          {csvLayout?.includesAttendance ? <><th>Asistencia</th><th>% asistencia</th></> : null}
-                          {csvLayout?.includesAverage ? <th>Promedio</th> : null}
-                          <th>Revisión</th>
-                          <th>Acción</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {records.data.map((record) => (
-                          <tr key={record.id}>
-                            <td>
-                              {record.first_names} {record.last_names}
-                            </td>
-                            <td>{record.sis_code}</td>
-                            {csvLayout?.fields.map(({ key, scored }) => <td key={key}>{scored ? academicScore(record, key) : record.assessments?.[key] ? (record.assessments[key].was_taken ? 'Sí' : 'No') : '—'}</td>)}
-                            {csvLayout?.includesAttendance ? <>
-                              <td>{record.attended_classes == null || record.total_classes == null ? '—' : record.attended_classes + ' / ' + record.total_classes}</td>
-                              <td>{academicAttendancePercentage(record)}</td>
-                            </> : null}
-                            {csvLayout?.includesAverage ? <td>{academicAverage(record)}</td> : null}
-                            <td>{record.revision}</td>
-                            <td>
-                              <button
-                                type="button"
-                                className={sharedStyles.secondaryButton}
-                                onClick={() => setSelectedRecord(record)}
-                              >
-                                Corregir
-                              </button>
-                            </td>
+                  <>
+                    <div className={styles.tableWrap}>
+                      <table
+                        className={`${sharedStyles.table} ${styles.academicRecordsTable}`}
+                      >
+                        <thead>
+                          <tr>
+                            <th>Estudiante</th>
+                            <th>SIS</th>
+                            {csvLayout?.fields.map(({ key, column }) => <th key={key}>{column.label}</th>)}
+                            {csvLayout?.includesAttendance ? <><th>Asistencia</th><th>% asistencia</th></> : null}
+                            {csvLayout?.includesAverage ? <th>Promedio</th> : null}
+                            <th>Revisión</th>
+                            <th>Acción</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {records.data.map((record) => (
+                            <tr key={record.id}>
+                              <td>
+                                {record.first_names} {record.last_names}
+                              </td>
+                              <td>{record.sis_code}</td>
+                              {csvLayout?.fields.map(({ key, scored }) => <td key={key}>{scored ? academicScore(record, key) : record.assessments?.[key] ? (record.assessments[key].was_taken ? 'Sí' : 'No') : '—'}</td>)}
+                              {csvLayout?.includesAttendance ? <>
+                                <td>{record.attended_classes == null || record.total_classes == null ? '—' : record.attended_classes + ' / ' + record.total_classes}</td>
+                                <td>{academicAttendancePercentage(record)}</td>
+                              </> : null}
+                              {csvLayout?.includesAverage ? <td>{academicAverage(record)}</td> : null}
+                              <td>{record.revision}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className={sharedStyles.secondaryButton}
+                                  onClick={() => setSelectedRecord(record)}
+                                >
+                                  Corregir
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                     <PageControls
                       meta={records.meta}
                       onPage={(page) => void loadRecords(page)}
                     />
-                  </div>
+                  </>
                 ) : null}
                 {isPage(records) &&
                 records.data.length === 0 &&
