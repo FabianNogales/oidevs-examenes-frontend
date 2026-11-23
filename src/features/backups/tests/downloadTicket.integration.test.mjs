@@ -47,31 +47,45 @@ test('requests a CSRF-protected POST ticket and keeps the dump out of the HTTP c
   assert.ok(!calls.some((call) => call[1].includes('googleapis.com')))
 })
 
-test('submits a navigation form, handles only trusted Worker messages and cleans up', () => {
+test('posts once to a hidden iframe without opening a tab and accepts only trusted errors', () => {
   const h = sourceHarness(),
     forms = [],
     messages = []
-  const popup = { document: { title: '', body: { textContent: '' } } }
-  h.window.open = () => popup
+  const frame = {
+    contentWindow: {},
+    isConnected: false,
+    remove() {
+      this.removed = true
+      this.isConnected = false
+    },
+  }
+  h.window.open = () => assert.fail('must not open another tab')
   h.document.createElement = (tag) =>
-    tag === 'form'
-      ? {
-          append(input) {
-            this.input = input
-          },
-          submit() {
-            forms.push(this)
-          },
-          remove() {
-            this.removed = true
-          },
-        }
-      : {}
-  h.document.body.append = () => {}
+    tag === 'iframe'
+      ? frame
+      : tag === 'form'
+        ? {
+            append(input) {
+              this.input = input
+            },
+            submit() {
+              forms.push(this)
+            },
+            remove() {
+              this.removed = true
+            },
+          }
+        : {}
+  h.document.body.append = (element) => {
+    if (element === frame) frame.isConnected = true
+  }
   const { prepareBackupDownload, submitBackupDownload } = h.load(
     'features/backups/api/backupDownload.ts',
   )
   const target = prepareBackupDownload()
+  assert.equal(frame.hidden, true)
+  assert.equal(frame.name, target.name)
+  assert.equal(frame.isConnected, true)
   const value = ticket(h.now())
   const dispose = submitBackupDownload(value, target, (message) =>
     messages.push(message),
@@ -79,13 +93,19 @@ test('submits a navigation form, handles only trusted Worker messages and cleans
   assert.equal(forms.length, 1)
   assert.equal(forms[0].method, 'POST')
   assert.equal(forms[0].action, value.url)
+  assert.equal(forms[0].target, frame.name)
   assert.equal(forms[0].input.name, 'ticket')
   assert.equal(forms[0].input.value, value.ticket)
   assert.equal(forms[0].removed, true)
+  assert.throws(
+    () => submitBackupDownload(value, target, () => {}),
+    /DOWNLOAD_TARGET_UNAVAILABLE/,
+  )
+  assert.equal(forms.length, 1)
   const data = { type: 'eida-backup-download-error', code: 'TICKET_EXPIRED' }
   h.emit('message', 'window', {
     origin: 'https://other.example.invalid',
-    source: popup,
+    source: frame.contentWindow,
     data,
   })
   h.emit('message', 'window', {
@@ -96,30 +116,58 @@ test('submits a navigation form, handles only trusted Worker messages and cleans
   assert.equal(messages.length, 0)
   h.emit('message', 'window', {
     origin: 'https://worker.example.invalid',
-    source: popup,
+    source: frame.contentWindow,
     data,
   })
   assert.match(messages[0], /caducó/)
+  assert.equal(frame.removed, true)
   dispose()
   assert.equal(h.listenerCount(), 0)
 })
 
-test('expired ticket and blocked popup fail before form navigation', () => {
+test('expired tickets and detached iframes fail before form navigation', () => {
   const h = sourceHarness()
-  h.window.open = () => null
-  const { prepareBackupDownload, submitBackupDownload } = h.load(
+  const { submitBackupDownload } = h.load(
     'features/backups/api/backupDownload.ts',
   )
-  assert.throws(prepareBackupDownload, /DOWNLOAD_WINDOW_BLOCKED/)
+  const target = {
+    name: 'download-frame',
+    frame: { isConnected: true, contentWindow: {} },
+    submitted: false,
+  }
   assert.throws(
-    () =>
-      submitBackupDownload(
-        ticket(h.now() - 120_000),
-        { name: 'window', popup: {} },
-        () => {},
-      ),
+    () => submitBackupDownload(ticket(h.now() - 120_000), target, () => {}),
     /DOWNLOAD_TICKET_EXPIRED/,
   )
+  target.frame.isConnected = false
+  assert.throws(
+    () => submitBackupDownload(ticket(h.now()), target, () => {}),
+    /DOWNLOAD_TARGET_UNAVAILABLE/,
+  )
+})
+
+test('feedback cleanup does not remove an iframe carrying a large download', () => {
+  const h = sourceHarness()
+  const frame = {
+    isConnected: true,
+    contentWindow: {},
+    remove: () => assert.fail('must not interrupt an active download'),
+  }
+  h.document.createElement = (tag) =>
+    tag === 'form' ? { append() {}, submit() {}, remove() {} } : {}
+  h.document.body.append = () => {}
+  const { submitBackupDownload } = h.load(
+    'features/backups/api/backupDownload.ts',
+  )
+  const dispose = submitBackupDownload(
+    ticket(h.now()),
+    { name: 'download-frame', frame, submitted: false },
+    () => {},
+  )
+  h.advance(120_000)
+  dispose()
+  assert.equal(h.listenerCount(), 0)
+  assert.equal(frame.isConnected, true)
 })
 
 test('the existing page prevents double ticket requests and preserves its table and loading state', async () => {
@@ -136,7 +184,7 @@ test('the existing page prevents double ticket requests and preserves its table 
   let finish
   const posts = [],
     submissions = []
-  const popup = { close() {} }
+  const frame = { remove() {} }
   const client = {
     async get(url) {
       return url === '/sanctum/csrf-cookie'
@@ -176,7 +224,7 @@ test('the existing page prevents double ticket requests and preserves its table 
     '@/shared/components/ui/Badge/Badge': { Badge: 'badge' },
     '@/shared/components/PortalDialog/PortalDialog': { PortalDialog: 'dialog' },
     '../api/backupDownload': {
-      prepareBackupDownload: () => ({ popup, name: 'test' }),
+      prepareBackupDownload: () => ({ frame, name: 'test', submitted: false }),
       submitBackupDownload: (value) => {
         submissions.push(value)
         return () => {}
@@ -207,7 +255,19 @@ test('the existing page prevents double ticket requests and preserves its table 
   )
   assert.doesNotMatch(
     textContent(tree),
-    /descarga completada|archivo descargado/i,
+    /descarga completada|archivo descargado|otra ventana/i,
   )
+  const secondAction = nodes(tree, (node) => node.type === 'table')[0]
+    .props.columns.find((column) => column.id === 'actions')
+    .cell(row)
+  secondAction.props.onClick()
+  await settle()
+  assert.equal(posts.length, 2)
+  finish({
+    data: { data: { ...ticket(Date.now()), ticket: 'header.fresh.signature' } },
+  })
+  await settle()
+  assert.equal(submissions.length, 2)
+  assert.notEqual(submissions[0].ticket, submissions[1].ticket)
   h.unmount()
 })

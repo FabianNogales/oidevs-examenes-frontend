@@ -22,14 +22,13 @@ const messages: Record<string, string> = {
 }
 
 export function prepareBackupDownload() {
-  // Open synchronously during the click, before awaiting Sanctum/the ticket API.
   const name = `eida-backup-${crypto.randomUUID()}`
-  const popup = window.open('about:blank', name)
-  if (!popup) throw new Error('DOWNLOAD_WINDOW_BLOCKED')
-  popup.document.title = 'Preparando descarga de respaldo'
-  popup.document.body.textContent =
-    'Preparando la descarga. Si no se inicia, vuelve a EIDA e intenta nuevamente.'
-  return { name, popup }
+  const frame = document.createElement('iframe')
+  frame.name = name
+  frame.title = 'Descarga de respaldo'
+  frame.hidden = true
+  document.body.append(frame)
+  return { name, frame, submitted: false }
 }
 
 export function submitBackupDownload(
@@ -37,19 +36,26 @@ export function submitBackupDownload(
   target: ReturnType<typeof prepareBackupDownload>,
   onError: (message: string) => void,
 ): () => void {
+  const frameWindow = target.frame.contentWindow
+  if (target.submitted || !target.frame.isConnected || !frameWindow)
+    throw new Error('DOWNLOAD_TARGET_UNAVAILABLE')
   if (Date.parse(ticket.expires_at) <= Date.now())
     throw new Error('DOWNLOAD_TICKET_EXPIRED')
+  target.submitted = true
   const origin = new URL(ticket.url).origin
   const listener = (event: MessageEvent) => {
     if (
-      event.source !== target.popup ||
+      event.source !== frameWindow ||
       event.origin !== origin ||
       event.data?.type !== 'eida-backup-download-error'
     )
       return
     const code: unknown = event.data.code
-    if (typeof code === 'string' && Object.hasOwn(messages, code))
+    if (typeof code === 'string' && Object.hasOwn(messages, code)) {
+      dispose()
+      target.frame.remove()
       onError(messages[code])
+    }
   }
   window.addEventListener('message', listener)
   const timer = window.setTimeout(
@@ -59,6 +65,7 @@ export function submitBackupDownload(
   const dispose = () => {
     window.clearTimeout(timer)
     window.removeEventListener('message', listener)
+    // Keep the frame attached: removing it could cancel a large active download.
   }
   const form = document.createElement('form')
   form.method = 'POST'
@@ -75,6 +82,7 @@ export function submitBackupDownload(
     form.submit()
   } catch (error) {
     dispose()
+    target.frame.remove()
     throw error
   } finally {
     form.remove()
