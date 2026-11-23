@@ -61,28 +61,33 @@
 }
 
 .studentName {
-  overflow-wrap: anywhere;
+  display: block;
+  min-width: 180px;
+  overflow-wrap: break-word;
 }
 
 .statusCell {
-  display: grid;
-  min-width: 0;
-  justify-items: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 170px;
   gap: var(--space-1);
 }
 
 .badge {
-  display: inline-block;
-  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  max-width: 100%;
+  line-height: 1.25;
   box-sizing: border-box;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .badgeEligible {
@@ -95,16 +100,25 @@
   color: var(--color-error);
 }
 
+.badgePending {
+  background: var(--color-warning-soft);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-warning);
+}
+
 .tag {
+  display: inline-flex;
+  align-items: center;
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 }
 
 .reason {
   display: block;
-  min-width: 0;
-  overflow-wrap: anywhere;
+  min-width: 220px;
+  overflow-wrap: break-word;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
 }
@@ -174,14 +188,5 @@
   .applyBar > button,
   .dialogActions > button {
     flex: 1 1 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  /* DataTable shows each cell as «label | value» with a 110px label column. Inside the nested
-     cards of this page that leaves the value too narrow to read, so the label goes above it. */
-  .review td {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-1);
   }
 }

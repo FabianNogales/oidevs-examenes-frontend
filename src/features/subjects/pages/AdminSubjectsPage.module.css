@@ -32,13 +32,11 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
-.filter select {
+.filter select,
+.filter [data-ds-dropdown] {
   max-width: 100%;
 }
 @media (max-width: 640px) {
-  .table {
-    min-width: 0;
-  }
   .filter {
     min-width: 0;
     flex-basis: 100%;

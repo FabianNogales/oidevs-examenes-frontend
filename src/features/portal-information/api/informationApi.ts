@@ -9,6 +9,7 @@ import type {
   InformationDraft,
   InformationKind,
   PublicInformation,
+  SectionDraft,
 } from '../types/information.types'
 
 export async function getInformation(
@@ -36,6 +37,15 @@ export async function getInformationContent(
   const { data } = await httpClient.get(
     `/admin/portal/information/${kind}/${id}`,
     { signal },
+  )
+  return data.data
+}
+export async function createSection(
+  input: SectionDraft,
+): Promise<AdminInformation> {
+  const { data } = await httpClient.post(
+    '/admin/portal/information/sections',
+    input,
   )
   return data.data
 }

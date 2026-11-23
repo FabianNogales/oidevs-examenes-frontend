@@ -89,7 +89,12 @@ function InformationDialog({
   const [dirty, setDirty] = useState(false)
   const [confirmClose, setConfirmClose] = useState(false)
   const [editorState, setEditorState] = useState({
-    label: id === null ? 'Crear FAQ' : 'Guardar borrador',
+    label:
+      id === null
+        ? kind === 'sections'
+          ? 'Crear información'
+          : 'Crear FAQ'
+        : 'Guardar borrador',
     disabled: true,
   })
   const [historyVersion, setHistoryVersion] = useState(0)
@@ -112,7 +117,15 @@ function InformationDialog({
     <>
       <PortalModal
         drawer
-        title={kind === 'sections' ? 'Gestionar sección' : 'Gestionar FAQ'}
+        title={
+          id === null
+            ? kind === 'sections'
+              ? 'Crear información'
+              : 'Crear pregunta frecuente'
+            : kind === 'sections'
+              ? 'Gestionar sección'
+              : 'Gestionar FAQ'
+        }
         onClose={requestClose}
         busy={busy}
         closeBlocked={confirmClose}
@@ -203,14 +216,18 @@ export function AdminInformationPage({ initialKind = 'sections' }: { initialKind
         className={`${styles.informationAdminPage} ${adminStyles.pageReset}`}
         searchLayout="wide"
         searchPlaceholder="Buscar información"
-        createLabel="Crear pregunta frecuente"
+        createLabel={
+          kind === 'sections'
+            ? '+ Crear información'
+            : '+ Crear pregunta frecuente'
+        }
         filterLayout="below"
         columns={columns}
         version={version}
         load={load}
         onSelect={(id) => setSelected({ kind, id, dialogKey: `${kind}-${id}` })}
         onCreate={
-          canManage && kind === 'faqs'
+          canManage
             ? () => setSelected({ kind, id: null, dialogKey: `${kind}-new` })
             : undefined
         }

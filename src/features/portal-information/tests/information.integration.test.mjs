@@ -134,7 +134,7 @@ test('HU42 unpublished sections and empty FAQ produce only compact empty states'
   ui.h.unmount()
 })
 
-test('F2.2 administration labels: search text and FAQ-only "Crear pregunta frecuente"', () => {
+test('F2.2 administration labels: search text and creation button for both sections and FAQs', () => {
   const c = client(
     { get: () => ({ data: page([section]) }) },
     { '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) } },
@@ -150,13 +150,14 @@ test('F2.2 administration labels: search text and FAQ-only "Crear pregunta frecu
       (node) => node.props?.title === 'Gestión de información y FAQ',
     )[0]
   assert.equal(collection().props.searchPlaceholder, 'Buscar información')
-  assert.equal(collection().props.onCreate, undefined, 'sections still offer no creation')
+  assert.equal(typeof collection().props.onCreate, 'function', 'sections offer creation')
+  assert.equal(collection().props.createLabel, '+ Crear información')
   nodes(collection().props.filters, (node) => node.type === 'select')[0].props.onChange({
     target: { value: 'faqs' },
   })
   ui.render()
   assert.equal(typeof collection().props.onCreate, 'function', 'FAQ creation kept')
-  assert.equal(collection().props.createLabel, 'Crear pregunta frecuente')
+  assert.equal(collection().props.createLabel, '+ Crear pregunta frecuente')
   assert.equal(collection().props.searchPlaceholder, 'Buscar información')
   ui.h.unmount()
 })
@@ -203,14 +204,14 @@ test('F2.3 "Limpiar filtros" resets only Visibilidad and keeps the Secciones/FAQ
     assert.equal(collection().key, null, 'the collection is not remounted')
     assert.equal(
       typeof collection().props.onCreate,
-      view === 'faqs' ? 'function' : 'undefined',
-      'creation only for FAQ',
+      'function',
+      'creation available for sections and FAQs',
     )
   }
   ui.h.unmount()
 })
 
-test('HU43 administration consults existing sections and does not offer section creation or seed fixed IDs', async () => {
+test('HU43 administration consults existing sections and allows section creation without seeding fixed IDs', async () => {
   const c = client(
     { get: () => ({ data: page([section]) }) },
     { '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) } },
@@ -233,7 +234,7 @@ test('HU43 administration consults existing sections and does not offer section 
   assert.equal(collection().props.searchLayout, 'wide')
   assert.equal(collection().props.filterLayout, 'below')
   assert.equal(collection().props.resetPageKey, 'sections-')
-  assert.equal(collection().props.onCreate, undefined)
+  assert.equal(typeof collection().props.onCreate, 'function')
   const filters = () =>
     nodes(collection().props.filters, (node) => node.type === 'select')
   assert.equal(filters().length, 2)
@@ -622,6 +623,34 @@ test('HU43 unpublish preserves snapshot and distinguishes visibility from has_un
   assert.ok(textContent(ui.tree).includes(old.description))
   assert.equal(ui.button('Despublicar'), undefined)
   assert.ok(ui.button('Publicar'))
+  ui.h.unmount()
+})
+
+test('HU43 section creation sends section fields and does not publish automatically', async () => {
+  const createdSection = {
+    ...section,
+    id: 201,
+    is_published: false,
+    has_unpublished_changes: true,
+    published: null,
+  }
+  const ui = editor(
+    { post: () => ({ data: { data: createdSection } }) },
+    null,
+    'sections',
+  )
+  ui.edit('title', old.title)
+  ui.edit('description', old.description)
+  ui.edit('sort_order', old.sort_order)
+  await ui.submit()
+  assert.deepEqual(ui.calls[0].args, [
+    '/admin/portal/information/sections',
+    old,
+  ])
+  assert.equal(ui.field('question'), undefined)
+  assert.equal(ui.saved.length, 1)
+  assert.equal(ui.saved[0].id, createdSection.id)
+  assert.match(textContent(ui.tree), /Despublicado/)
   ui.h.unmount()
 })
 

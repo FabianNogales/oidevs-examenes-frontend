@@ -175,19 +175,6 @@
   .adminTable table td {
     padding: 10px 14px;
   }
-
-  /* The shared action cell does not wrap; in the narrow mobile card the
-     "Gestionar" label may wrap so the button stays inside the card. */
-  .adminTable td[data-label='Acciones'] {
-    white-space: normal;
-  }
-
-  .adminTable td[data-label='Acciones'] button {
-    max-width: 100%;
-    height: auto;
-    white-space: normal;
-    text-align: center;
-  }
 }
 
 /* Cabecera con acción secundaria y primaria: mismo alto en fila (escritorio) y en columna (móvil),

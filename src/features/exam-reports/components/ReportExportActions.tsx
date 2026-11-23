@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { downloadBlob } from '@/shared/utils/downloadBlob'
 import { exportExamReport } from '../api/examReportsApi'
 import { ExamReportError } from '../api/reportErrors'
+import { normalizeExamReportCsvBlob } from '../utils/csvExportFormat'
 import type {
   ExamReportPage,
   ReportExam,
@@ -38,9 +39,11 @@ export function ReportExportActions({
     setNotice(null)
     try {
       const blob = await exportExamReport(exam, filters, page, format, c.signal)
+      const outputBlob =
+        format === 'csv' ? await normalizeExamReportCsvBlob(blob) : blob
       if (!c.signal.aborted) {
         downloadBlob(
-          blob,
+          outputBlob,
           `reporte-examen-${exam.id}-${page.report.type.toLowerCase()}-${page.report.id}.${format}`,
         )
         setNotice(
