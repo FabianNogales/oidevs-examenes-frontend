@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import axios from 'axios'
 import { sourceHarness, nodes, textContent, settle } from './sourceHarness.mjs'
 
 function setup(
@@ -30,7 +31,7 @@ function setup(
   return { ...h, calls, created, revoked }
 }
 
-test('HU14 image: authenticated client receives the exact backend URL and blob responseType; img uses Object URL', async (t) => {
+test('HU14 image: admin student photos use the configured API and blob responseType; img uses Object URL', async (t) => {
   const h = setup(t)
   const { AuthenticatedImage } = h.load(
     'shared/components/AuthenticatedImage/AuthenticatedImage.tsx',
@@ -51,7 +52,7 @@ test('HU14 image: authenticated client receives the exact backend URL and blob r
   await settle()
   tree = h.render()
   const [url, config] = h.calls[0]
-  assert.equal(url, props.url, 'No file route construction or tokens in URLs')
+  assert.equal(url, '/admin/students/8/historical-photo')
   assert.equal(config.responseType, 'blob')
   assert.equal(
     config.headers,
@@ -71,6 +72,76 @@ test('HU14 image: authenticated client receives the exact backend URL and blob r
   h.unmount()
   assert.deepEqual(h.revoked, ['blob:authenticated-1'])
 })
+
+for (const photo of ['profile-photo', 'historical-photo'])
+  test(`admin student ${photo} keeps its revision through the configured API/proxy`, (t) => {
+    for (const prefix of [
+      'https://backend.test/api/v1',
+      'https://frontend.test/backend/api/v1',
+      '/backend/api/v1',
+      '/api/v1',
+      '',
+    ]) {
+      const h = setup(t)
+      const { useAuthenticatedImage } = h.load(
+        'shared/hooks/useAuthenticatedImage.ts',
+      )
+      const path = `/admin/students/8/${photo}?v=image-version&revision=2`
+      h.render(() => useAuthenticatedImage(prefix + path))
+      assert.equal(h.calls[0][0], path)
+      h.unmount()
+    }
+  })
+
+for (const expired of [false, true])
+  test(`admin photo loading with the real 401 interceptor: session ${expired ? 'expired' : 'valid'}`, async (t) => {
+    const events = []
+    const h = sourceHarness({
+      '@/app/config/env': {
+        env: { apiUrl: '/backend/api/v1', backendUrl: '/backend' },
+      },
+      '@/features/auth/utils/authEvents': {
+        emitAuthSessionEvent: (event) => events.push(event),
+      },
+    })
+    t.mock.method(URL, 'createObjectURL', () => 'blob:admin-photo')
+    t.mock.method(URL, 'revokeObjectURL', () => {})
+    const { httpClient } = h.load('shared/api/httpClient.ts')
+    httpClient.defaults.adapter = async (config) => {
+      // A host-only frontend cookie is unavailable to the backend's absolute hostname.
+      const authenticated =
+        !expired && !config.url.startsWith('https://backend.test/')
+      const response = {
+        config,
+        headers: {},
+        status: authenticated ? 200 : 401,
+        data: authenticated
+          ? new Blob(['image'])
+          : { message: 'Unauthenticated.' },
+      }
+      if (!authenticated)
+        throw new axios.AxiosError(
+          'Unauthorized',
+          'ERR_BAD_REQUEST',
+          config,
+          null,
+          response,
+        )
+      return response
+    }
+    const { useAuthenticatedImage } = h.load(
+      'shared/hooks/useAuthenticatedImage.ts',
+    )
+    h.render(() =>
+      useAuthenticatedImage(
+        'https://backend.test/api/v1/admin/students/1/historical-photo?v=1',
+      ),
+    )
+    await settle()
+    assert.deepEqual(events, expired ? [{ reason: 'SESSION_EXPIRED' }] : [])
+    assert.equal(h.render().src, expired ? null : 'blob:admin-photo')
+    h.unmount()
+  })
 
 test('HU14 image: null produces only its placeholder without HTTP or Object URL', (t) => {
   const h = setup(t)
