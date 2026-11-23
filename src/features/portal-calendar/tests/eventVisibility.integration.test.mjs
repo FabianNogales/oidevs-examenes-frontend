@@ -541,7 +541,7 @@ test('HU39 historial existente presenta visibility recibido sin reconstruir snap
     { resource: 'events', id: 47 },
   )
   await ui.ready()
-  assert.match(textContent(ui.tree), /VisibilidadAnteriorPRIVATENuevoPUBLIC/)
+  assert.match(textContent(ui.tree), /VisibilidadAnteriorPrivadoNuevoPúblico/)
   assert.equal(
     nodes(
       ui.tree,

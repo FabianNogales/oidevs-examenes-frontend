@@ -157,7 +157,15 @@ export async function getNewsImage(
   url: string,
   signal: AbortSignal,
 ): Promise<Blob> {
-  const { data } = await httpClient.get<Blob>(url, {
+  // Laravel can return its absolute backend URL after an upload. Read this known private
+  // resource through the configured API client/proxy so the frontend cookie remains attached.
+  // Other image URLs keep their existing behaviour; no global 401 handling is bypassed.
+  const parsed = new URL(url, 'https://eida.invalid')
+  const privatePath = parsed.pathname.match(
+    /\/admin\/portal\/news\/[1-9]\d*\/image$/,
+  )?.[0]
+  const requestUrl = privatePath ? `${privatePath}${parsed.search}` : url
+  const { data } = await httpClient.get<Blob>(requestUrl, {
     signal,
     responseType: 'blob',
   })

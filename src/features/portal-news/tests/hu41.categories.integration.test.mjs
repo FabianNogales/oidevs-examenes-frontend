@@ -425,3 +425,31 @@ test('D1.1 public responses accept category null and reject malformed categories
     else await assert.rejects(api.listNews({ page: 1 }))
   }
 })
+
+test('HU41 native category validation is Spanish and linked to an inline alert', () => {
+  const ui = editor({}, null)
+  const messages = []
+  ui.field('category_id').props.onInvalid({
+    currentTarget: { setCustomValidity: (value) => messages.push(value) },
+  })
+  ui.render()
+  assert.deepEqual(messages, ['Selecciona una categoría activa.'])
+  const category = ui.field('category_id')
+  assert.equal(category.props['aria-invalid'], true)
+  const alert = nodes(
+    ui.tree,
+    (node) => node.props?.id === category.props['aria-describedby'],
+  )[0]
+  assert.equal(alert.props.role, 'alert')
+  assert.equal(textContent(alert), messages[0])
+  category.props.onChange({
+    target: { value: '7' },
+    currentTarget: { setCustomValidity: (value) => messages.push(value) },
+  })
+  ui.render()
+  assert.equal(messages.at(-1), '')
+  assert.equal(ui.field('category_id').props.value, '7')
+  assert.equal(ui.field('category_id').props['aria-invalid'], false)
+  assert.equal(ui.calls.length, 0)
+  ui.h.unmount()
+})

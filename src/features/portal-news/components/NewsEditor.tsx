@@ -1,7 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { AdminStatusBadge } from '@/features/portal-shared/components/AdminStatusBadge'
 import { useRevisionEditor } from '@/features/portal-shared/hooks/useRevisionEditor'
-import { EditorFeedback, PortalField } from '@/features/portal-shared/components/PortalUi'
+import {
+  EditorFeedback,
+  PortalField,
+} from '@/features/portal-shared/components/PortalUi'
 import {
   createNews,
   editNews,
@@ -12,7 +15,13 @@ import {
 } from '../api/newsApi'
 import { AuthenticatedNewsImage } from './NewsImage'
 import { publicationDate } from '@/features/portal-shared/api/portalApi'
-import { NEWS_STATUS_LABELS, type AdminNews, type NewsStatus, type NewsCategory, type NewsEditInput } from '../types/news.types'
+import {
+  NEWS_STATUS_LABELS,
+  type AdminNews,
+  type NewsStatus,
+  type NewsCategory,
+  type NewsEditInput,
+} from '../types/news.types'
 import styles from '@/features/portal-shared/components/portalShared.module.css'
 import adminStyles from '../pages/adminNews.module.css'
 
@@ -60,6 +69,7 @@ export function NewsEditor({
   const editor = useRevisionEditor(initial)
   const [draft, setDraft] = useState(() => draftOf(initial))
   const [file, setFile] = useState<File | null>(null)
+  const [imageError, setImageError] = useState<string | null>(null)
   const [imageInputVersion, setImageInputVersion] = useState(0)
   const [pending, setPending] = useState<NewsStatus | null>(null)
   const [removing, setRemoving] = useState(false)
@@ -71,18 +81,19 @@ export function NewsEditor({
   // is no longer active (or is null for news created before categories).
   const currentCategory = news?.category ?? null
   const currentInactive =
-    canManage && !!currentCategory &&
+    canManage &&
+    !!currentCategory &&
     !activeCategories.some((category) => category.id === currentCategory.id)
   // Creating requires an active category; block it while none can be offered.
   const categoriesUnavailable = !news && activeCategories.length === 0
   const isUnpublishing =
     !!news && !removing && pending === 'DRAFT' && news.status === 'PUBLISHED'
   const dirtyText = JSON.stringify(draft) !== JSON.stringify(draftOf(news))
-  const dirty =
-    dirtyText || file !== null || pending !== null || removing
+  const dirty = dirtyText || file !== null || pending !== null || removing
   const locked = editor.locked || pending !== null || removing
   const submitLabel = news ? 'Guardar noticia' : 'Crear borrador'
-  const submitDisabled = locked || categoriesUnavailable || (!news && !canManage)
+  const submitDisabled =
+    locked || categoriesUnavailable || (!news && !canManage)
   useEffect(() => {
     onBusy(editor.busy)
   }, [editor.busy, onBusy])
@@ -107,6 +118,7 @@ export function NewsEditor({
       setRemoving(false)
       if (resetImage) {
         setFile(null)
+        setImageError(null)
         setImageInputVersion((version) => version + 1)
       }
       onSaved(result)
@@ -123,6 +135,7 @@ export function NewsEditor({
       setPending(null)
       setRemoving(false)
       setFile(null)
+      setImageError(null)
       setImageInputVersion((version) => version + 1)
     }
   }
@@ -221,11 +234,17 @@ export function NewsEditor({
       {news?.status === 'PUBLISHED' ? (
         <p className={styles.notice}>
           Guardar cambia el contenido público inmediatamente.
-          {canManage ? ' Despublica primero para preparar cambios fuera del portal.' : ''}
+          {canManage
+            ? ' Despublica primero para preparar cambios fuera del portal.'
+            : ''}
         </p>
       ) : null}
       {!canManage && news?.image_url ? (
-        <AuthenticatedNewsImage url={news.image_url} title={news.title} revision={news.revision} />
+        <AuthenticatedNewsImage
+          url={news.image_url}
+          title={news.title}
+          revision={news.revision}
+        />
       ) : null}
       <form
         id={editorFormId}
@@ -281,10 +300,7 @@ export function NewsEditor({
             ))}
             {canManage ? (
               <>
-                <PortalField
-                  label="Categoría"
-                  error={fields.category_id ?? categoryError ?? undefined}
-                >
+                <PortalField label="Categoría" error={fields.category_id}>
                   <select
                     name="category_id"
                     value={draft.category_id}
@@ -292,7 +308,19 @@ export function NewsEditor({
                     // categoría" (value ""), which native validation would block.
                     required={!news}
                     aria-invalid={!!(fields.category_id ?? categoryError)}
+                    aria-describedby={
+                      categoryError
+                        ? `${editorFormId}-category-error`
+                        : undefined
+                    }
+                    onInvalid={(event) => {
+                      event.currentTarget.setCustomValidity(
+                        'Selecciona una categoría activa.',
+                      )
+                      setCategoryError('Selecciona una categoría activa.')
+                    }}
                     onChange={(event) => {
+                      event.currentTarget?.setCustomValidity('')
                       setDraft({ ...draft, category_id: event.target.value })
                       setCategoryError(null)
                       editor.clearError()
@@ -314,6 +342,11 @@ export function NewsEditor({
                       </option>
                     ))}
                   </select>
+                  {categoryError ? (
+                    <span id={`${editorFormId}-category-error`} role="alert" className={styles.error}>
+                      {categoryError}
+                    </span>
+                  ) : null}
                 </PortalField>
                 {categories.loading ? (
                   <p role="status" className={styles.muted}>
@@ -357,7 +390,7 @@ export function NewsEditor({
               </div>
               <PortalField
                 label="Imagen JPEG, PNG o WebP (máximo 5 MiB)"
-                error={fields.image}
+                error={imageError ?? fields.image}
               >
                 <input
                   key={imageInputVersion}
@@ -365,9 +398,21 @@ export function NewsEditor({
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   disabled={locked}
-                  onChange={(event) =>
-                    setFile(event.target.files?.[0] ?? null)
-                  }
+                  aria-invalid={!!(imageError ?? fields.image)}
+                  onChange={(event) => {
+                    const selected = event.target.files?.[0] ?? null
+                    const message =
+                      selected &&
+                      !['image/jpeg', 'image/png', 'image/webp'].includes(
+                        selected.type,
+                      )
+                        ? 'Selecciona una imagen JPEG, PNG o WebP.'
+                        : selected && selected.size > 5 * 1024 * 1024
+                          ? 'La imagen no debe superar los 5 MiB.'
+                          : null
+                    setImageError(message)
+                    setFile(message ? null : selected)
+                  }}
                 />
               </PortalField>
               <div className={adminStyles.editorActionsRow}>

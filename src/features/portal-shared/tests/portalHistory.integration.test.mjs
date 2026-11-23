@@ -98,7 +98,8 @@ for (const [criterion, resource, action, old_values, new_values] of resources) {
     assert.deepEqual(ui.calls[0].args[1].params, { page: 1, per_page: 15 })
     assert.ok(ui.calls[0].args[1].signal instanceof AbortSignal)
     const text = textContent(ui.tree)
-    if (!resource.startsWith('information/') && resource !== 'services') assert.ok(text.includes(action))
+    if (resource === 'news') assert.match(text, /Noticia actualizada/)
+    if (resource === 'events') assert.match(text, /Evento actualizado/)
     assert.match(text, /Responsable: Administradora de prueba/)
     const date = nodes(ui.tree, (node) => node.type === 'time')[0]
     assert.equal(date.props.dateTime, '2026-11-01T15:00:00.000000Z')
@@ -234,7 +235,7 @@ test('HU39 CA13: modificación y cancelación conservadas se muestran en el orde
   const text = textContent(ui.tree)
   assert.match(
     text,
-    /PUBLISHED.*CANCELLED.*Jornada institucional.*Jornada académica/s,
+    /Publicado.*Cancelado.*Jornada institucional.*Jornada académica/s,
   )
   assert.equal(nodes(ui.tree, (node) => node.type === 'h3').length, 2)
   ui.h.unmount()
@@ -275,7 +276,7 @@ for (const [name, old_values, new_values, oldCount, newCount] of [
     assert.equal(terms.filter((text) => text === 'Nuevo').length, newCount)
     assert.match(
       textContent(ui.tree),
-      /PORTAL_EVENT_UPDATED.*Responsable: Administradora de prueba.*Fecha:/s,
+      /Evento actualizado.*Responsable: Administradora de prueba.*Fecha:/s,
     )
     if (name.startsWith('null explícito'))
       assert.match(textContent(ui.tree), /Sin valor.*No.*0.*Vacío/s)
@@ -517,7 +518,19 @@ for (const [resource, path, name] of adminPages) {
           return { data: historyPage([]) }
         },
       },
-      { '@/features/auth/hooks/useAuth': { useAuth: () => ({ notify() {} }) } },
+      {
+        '@/features/auth/hooks/useAuth': {
+          useAuth: () => ({
+            user: {
+              id: 1,
+              status: 'ACTIVE',
+              must_change_password: false,
+              roles: ['ADMINISTRADOR'],
+            },
+            notify() {},
+          }),
+        },
+      },
     )
     const Page = c.h.load(path)[name]
     const expanded = [
@@ -576,8 +589,7 @@ for (const [resource, path, name] of adminPages) {
     render()
     await settle()
     render()
-    const historyLabel =
-      resource === 'services' ? 'Historial' : 'Ver historial'
+    const historyLabel = resource === 'services' ? 'Historial' : 'Ver historial'
     assert.ok(button(historyLabel))
     assert.equal(
       c.calls.filter((call) => call.args[0].endsWith('/history')).length,
@@ -664,7 +676,7 @@ test('páginas públicas y Home no pueden alcanzar el API/componente de historia
   }
 })
 
-test('las cuatro rutas administrativas siguen dentro de ProtectedRoute ADMINISTRADOR', () => {
+test('portal routes retain session and module permission guards', () => {
   const file = resolve(sourceRoot, 'app/router/router.tsx')
   const ast = ts.createSourceFile(
     file,
@@ -673,26 +685,46 @@ test('las cuatro rutas administrativas siguen dentro de ProtectedRoute ADMINISTR
     true,
     ts.ScriptKind.TSX,
   )
-  let adminBoundary
-  function visit(node) {
+  const required = new Map([
+    ['admin/portal/events', 'events'],
+    ['admin/portal/news', 'news'],
+    ['admin/portal/information', 'sections'],
+    ['admin/portal/information/faqs', 'faqs'],
+    ['admin/portal/services', 'services'],
+  ])
+  const found = new Set()
+  function visit(node, parents = []) {
     if (ts.isObjectLiteralExpression(node)) {
-      const element = node.properties.find(
-        (prop) => prop.name?.getText(ast) === 'element',
-      )
-      if (
-        element &&
-        /ProtectedRoute allowedRoles=\{\['ADMINISTRADOR'\]\}/.test(
-          element.getText(ast),
+      const path = node.properties.find(
+        (prop) => prop.name?.getText(ast) === 'path',
+      )?.initializer?.text
+      if (required.has(path)) {
+        const elements = parents.map(
+          (parent) =>
+            parent.properties
+              .find((prop) => prop.name?.getText(ast) === 'element')
+              ?.getText(ast) ?? '',
         )
-      )
-        adminBoundary = node
+        assert.ok(
+          elements.some((element) => element.includes('<ProtectedRoute />')),
+          path + ': session guard',
+        )
+        assert.ok(
+          elements.some((element) =>
+            element.includes(
+              '<PortalRoute section="' + required.get(path) + '"',
+            ),
+          ),
+          path + ': module guard',
+        )
+        found.add(path)
+      }
+      parents = [...parents, node]
     }
-    ts.forEachChild(node, visit)
+    ts.forEachChild(node, (child) => visit(child, parents))
   }
   visit(ast)
-  assert.ok(adminBoundary)
-  for (const path of ['events', 'news', 'information', 'services'])
-    assert.ok(adminBoundary.getText(ast).includes(`path: 'portal/${path}'`))
+  assert.deepEqual([...found].sort(), [...required.keys()].sort())
 })
 
 for (const role of ['DOCENTE', 'ESTUDIANTE', null, 'ADMINISTRADOR']) {
@@ -728,3 +760,64 @@ for (const role of ['DOCENTE', 'ESTUDIANTE', null, 'ADMINISTRADOR']) {
     c.h.unmount()
   })
 }
+
+for (const [action, heading] of [
+  ['PORTAL_NEWS_CREATED', 'Noticia creada'],
+  ['PORTAL_NEWS_UPDATED', 'Noticia actualizada'],
+  ['PORTAL_NEWS_IMAGE_UPDATED', 'Imagen de la noticia actualizada'],
+  ['PORTAL_NEWS_IMAGE_REMOVED', 'Imagen de la noticia eliminada'],
+  ['PORTAL_EVENT_CREATED', 'Evento creado'],
+  ['PORTAL_EVENT_STATUS_CHANGED', 'Estado del evento actualizado'],
+]) {
+  test(`human readable publication history: ${action}`, async () => {
+    const ui = panel(
+      [entry({ action })],
+      action.includes('NEWS') ? 'news' : 'events',
+    )
+    await ui.ready()
+    assert.equal(
+      textContent(nodes(ui.tree, (node) => node.type === 'h3')[0]),
+      heading,
+    )
+    assert.ok(!textContent(ui.tree).includes(action))
+    assert.match(
+      textContent(ui.tree),
+      /Jornada institucional.*Jornada académica/s,
+    )
+    ui.h.unmount()
+  })
+}
+
+test('publication history omits identical fields and preserves changed and explicit null values', async () => {
+  const ui = panel([
+    entry({
+      old_values: { title: 'Igual', location: 'Sala antigua', has_image: true },
+      new_values: { title: 'Igual', location: null, has_image: false },
+    }),
+  ])
+  await ui.ready()
+  const text = textContent(ui.tree)
+  assert.doesNotMatch(text, /Igual/)
+  assert.match(text, /Lugar.*Sala antigua.*Sin valor/s)
+  assert.match(text, /Tiene imagen.*Sí.*No/s)
+  ui.h.unmount()
+})
+
+test('publication history humanizes states and preserves Bolivia time near midnight', async () => {
+  const ui = panel([
+    entry({
+      old_values: null,
+      new_values: {
+        starts_at: '2026-11-05T02:00:00Z',
+        status: 'DRAFT',
+        visibility: 'PRIVATE',
+      },
+    }),
+  ])
+  await ui.ready()
+  const text = textContent(ui.tree)
+  assert.match(text, /4 nov de 2026.*10:00 p\. m\./s)
+  assert.match(text, /Borrador/)
+  assert.match(text, /Privado/)
+  ui.h.unmount()
+})

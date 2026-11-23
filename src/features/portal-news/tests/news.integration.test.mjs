@@ -180,7 +180,7 @@ test('HU41 administrative preview fetches authenticated blob and revokes Object 
   const first = ui.tree.props.src
   assert.match(first, /^blob:/)
   assert.equal(await (await fetch(first)).text(), 'imagen')
-  assert.equal(ui.calls[0].args[0], ui.props.url)
+  assert.equal(ui.calls[0].args[0], '/admin/portal/news/42/image')
   assert.equal(ui.calls[0].args[1].responseType, 'blob')
   ui.props.revision = 8
   ui.render()
@@ -503,3 +503,66 @@ test('HU41 external drawer footer keeps the form submit contract without duplica
   assert.equal(ui.button('Guardar noticia'), undefined)
   ui.h.unmount()
 })
+
+for (const url of [
+  'https://backend.example/api/v1/admin/portal/news/42/image?v=8',
+  'https://backend.example/backend/api/v1/admin/portal/news/42/image?v=8',
+  '/backend/api/v1/admin/portal/news/42/image?v=8',
+  '/admin/portal/news/42/image?v=8',
+]) {
+  test(`HU41 private image uses the configured authenticated client: ${url}`, async () => {
+    const blob = new Blob(['imagen'], { type: 'image/png' })
+    const c = client({ get: () => ({ data: blob }) })
+    const signal = new AbortController().signal
+    const { getNewsImage } = c.h.load('features/portal-news/api/newsApi.ts')
+    assert.equal(await getNewsImage(url, signal), blob)
+    assert.deepEqual(c.calls[0].args, [
+      '/admin/portal/news/42/image?v=8',
+      { signal, responseType: 'blob' },
+    ])
+    c.h.unmount()
+  })
+}
+
+test('HU41 unrelated image URLs retain their existing destination', async () => {
+  const c = client({ get: () => ({ data: new Blob() }) })
+  const { getNewsImage } = c.h.load('features/portal-news/api/newsApi.ts')
+  const url = 'https://backend.example/private/image?id=42'
+  await getNewsImage(url)
+  assert.equal(c.calls[0].args[0], url)
+  c.h.unmount()
+})
+
+for (const [name, type, size, message] of [
+  ['vector.svg', 'image/svg+xml', 4, 'Selecciona una imagen JPEG, PNG o WebP.'],
+  [
+    'grande.png',
+    'image/png',
+    5 * 1024 * 1024 + 1,
+    'La imagen no debe superar los 5 MiB.',
+  ],
+]) {
+  test(`HU41 invalid image is rejected locally without losing the draft: ${name}`, () => {
+    const ui = editor()
+    ui.edit('title', 'Borrador pendiente')
+    ui.field('image').props.onChange({
+      target: { files: [new File([new Uint8Array(size)], name, { type })] },
+    })
+    ui.render()
+    assert.ok(textContent(ui.tree).includes(message))
+    assert.equal(ui.field('image').props['aria-invalid'], true)
+    assert.equal(ui.button('Subir imagen').props.disabled, true)
+    assert.equal(ui.field('title').props.value, 'Borrador pendiente')
+    assert.equal(ui.calls.length, 0)
+    ui.field('image').props.onChange({
+      target: {
+        files: [new File(['png'], 'valida.png', { type: 'image/png' })],
+      },
+    })
+    ui.render()
+    assert.equal(ui.field('image').props['aria-invalid'], false)
+    assert.equal(ui.button('Subir imagen').props.disabled, false)
+    assert.ok(!textContent(ui.tree).includes(message))
+    ui.h.unmount()
+  })
+}

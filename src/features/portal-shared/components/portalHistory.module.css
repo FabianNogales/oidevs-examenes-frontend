@@ -96,3 +96,71 @@
 .pager {
   justify-content: space-between;
 }
+
+/* Noticias y calendario: el drawer ya tiene su propio scroll; no anidar otra región desplazable. */
+.readablePanel {
+  max-height: none;
+  overflow: visible;
+  padding: var(--space-4);
+  background: var(--color-surface);
+}
+
+.readablePanel .entry h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+}
+
+.entryMetadata {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.entryMetadata p {
+  margin: 0;
+}
+
+.changeList {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.readablePanel .change h4 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.readablePanel .change dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.readablePanel .change dl > div {
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+}
+
+.readablePanel .change dt {
+  margin-bottom: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.readablePanel .change dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.noDetails {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}

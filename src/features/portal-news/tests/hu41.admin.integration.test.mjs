@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { sourceHarness } from '../../../shared/tests/sourceHarness.mjs'
+import { sourceHarness, settle } from '../../../shared/tests/sourceHarness.mjs'
 import {
   client,
   component,
@@ -36,16 +36,14 @@ const categoryOptions = (data = activeCategories, extra = {}) => ({
   reload() {},
   ...extra,
 })
-test('HU41 news Escape confirmation uses the native top layer and preserves the editor until discard', () => {
+test('HU41 news Escape confirmation uses the native top layer and preserves the editor until discard', async () => {
   const h = sourceHarness({
-    '@/shared/api/httpClient': { httpClient: {} },
+    '@/shared/api/httpClient': { httpClient: { get: async (url) => {
+      assert.ok(url.endsWith('news-categories') || url.endsWith('/42'), url)
+      return { data: { data: url.endsWith('news-categories') ? activeCategories : draft } }
+    } } },
     '@/features/auth/hooks/useAuth': { useAuth: () => ({ user: { status: 'ACTIVE', must_change_password: false, roles: ['ADMINISTRADOR'] }, notify() {} }) },
-    '@/features/portal-shared/hooks/usePortalResource': {
-      usePortalResource: (load) =>
-        load.name === 'loadAdminNewsCategories'
-          ? categoryOptions()
-          : { data: draft, loading: false, error: null },
-    },
+
   })
   const { AdminNewsPage } = h.load('features/portal-news/pages/AdminNewsPage.tsx')
   let pageTree, drawerTree
@@ -56,8 +54,12 @@ test('HU41 news Escape confirmation uses the native top layer and preserves the 
     return pageTree
   })
   render()
+  await settle()
+  render()
   nodes(pageTree, (node) => node.type?.name === 'PortalAdminCollection')[0]
     .props.onSelect(draft.id)
+  render()
+  await settle()
   render()
   const drawer = () => nodes(drawerTree, (node) => node.type?.name === 'PortalModal')[0]
   const editorNode = () => nodes(drawerTree, (node) => node.type?.name === 'NewsEditor')[0]
@@ -121,6 +123,8 @@ test('HU41 news Escape confirmation uses the native top layer and preserves the 
   escapeDrawer()
   assert.equal(drawerTree, null, 'clean Drawer closes directly')
   nodes(pageTree, (node) => node.type?.name === 'PortalAdminCollection')[0].props.onSelect(draft.id)
+  render()
+  await settle()
   render()
   editorNode().props.onDirty(true)
   render()

@@ -241,8 +241,7 @@ function serviceEntry(entry: PortalHistoryEntry) {
                     part === 'url' ? 'URL institucional' : label(part),
                   )
                   .join(' · ')}
-                :{' '}
-                {simpleValue(previous)} → {simpleValue(next)}
+                : {simpleValue(previous)} → {simpleValue(next)}
               </li>
             ))}
           </ul>
@@ -309,7 +308,33 @@ function informationEntry(
 }
 
 // Historical URLs and markup remain escaped text, never active links or HTML.
-function valueContent(value: HistoryValue): ReactNode {
+function valueContent(value: HistoryValue, field?: string): ReactNode {
+  if (typeof value === 'string' && field === 'status') {
+    return (
+      (
+        {
+          DRAFT: 'Borrador',
+          PUBLISHED: 'Publicado',
+          ARCHIVED: 'Archivado',
+          CANCELLED: 'Cancelado',
+        } as Record<string, string>
+      )[value] ?? value
+    )
+  }
+  if (typeof value === 'string' && field === 'visibility') {
+    return (
+      ({ PUBLIC: 'Público', PRIVATE: 'Privado' } as Record<string, string>)[
+        value
+      ] ?? value
+    )
+  }
+  if (
+    typeof value === 'string' &&
+    ['starts_at', 'ends_at', 'published_at'].includes(field ?? '') &&
+    !Number.isNaN(Date.parse(value))
+  ) {
+    return publicationDate(value)
+  }
   if (value === null) return 'Sin valor'
   if (typeof value === 'boolean') return value ? 'Sí' : 'No'
   if (typeof value !== 'object') return value === '' ? 'Vacío' : String(value)
@@ -329,7 +354,7 @@ function valueContent(value: HistoryValue): ReactNode {
         .map(([key, item]) => (
           <div key={key}>
             <dt>{label(key)}</dt>
-            <dd>{valueContent(item)}</dd>
+            <dd>{valueContent(item, key)}</dd>
           </div>
         ))}
     </dl>
@@ -345,6 +370,12 @@ function changes(entry: PortalHistoryEntry) {
         Object.hasOwn(previous, field) && presentable(previous[field])
       const hasNew = Object.hasOwn(next, field) && presentable(next[field])
       if (!hasOld && !hasNew) return null
+      if (
+        hasOld &&
+        hasNew &&
+        JSON.stringify(previous[field]) === JSON.stringify(next[field])
+      )
+        return null
       return (
         <div className={styles.change} key={field}>
           <h4>{label(field)}</h4>
@@ -352,19 +383,65 @@ function changes(entry: PortalHistoryEntry) {
             {hasOld ? (
               <div>
                 <dt>Anterior</dt>
-                <dd>{valueContent(previous[field])}</dd>
+                <dd>{valueContent(previous[field], field)}</dd>
               </div>
             ) : null}
             {hasNew ? (
               <div>
                 <dt>Nuevo</dt>
-                <dd>{valueContent(next[field])}</dd>
+                <dd>{valueContent(next[field], field)}</dd>
               </div>
             ) : null}
           </dl>
         </div>
       )
     },
+  )
+}
+
+const publicationActions: Record<string, string> = {
+  PORTAL_NEWS_CREATED: 'Noticia creada',
+  PORTAL_NEWS_UPDATED: 'Noticia actualizada',
+  PORTAL_NEWS_STATUS_CHANGED: 'Estado de la noticia actualizado',
+  PORTAL_NEWS_IMAGE_UPDATED: 'Imagen de la noticia actualizada',
+  PORTAL_NEWS_IMAGE_REMOVED: 'Imagen de la noticia eliminada',
+  PORTAL_EVENT_CREATED: 'Evento creado',
+  PORTAL_EVENT_UPDATED: 'Evento actualizado',
+  PORTAL_EVENT_STATUS_CHANGED: 'Estado del evento actualizado',
+}
+
+function publicationEntry(entry: PortalHistoryEntry) {
+  const action = publicationActions[entry.action]
+  const fields = changes(entry).filter((change) => change !== null)
+  return (
+    <>
+      <h3>{action ?? 'Cambio registrado'}</h3>
+      {!action ? <p>Código: {entry.action}</p> : null}
+      <div className={styles.entryMetadata}>
+        {entry.actor_name !== null || entry.actor_id !== null ? (
+          <p>Responsable: {entry.actor_name ?? `ID ${entry.actor_id}`}</p>
+        ) : null}
+        {entry.created_at ? (
+          <p>
+            Fecha:{' '}
+            <time dateTime={entry.created_at}>
+              {Number.isNaN(Date.parse(entry.created_at))
+                ? entry.created_at
+                : publicationDate(entry.created_at)}
+            </time>
+          </p>
+        ) : null}
+      </div>
+      {fields.length ? (
+        <div className={styles.changeList} aria-label="Cambios registrados">
+          {fields}
+        </div>
+      ) : (
+        <p className={styles.noDetails}>
+          Sin diferencias de campos disponibles en este registro.
+        </p>
+      )}
+    </>
   )
 }
 
@@ -384,7 +461,7 @@ export function PortalHistoryPanel({
   const history = result.data
   return (
     <section
-      className={styles.panel}
+      className={`${styles.panel} ${resource === 'news' || resource === 'events' ? styles.readablePanel : ''}`}
       aria-label="Historial administrativo"
       aria-busy={result.loading}
       tabIndex={0}
@@ -398,32 +475,11 @@ export function PortalHistoryPanel({
             <ol className={styles.entries}>
               {history.data.map((entry) => (
                 <li key={entry.id} className={styles.entry}>
-                  {resource.startsWith('information/') ? (
-                    informationEntry(entry, resource)
-                  ) : resource === 'services' ? (
-                    serviceEntry(entry)
-                  ) : (
-                    <>
-                      <h3>Acción: {entry.action}</h3>
-                      {entry.actor_name !== null || entry.actor_id !== null ? (
-                        <p>
-                          Responsable:
-                          {` ${entry.actor_name ?? `ID ${entry.actor_id}`}`}
-                        </p>
-                      ) : null}
-                      {entry.created_at ? (
-                        <p>
-                          Fecha:{' '}
-                          <time dateTime={entry.created_at}>
-                            {Number.isNaN(Date.parse(entry.created_at))
-                              ? entry.created_at
-                              : publicationDate(entry.created_at)}
-                          </time>
-                        </p>
-                      ) : null}
-                      {changes(entry)}
-                    </>
-                  )}
+                  {resource.startsWith('information/')
+                    ? informationEntry(entry, resource)
+                    : resource === 'services'
+                      ? serviceEntry(entry)
+                      : publicationEntry(entry)}
                 </li>
               ))}
             </ol>
