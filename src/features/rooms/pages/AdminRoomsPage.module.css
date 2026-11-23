@@ -73,7 +73,7 @@
   font-size: var(--font-size-sm);
 }
 .card {
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -113,11 +113,13 @@
 .filter {
   display: grid;
   gap: var(--space-1);
+  min-width: 210px;
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
 }
-.filter select {
-  min-width: 120px;
+.filter select,
+.filter [data-ds-dropdown] {
+  min-width: 210px;
   font-size: var(--font-size-sm);
 }
 .primaryButton,
@@ -148,6 +150,7 @@
 }
 .tableScroll {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .table {
   width: 100%;
@@ -263,49 +266,6 @@
     flex-direction: column;
     align-items: stretch;
   }
-  .table {
-    min-width: 0;
-  }
-  .table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .table tbody,
-  .table tr {
-    display: block;
-  }
-  .table tr {
-    border-top: 1px solid var(--color-border-strong);
-    padding: var(--space-2) var(--space-4);
-  }
-  .table th,
-  .table td {
-    display: grid;
-    grid-template-columns: minmax(100px, 38%) minmax(0, 1fr);
-    column-gap: var(--space-3);
-    padding: var(--space-3) 0;
-    max-width: none !important;
-  }
-  .table th::before,
-  .table td::before {
-    content: attr(data-label);
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-  }
-  .table td > small {
-    grid-column: 2;
-  }
-  .table td > span {
-    justify-self: start;
-    white-space: normal;
-  }
-  .table tr:last-child td:last-child {
-    border-bottom: 0;
-  }
   .page {
     padding: var(--space-5) var(--space-3) var(--space-8);
   }
@@ -314,7 +274,13 @@
     min-width: 0;
   }
   .filter {
-    flex: 1;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .filter select,
+  .filter [data-ds-dropdown] {
+    min-width: 0;
+    width: 100%;
   }
   .pagination {
     flex-direction: column;

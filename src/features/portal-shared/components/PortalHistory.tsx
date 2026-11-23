@@ -1,6 +1,5 @@
 import { useCallback, useId, useState, type ReactNode } from 'react'
 import { PortalFeedback } from './PortalUi'
-import { publicationDate } from '../api/portalApi'
 import {
   getPortalHistory,
   type HistoryValue,
@@ -8,6 +7,11 @@ import {
   type PortalHistoryResource,
 } from '../api/portalHistoryApi'
 import { usePortalResource } from '../hooks/usePortalResource'
+import {
+  formatAuditAction,
+  formatAuditDate,
+  formatAuditScalarValue,
+} from '../utils/portalHistoryFormat'
 import styles from './portalHistory.module.css'
 
 const fieldLabels: Record<string, string> = {
@@ -217,9 +221,7 @@ function serviceEntry(entry: PortalHistoryEntry) {
         <p>
           Fecha:{' '}
           <time dateTime={entry.created_at}>
-            {Number.isNaN(Date.parse(entry.created_at))
-              ? entry.created_at
-              : publicationDate(entry.created_at)}
+            {formatAuditDate(entry.created_at)}
           </time>
         </p>
       ) : null}
@@ -276,9 +278,7 @@ function informationEntry(
         <p>
           Fecha:{' '}
           <time dateTime={entry.created_at}>
-            {Number.isNaN(Date.parse(entry.created_at))
-              ? entry.created_at
-              : publicationDate(entry.created_at)}
+            {formatAuditDate(entry.created_at)}
           </time>
         </p>
       ) : null}
@@ -309,35 +309,8 @@ function informationEntry(
 
 // Historical URLs and markup remain escaped text, never active links or HTML.
 function valueContent(value: HistoryValue, field?: string): ReactNode {
-  if (typeof value === 'string' && field === 'status') {
-    return (
-      (
-        {
-          DRAFT: 'Borrador',
-          PUBLISHED: 'Publicado',
-          ARCHIVED: 'Archivado',
-          CANCELLED: 'Cancelado',
-        } as Record<string, string>
-      )[value] ?? value
-    )
-  }
-  if (typeof value === 'string' && field === 'visibility') {
-    return (
-      ({ PUBLIC: 'Público', PRIVATE: 'Privado' } as Record<string, string>)[
-        value
-      ] ?? value
-    )
-  }
-  if (
-    typeof value === 'string' &&
-    ['starts_at', 'ends_at', 'published_at'].includes(field ?? '') &&
-    !Number.isNaN(Date.parse(value))
-  ) {
-    return publicationDate(value)
-  }
-  if (value === null) return 'Sin valor'
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No'
-  if (typeof value !== 'object') return value === '' ? 'Vacío' : String(value)
+  const scalar = formatAuditScalarValue(field, value)
+  if (scalar !== null) return scalar
   if (Array.isArray(value)) {
     return (
       <ol>
@@ -349,7 +322,7 @@ function valueContent(value: HistoryValue, field?: string): ReactNode {
   }
   return (
     <dl>
-      {Object.entries(value)
+      {Object.entries(value as Record<string, HistoryValue>)
         .filter(([, item]) => presentable(item))
         .map(([key, item]) => (
           <div key={key}>
@@ -379,16 +352,16 @@ function changes(entry: PortalHistoryEntry) {
       return (
         <div className={styles.change} key={field}>
           <h4>{label(field)}</h4>
-          <dl>
+          <dl className={styles.diffList}>
             {hasOld ? (
-              <div>
-                <dt>Anterior</dt>
+              <div className={styles.diffRow}>
+                <dt className={styles.diffBadgePrevious}>Anterior</dt>
                 <dd>{valueContent(previous[field], field)}</dd>
               </div>
             ) : null}
             {hasNew ? (
-              <div>
-                <dt>Nuevo</dt>
+              <div className={styles.diffRow}>
+                <dt className={styles.diffBadgeNext}>Nuevo</dt>
                 <dd>{valueContent(next[field], field)}</dd>
               </div>
             ) : null}
@@ -399,39 +372,32 @@ function changes(entry: PortalHistoryEntry) {
   )
 }
 
-const publicationActions: Record<string, string> = {
-  PORTAL_NEWS_CREATED: 'Noticia creada',
-  PORTAL_NEWS_UPDATED: 'Noticia actualizada',
-  PORTAL_NEWS_STATUS_CHANGED: 'Estado de la noticia actualizado',
-  PORTAL_NEWS_IMAGE_UPDATED: 'Imagen de la noticia actualizada',
-  PORTAL_NEWS_IMAGE_REMOVED: 'Imagen de la noticia eliminada',
-  PORTAL_EVENT_CREATED: 'Evento creado',
-  PORTAL_EVENT_UPDATED: 'Evento actualizado',
-  PORTAL_EVENT_STATUS_CHANGED: 'Estado del evento actualizado',
-}
-
-function publicationEntry(entry: PortalHistoryEntry) {
-  const action = publicationActions[entry.action]
+function publicationEntry(
+  entry: PortalHistoryEntry,
+  resource: PortalHistoryResource,
+) {
+  const action = formatAuditAction(entry.action, resource)
+  const knownAction = action !== entry.action
   const fields = changes(entry).filter((change) => change !== null)
   return (
     <>
-      <h3>{action ?? 'Cambio registrado'}</h3>
-      {!action ? <p>Código: {entry.action}</p> : null}
-      <div className={styles.entryMetadata}>
-        {entry.actor_name !== null || entry.actor_id !== null ? (
-          <p>Responsable: {entry.actor_name ?? `ID ${entry.actor_id}`}</p>
-        ) : null}
+      <header className={styles.entryHeader}>
+        <h3>{knownAction ? action : 'Cambio registrado'}</h3>
         {entry.created_at ? (
-          <p>
+          <p className={styles.entryMeta}>
             Fecha:{' '}
             <time dateTime={entry.created_at}>
-              {Number.isNaN(Date.parse(entry.created_at))
-                ? entry.created_at
-                : publicationDate(entry.created_at)}
+              {formatAuditDate(entry.created_at)}
             </time>
           </p>
         ) : null}
-      </div>
+      </header>
+      {!knownAction ? <p>Código: {entry.action}</p> : null}
+      {entry.actor_name !== null || entry.actor_id !== null ? (
+        <p className={styles.entryMeta}>
+          Responsable: {entry.actor_name ?? `Usuario #${entry.actor_id}`}
+        </p>
+      ) : null}
       {fields.length ? (
         <div className={styles.changeList} aria-label="Cambios registrados">
           {fields}
@@ -479,7 +445,7 @@ export function PortalHistoryPanel({
                     ? informationEntry(entry, resource)
                     : resource === 'services'
                       ? serviceEntry(entry)
-                      : publicationEntry(entry)}
+                      : publicationEntry(entry, resource)}
                 </li>
               ))}
             </ol>

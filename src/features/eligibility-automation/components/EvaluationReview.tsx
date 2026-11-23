@@ -35,6 +35,7 @@ import {
   isProtectedResult,
   isSnapshotExpired,
   isStateChange,
+  resolveProposedStatusDisplay,
   summarizeReview,
 } from '../utils/evaluationReview'
 import type { ReviewFilter, ReviewSummary } from '../utils/evaluationReview'
@@ -56,6 +57,7 @@ function statusBadgeClass(status: string | null | undefined): string {
   if (status === 'ELIGIBLE') return `${styles.badge} ${styles.badgeEligible}`
   if (status === 'INELIGIBLE')
     return `${styles.badge} ${styles.badgeIneligible}`
+  if (status === 'PENDING') return `${styles.badge} ${styles.badgePending}`
   return styles.badge
 }
 
@@ -441,17 +443,23 @@ export function EvaluationReview({
     {
       id: 'student',
       header: 'Estudiante',
-      width: '24%',
+      width: '210px',
       cell: ({ result }) => (
         <strong className={styles.studentName}>
           {result.student.display_name}
         </strong>
       ),
     },
-    { id: 'sis', header: 'SIS', cell: ({ result }) => result.student.sis },
+    {
+      id: 'sis',
+      header: 'SIS',
+      width: '120px',
+      cell: ({ result }) => result.student.sis,
+    },
     {
       id: 'current',
       header: 'Estado actual',
+      width: '160px',
       cell: ({ result }) => (
         <span className={statusBadgeClass(result.current_status)}>
           {displayStatus(result.current_status)}
@@ -459,29 +467,43 @@ export function EvaluationReview({
       ),
     },
     {
-      id: 'final',
-      header: 'Estado final propuesto',
+      id: 'computed',
+      header: 'Resultado calculado',
+      width: '165px',
       cell: ({ result }) => (
-        <span className={styles.statusCell}>
-          <span className={statusBadgeClass(result.effective_status)}>
-            {displayStatus(result.effective_status)}
-          </span>
-          {isStateChange(result) ? (
-            <span className={styles.tag}>Cambia</span>
-          ) : null}
-          {isProtectedResult(result) ? (
-            <span className={styles.tag}>{protectedLabel(result)}</span>
-          ) : null}
-          {isPendingResult(result) ? (
-            <span className={styles.tag}>Se conserva el estado actual</span>
-          ) : null}
+        <span className={statusBadgeClass(result.computed_status)}>
+          {displayStatus(result.computed_status)}
         </span>
       ),
     },
     {
+      id: 'final',
+      header: 'Estado final propuesto',
+      width: '220px',
+      cell: ({ result }) => {
+        const proposed = resolveProposedStatusDisplay(result)
+        return (
+          <span className={styles.statusCell}>
+            <span className={statusBadgeClass(proposed.status)}>
+              {proposed.label}
+            </span>
+            {isStateChange(result) ? (
+              <span className={styles.tag}>Cambia</span>
+            ) : null}
+            {isProtectedResult(result) ? (
+              <span className={styles.tag}>{protectedLabel(result)}</span>
+            ) : null}
+            {isPendingResult(result) && result.effective_status ? (
+              <span className={styles.tag}>Se conserva el estado actual</span>
+            ) : null}
+          </span>
+        )
+      },
+    },
+    {
       id: 'reason',
       header: 'Motivo',
-      width: '26%',
+      width: '260px',
       cell: ({ result }) => (
         <span className={styles.reason}>
           {briefReason(effectiveReason(result))}
@@ -491,6 +513,7 @@ export function EvaluationReview({
     {
       id: 'action',
       header: 'Acción',
+      width: '140px',
       align: 'right',
       cell: ({ result }) => (
         <button
@@ -526,6 +549,23 @@ export function EvaluationReview({
           <p className={pageStyles.note}>
             {summary.traceability} registros se actualizarán solo por
             trazabilidad.
+          </p>
+        ) : null}
+        {(summary.protected ?? 0) > 0 || summary.pending > 0 ? (
+          <p className={pageStyles.note}>
+            {[
+              (summary.protected ?? 0) > 0
+                ? `${summary.protected} estudiante(s) tienen decisiones protegidas`
+                : null,
+              summary.pending > 0
+                ? `${summary.pending} estudiante(s) están pendientes por datos académicos faltantes`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' y ')}
+            ; en esos casos se conserva su estado actual en «Estado final
+            propuesto». Revisa la columna «Resultado calculado» para ver el
+            resultado de los criterios configurados.
           </p>
         ) : null}
         <p className={styles.tableStatus}>

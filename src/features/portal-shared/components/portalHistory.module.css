@@ -68,21 +68,80 @@
   overflow-wrap: anywhere;
 }
 
+.entryHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.entryMeta {
+  margin-block: 4px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
 .change {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
   white-space: pre-wrap;
 }
 
-.change dl {
-  margin-block: 8px;
+.change h4 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.change dl,
+.diffList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.diffRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 
 .change dt {
   font-weight: var(--font-weight-semibold);
 }
 
+.diffBadgePrevious,
+.diffBadgeNext {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.diffBadgePrevious {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.diffBadgeNext {
+  border: 1px solid var(--color-primary);
+  background: var(--color-info-soft);
+  color: var(--color-primary);
+}
+
 .change dd {
-  margin-inline-start: 16px;
-  margin-bottom: 8px;
+  margin: 0;
+  flex: 1 1 180px;
+  min-width: 0;
 }
 
 .pager,
@@ -111,17 +170,6 @@
   font-size: var(--font-size-md);
 }
 
-.entryMetadata {
-  display: grid;
-  gap: var(--space-1);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.entryMetadata p {
-  margin: 0;
-}
-
 .changeList {
   display: grid;
   gap: var(--space-3);
@@ -137,20 +185,6 @@
   display: grid;
   gap: var(--space-2);
   margin: 0;
-}
-
-.readablePanel .change dl > div {
-  min-width: 0;
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-soft);
-}
-
-.readablePanel .change dt {
-  margin-bottom: var(--space-1);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
 }
 
 .readablePanel .change dd {

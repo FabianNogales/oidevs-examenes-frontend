@@ -65,6 +65,19 @@ export function isProtectedResult(result: EvaluationResult): boolean {
   return result.manual_override_preserved === true
 }
 
+export function resolveProposedStatusDisplay(result: EvaluationResult): {
+  status: 'ELIGIBLE' | 'INELIGIBLE' | 'PENDING' | null
+  label: string
+} {
+  if (isPendingResult(result) && !result.effective_status) {
+    return { status: 'PENDING', label: displayStatus('PENDING') }
+  }
+  return {
+    status: result.effective_status,
+    label: displayStatus(result.effective_status),
+  }
+}
+
 // Históricos sin motivo efectivo usan el motivo vigente y luego la explicación original.
 // Un null explícito se conserva: el servidor eliminó el motivo de la decisión final.
 export function effectiveReason(result: EvaluationResult): string | null {

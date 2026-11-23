@@ -83,9 +83,13 @@ try {
         `document.getElementById('${resource}-trigger').focus();document.getElementById('${resource}-trigger').click()`,
       )
       await ui.wait('!!document.querySelector("dialog[open]")')
-      await ui.evaluate(`Promise.all(document.querySelector('dialog').getAnimations().map(animation => animation.finished))`)
+      await ui.evaluate(
+        `Promise.all(document.querySelector('dialog').getAnimations().map(animation => animation.finished))`,
+      )
       await ui.click('Ver historial')
-      await ui.wait(`!!document.querySelector('[aria-label="Historial administrativo"] h3')`)
+      await ui.wait(
+        `!!document.querySelector('[aria-label="Historial administrativo"] h3')`,
+      )
       const metrics = await ui.evaluate(`(()=>{
         const dialog=document.querySelector('dialog[open]'), panel=document.querySelector('[aria-label="Historial administrativo"]');
         const rect=dialog.getBoundingClientRect(),style=getComputedStyle(panel);
@@ -110,7 +114,7 @@ try {
       )
       assert.doesNotMatch(metrics.text, /PORTAL_NEWS_|PORTAL_EVENT_/)
       assert.match(metrics.text, /Anterior[\s\S]*Nuevo/)
-      assert.match(metrics.text, /4 nov de 2026/)
+      assert.match(metrics.text, /04\/11\/2026/)
       await ui.shot(`${resource}-${width}`)
       // Real keyboard events: Tab stays inside and Escape restores the opening action.
       await ui.send('Input.dispatchKeyEvent', {
