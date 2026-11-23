@@ -5,7 +5,7 @@ function getImageRequestUrl(source: string): string {
   try {
     const parsed = new URL(source, 'https://eida.invalid')
     const studentPhotoPath = parsed.pathname.match(
-      /\/admin\/students\/[1-9]\d*\/(?:profile-photo|historical-photo)$/,
+      /\/(?:admin\/students\/[1-9]\d*\/(?:profile-photo|historical-photo)|students\/profile\/photo)$/,
     )?.[0]
     // Keep private student photos on the configured API/proxy with the session cookie.
     return studentPhotoPath ? `${studentPhotoPath}${parsed.search}` : source

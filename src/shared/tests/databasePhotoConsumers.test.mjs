@@ -30,7 +30,7 @@ test('student profile fetches the private binary URL through the authenticated c
   const props = { photoUrl: 'https://api.test/api/v1/students/profile/photo?v=first', updating: false, error: null, onUpdate: async () => true }
   let tree = h.render(() => expand(StudentProfilePhoto(props)))
   assert.equal(nodes(tree, n => n.type === 'img').length, 0)
-  assert.equal(h.calls[0].url, props.photoUrl)
+  assert.equal(h.calls[0].url, '/students/profile/photo?v=first')
   assert.equal(h.calls[0].config.responseType, 'blob')
   await settle()
   tree = h.render()
@@ -38,6 +38,7 @@ test('student profile fetches the private binary URL through the authenticated c
   props.photoUrl = 'https://api.test/api/v1/students/profile/photo?v=second'
   tree = h.render()
   assert.equal(nodes(tree, n => n.type === 'img').length, 0)
+  assert.equal(h.calls.at(-1).url, '/students/profile/photo?v=second')
   assert.deepEqual(h.revoked, ['blob:private-1'])
   await settle()
   tree = h.render()

@@ -73,8 +73,12 @@ test('HU14 image: admin student photos use the configured API and blob responseT
   assert.deepEqual(h.revoked, ['blob:authenticated-1'])
 })
 
-for (const photo of ['profile-photo', 'historical-photo'])
-  test(`admin student ${photo} keeps its revision through the configured API/proxy`, (t) => {
+for (const photoPath of [
+  '/admin/students/8/profile-photo',
+  '/admin/students/8/historical-photo',
+  '/students/profile/photo',
+])
+  test(`${photoPath} keeps its revision through the configured API/proxy`, (t) => {
     for (const prefix of [
       'https://backend.test/api/v1',
       'https://frontend.test/backend/api/v1',
@@ -86,12 +90,85 @@ for (const photo of ['profile-photo', 'historical-photo'])
       const { useAuthenticatedImage } = h.load(
         'shared/hooks/useAuthenticatedImage.ts',
       )
-      const path = `/admin/students/8/${photo}?v=image-version&revision=2`
+      const path = `${photoPath}?v=image-version&revision=2`
       h.render(() => useAuthenticatedImage(prefix + path))
       assert.equal(h.calls[0][0], path)
       h.unmount()
     }
   })
+
+test('student photo upload reloads the returned absolute photo URL without expiring a valid session', async (t) => {
+  const events = []
+  const calls = []
+  const h = sourceHarness({
+    '@/app/config/env': {
+      env: { apiUrl: '/backend/api/v1', backendUrl: '/backend' },
+    },
+    '@/features/auth/utils/authEvents': {
+      emitAuthSessionEvent: (event) => events.push(event),
+    },
+  })
+  t.mock.method(URL, 'createObjectURL', () => 'blob:student-photo')
+  t.mock.method(URL, 'revokeObjectURL', () => {})
+  const { httpClient } = h.load('shared/api/httpClient.ts')
+  httpClient.defaults.adapter = async (config) => {
+    calls.push([config.method, config.url])
+    const response = { config, headers: {}, status: 200, data: null }
+    if (config.url.startsWith('https://backend.test/')) {
+      response.status = 401
+      throw new axios.AxiosError(
+        'Unauthorized',
+        'ERR_BAD_REQUEST',
+        config,
+        null,
+        response,
+      )
+    }
+    if (config.method === 'post') {
+      assert.equal(config.data.get('photo').name, 'photo.png')
+      response.data = {
+        data: {
+          profile_photo_url:
+            'https://backend.test/api/v1/students/profile/photo?v=new-photo',
+        },
+      }
+    } else if (config.url === '/students/profile') {
+      response.data = { data: { profile_photo_url: null } }
+    } else {
+      response.data = new Blob(['updated image'])
+    }
+    return response
+  }
+  const { useStudentProfile } = h.load(
+    'features/students/hooks/useStudentProfile.ts',
+  )
+  const { useAuthenticatedImage } = h.load(
+    'shared/hooks/useAuthenticatedImage.ts',
+  )
+  h.render(() => {
+    const profile = useStudentProfile()
+    const image = useAuthenticatedImage(profile.data?.profile_photo_url)
+    return { profile, image }
+  })
+  await settle()
+  const { profile } = h.render()
+  assert.equal(
+    await profile.updatePhoto(
+      new File(['image'], 'photo.png', { type: 'image/png' }),
+    ),
+    true,
+  )
+  h.render()
+  await settle()
+  assert.deepEqual(events, [])
+  assert.equal(h.render().image.src, 'blob:student-photo')
+  assert.deepEqual(calls, [
+    ['get', '/students/profile'],
+    ['post', '/students/profile/photo'],
+    ['get', '/students/profile/photo?v=new-photo'],
+  ])
+  h.unmount()
+})
 
 for (const expired of [false, true])
   test(`admin photo loading with the real 401 interceptor: session ${expired ? 'expired' : 'valid'}`, async (t) => {
