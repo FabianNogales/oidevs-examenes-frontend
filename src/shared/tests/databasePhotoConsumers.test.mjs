@@ -55,7 +55,10 @@ test('HU13/HU14 request both student photos as authenticated blobs without assig
     profile_photo_url: 'https://api.test/api/v1/exams/2/entry-control/students/1/profile-photo?v=uuid' }
   let tree = h.render(() => expand(EntryStudentPhotos({ student })))
   assert.equal(nodes(tree, n => n.type === 'img').length, 0)
-  assert.deepEqual(h.calls.map(c => c.url), [student.historical_photo_url, student.profile_photo_url])
+  assert.deepEqual(h.calls.map(c => c.url), [
+    '/exams/2/entry-control/students/1/historical-photo',
+    '/exams/2/entry-control/students/1/profile-photo?v=uuid',
+  ])
   assert.ok(h.calls.every(c => c.config.responseType === 'blob'))
   await settle()
   tree = h.render()

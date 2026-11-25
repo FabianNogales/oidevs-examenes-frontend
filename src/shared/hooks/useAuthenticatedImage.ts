@@ -4,11 +4,18 @@ import { httpClient } from '@/shared/api/httpClient'
 function getImageRequestUrl(source: string): string {
   try {
     const parsed = new URL(source, 'https://eida.invalid')
-    const studentPhotoPath = parsed.pathname.match(
-      /\/(?:admin\/students\/[1-9]\d*\/(?:profile-photo|historical-photo)|students\/profile\/photo)$/,
-    )?.[0]
-    // Keep private student photos on the configured API/proxy with the session cookie.
-    return studentPhotoPath ? `${studentPhotoPath}${parsed.search}` : source
+    const privatePhotoPath =
+      parsed.pathname.match(
+        /\/(?:admin\/students\/[1-9]\d*\/(?:profile-photo|historical-photo)|students\/profile\/photo)$/,
+      )?.[0] ??
+      parsed.pathname.match(
+        /\/exams\/[1-9]\d*\/(?:collaborators|eligibilities)\/[1-9]\d*\/profile-photo$/,
+      )?.[0] ??
+      parsed.pathname.match(
+        /\/exams\/[1-9]\d*\/entry-control\/students\/[1-9]\d*\/(?:profile-photo|historical-photo)$/,
+      )?.[0]
+    // Keep private photos on the configured API/proxy with the session cookie.
+    return privatePhotoPath ? `${privatePhotoPath}${parsed.search}` : source
   } catch {
     return source
   }
