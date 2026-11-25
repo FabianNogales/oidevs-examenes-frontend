@@ -8,6 +8,14 @@ import { listAuditEvents, readAuditEvent, listCareers, readCareer } from '@/feat
 import type { AuditEvent, Career, ReadPage as PageResult, ReadQuery } from '@/features/users/api/adminReadApi'
 import { PageContainer } from '@/shared/components/ui/PageContainer/PageContainer'
 import { PageHeader } from '@/shared/components/ui/PageHeader/PageHeader'
+import { auditActionLabel, auditContextRows, auditEntityLabel } from '../utils/auditPresentation'
+
+function AuditContext({ title, context }: { title: string; context: AuditEvent['old_context'] }) {
+  const rows = auditContextRows(context)
+  return <section><h3>{title}</h3>{rows.length ? <dl className={detailDialog.details}>{rows.map((item) =>
+    <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>
+    : <p>No hay información adicional registrada para este momento del evento.</p>}</section>
+}
 
 function ReadPage<T extends BaseTableEntity & { id: number }>({ title, label, columns, list, detail, renderDetail, searchable = false, description }: {
   title: string; label: string; columns: readonly TableColumnDef<T>[]; list: (query: ReadQuery, signal: AbortSignal) => Promise<PageResult<T>>;
@@ -71,17 +79,18 @@ const careerColumns: readonly TableColumnDef<Career>[] = [
 ]
 const auditColumns: readonly TableColumnDef<AuditEvent>[] = [
   { id: 'id', header: 'Evento', accessorKey: 'id' }, { id: 'actor', header: 'Actor (ID)', cell: (row) => row.actor_id ?? 'No registrado' },
-  { id: 'action', header: 'Acción', accessorKey: 'action' }, { id: 'entity', header: 'Entidad', cell: (row) => `${row.entity_type} · ${row.entity_id ?? 'Sin ID individual'}` },
+  { id: 'action', header: 'Acción', cell: (row) => auditActionLabel(row.action) }, { id: 'entity', header: 'Registro relacionado', cell: (row) => `${auditEntityLabel(row.entity_type)} · ${row.entity_id ?? 'Sin ID individual'}` },
   { id: 'date', header: 'Fecha', cell: (row) => row.created_at ? new Date(row.created_at).toLocaleString('es-BO', { timeZone: 'America/La_Paz' }) : 'No registrada' },
 ]
 
 export function AdminReadPage({ kind }: { kind: 'careers' | 'audit-logs' }) {
   return kind === 'careers' ? <ReadPage<Career> title="Carreras" label="carreras" columns={careerColumns} list={listCareers} detail={readCareer} searchable
     description="Consulta del catálogo. Incluye carreras activas e inactivas."
-    renderDetail={(row) => <dl><dt>Código</dt><dd>{row.code}</dd><dt>Nombre</dt><dd>{row.name}</dd><dt>Estado</dt><dd>{row.status === 'ACTIVE' ? 'Activa' : 'Inactiva'}</dd></dl>} /> : <ReadPage<AuditEvent> title="Auditoría" description="El total cuenta eventos. WRITE/Exam y CREATE/Exam pueden describir la misma programación; no representan dos exámenes creados." label="eventos" columns={auditColumns} list={listAuditEvents} detail={readAuditEvent}
+    renderDetail={(row) => <dl><dt>Código</dt><dd>{row.code}</dd><dt>Nombre</dt><dd>{row.name}</dd><dt>Estado</dt><dd>{row.status === 'ACTIVE' ? 'Activa' : 'Inactiva'}</dd></dl>} /> : <ReadPage<AuditEvent> title="Auditoría" description="Consulta las acciones registradas y sus responsables. El total cuenta eventos, no registros únicos: una operación puede generar varios eventos." label="eventos" columns={auditColumns} list={listAuditEvents} detail={readAuditEvent}
     renderDetail={(row) => <><dl><dt>Evento</dt><dd>{row.id}</dd><dt>Actor (ID)</dt><dd>{row.actor_id ?? 'No registrado'}</dd>
-      <dt>Acción</dt><dd>{row.action}</dd><dt>Entidad</dt><dd>{row.entity_type} · {row.entity_id ?? 'Sin ID individual'}</dd>
+      <dt>Acción</dt><dd>{auditActionLabel(row.action)}</dd><dt>Registro relacionado</dt><dd>{auditEntityLabel(row.entity_type)} · {row.entity_id ?? 'Sin ID individual'}</dd>
       <dt>Fecha</dt><dd>{row.created_at ? new Date(row.created_at).toLocaleString('es-BO', { timeZone: 'America/La_Paz' }) : 'No registrada'}</dd></dl>
-      <h3>Contexto anterior permitido</h3><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(row.old_context, null, 2)}</pre>
-      <h3>Contexto nuevo permitido</h3><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(row.new_context, null, 2)}</pre></>} />
+      <AuditContext title="Información anterior" context={row.old_context} />
+      <AuditContext title="Información registrada" context={row.new_context} />
+      <details className={detailDialog.reference}><summary>Referencia técnica del evento</summary><p>Este código permite identificar el evento al solicitar soporte.</p><code>{row.action}</code><p>Tipo de registro: {row.entity_type}</p></details></>} />
 }

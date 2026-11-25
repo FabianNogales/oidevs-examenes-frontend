@@ -125,7 +125,7 @@ for (const kind of ['careers', 'audit-logs']) test(`024/022: ${kind} uses real p
   assert.equal(h.calls.at(-1)[2].params.page, 2)
   table(tree).props.onViewProfile(row); await settle(); tree = h.render()
   assert.equal(h.calls.at(-1)[1], `/admin/${kind}/${row.id}`)
-  assert.match(textContent(tree), kind === 'careers' ? /Sistemas/ : /Contexto nuevo permitido/)
+  assert.match(textContent(tree), kind === 'careers' ? /Sistemas/ : /Referencia técnica del evento/)
   if (kind === 'audit-logs') assert.match(nodes(tree, (node) => node.type?.name === 'PageHeader')[0].props.description, /total cuenta eventos/)
   h.unmount()
 })

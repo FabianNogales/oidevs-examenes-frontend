@@ -29,6 +29,10 @@
   color: var(--color-text-secondary);
 }
 
+.reference {
+  overflow-wrap: anywhere;
+}
+
 /* Detalle de cuenta: secciones con rejilla de etiqueta y valor. Clases propias; .dialog no cambia,
    así que el detalle de registro (Carreras, Auditoría) conserva su presentación. */
 .content {

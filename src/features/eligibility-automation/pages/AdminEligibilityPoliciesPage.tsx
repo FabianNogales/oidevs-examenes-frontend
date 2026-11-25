@@ -299,7 +299,7 @@ export function AdminEligibilityPoliciesPage() {
       <PageHeader
         title="Criterios de habilitación"
         titleId="eligibility-criteria-title"
-        description="Administra los criterios disponibles para la evaluación automática de habilitaciones."
+        description="Administra los criterios disponibles. La edición cambia únicamente su nombre y descripción; las fórmulas institucionales se conservan y los parámetros se configuran por examen."
         breadcrumbs={[
           { label: 'Administración', to: '/admin' },
           { label: 'Criterios de habilitación' },
@@ -353,7 +353,7 @@ export function AdminEligibilityPoliciesPage() {
                   onClick={() => startEditing(criterion)}
                   disabled={saving || statusWorking}
                 >
-                  Editar
+                  Editar información
                 </button>
                 <button
                   type="button"

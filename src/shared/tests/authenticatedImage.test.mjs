@@ -350,3 +350,30 @@ for (const status of [401, 403, 404])
     assert.match(textContent(tree), /No se pudo cargar/)
     h.unmount()
   })
+
+for (const accountStatus of [200, 401, 503])
+  test(`BUG06: a photograph 401 verifies the account (${accountStatus}) before ending the session`, async (t) => {
+    const events = [], calls = []
+    const h = sourceHarness({
+      '@/app/config/env': { env: { apiUrl: '/backend/api/v1', backendUrl: '/backend' } },
+      '@/features/auth/utils/authEvents': { emitAuthSessionEvent: (event) => events.push(event) },
+    })
+    t.mock.method(URL, 'createObjectURL', () => 'blob:unused')
+    t.mock.method(URL, 'revokeObjectURL', () => {})
+    const { httpClient } = h.load('shared/api/httpClient.ts')
+    httpClient.defaults.adapter = async (config) => {
+      calls.push(config.url)
+      const status = config.url === '/me' ? accountStatus : 401
+      const response = { config, headers: {}, status, data: status === 200 ? { data: { id: 1 } } : { message: 'Unavailable' } }
+      if (status !== 200) throw new axios.AxiosError('Failed', 'ERR_BAD_REQUEST', config, null, response)
+      return response
+    }
+    const { useAuthenticatedImage } = h.load('shared/hooks/useAuthenticatedImage.ts')
+    h.render(() => useAuthenticatedImage('/exams/23/eligibilities/17/profile-photo'))
+    await settle()
+    assert.deepEqual(calls, ['/exams/23/eligibilities/17/profile-photo', '/me'])
+    assert.deepEqual(events, accountStatus === 401 ? [{ reason: 'SESSION_EXPIRED' }] : [])
+    assert.equal(h.render().failed, true)
+    assert.equal(h.render().src, null)
+    h.unmount()
+  })

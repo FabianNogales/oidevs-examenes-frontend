@@ -161,8 +161,8 @@ try {
       content: ['Persona QA de prueba', 'Roles permanentes', 'Docente'], links: ['Asignar o retirar roles', 'Ver perfil docente', 'Ver perfil estudiantil'] },
     { path: '/admin/careers', h1: 'Carreras', row: 'QA-SIS', title: 'Detalle del registro', slug: 'carrera',
       content: ['QA-SIS', 'Carrera QA Sistemas', 'Activa'], links: [] },
-    { path: '/admin/audit-logs', h1: 'Auditoría', row: 'UPDATE', title: 'Detalle del registro', slug: 'auditoria',
-      content: ['Contexto anterior permitido', 'Contexto nuevo permitido', 'Aula QA 101'], links: [] },
+    { path: '/admin/audit-logs', h1: 'Auditoría', row: 'Actualización de registro', title: 'Detalle del registro', slug: 'auditoria',
+      content: ['Información anterior', 'Información registrada', 'Aula QA 101'], links: [] },
   ]
   const show = async (screen) => {
     await evaluate(`detailQa.show(${JSON.stringify(screen.path)})`)
@@ -220,7 +220,7 @@ try {
 
     // 3. Keyboard: Tab and Shift+Tab never reach the page behind; every control is reachable.
     await open(screen)
-    const expected = ['Cerrar ventana', ...screen.links]
+    const expected = ['Cerrar ventana', ...screen.links, ...(screen.slug === 'auditoria' ? ['Referencia técnica del evento'] : [])]
     const seen = new Set([await evaluate('qaFocus()')])
     for (const modifiers of [0, 8]) {
       for (let index = 0; index < expected.length + 2; index++) {

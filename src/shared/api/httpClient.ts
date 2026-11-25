@@ -5,10 +5,18 @@ import { emitAuthSessionEvent } from '@/features/auth/utils/authEvents'
 function registerAuthSessionInterceptor(client: ReturnType<typeof axios.create>) {
   client.interceptors.response.use(
     (response) => response,
-    (error: unknown) => {
+    async (error: unknown) => {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         if (error.config?.url === '/auth/logout') return Promise.reject(error)
         const code = readErrorCode(error.response.data)
+
+        // A failed photograph is not proof that the user's session expired.
+        // Check the authenticated account before redirecting the whole application.
+        if (error.config?.responseType === 'blob' &&
+          /\/(?:profile-photo|historical-photo|students\/profile\/photo)(?:\?|$)/.test(error.config.url ?? '')) {
+          try { await httpClient.get('/me') } catch { /* /me handles genuine session expiration. */ }
+          return Promise.reject(error)
+        }
 
         emitAuthSessionEvent({
           reason: code === 'SESSION_REPLACED' ? 'SESSION_REPLACED' : 'SESSION_EXPIRED',
