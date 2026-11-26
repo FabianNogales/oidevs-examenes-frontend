@@ -41,6 +41,12 @@ export async function updatePassword(
   await backendHttpClient.put('/user/password', payload)
 }
 
+export async function registerHistoricalPhoto(photo: File): Promise<void> {
+  const form = new FormData()
+  form.append('photo', photo)
+  await httpClient.post('/students/initial-setup/historical-photo', form)
+}
+
 export async function forgotPassword(
   payload: ForgotPasswordPayload,
 ): Promise<void> {

@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getHomeRouteForUser } from '@/features/auth/utils/authRoutes'
 import { getDelegatedRoleLabel, withDelegatedNavigation } from '@/features/roles/utils/delegatedNavigation'
 import { CollaborationsProvider } from '@/features/collaborations/components/CollaborationsProvider'
 import { useMyCollaborations } from '@/features/collaborations/hooks/useMyCollaborations'
@@ -114,6 +115,10 @@ function AppLayoutContent() {
 
   if (isLoading) {
     return null
+  }
+
+  if (user?.must_upload_historical_photo) {
+    return <Navigate to={getHomeRouteForUser(user)} replace />
   }
 
   return (

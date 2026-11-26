@@ -35,10 +35,10 @@ export function RoleRoute({
     )
   }
 
-  if (user.must_change_password) {
+  if (user.must_change_password || user.must_upload_historical_photo) {
     return (
       <Navigate
-        to={AUTH_ROUTES.changeInitialPassword}
+        to={getHomeRouteForUser(user)}
         replace
       />
     )

@@ -17,6 +17,7 @@ const STUDENT_IMPORT_TABLE_COLUMNS: ReadonlyArray<{
   { key: 'email', label: 'Correo', width: 310, keywords: ['correo', 'email'] },
   { key: 'career', label: 'Carrera', width: 155, keywords: ['carrera', 'career'] },
   { key: 'profile_photo', label: 'Foto de perfil', width: 141, keywords: ['foto', 'profile_photo'] },
+  { key: 'historical_photo', label: 'Foto histórica', width: 141, keywords: ['histórica', 'historical_photo'] },
 ]
 
 const TOTAL_WIDTH = STUDENT_IMPORT_TABLE_COLUMNS.reduce((sum, c) => sum + c.width, 0)
@@ -88,7 +89,7 @@ export function StudentImportPreviewTable({
                   {STUDENT_IMPORT_TABLE_COLUMNS.map((column) => {
                     const issue = rowErrors?.byColumn[column.key]
                     let cellContent: React.ReactNode = row.data[column.key] || '-'
-                    if (column.key === 'profile_photo') {
+                    if (column.key === 'profile_photo' || column.key === 'historical_photo') {
                       const textVal = String(row.data[column.key] || '').toLowerCase()
                       const hasImage = textVal.includes('.png') || textVal.includes('.jpg') || textVal.includes('.jpeg') || textVal.includes('.webp')
                       cellContent = (

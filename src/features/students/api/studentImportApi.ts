@@ -44,6 +44,7 @@ function isPreview(value: unknown): value is StudentImportPreview & Record<strin
       typeof row.valid !== 'boolean' || !isMessages(row.errors) || !isObject(row.data)) return false
     const data = row.data
     if (!COLUMNS.every((column) => typeof data[column] === 'string') ||
+      (data.historical_photo !== undefined && typeof data.historical_photo !== 'string') ||
       row.valid !== (row.errors.length === 0)) return false
     lineNumbers.add(row.row)
     if (row.valid) validRows++

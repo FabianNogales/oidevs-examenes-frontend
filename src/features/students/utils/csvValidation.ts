@@ -84,23 +84,36 @@ export async function validateStudentImportCsv(
   if (!headersMatchExpected(headers, expectedHeaders)) {
     return {
       isValid: false,
-      message: `Los encabezados deben ser exactamente: ${STUDENT_IMPORT_COLUMNS.join(', ')}.`,
+      message:
+        'Usa las columnas sis_code, identity_number, first_names, last_names, email, career, en ese orden. Al final puedes incluir profile_photo y historical_photo, ambas opcionales.',
     }
   }
 
   return { isValid: true }
 }
 
-function headersMatchExpected(headers: string[], expectedHeaders: string[]): boolean {
-  if (headers.length !== expectedHeaders.length) {
-    return false
-  }
-
-  return expectedHeaders.every((header, index) => headers[index] === header)
+function headersMatchExpected(
+  headers: string[],
+  expectedHeaders: string[],
+): boolean {
+  const required = expectedHeaders.filter(
+    (header) => header !== 'profile_photo' && header !== 'historical_photo',
+  )
+  const optional = ['profile_photo', 'historical_photo'].filter((header) =>
+    headers.includes(header),
+  )
+  const accepted = [...required, ...optional]
+  return (
+    headers.length === accepted.length &&
+    accepted.every((header, index) => headers[index] === header)
+  )
 }
 
 function normalizeHeader(value: string): string {
-  return value.replace(/^\uFEFF/, '').trim().toLowerCase()
+  return value
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .toLowerCase()
 }
 
 function parseCsvRow(row: string): string[] {

@@ -521,6 +521,10 @@ export const router = createBrowserRouter([
             path: AUTH_ROUTES.changeInitialPassword,
             element: <ChangeInitialPasswordPage />,
           },
+          {
+            path: AUTH_ROUTES.initialHistoricalPhoto,
+            element: <ChangeInitialPasswordPage />,
+          },
         ],
       },
       {

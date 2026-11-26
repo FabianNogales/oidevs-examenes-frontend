@@ -41,7 +41,7 @@ export function OfflineAccessGate({
     (!user ||
       (user.id === identity.ownerId &&
         user.status === 'ACTIVE' &&
-        !user.must_change_password))
+        !user.must_change_password && !user.must_upload_historical_photo))
 
   return (
     <div className={workspace.layout}>

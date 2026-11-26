@@ -132,7 +132,7 @@ test('entry, guest, first-access and permission guards never send a custom-only 
   h.auth.user.must_change_password = true
   assert.equal(GuestRoute().props.to, '/cambiar-contrasena-inicial')
   assert.equal(ProtectedRoute({}).props.to, '/cambiar-contrasena-inicial')
-  assert.equal(FirstAccessRoute().type, 'Outlet')
+  assert.equal(FirstAccessRoute().props.to, '/cambiar-contrasena-inicial')
 })
 
 test('Home renders existing public content for staff with no operational permissions and no navigation effect', () => {

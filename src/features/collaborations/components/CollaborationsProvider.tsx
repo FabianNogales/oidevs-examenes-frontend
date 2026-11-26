@@ -18,7 +18,7 @@ type LoadState = {
 export function CollaborationsProvider({ children }: { children: ReactNode }) {
   const { user, isLoading: authLoading } = useAuth()
   const userId =
-    !authLoading && user && !user.must_change_password ? user.id : null
+    !authLoading && user && !user.must_change_password && !user.must_upload_historical_photo ? user.id : null
   const [version, setVersion] = useState(0)
   const [state, setState] = useState<LoadState>({
     userId: null,

@@ -11,7 +11,8 @@ const STUDENT_IMPORT_COLUMN_LABELS: ReadonlyArray<{
   { csvHeader: 'last_names', label: 'Apellidos' },
   { csvHeader: 'email', label: 'Correo' },
   { csvHeader: 'career', label: 'Carrera' },
-  { csvHeader: 'profile_photo', label: 'Foto de perfil' },
+  { csvHeader: 'profile_photo', label: 'Foto de perfil (opcional)' },
+  { csvHeader: 'historical_photo', label: 'Foto histórica (opcional)' },
 ]
 
 export function ImportColumnsGuide() {

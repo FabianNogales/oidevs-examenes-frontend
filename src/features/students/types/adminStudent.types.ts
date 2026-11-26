@@ -15,6 +15,7 @@ export interface StudentDetail extends Student {
   career_id?: string | number | null
   historical_photo_url: string | null
   historical_photo_revision: number
+  historical_photo_source?: 'STUDENT_UPLOAD' | 'STAFF_UPLOAD' | 'INSTITUTIONAL_IMPORT' | null
   profile_photo_url: string | null
 }
 

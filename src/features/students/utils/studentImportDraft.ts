@@ -50,12 +50,14 @@ export function sanitizeStudentImportPreview(value: unknown): StudentImportPrevi
       !object(row.data)) return null
     const data = row.data
     if (!COLUMNS.every((column) => typeof data[column] === 'string')) return null
+    if (data.historical_photo !== undefined && typeof data.historical_photo !== 'string') return null
     seen.add(row.row)
     if (row.valid) validRows++
     rows.push({ row: row.row, valid: row.valid, errors: [...row.errors], data: {
       sis_code: data.sis_code as string, identity_number: data.identity_number as string,
       first_names: data.first_names as string, last_names: data.last_names as string,
       email: data.email as string, career: data.career as string, profile_photo: data.profile_photo as string,
+      ...(typeof data.historical_photo === 'string' ? { historical_photo: data.historical_photo } : {}),
     } })
   }
   if (validRows !== value.valid_rows || value.total_rows !== value.valid_rows + value.error_rows ||
