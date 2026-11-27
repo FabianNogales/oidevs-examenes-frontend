@@ -46,7 +46,7 @@ function OfflineWorkspace({
     ? currentView
     : 'prepare'
   const canRequest =
-    online && user?.id === identity.ownerId && !user.must_change_password
+    online && user?.id === identity.ownerId && !user.must_change_password && !user.must_upload_historical_photo
   const pending = data.entries.filter(
     (entry) => entry.status === 'PENDING',
   ).length

@@ -1,0 +1,39 @@
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.steps li {
+  flex: 1 1 140px;
+  padding: 0.75rem;
+  border-bottom: 3px solid var(--color-border, #d8dce5);
+}
+
+.steps [aria-current='step'] {
+  border-color: var(--color-primary, #253b80);
+  font-weight: 600;
+}
+
+.preview {
+  display: block;
+  width: min(100%, 240px);
+  max-height: 280px;
+  object-fit: contain;
+  margin-inline: auto;
+  border-radius: 0.75rem;
+}
+
+.file {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.file input {
+  max-width: 100%;
+}

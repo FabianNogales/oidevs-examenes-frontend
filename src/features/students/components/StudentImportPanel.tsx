@@ -52,6 +52,7 @@ const EXPORT_COLUMNS: StudentImportColumn[] = [
   'email',
   'career',
   'profile_photo',
+  'historical_photo',
 ]
 
 function toStep(flowState: ImportFlowState): ImportStep {
@@ -295,6 +296,7 @@ function StudentImportContent({
           </div>
 
           <ImportColumnsGuide />
+          <p>Las columnas de fotografías pueden omitirse o quedar vacías. historical_photo admite una referencia a una imagen institucional existente en institutional-photos/ del almacenamiento privado (JPEG, PNG o WebP, hasta 5 MB). Si falta una fotografía histórica válida, el estudiante deberá cargarla al iniciar sesión. profile_photo conserva su uso anterior para el perfil.</p>
           <CsvDropzone
             selectedFile={selectedFile}
             validationMessage={validationMessage}

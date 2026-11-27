@@ -13,6 +13,7 @@ export type AuthenticatedUser = {
   permissions?: string[]
   status: string
   must_change_password: boolean
+  must_upload_historical_photo?: boolean
 }
 
 export type CurrentUserResponse = {

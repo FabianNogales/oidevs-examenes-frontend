@@ -41,7 +41,7 @@ export function readOfflineIdentity(): OfflineIdentity | null {
 }
 
 export function rememberOfflineIdentity(user: AuthenticatedUser): void {
-  if (user.status !== 'ACTIVE' || user.must_change_password) {
+  if (user.status !== 'ACTIVE' || user.must_change_password || user.must_upload_historical_photo) {
     invalidateOfflineIdentity()
     return
   }

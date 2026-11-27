@@ -6,13 +6,17 @@ export type StudentImportColumn =
   | 'email'
   | 'career'
   | 'profile_photo'
+  | 'historical_photo'
 
 export type CsvValidationResult = {
   isValid: boolean
   message?: string
 }
 
-export type StudentImportRowData = Record<StudentImportColumn, string>
+export type StudentImportRowData = Record<
+  Exclude<StudentImportColumn, 'historical_photo'>,
+  string
+> & { historical_photo?: string }
 
 export type StudentImportPreviewRow = {
   row: number

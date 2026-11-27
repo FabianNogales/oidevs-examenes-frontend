@@ -170,6 +170,13 @@ export function StudentHistoricalPhotoSection({
       <p>
         Referencia histórica del estudiante para la verificación de identidad.
       </p>
+      <p>{student.historical_photo_source === 'STUDENT_UPLOAD'
+        ? 'Origen: carga del estudiante. Identidad no verificada institucionalmente.'
+        : student.historical_photo_source === 'INSTITUTIONAL_IMPORT'
+          ? 'Origen: importación institucional.'
+          : student.historical_photo_source === 'STAFF_UPLOAD'
+            ? 'Origen: personal autorizado.'
+            : 'Origen: registro anterior sin información de procedencia.'}</p>
       <div className={styles.content}>
         <div className={styles.photo}>
           <AuthenticatedImage

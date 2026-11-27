@@ -8,4 +8,5 @@ export const STUDENT_IMPORT_COLUMNS = [
   'email',
   'career',
   'profile_photo',
+  'historical_photo',
 ] as const satisfies readonly StudentImportColumn[]

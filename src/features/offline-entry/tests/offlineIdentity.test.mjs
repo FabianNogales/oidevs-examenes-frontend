@@ -97,6 +97,8 @@ test('expired contexts, inactive users and password-change users cannot restore 
   assert.equal(identity.readOfflineIdentity(), null)
   identity.rememberOfflineIdentity({ ...user(), must_change_password: true })
   assert.equal(identity.readOfflineIdentity(), null)
+  identity.rememberOfflineIdentity({ ...user(), must_upload_historical_photo: true })
+  assert.equal(identity.readOfflineIdentity(), null)
 })
 test('opener-created tabs discard inherited local continuity', () => {
   const identity = context()
